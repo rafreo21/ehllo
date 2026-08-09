@@ -62,8 +62,10 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "start": "expo start",
-    "android": "expo run:android",
+    "start": "APP_VARIANT=staging expo start",
+    "start:production": "APP_VARIANT=production expo start",
+    "android": "APP_VARIANT=staging expo run:android",
+    "android:production": "APP_VARIANT=production expo run:android",
     "android:install": "bash scripts/install-dev-android.sh",
     "android:rebuild": "bash scripts/install-dev-android.sh --rebuild",
     "android:dev-client": "bash scripts/install-dev-client-android.sh",
@@ -76,7 +78,8 @@
     "android:dev-client:staging:rebuild": "APP_VARIANT=staging bash scripts/install-dev-client-android.sh --rebuild",
     "android:dev:staging": "APP_VARIANT=staging bash scripts/run-dev-android.sh",
     "android:dev:connect:staging": "APP_VARIANT=staging bash scripts/connect-android-dev.sh",
-    "ios": "expo run:ios",
+    "ios": "APP_VARIANT=staging expo run:ios",
+    "ios:production": "APP_VARIANT=production expo run:ios",
     "ios:staging": "APP_VARIANT=staging expo prebuild --platform ios --clean && APP_VARIANT=staging expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",

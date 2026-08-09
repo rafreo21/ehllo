@@ -1,8 +1,13 @@
 // Dynamic config so a "staging" build can be installed side-by-side with
 // production on the same device (own bundle ID/package, own app name, own
 // backend) instead of overwriting it. Selected via APP_VARIANT — set by the
-// mobile/scripts/*.sh helpers, defaults to production for a plain build.
-const APP_VARIANT = process.env.APP_VARIANT === "staging" ? "staging" : "production";
+// mobile/scripts/*.sh helpers. Plain local commands default to staging so a
+// developer cannot accidentally write to production.
+const requestedVariant = process.env.APP_VARIANT ?? "staging";
+if (!['staging', 'production'].includes(requestedVariant)) {
+  throw new Error(`Invalid APP_VARIANT: ${requestedVariant}. Use staging or production.`);
+}
+const APP_VARIANT = requestedVariant;
 const IS_STAGING = APP_VARIANT === "staging";
 
 const BASE_BUNDLE_ID = "com.aftermeet.app";
@@ -12,7 +17,7 @@ const BACKEND = IS_STAGING
   ? {
       supabaseUrl: "https://vgrxsdjfrkmpmpqvuqty.supabase.co",
       supabaseAnonKey: "sb_publishable_eSjPw8e5uHqCDUtAf_vdDQ_SXAS-hsW",
-      publicCardBaseUrl: "https://aftermeet-git-staging-rafreo21-8924s-projects.vercel.app",
+      publicCardBaseUrl: "https://aftermeet-staging.vercel.app",
     }
   : {
       supabaseUrl: "https://tgpzxgrvdmmwnodxrooh.supabase.co",
