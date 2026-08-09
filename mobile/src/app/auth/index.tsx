@@ -35,7 +35,6 @@ export default function AuthScreen() {
 
   useEffect(() => {
     if (step !== 'code') return;
-    setSecondsLeft(OTP_EXPIRY_SECONDS);
     const interval = setInterval(() => {
       setSecondsLeft((current) => Math.max(0, current - 1));
     }, 1000);
@@ -57,6 +56,7 @@ export default function AuthScreen() {
     const result = await signIn(email);
     setLoading(false);
     if (result.error) return setMessage(result.error);
+    setSecondsLeft(OTP_EXPIRY_SECONDS);
     setStep('code');
     setCodeSentAt((current) => current + 1);
     setMessage('Check your email for your 6-digit sign-in code.');

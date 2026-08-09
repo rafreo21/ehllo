@@ -77,7 +77,7 @@ export function DropdownButton({ label, icon, items, size = "small", fullWidth =
     item.onSelect?.();
     if (item.href) {
       if (item.external) window.open(item.href, "_blank", "noreferrer");
-      else window.location.href = item.href;
+      else window.location.assign(item.href);
     }
   }
 

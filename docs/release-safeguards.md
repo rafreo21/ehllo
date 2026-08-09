@@ -34,8 +34,30 @@ Before any beta build:
 1. Confirm `git status` is clean and CI passes.
 2. Confirm the intended EAS profile and app identifier.
 3. Confirm Supabase redirect URLs and the public web domain for that environment.
-4. Run `npm run security:secrets`, web tests, and mobile typecheck/lint.
+4. Run `npm run release:check`, web tests, and mobile typecheck/lint.
 5. Record the commit and build numbers in the release notes.
+
+## Automated readiness
+
+`npm run release:check` is the minimum release gate. It checks tracked files for
+privileged Supabase credentials and verifies that ordinary web/mobile commands,
+EAS profiles, app identifiers, and backend references preserve the staging-first
+release split. CI runs the same command for every pull request and push to `main`.
+
+This check is intentionally static: it prevents configuration regressions without
+connecting to either Supabase project or mutating external services.
+
+## External and hardware work still required
+
+These items cannot be made complete by repository checks alone:
+
+- Link the Expo project and configure EAS credentials and push-notification keys.
+- Confirm every production database migration has been applied to production.
+- Validate NFC programming on a supported physical Android device.
+- Validate the complete QR exchange with two physical phones.
+- Complete App Store and Play Store privacy, screenshots, listing, and review data.
+
+Do not describe the app as store-ready until those items have recorded evidence.
 
 ## Credential safeguards
 
