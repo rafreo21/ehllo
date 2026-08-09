@@ -12,6 +12,15 @@ const IS_STAGING = APP_VARIANT === "staging";
 
 const BASE_BUNDLE_ID = "com.aftermeet.app";
 const bundleId = IS_STAGING ? `${BASE_BUNDLE_ID}.staging` : BASE_BUNDLE_ID;
+const EAS_PROJECT = IS_STAGING
+  ? {
+      slug: "aftermeet-staging",
+      projectId: "7f8c9f69-0c82-4b58-87db-a0e7cdc89c0a",
+    }
+  : {
+      slug: "aftermeet",
+      projectId: "97c0cff3-8e13-4e80-b62f-733ad1cbf663",
+    };
 
 const BACKEND = IS_STAGING
   ? {
@@ -28,7 +37,8 @@ const BACKEND = IS_STAGING
 module.exports = {
   expo: {
     name: IS_STAGING ? "AfterMeet Staging" : "AfterMeet",
-    slug: "aftermeet",
+    owner: "rafreo",
+    slug: EAS_PROJECT.slug,
     version: "1.0.1",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
@@ -189,6 +199,9 @@ module.exports = {
       typedRoutes: true,
     },
     extra: {
+      eas: {
+        projectId: EAS_PROJECT.projectId,
+      },
       publicCardBaseUrl: BACKEND.publicCardBaseUrl,
       supabaseUrl: BACKEND.supabaseUrl,
       supabaseAnonKey: BACKEND.supabaseAnonKey,

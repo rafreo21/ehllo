@@ -56,9 +56,11 @@ for (const profile of ["development", "staging", "staging-simulator"]) {
 }
 requireCondition(eas.build?.production?.env?.APP_VARIANT === "production", "EAS `production` must explicitly target production.");
 
-if (!appConfig.includes("projectId")) {
-  warnings.push("Expo projectId is not configured; remote EAS push notifications are not release-ready.");
-}
+const easProjectIds = [...appConfig.matchAll(/projectId:\s*["']([0-9a-f-]{36})["']/g)].map((match) => match[1]);
+requireCondition(
+  new Set(easProjectIds).size === 2,
+  "Mobile app configuration must contain distinct staging and production EAS project IDs.",
+);
 
 if (failures.length > 0) {
   console.error("Release-readiness safeguards failed:\n");
