@@ -36,20 +36,6 @@ export type ImportRecordingMeta = {
 };
 export type ServerTranscribePhase = 'idle' | 'preparing' | 'transcribing' | 'revealing' | 'done' | 'failed';
 
-async function revealTranscriptProgressively(
-  fullText: string,
-  onChunk: (value: string) => void,
-) {
-  const words = fullText.trim().split(/\s+/).filter(Boolean);
-  if (!words.length) return;
-  let built = '';
-  for (let index = 0; index < words.length; index += 1) {
-    built += `${index ? ' ' : ''}${words[index]}`;
-    onChunk(built);
-    await new Promise((resolve) => setTimeout(resolve, index < 24 ? 28 : 8));
-  }
-}
-
 type UseCaptureRecorderOptions = {
   transcript: string;
   onTranscriptChange: (value: string) => void;
@@ -347,11 +333,11 @@ export function useCaptureRecorder({
       setServerTranscribePhase('transcribing');
       const serverTranscript = await transcribe(normalizedUri, meta);
       if (serverTranscript?.trim()) {
-        setServerTranscribePhase('revealing');
-        liveTranscript.markTranscribing();
-        await revealTranscriptProgressively(serverTranscript, (partial) => {
-          liveTranscript.updateFromUser(partial);
-        });
+        // A visual word-by-word reveal used to keep the recorder in a
+        // processing state while awaiting JS timers. Mobile OS suspension can
+        // pause those timers indefinitely, leaving the global capture banner
+        // stuck even though transcription has already finished. Commit the
+        // complete transcript atomically so the state machine can settle.
         liveTranscript.updateFromUser(serverTranscript);
         liveTranscript.markIdle();
         setServerTranscribePhase('done');

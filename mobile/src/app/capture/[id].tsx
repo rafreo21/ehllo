@@ -15,6 +15,7 @@ import { RecordingPlayback } from '@/components/recording-playback';
 import { ConnectionDetailSkeleton } from '@/components/skeleton';
 import { Body, Button, PageHeader, Panel, Screen } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
+import { clearActiveCaptureController } from '@/features/encounters/active-capture-controller';
 import {
   resolveEncounterRecordingUri,
   updateLocalRecordingSharedUrl,
@@ -327,6 +328,7 @@ export default function CaptureDetailScreen() {
     try {
       const saved = await saveWithConflictGuard(next);
       if (saved) {
+        clearActiveCaptureController(saved.id);
         setSuccessMessage('Review confirmed. Your follow-ups are now active.');
         setSuccessSheetOpen(true);
       }

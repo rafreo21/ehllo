@@ -12,6 +12,7 @@ type ActiveCaptureControls = {
 };
 
 type ActiveCaptureController = ActiveCaptureControls & {
+  registrationId: symbol;
   snapshot: ActiveCaptureSnapshot;
 };
 
@@ -26,15 +27,19 @@ export function registerActiveCaptureController(
   controls: ActiveCaptureControls,
   initialSnapshot: ActiveCaptureSnapshot,
 ) {
+  const registrationId = Symbol('active-capture-registration');
   const registered: ActiveCaptureController = {
     ...controls,
+    registrationId,
     snapshot: initialSnapshot,
   };
   controller = registered;
   emitChange();
 
   return () => {
-    if (controller !== registered) return;
+    // Snapshot updates replace the controller object. Use a stable registration
+    // token so the owning effect can still unregister the updated controller.
+    if (controller?.registrationId !== registrationId) return;
     controller = null;
     emitChange();
   };
@@ -46,6 +51,13 @@ export function updateActiveCaptureSnapshot(snapshot: ActiveCaptureSnapshot) {
   emitChange();
 }
 
+export function clearActiveCaptureController(encounterId?: string) {
+  if (!controller) return;
+  if (encounterId && controller.snapshot.encounterId !== encounterId) return;
+  controller = null;
+  emitChange();
+}
+
 export function getActiveCaptureController() {
   return controller;
 }
@@ -54,4 +66,3 @@ export function subscribeToActiveCapture(listener: () => void) {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
-
