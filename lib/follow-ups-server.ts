@@ -1,4 +1,9 @@
 import type { Encounter, EncounterAction, EncounterParticipant } from "./encounters";
+import {
+  getFollowUpEffectiveState,
+  isFollowUpTerminal,
+  type FollowUpEffectiveState,
+} from "./follow-up-lifecycle.ts";
 
 export type FollowUpItem = {
   encounterId: string;
@@ -8,7 +13,12 @@ export type FollowUpItem = {
   channel: EncounterAction["channel"];
   dueAt: string;
   status: EncounterAction["status"];
+  effectiveState: FollowUpEffectiveState;
   completedAt?: string;
+  snoozedUntil?: string;
+  dismissedAt?: string;
+  cancelledAt?: string;
+  statusUpdatedAt?: string;
   owner: EncounterAction["owner"];
   personName: string;
   personEmail: string;
@@ -49,6 +59,9 @@ export function flattenOpenFollowUps(encounters: Encounter[]): FollowUpItem[] {
     if (encounter.status === "draft") continue;
     for (const action of encounter.actions) {
       if (!action.title.trim()) continue;
+      // Proposed actions remain attached to the meeting while its review is
+      // pending. They must not appear in the actionable Follow-ups queue.
+      if (action.status === "proposed") continue;
       items.push({
         encounterId: encounter.id,
         actionId: action.id,
@@ -57,7 +70,12 @@ export function flattenOpenFollowUps(encounters: Encounter[]): FollowUpItem[] {
         channel: action.channel,
         dueAt: action.dueAt || "",
         status: action.status,
+        effectiveState: getFollowUpEffectiveState(action),
         completedAt: action.completedAt,
+        snoozedUntil: action.snoozedUntil,
+        dismissedAt: action.dismissedAt,
+        cancelledAt: action.cancelledAt,
+        statusUpdatedAt: action.statusUpdatedAt,
         owner: action.owner ?? "me",
         personName: action.assigneeName?.trim() || encounter.personName,
         personEmail: action.assigneeEmail?.trim() || encounter.personEmail,
@@ -101,8 +119,10 @@ export function dueDateBucket(dueAt: string, now = new Date()): "overdue" | "tod
 export function sortFollowUps(items: FollowUpItem[]): FollowUpItem[] {
   const bucketOrder = { overdue: 0, today: 1, week: 2, future: 3, none: 4 } as const;
   return [...items].sort((left, right) => {
-    if (left.status === "completed" && right.status === "completed") {
-      return (right.completedAt || right.startedAt).localeCompare(left.completedAt || left.startedAt);
+    if (isFollowUpTerminal(left.status) && isFollowUpTerminal(right.status)) {
+      const leftSettledAt = left.statusUpdatedAt || left.completedAt || left.dismissedAt || left.cancelledAt || left.startedAt;
+      const rightSettledAt = right.statusUpdatedAt || right.completedAt || right.dismissedAt || right.cancelledAt || right.startedAt;
+      return rightSettledAt.localeCompare(leftSettledAt);
     }
     const leftBucket = bucketOrder[dueDateBucket(left.dueAt)];
     const rightBucket = bucketOrder[dueDateBucket(right.dueAt)];

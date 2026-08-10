@@ -280,7 +280,9 @@ export default function CaptureDetailScreen() {
         channel: newActionChannel,
         owner: newActionOwner,
         dueAt: newActionDueAt,
-        status: 'open',
+        // A follow-up added before review is confirmed is still just a
+        // proposal, same as the ones suggested from the transcript.
+        status: encounter.status === 'draft' ? 'proposed' : 'open',
         participantId: participant?.id,
         assigneeName: participant?.name,
         assigneeEmail: participant?.email,
@@ -295,15 +297,23 @@ export default function CaptureDetailScreen() {
     setActionComposerOpen(false);
   }
 
+  // A still-proposed action is awaiting review confirmation and cannot jump
+  // straight to completed — it has to be activated (open) first, same as
+  // the server-side transition table enforces.
+  function canToggleAction(status: EncounterPayload['actions'][number]['status']) {
+    return status !== 'proposed';
+  }
+
   function toggleAction(actionId: string) {
     if (!encounter) return;
     setEncounter({
       ...encounter,
-      actions: encounter.actions.map((action) => action.id === actionId
-        ? action.status === 'completed'
+      actions: encounter.actions.map((action) => {
+        if (action.id !== actionId || !canToggleAction(action.status)) return action;
+        return action.status === 'completed'
           ? { ...action, status: 'open', completedAt: undefined }
-          : { ...action, status: 'completed', completedAt: new Date().toISOString() }
-        : action),
+          : { ...action, status: 'completed', completedAt: new Date().toISOString() };
+      }),
     });
   }
 
@@ -621,8 +631,11 @@ export default function CaptureDetailScreen() {
                   <View style={styles.actionRow}>
                   <Pressable
                     accessibilityRole="checkbox"
-                    accessibilityState={{ checked: action.status === 'completed' }}
-                    accessibilityLabel={`${action.status === 'completed' ? 'Reopen' : 'Complete'} ${action.title}`}
+                    accessibilityState={{ checked: action.status === 'completed', disabled: !canToggleAction(action.status) }}
+                    accessibilityLabel={canToggleAction(action.status)
+                      ? `${action.status === 'completed' ? 'Reopen' : 'Complete'} ${action.title}`
+                      : `Confirm review to activate ${action.title} first`}
+                    disabled={!canToggleAction(action.status)}
                     onPress={() => toggleAction(action.id)}>
                     <CheckCircle size={22} color={action.status === 'completed' ? colors.accent : colors.muted} weight={action.status === 'completed' ? 'fill' : 'regular'} />
                   </Pressable>

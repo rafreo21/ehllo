@@ -44,7 +44,9 @@ export function ActionDoButton({ action, context, size = "small", showSecondary 
       .catch(() => undefined);
   }, []);
 
-  if (action.owner !== "me" || action.status === "completed") return null;
+  // A proposed action is still awaiting review confirmation and must not be
+  // externally actionable — schedules and sends stay disabled until then.
+  if (action.owner !== "me" || action.status === "completed" || action.status === "proposed") return null;
 
   const primary = resolveActionLink(action, context);
   const secondary = (showSecondary ? resolveSecondaryActionLinks(action, context) : []).filter((link) => {

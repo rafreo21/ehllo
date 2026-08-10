@@ -47,8 +47,12 @@ export type EncounterAction = {
   channel: FollowUpChannelId;
   owner: 'me' | 'guest';
   dueAt: string;
-  status: 'open' | 'completed' | 'snoozed';
+  status: 'proposed' | 'open' | 'snoozed' | 'completed' | 'dismissed' | 'cancelled';
   completedAt?: string;
+  snoozedUntil?: string;
+  dismissedAt?: string;
+  cancelledAt?: string;
+  statusUpdatedAt?: string;
   assigneeName?: string;
   assigneeEmail?: string;
   participantId?: string;
@@ -313,6 +317,8 @@ export function buildEncounterPayload(input: {
   recording?: LocalRecordingMetadata;
 }): EncounterPayload {
   const now = new Date().toISOString();
+  const encounterStatus = input.status || 'draft';
+  const actionStatus: EncounterAction['status'] = encounterStatus === 'draft' ? 'proposed' : 'open';
   const durationSeconds = Math.max(0, Math.round(input.durationSeconds ?? 0));
   const startedAt = input.startedAt || new Date(Date.now() - durationSeconds * 1000).toISOString();
   const meetingPeople: EncounterParticipant[] = (input.people ?? [])
@@ -361,7 +367,7 @@ export function buildEncounterPayload(input: {
       channel: commitment.channel,
       owner: commitment.owner,
       dueAt: commitment.dueAt.trim(),
-      status: 'open',
+      status: actionStatus,
       assigneeName: assignee.name,
       assigneeEmail: assignee.email,
       participantId: assignee.id,
@@ -386,7 +392,7 @@ export function buildEncounterPayload(input: {
       channel: item.channel,
       owner,
       dueAt: item.dueAt?.trim() || '',
-      status: 'open',
+      status: actionStatus,
       assigneeName: assignee.name,
       assigneeEmail: assignee.email,
       participantId: assignee.id,
@@ -417,7 +423,7 @@ export function buildEncounterPayload(input: {
     recording: input.recording,
     actions,
     participants: assignees.filter((assignee) => assignee.name.trim().length >= 2),
-    status: input.status || 'draft',
+    status: encounterStatus,
     shareToken: input.shareToken || createId().replace(/-/g, ''),
   };
 }

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { encounterFromApi } from "../../../../lib/encounters";
 import { fetchParticipantsByEncounter } from "../../../../lib/encounter-participants-server";
 import { dueDateBucket, flattenOpenFollowUps, type FollowUpItem } from "../../../../lib/follow-ups-server";
+import { isFollowUpReminderEligible } from "../../../../lib/follow-up-lifecycle";
 import { createNotification, notificationTypeEnabled } from "../../../../lib/notifications-server";
 import { dispatchPushForUser } from "../../../../lib/push-dispatch-server";
 import { buildReminderDigestEmail, reminderQualifies } from "../../../../lib/reminder-email";
@@ -85,7 +86,9 @@ export async function GET(request: Request) {
         }));
 
         for (const item of flattenOpenFollowUps(encounters)) {
-          if (item.owner === "me" && reminderQualifies(item)) qualifying.push(item);
+          if (item.owner === "me" && isFollowUpReminderEligible(item) && reminderQualifies(item)) {
+            qualifying.push(item);
+          }
         }
       }
     }
@@ -110,7 +113,12 @@ export async function GET(request: Request) {
 
         for (const item of flattenOpenFollowUps(encounters)) {
           const myParticipantId = participantIdByEncounter.get(item.encounterId);
-          if (item.owner === "guest" && item.participantId === myParticipantId && reminderQualifies(item)) {
+          if (
+            item.owner === "guest"
+            && item.participantId === myParticipantId
+            && isFollowUpReminderEligible(item)
+            && reminderQualifies(item)
+          ) {
             qualifying.push(item);
           }
         }

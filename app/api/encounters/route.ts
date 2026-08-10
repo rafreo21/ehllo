@@ -13,6 +13,7 @@ import { dispatchPushForUser } from "../../../lib/push-dispatch-server";
 import { provisionGuestAccountFromContact } from "../../../lib/guest-contact-provision-server";
 import { buildGuestAddedEmail } from "../../../lib/guest-added-email";
 import { sendEmail } from "../../../lib/send-email";
+import { applyFollowUpTransition } from "../../../lib/follow-up-lifecycle";
 
 const allowedStatuses = new Set(["draft", "reviewed", "shared", "archived"]);
 
@@ -220,7 +221,7 @@ export async function POST(request: Request) {
   const supabase = await createApiSupabaseClient(request);
   const { data: existingRow } = await supabase
     .from("encounters")
-    .select("recording_metadata, updated_at")
+    .select("recording_metadata, updated_at, status")
     .eq("id", body.id)
     .eq("workspace_id", user.workspaceId)
     .maybeSingle();
@@ -255,10 +256,23 @@ export async function POST(request: Request) {
         personName: typeof body.personName === "string" ? body.personName.trim() : "",
         personEmail: typeof body.personEmail === "string" ? body.personEmail.trim() : "",
       };
-  const actions = normalizeEncounterActions(body.actions, participants, {
+  const nextStatus = typeof body.status === "string" && allowedStatuses.has(body.status) ? body.status : "draft";
+  let actions = normalizeEncounterActions(body.actions, participants, {
     name: projection.personName,
     email: projection.personEmail,
   });
+
+  // A follow-up suggested while a meeting is still a draft is only a proposal.
+  // It becomes actionable exactly once the meeting has been reviewed or shared.
+  if (nextStatus === "draft") {
+    actions = actions.map((action) => action.status === "open"
+      ? { ...action, status: "proposed" as const }
+      : action);
+  } else if (nextStatus === "reviewed" || nextStatus === "shared") {
+    actions = actions.map((action) => action.status === "proposed"
+      ? applyFollowUpTransition(action, "open")
+      : action);
+  }
 
   const nextUpdatedAt = new Date().toISOString();
   const { error } = await supabase.from("encounters").upsert({
@@ -280,7 +294,7 @@ export async function POST(request: Request) {
     shared_summary: typeof body.sharedSummary === "string" ? body.sharedSummary : "",
     actions,
     recording_metadata: recordingMetadata,
-    status: typeof body.status === "string" && allowedStatuses.has(body.status) ? body.status : "draft",
+    status: nextStatus,
     share_token: typeof body.shareToken === "string" ? body.shareToken : crypto.randomUUID().replaceAll("-", ""),
     updated_at: nextUpdatedAt,
   }, { onConflict: "id" });

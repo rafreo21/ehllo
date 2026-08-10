@@ -12,7 +12,12 @@ export type FollowUpItem = {
   channel: EncounterAction['channel'];
   dueAt: string;
   status: EncounterAction['status'];
+  effectiveState?: 'proposed' | 'open' | 'scheduled' | 'due' | 'overdue' | 'snoozed' | 'completed' | 'dismissed' | 'cancelled';
   completedAt?: string;
+  snoozedUntil?: string;
+  dismissedAt?: string;
+  cancelledAt?: string;
+  statusUpdatedAt?: string;
   owner: EncounterAction['owner'];
   personName: string;
   personEmail: string;
@@ -72,7 +77,14 @@ export async function fetchFollowUps(
     channel: row.channel as FollowUpItem['channel'],
     dueAt: String(row.dueAt ?? ''),
     status: row.status as FollowUpItem['status'],
+    effectiveState: typeof row.effectiveState === 'string'
+      ? row.effectiveState as FollowUpItem['effectiveState']
+      : undefined,
     completedAt: typeof row.completedAt === 'string' ? row.completedAt : undefined,
+    snoozedUntil: typeof row.snoozedUntil === 'string' ? row.snoozedUntil : undefined,
+    dismissedAt: typeof row.dismissedAt === 'string' ? row.dismissedAt : undefined,
+    cancelledAt: typeof row.cancelledAt === 'string' ? row.cancelledAt : undefined,
+    statusUpdatedAt: typeof row.statusUpdatedAt === 'string' ? row.statusUpdatedAt : undefined,
     owner: (row.owner as FollowUpItem['owner']) ?? 'me',
     personName: String(row.personName ?? ''),
     personEmail: String(row.personEmail ?? ''),
@@ -86,36 +98,47 @@ export async function fetchFollowUps(
   })));
 }
 
-export async function completeFollowUp(accessToken: string, encounterId: string, actionId: string) {
+async function updateFollowUpStatus(
+  accessToken: string,
+  encounterId: string,
+  actionId: string,
+  status: EncounterAction['status'],
+  snoozedUntil?: string,
+) {
   const response = await mobileFetch(`/api/encounters/${encounterId}/actions/${actionId}`, accessToken, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status: 'completed' }),
+    body: JSON.stringify({ status, snoozedUntil }),
   });
   const payload = await readMobileApiJson<{ ok?: boolean; error?: string }>(
     response,
     'Could not read the follow-up completion response.',
   );
   if (!response.ok || !payload.ok) {
-    throw new Error(payload.error || 'Could not complete this follow-up.');
+    throw new Error(payload.error || 'Could not update this follow-up.');
   }
   requestFollowUpNotificationSync();
 }
 
+export async function completeFollowUp(accessToken: string, encounterId: string, actionId: string) {
+  await updateFollowUpStatus(accessToken, encounterId, actionId, 'completed');
+}
+
 export async function reopenFollowUp(accessToken: string, encounterId: string, actionId: string) {
-  const response = await mobileFetch(`/api/encounters/${encounterId}/actions/${actionId}`, accessToken, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status: 'open' }),
-  });
-  const payload = await readMobileApiJson<{ ok?: boolean; error?: string }>(
-    response,
-    'Could not read the follow-up reopening response.',
-  );
-  if (!response.ok || !payload.ok) {
-    throw new Error(payload.error || 'Could not reopen this follow-up.');
-  }
-  requestFollowUpNotificationSync();
+  await updateFollowUpStatus(accessToken, encounterId, actionId, 'open');
+}
+
+export async function dismissFollowUp(accessToken: string, encounterId: string, actionId: string) {
+  await updateFollowUpStatus(accessToken, encounterId, actionId, 'dismissed');
+}
+
+export async function snoozeFollowUp(
+  accessToken: string,
+  encounterId: string,
+  actionId: string,
+  snoozedUntil: string,
+) {
+  await updateFollowUpStatus(accessToken, encounterId, actionId, 'snoozed', snoozedUntil);
 }
 
 export async function fetchEncounterRecords(accessToken: string) {

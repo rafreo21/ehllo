@@ -6,11 +6,11 @@ export type FollowUpScope = 'current' | 'past';
 export type FollowUpSort = 'urgency' | 'recent' | 'az';
 
 export function isOpenFollowUp(item: FollowUpItem) {
-  return item.status !== 'completed';
+  return !['completed', 'dismissed', 'cancelled'].includes(item.status);
 }
 
 export function isPastFollowUp(item: FollowUpItem) {
-  return item.status === 'completed';
+  return ['completed', 'dismissed', 'cancelled'].includes(item.status);
 }
 
 export function filterFollowUpsByScope(items: FollowUpItem[], scope: FollowUpScope) {

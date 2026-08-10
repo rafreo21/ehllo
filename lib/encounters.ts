@@ -1,4 +1,5 @@
 import type { LocalRecordingMetadata } from "./local-recordings";
+import { normalizeFollowUpStatus, type FollowUpStatus } from "./follow-up-lifecycle.ts";
 
 export type EncounterAction = {
   id: string;
@@ -6,8 +7,12 @@ export type EncounterAction = {
   channel: "email" | "linkedin" | "call" | "meeting" | "send" | "whatsapp" | "instagram" | "x" | "tiktok" | "other";
   owner: "me" | "guest";
   dueAt: string;
-  status: "open" | "completed" | "snoozed";
+  status: FollowUpStatus;
+  snoozedUntil?: string;
   completedAt?: string;
+  dismissedAt?: string;
+  cancelledAt?: string;
+  statusUpdatedAt?: string;
   assigneeName?: string;
   assigneeEmail?: string;
   participantId?: string;
@@ -27,7 +32,6 @@ export type EncounterParticipant = {
 const ACTION_CHANNELS = new Set<EncounterAction["channel"]>([
   "email", "linkedin", "call", "meeting", "send", "whatsapp", "instagram", "x", "tiktok", "other",
 ]);
-const ACTION_STATUSES = new Set<EncounterAction["status"]>(["open", "completed", "snoozed"]);
 
 function normalizedMatch(value: unknown) {
   return typeof value === "string" ? value.trim().toLocaleLowerCase() : "";
@@ -66,9 +70,7 @@ export function normalizeEncounterActions(
     const channel = ACTION_CHANNELS.has(record.channel as EncounterAction["channel"])
       ? record.channel as EncounterAction["channel"]
       : "other";
-    const status = ACTION_STATUSES.has(record.status as EncounterAction["status"])
-      ? record.status as EncounterAction["status"]
-      : "open";
+    const status = normalizeFollowUpStatus(record.status);
     const assigneeName = participant?.name.trim()
       || (typeof record.assigneeName === "string" ? record.assigneeName.trim().slice(0, 160) : "")
       || fallbackPerson?.name?.trim().slice(0, 160)
@@ -85,8 +87,20 @@ export function normalizeEncounterActions(
       owner,
       dueAt: typeof record.dueAt === "string" ? record.dueAt.trim().slice(0, 40) : "",
       status,
+      snoozedUntil: typeof record.snoozedUntil === "string" && record.snoozedUntil.trim()
+        ? record.snoozedUntil.trim()
+        : undefined,
       completedAt: typeof record.completedAt === "string" && record.completedAt.trim()
         ? record.completedAt.trim()
+        : undefined,
+      dismissedAt: typeof record.dismissedAt === "string" && record.dismissedAt.trim()
+        ? record.dismissedAt.trim()
+        : undefined,
+      cancelledAt: typeof record.cancelledAt === "string" && record.cancelledAt.trim()
+        ? record.cancelledAt.trim()
+        : undefined,
+      statusUpdatedAt: typeof record.statusUpdatedAt === "string" && record.statusUpdatedAt.trim()
+        ? record.statusUpdatedAt.trim()
         : undefined,
       assigneeName,
       assigneeEmail,

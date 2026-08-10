@@ -16,6 +16,7 @@ import { buildActionLinkContext, channelLabel } from "../../../lib/action-links"
 import { findContactById } from "../../../lib/contacts";
 import { hydrateContactsFromServer } from "../../../lib/contacts-sync";
 import { readEncounters, updateEncounter, type Encounter, type EncounterAction } from "../../../lib/encounters";
+import { isFollowUpTerminal } from "../../../lib/follow-up-lifecycle";
 import { hydrateEncountersFromServer } from "../../../lib/encounters-sync";
 import { recordCompletedAction, supportsOutboundDraft } from "../../../lib/outbound-habit";
 import { OutboundDraftPanel } from "../../components/OutboundDraftPanel";
@@ -137,12 +138,21 @@ export default function FollowupsPage() {
   }, []);
 
   const allActions = useMemo(
-    () => encounters.flatMap((encounter) => encounter.actions.map((action) => ({ encounter, action }))),
+    // A follow-up proposed during capture stays attached to its encounter
+    // while review is pending; it must not surface here as actionable until
+    // the encounter has been reviewed. Mirrors flattenOpenFollowUps' gate.
+    () => encounters
+      .filter((encounter) => encounter.status !== "draft")
+      .flatMap((encounter) => encounter.actions
+        .filter((action) => action.status !== "proposed")
+        .map((action) => ({ encounter, action }))),
     [encounters],
   );
   const visibleActions = useMemo(
     () => {
-      const filtered = allActions.filter(({ action }) => (scope === "past" ? action.status === "completed" : action.status !== "completed"));
+      const filtered = allActions.filter(({ action }) => (
+        scope === "past" ? isFollowUpTerminal(action.status) : !isFollowUpTerminal(action.status)
+      ));
       if (scope !== "past") return filtered;
       return [...filtered].sort((left, right) => (
         (right.action.completedAt || right.encounter.startedAt)
@@ -181,7 +191,7 @@ export default function FollowupsPage() {
 
   function completeAction(encounterId: string, actionId: string) {
     const completedAt = new Date().toISOString();
-    const updated = updateEncounter(encounterId, (encounter) => ({ ...encounter, actions: encounter.actions.map((action) => action.id === actionId ? { ...action, status: "completed", completedAt } : action) }));
+    const updated = updateEncounter(encounterId, (encounter) => ({ ...encounter, actions: encounter.actions.map((action) => action.id === actionId ? { ...action, status: "completed", completedAt, snoozedUntil: undefined, statusUpdatedAt: completedAt } : action) }));
     const action = updated?.actions.find((item) => item.id === actionId);
     if (action) void patchAction(encounterId, action);
     recordCompletedAction();
@@ -193,13 +203,43 @@ export default function FollowupsPage() {
     const updated = updateEncounter(encounterId, (encounter) => ({
       ...encounter,
       actions: encounter.actions.map((action) => action.id === actionId
-        ? { ...action, status: "open", completedAt: undefined }
+        ? { ...action, status: "open", completedAt: undefined, dismissedAt: undefined, cancelledAt: undefined, snoozedUntil: undefined, statusUpdatedAt: new Date().toISOString() }
         : action),
     }));
     const action = updated?.actions.find((item) => item.id === actionId);
     if (action) void patchAction(encounterId, action);
     setEncounters(readEncounters());
     setMessage("Follow-up moved back to Current.");
+  }
+
+  function snoozeAction(encounterId: string, actionId: string) {
+    const snoozeTarget = new Date();
+    snoozeTarget.setDate(snoozeTarget.getDate() + 1);
+    const snoozedUntil = snoozeTarget.toISOString();
+    const updated = updateEncounter(encounterId, (encounter) => ({
+      ...encounter,
+      actions: encounter.actions.map((action) => action.id === actionId
+        ? { ...action, status: "snoozed", snoozedUntil, statusUpdatedAt: new Date().toISOString() }
+        : action),
+    }));
+    const action = updated?.actions.find((item) => item.id === actionId);
+    if (action) void patchAction(encounterId, action);
+    setEncounters(readEncounters());
+    setMessage("Follow-up snoozed until tomorrow.");
+  }
+
+  function dismissAction(encounterId: string, actionId: string) {
+    const dismissedAt = new Date().toISOString();
+    const updated = updateEncounter(encounterId, (encounter) => ({
+      ...encounter,
+      actions: encounter.actions.map((action) => action.id === actionId
+        ? { ...action, status: "dismissed", dismissedAt, statusUpdatedAt: dismissedAt }
+        : action),
+    }));
+    const action = updated?.actions.find((item) => item.id === actionId);
+    if (action) void patchAction(encounterId, action);
+    setEncounters(readEncounters());
+    setMessage("Follow-up dismissed. You can reopen it from Past.");
   }
 
   function saveAction(encounterId: string, actionId: string, nextAction: Encounter["actions"][number]) {
@@ -299,7 +339,7 @@ export default function FollowupsPage() {
                         encounter.contactId ? findContactById(encounter.contactId) : null,
                         action,
                       );
-                      const isPast = action.status === "completed";
+                      const isPast = isFollowUpTerminal(action.status);
                       return (
                         <Fragment key={action.id}>
                           <tr className="followup-table-row">
@@ -321,7 +361,9 @@ export default function FollowupsPage() {
                                 ) : (
                                   <>
                                     <ActionDoButton action={action} context={context} showSecondary />
+                                    <Button size="small" variant="secondary" onClick={() => snoozeAction(encounter.id, action.id)}><ClockIcon size={16} weight="bold" />Snooze</Button>
                                     <Button size="small" variant="secondary" onClick={() => completeAction(encounter.id, action.id)}><CheckCircleIcon size={16} weight="bold" />Done</Button>
+                                    <Button size="small" variant="secondary" onClick={() => dismissAction(encounter.id, action.id)}>Dismiss</Button>
                                     <LinkButton size="small" variant="secondary" href={`/app/encounters/${encounter.id}`}>View</LinkButton>
                                   </>
                                 )}

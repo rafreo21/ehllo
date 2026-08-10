@@ -30,6 +30,7 @@ import {
 import { formatMeetingEmailDate, recordingShareMailtoHref } from "../../../../lib/recording-email";
 import { renameSpeakerAssignees, renameTranscriptSpeakers, transcriptSpeakerLabels } from "../../../../lib/speaker-labels";
 import { displayFollowUpTitle } from "../../../../lib/follow-up-channels";
+import { applyFollowUpTransition, canTransitionFollowUp } from "../../../../lib/follow-up-lifecycle";
 
 type UploadStatus = "idle" | "uploading" | "uploaded" | "failed";
 
@@ -195,7 +196,9 @@ export default function EncounterReviewPage() {
         assigneeEmail: participant?.email,
         dueAt: newAction.dueAt,
         channel: newAction.channel,
-        status: "open",
+        // A follow-up added before review is confirmed is still just a
+        // proposal, same as the ones suggested from the transcript.
+        status: current.status === "draft" ? "proposed" : "open",
       }],
       };
     });
@@ -403,18 +406,22 @@ export default function EncounterReviewPage() {
                   encounter.contactId ? findContactById(encounter.contactId) : null,
                   action,
                 );
+                const toggleTarget = action.status === "completed" ? "open" : "completed";
+                const canToggle = canTransitionFollowUp(action.status, toggleTarget);
                 return <article key={action.id}>
                   <button
                     className={action.status === "completed" ? "action-check complete" : "action-check"}
-                    onClick={() => patch((current) => ({
-                      ...current,
-                      actions: (current.actions ?? []).map((item) => item.id === action.id
-                        ? item.status === "completed"
-                          ? { ...item, status: "open", completedAt: undefined }
-                          : { ...item, status: "completed", completedAt: new Date().toISOString() }
-                        : item),
-                    }))}
-                    aria-label={action.status === "completed" ? "Mark open" : "Mark complete"}
+                    disabled={!canToggle}
+                    onClick={() => {
+                      if (!canToggle) return;
+                      patch((current) => ({
+                        ...current,
+                        actions: (current.actions ?? []).map((item) => item.id === action.id
+                          ? applyFollowUpTransition(item, toggleTarget)
+                          : item),
+                      }));
+                    }}
+                    aria-label={action.status === "completed" ? "Mark open" : canToggle ? "Mark complete" : "Confirm review to activate this follow-up first"}
                   ><CheckCircleIcon size={22} weight={action.status === "completed" ? "fill" : "regular"} /></button>
                   <div className="action-copy"><strong>{action.title}</strong><small>{actionOwnerLabel(action)}{action.dueAt ? ` · due ${action.dueAt}` : ""} · {channelLabel(action.channel)}</small></div>
                   {editingActionId === action.id ? (
