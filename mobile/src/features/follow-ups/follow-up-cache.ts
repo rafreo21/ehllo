@@ -2,7 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { FollowUpItem } from '@/features/follow-ups/follow-up-api';
 
-export const FOLLOW_UPS_CACHE_KEY = 'aftermeet.mobile.follow-ups-cache.v1';
+// v2: FollowUpItem gained eventId/eventTitle — bump so caches written before
+// that schema change don't silently serve stale rows missing the fields.
+export const FOLLOW_UPS_CACHE_KEY = 'aftermeet.mobile.follow-ups-cache.v2';
 export const FOLLOW_UPS_QUEUE_KEY = 'aftermeet.mobile.follow-ups-queue.v1';
 
 export type FollowUpQueueAction = 'complete' | 'reopen' | 'snooze' | 'dismiss';

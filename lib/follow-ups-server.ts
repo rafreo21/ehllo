@@ -29,6 +29,9 @@ export type FollowUpItem = {
   encounterTitle: string;
   startedAt: string;
   contactMethods?: FollowUpContactMethod[];
+  eventId?: string;
+  /** The linked event's title, if any — populated by the API route (see app/api/follow-ups/route.ts), not here. */
+  eventTitle?: string;
 };
 
 export type FollowUpContactMethod = {
@@ -85,6 +88,7 @@ export function flattenOpenFollowUps(encounters: Encounter[]): FollowUpItem[] {
         exchangeId: encounter.exchangeId,
         encounterTitle: encounter.title,
         startedAt: encounter.startedAt,
+        eventId: encounter.eventId,
       });
     }
   }

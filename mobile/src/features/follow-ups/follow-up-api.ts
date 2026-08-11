@@ -28,6 +28,9 @@ export type FollowUpItem = {
   encounterTitle: string;
   startedAt: string;
   contactMethods: ContactMethod[];
+  eventId?: string;
+  /** The linked event's title, if any — event is an activator: absent means nothing about the follow-up's copy changes. */
+  eventTitle?: string;
 };
 
 const followUpMethodTypes = new Set<ContactMethod['type']>([
@@ -95,6 +98,8 @@ export async function fetchFollowUps(
     encounterTitle: String(row.encounterTitle ?? ''),
     startedAt: String(row.startedAt ?? ''),
     contactMethods: mapContactMethods(row.contactMethods),
+    eventId: typeof row.eventId === 'string' ? row.eventId : undefined,
+    eventTitle: typeof row.eventTitle === 'string' ? row.eventTitle : undefined,
   })));
 }
 

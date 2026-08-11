@@ -30,6 +30,8 @@ export type ActionContactContext = {
   userName?: string;
   audienceParticipants?: FollowUpParticipant[];
   audienceMode?: 'group' | 'individual';
+  /** The linked event's title, if any — event is an activator: when unset, the email opener is unchanged. */
+  eventTitle?: string;
 };
 
 export type ResolvedAction = {
@@ -251,18 +253,24 @@ export function channelLabel(channel: EncounterAction['channel']) {
   }
 }
 
-export function buildFollowUpEmailBody(personName: string) {
+/** eventTitle is an activator: omit it and the opener reads exactly as before. */
+function meetingOpener(eventTitle?: string) {
+  const trimmed = eventTitle?.trim();
+  return trimmed ? `It was great meeting you at ${trimmed}.` : 'It was great meeting you.';
+}
+
+export function buildFollowUpEmailBody(personName: string, eventTitle?: string) {
   const greeting = personName.trim()
     ? `Hey ${personName.split(' ')[0]},`
     : 'Hey there,';
-  return `${greeting}\n\nIt was great meeting you. I'd love to stay in touch.\n\nThanks!`;
+  return `${greeting}\n\n${meetingOpener(eventTitle)} I'd love to stay in touch.\n\nThanks!`;
 }
 
-export function buildFollowUpMailto(email: string, personName: string) {
-  return buildFollowUpMailtoMany([email], [personName]);
+export function buildFollowUpMailto(email: string, personName: string, eventTitle?: string) {
+  return buildFollowUpMailtoMany([email], [personName], eventTitle);
 }
 
-export function buildFollowUpMailtoMany(emails: string[], personNames: string[]) {
+export function buildFollowUpMailtoMany(emails: string[], personNames: string[], eventTitle?: string) {
   const addresses = emails
     .map((email) => email.trim())
     .filter((email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
@@ -274,7 +282,7 @@ export function buildFollowUpMailtoMany(emails: string[], personNames: string[])
     : names[0]
       ? `Hey ${names[0].split(' ')[0]},`
       : 'Hey there,';
-  const body = `${greeting}\n\nIt was great meeting you. I'd love to stay in touch.\n\nThanks!`;
+  const body = `${greeting}\n\n${meetingOpener(eventTitle)} I'd love to stay in touch.\n\nThanks!`;
   const query = buildMailtoQuery({
     subject: names.length > 1 ? 'Great meeting everyone' : 'Great meeting you',
     body,
@@ -371,9 +379,9 @@ export function resolveFollowUpAction(
       .map((entry) => entry.email.trim())
       .filter((email) => email.includes('@'));
     const mailto = cardEmails.length > 1
-      ? buildFollowUpMailtoMany(cardEmails, audience.map((entry) => entry.name))
+      ? buildFollowUpMailtoMany(cardEmails, audience.map((entry) => entry.name), context.eventTitle)
       : cardEmail
-        ? buildFollowUpMailto(cardEmail, primaryParticipantLabel(audience))
+        ? buildFollowUpMailto(cardEmail, primaryParticipantLabel(audience), context.eventTitle)
         : null;
     if (mailto) {
       return { href: mailto, label: 'Email', external: true };
