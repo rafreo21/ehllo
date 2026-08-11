@@ -16,6 +16,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { EventCard } from '@/components/event-card';
 import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OfflineBanner } from '@/components/offline-banner';
+import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { ProgressRing } from '@/components/progress-ring';
 import { QuickActionsFab } from '@/components/quick-actions-fab';
 import { Skeleton, SkeletonCircle, SkeletonLine } from '@/components/skeleton';
@@ -74,6 +75,7 @@ export default function HomeScreen() {
   const [goingEvents, setGoingEvents] = useState<EventItem[]>([]);
   const [eventCandidates, setEventCandidates] = useState<EventItem[]>([]);
   const [eventCardBusy, setEventCardBusy] = useState(false);
+  const [eventActionError, setEventActionError] = useState('');
   const [loading, setLoading] = useState(true);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -177,7 +179,9 @@ export default function HomeScreen() {
       setEventCandidates((current) => current.filter((item) => item.id !== event.id));
       if (status === 'going') setGoingEvents((current) => [...current, event]);
     } catch {
-      // The event stays in the candidate list; the user can retry from Home or My Events.
+      // The event stays in the candidate list, but the user needs to know the
+      // tap didn't actually do anything — this used to fail silently.
+      setEventActionError('Could not update this event. Check your connection and try again.');
     } finally {
       setEventCardBusy(false);
     }
@@ -191,7 +195,9 @@ export default function HomeScreen() {
       await markEventLeft(session.access_token, event.id);
       setGoingEvents((current) => current.map((item) => (item.id === event.id ? { ...item, leftAt } : item)));
     } catch {
-      // The card stays showing "You're here"; the user can retry from Home.
+      // The card stays showing "You're here", but the user needs to know the
+      // tap didn't actually do anything — this used to fail silently.
+      setEventActionError('Could not update this event. Check your connection and try again.');
     } finally {
       setEventCardBusy(false);
     }
@@ -448,6 +454,11 @@ export default function HomeScreen() {
       </ScrollView>
 
       <QuickActionsFab />
+      <OutcomeErrorSheet
+        visible={Boolean(eventActionError)}
+        message={eventActionError}
+        onClose={() => setEventActionError('')}
+      />
     </View>
   );
 }

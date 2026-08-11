@@ -39,7 +39,10 @@ export function EventCard({
   const when = formatEventWhen(event.startsAt);
   const showCandidateActions = variant === 'candidate';
   const showLeaveAction = variant === 'current' && Boolean(onLeave);
-  const showCaret = !showCandidateActions && !showLeaveAction && variant !== 'past' && Boolean(onPress);
+  // Independent of the action row below — this is Home's "tap the card to
+  // see it in My Events" affordance. Events itself never passes onPress, so
+  // this never shows there even when the same variant has action buttons.
+  const showCaret = variant !== 'past' && Boolean(onPress);
 
   return (
     <Pressable
