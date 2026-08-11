@@ -132,7 +132,7 @@ export default function HomeScreen() {
     // — a user with no calendar connected (the common case) has candidates
     // fail by design, and that must stay silent, not read as an outage.
     void fetchMyEvents(token).then(setGoingEvents).catch(() => undefined);
-    void fetchEventCandidates(token).then(setEventCandidates).catch(() => setEventCandidates([]));
+    void fetchEventCandidates(token).then((result) => setEventCandidates(result.candidates)).catch(() => setEventCandidates([]));
   }, [session]);
 
   useFocusEffect(

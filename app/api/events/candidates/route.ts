@@ -7,13 +7,18 @@ export async function GET(request: Request) {
   const user = await resolveApiUser(request);
   if (!user) return NextResponse.json({ error: "Your session has expired." }, { status: 401 });
   if (user.id === "local-development-preview") {
-    return NextResponse.json({ candidates: [], preview: true }, { headers: { "Cache-Control": "private, no-store" } });
+    return NextResponse.json({
+      candidates: [],
+      preview: true,
+      providerStatus: { google: "not_connected", microsoft: "not_connected" },
+      syncedAt: new Date().toISOString(),
+    }, { headers: { "Cache-Control": "private, no-store" } });
   }
 
   const supabase = await createApiSupabaseClient(request);
-  const synced = await syncCalendarCandidates(supabase, user);
+  const { candidates: synced, providerStatus, syncedAt } = await syncCalendarCandidates(supabase, user);
   if (!synced.length) {
-    return NextResponse.json({ candidates: [] }, { headers: { "Cache-Control": "private, no-store" } });
+    return NextResponse.json({ candidates: [], providerStatus, syncedAt }, { headers: { "Cache-Control": "private, no-store" } });
   }
 
   // syncCalendarCandidates upserts every structurally-worthy calendar entry
@@ -28,5 +33,5 @@ export async function GET(request: Request) {
   const decidedIds = new Set((decided ?? []).map((row) => row.event_id as string));
   const candidates = synced.filter((event) => !decidedIds.has(event.id));
 
-  return NextResponse.json({ candidates }, { headers: { "Cache-Control": "private, no-store" } });
+  return NextResponse.json({ candidates, providerStatus, syncedAt }, { headers: { "Cache-Control": "private, no-store" } });
 }

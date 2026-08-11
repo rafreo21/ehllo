@@ -2,6 +2,9 @@ import "server-only";
 
 import { buildPlainEmailRaw } from "./email";
 
+/** A 401/403 from the provider means the access token itself was rejected — distinct from a 5xx/network blip, since the former means the connection needs reconnecting, not just retrying. */
+export class CalendarProviderAuthError extends Error {}
+
 export async function sendGoogleEmail(accessToken: string, input: { to: string; subject: string; body: string }) {
   const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
     method: "POST",
@@ -137,6 +140,9 @@ export async function listGoogleCalendarEvents(
     `https://www.googleapis.com/calendar/v3/calendars/primary/events?${params.toString()}`,
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
+  if (response.status === 401 || response.status === 403) {
+    throw new CalendarProviderAuthError("Google Calendar rejected this token.");
+  }
   if (!response.ok) throw new Error("Google Calendar rejected this request.");
   const payload = await response.json() as GoogleCalendarListResponse;
 
@@ -196,6 +202,9 @@ export async function listMicrosoftCalendarEvents(
       },
     },
   );
+  if (response.status === 401 || response.status === 403) {
+    throw new CalendarProviderAuthError("Outlook Calendar rejected this token.");
+  }
   if (!response.ok) throw new Error("Outlook Calendar rejected this request.");
   const payload = await response.json() as MicrosoftCalendarViewResponse;
 

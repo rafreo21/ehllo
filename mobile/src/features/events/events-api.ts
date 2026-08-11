@@ -3,6 +3,21 @@ import { mobileFetch, readMobileApiJson } from '@/lib/mobile-api';
 export type EventSource = 'manual' | 'link' | 'calendar';
 export type EventAttendanceStatus = 'going' | 'not_going';
 
+/**
+ * "ok" — synced fine. "not_connected" — provider was never linked, a normal
+ * state. "needs_reconnect" — a connection exists but its token is dead
+ * (revoked grant, provider rejected the refresh) and nothing will sync
+ * again until the user reconnects. "error" — a transient failure, worth
+ * retrying, not worth alarming the user about.
+ */
+export type CalendarProviderStatus = 'ok' | 'not_connected' | 'needs_reconnect' | 'error';
+
+export type EventCandidatesResult = {
+  candidates: EventItem[];
+  providerStatus: { google: CalendarProviderStatus; microsoft: CalendarProviderStatus };
+  syncedAt: string;
+};
+
 export type EventItem = {
   id: string;
   title: string;
@@ -40,14 +55,23 @@ export async function fetchMyEvents(accessToken: string): Promise<EventItem[]> {
   return (payload.events ?? []).map(mapEvent);
 }
 
-export async function fetchEventCandidates(accessToken: string): Promise<EventItem[]> {
+export async function fetchEventCandidates(accessToken: string): Promise<EventCandidatesResult> {
   const response = await mobileFetch('/api/events/candidates', accessToken);
-  const payload = await readMobileApiJson<{ candidates?: Array<Record<string, unknown>>; error?: string }>(
-    response,
-    'Could not read suggested events from your calendar.',
-  );
+  const payload = await readMobileApiJson<{
+    candidates?: Array<Record<string, unknown>>;
+    providerStatus?: { google?: CalendarProviderStatus; microsoft?: CalendarProviderStatus };
+    syncedAt?: string;
+    error?: string;
+  }>(response, 'Could not read suggested events from your calendar.');
   if (!response.ok) throw new Error(payload.error || 'Could not load suggested events.');
-  return (payload.candidates ?? []).map(mapEvent);
+  return {
+    candidates: (payload.candidates ?? []).map(mapEvent),
+    providerStatus: {
+      google: payload.providerStatus?.google ?? 'not_connected',
+      microsoft: payload.providerStatus?.microsoft ?? 'not_connected',
+    },
+    syncedAt: payload.syncedAt ?? new Date().toISOString(),
+  };
 }
 
 /** Manually-added or pasted-link events default to "going" server-side — no separate attendance call needed after this. */

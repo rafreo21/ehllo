@@ -1,12 +1,13 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import * as Clipboard from 'expo-clipboard';
-import { useFocusEffect } from 'expo-router';
-import { ArrowsClockwise, CalendarBlank, CaretRight, LinkSimple, NotePencil, Plus } from 'phosphor-react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { ArrowsClockwise, CalendarBlank, CaretRight, LinkSimple, NotePencil, Plus, WarningCircle } from 'phosphor-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { EventCard } from '@/components/event-card';
+import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { SettingsSkeleton } from '@/components/skeleton';
@@ -21,11 +22,24 @@ import {
   fetchMyEvents,
   markEventLeft,
   setEventAttendance,
+  type CalendarProviderStatus,
   type EventItem,
 } from '@/features/events/events-api';
 import { fetchConnectedAccounts } from '@/features/integrations/integrations-api';
 import { readEnv } from '@/lib/env';
 import { colors, radius, spacing } from '@/theme/tokens';
+
+function formatSyncedAgo(syncedAt: string, now: Date): string {
+  const synced = new Date(syncedAt);
+  if (Number.isNaN(synced.getTime())) return '';
+  const seconds = Math.max(0, Math.round((now.getTime() - synced.getTime()) / 1000));
+  if (seconds < 10) return 'Synced just now';
+  if (seconds < 60) return `Synced ${seconds}s ago`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `Synced ${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  return `Synced ${hours}h ago`;
+}
 
 function looksLikeUrl(value: string): boolean {
   return /^https?:\/\/\S+\.\S+/i.test(value.trim());
@@ -55,6 +69,11 @@ export default function EventsScreen() {
   const [busyId, setBusyId] = useState('');
   const [addOpen, setAddOpen] = useState(false);
   const [calendarConnected, setCalendarConnected] = useState(false);
+  const [providerStatus, setProviderStatus] = useState<{ google: CalendarProviderStatus; microsoft: CalendarProviderStatus }>({
+    google: 'not_connected',
+    microsoft: 'not_connected',
+  });
+  const [syncedAt, setSyncedAt] = useState('');
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
 
   const refresh = useCallback(async (options?: { manual?: boolean }) => {
@@ -64,23 +83,29 @@ export default function EventsScreen() {
     }
     setRefreshing(true);
     if (options?.manual) setError('');
-    // fetchEventCandidates swallows its own errors below so a flaky Google
-    // Calendar call never blocks the rest of the screen — but for a manual
-    // refresh the user explicitly asked to be told, so track it separately
-    // instead of letting it disappear silently like it used to.
+    // fetchEventCandidates swallows its own per-provider errors below so a
+    // flaky Google Calendar call never blocks the rest of the screen — but
+    // for a manual refresh the user explicitly asked to be told, so track it
+    // separately instead of letting it disappear silently like it used to.
     let candidateSyncFailed = false;
     try {
-      const [mine, suggested, accounts] = await Promise.all([
+      const [mine, candidatesResult, accounts] = await Promise.all([
         fetchMyEvents(accessToken),
         fetchEventCandidates(accessToken).catch(() => {
           candidateSyncFailed = true;
-          return [] as EventItem[];
+          return null;
         }),
         fetchConnectedAccounts(accessToken).catch(() => null),
       ]);
       setEvents(mine);
-      setCandidates(suggested);
       if (accounts) setCalendarConnected(accounts.google.capabilities.calendar || accounts.microsoft.capabilities.calendar);
+
+      const suggested = candidatesResult?.candidates ?? [];
+      if (candidatesResult) {
+        setCandidates(candidatesResult.candidates);
+        setProviderStatus(candidatesResult.providerStatus);
+        setSyncedAt(candidatesResult.syncedAt);
+      }
 
       if (options?.manual) {
         if (candidateSyncFailed) {
@@ -113,6 +138,19 @@ export default function EventsScreen() {
       void refresh();
     }, [refresh]),
   );
+
+  // Ticks the "Synced Xm ago" caption forward without needing a new fetch.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const needsReconnectProvider = providerStatus.google === 'needs_reconnect'
+    ? 'Google'
+    : providerStatus.microsoft === 'needs_reconnect'
+      ? 'Microsoft'
+      : null;
 
   const { upcoming, past } = bucketEvents(events);
   const combinedUpcoming = [
@@ -195,6 +233,15 @@ export default function EventsScreen() {
 
       {!loading && accessToken ? (
         <View style={styles.section}>
+          {needsReconnectProvider ? (
+            <MiniPromptCard
+              icon={<WarningCircle size={18} color={colors.danger} weight="bold" />}
+              title={`Reconnect ${needsReconnectProvider} Calendar`}
+              copy="Your calendar connection stopped working, so nothing new can sync until you reconnect."
+              onPress={() => router.push('/settings/connected-accounts')}
+            />
+          ) : null}
+
           <View style={styles.tabRow}>
             <Pressable
               accessibilityRole="button"
@@ -211,6 +258,8 @@ export default function EventsScreen() {
               <Text style={[styles.tabText, activeTab === 'past' && styles.tabTextActive]}>Past</Text>
             </Pressable>
           </View>
+
+          {syncedAt ? <Text style={styles.syncedCaption}>{formatSyncedAgo(syncedAt, now)}</Text> : null}
 
           {activeTab === 'upcoming' ? (
             combinedUpcoming.length ? combinedUpcoming.map(({ event, candidate }) => (
@@ -609,6 +658,7 @@ const styles = StyleSheet.create({
   panelTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
   panelCopy: { color: colors.muted, fontSize: 13, lineHeight: 19 },
   section: { gap: spacing.x2, marginTop: spacing.x4 },
+  syncedCaption: { color: colors.muted, fontSize: 11, marginTop: -spacing.x1, marginBottom: spacing.x1 },
   tabRow: {
     flexDirection: 'row',
     gap: spacing.x1,

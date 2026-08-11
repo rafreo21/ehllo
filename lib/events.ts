@@ -113,11 +113,28 @@ export function resolveCurrentEvent(goingEvents: GoingEventWindow[], now: Date =
 }
 
 /**
- * Identifies a calendar entry for the dismiss-and-suppress list: once a
- * user says "not going" to a candidate, this key (organizer + title) is
- * remembered so the same recurring-in-spirit entry (e.g. a standing
- * "Dentist" block with no formal recurrence rule) doesn't get re-suggested.
+ * Buckets a timestamp to the nearest 30 minutes of its time-of-day (UTC),
+ * ignoring the date entirely — a standing weekly block repeats at the same
+ * clock time even though its calendar date moves every week.
  */
-export function candidateSuppressionKey(organizerEmail: string, title: string): string {
-  return `${organizerEmail.trim().toLowerCase()}::${title.trim().toLowerCase()}`;
+function suppressionTimeSlot(startsAt: string): string {
+  const date = new Date(startsAt);
+  if (Number.isNaN(date.getTime())) return "unknown";
+  const rounded = Math.round(date.getUTCMinutes() / 30) * 30;
+  const hour = (date.getUTCHours() + (rounded === 60 ? 1 : 0)) % 24;
+  const minute = rounded === 60 ? 0 : rounded;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+/**
+ * Identifies a calendar entry for the dismiss-and-suppress list: once a
+ * user says "not going" to a candidate, this key (organizer + title + time
+ * of day) is remembered so the same recurring-in-spirit entry (e.g. a
+ * standing "Dentist" block with no formal recurrence rule) doesn't get
+ * re-suggested. Time-of-day is part of the key — without it, declining one
+ * meeting permanently hides every future meeting anyone ever reuses that
+ * exact title for, even an unrelated one at a completely different time.
+ */
+export function candidateSuppressionKey(organizerEmail: string, title: string, startsAt: string): string {
+  return `${organizerEmail.trim().toLowerCase()}::${title.trim().toLowerCase()}::${suppressionTimeSlot(startsAt)}`;
 }

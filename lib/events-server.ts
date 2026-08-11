@@ -3,8 +3,23 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { AppUser } from "./auth/context";
 import { candidateSuppressionKey, isEventCandidateWorthy, resolveCurrentEvent, type EventSource } from "./events";
-import { getConnectedAccountAccessToken } from "./integrations/connected-accounts";
-import { listGoogleCalendarEvents, listMicrosoftCalendarEvents, type RawCalendarEvent } from "./integrations/providers";
+import { getConnectedAccountAccessTokenStatus } from "./integrations/connected-accounts";
+import {
+  CalendarProviderAuthError,
+  listGoogleCalendarEvents,
+  listMicrosoftCalendarEvents,
+  type RawCalendarEvent,
+} from "./integrations/providers";
+
+/**
+ * "ok" — synced fine. "not_connected" — user never linked this provider (or
+ * unlinked it), a normal state, not an error. "needs_reconnect" — a
+ * connection exists but its token is dead (revoked grant, refresh
+ * rejected, or the provider itself returned 401/403) and nothing will
+ * sync again until the user reconnects. "error" — a transient failure
+ * (network, 5xx); worth retrying, not worth alarming the user about.
+ */
+export type CalendarProviderStatus = "ok" | "not_connected" | "needs_reconnect" | "error";
 
 export type EventRow = {
   id: string;
@@ -57,16 +72,41 @@ const CANDIDATE_WINDOW_DAYS_AHEAD = 14;
 async function fetchSuppressedCandidateKeys(supabase: SupabaseClient, userId: string): Promise<Set<string>> {
   const { data } = await supabase
     .from("event_attendance")
-    .select("events!inner(title, organizer_email, source)")
+    .select("events!inner(title, organizer_email, source, starts_at)")
     .eq("user_id", userId)
     .eq("status", "not_going");
 
   const keys = new Set<string>();
-  for (const row of (data ?? []) as unknown as Array<{ events: { title: string; organizer_email: string; source: string } | null }>) {
+  for (const row of (data ?? []) as unknown as Array<{ events: { title: string; organizer_email: string; source: string; starts_at: string } | null }>) {
     if (!row.events || row.events.source !== "calendar") continue;
-    keys.add(candidateSuppressionKey(row.events.organizer_email, row.events.title));
+    keys.add(candidateSuppressionKey(row.events.organizer_email, row.events.title, row.events.starts_at));
   }
   return keys;
+}
+
+export type SyncCalendarCandidatesResult = {
+  candidates: EventRecord[];
+  providerStatus: { google: CalendarProviderStatus; microsoft: CalendarProviderStatus };
+  syncedAt: string;
+};
+
+async function fetchProviderEvents(
+  provider: "google" | "microsoft",
+  user: AppUser,
+  supabase: SupabaseClient,
+  window: { timeMinIso: string; timeMaxIso: string },
+): Promise<{ events: RawCalendarEvent[]; status: CalendarProviderStatus }> {
+  const tokenResult = await getConnectedAccountAccessTokenStatus(user, provider, supabase);
+  if (tokenResult.status !== "ok") return { events: [], status: tokenResult.status };
+
+  try {
+    const events = provider === "google"
+      ? await listGoogleCalendarEvents(tokenResult.token, window)
+      : await listMicrosoftCalendarEvents(tokenResult.token, window);
+    return { events, status: "ok" };
+  } catch (caught) {
+    return { events: [], status: caught instanceof CalendarProviderAuthError ? "needs_reconnect" : "error" };
+  }
 }
 
 /**
@@ -75,34 +115,27 @@ async function fetchSuppressedCandidateKeys(supabase: SupabaseClient, userId: st
  * (workspace_id, external_id) makes repeated calls idempotent instead of
  * creating duplicate rows per fetch — see the migration's unique index.
  * Best-effort per provider: one provider failing (expired grant, outage)
- * does not block candidates from the other.
+ * does not block candidates from the other, but each provider's own status
+ * is still reported back so the UI can tell "nothing new" apart from
+ * "this is actually broken."
  */
 export async function syncCalendarCandidates(
   supabase: SupabaseClient,
   user: AppUser,
-): Promise<EventRecord[]> {
+): Promise<SyncCalendarCandidatesResult> {
   const now = new Date();
   const timeMinIso = now.toISOString();
   const timeMaxIso = new Date(now.getTime() + CANDIDATE_WINDOW_DAYS_AHEAD * 24 * 60 * 60 * 1000).toISOString();
+  const syncedAt = now.toISOString();
+  const window = { timeMinIso, timeMaxIso };
 
-  const raw: RawCalendarEvent[] = [];
-  const googleToken = await getConnectedAccountAccessToken(user, "google", supabase).catch(() => null);
-  if (googleToken) {
-    try {
-      raw.push(...await listGoogleCalendarEvents(googleToken, { timeMinIso, timeMaxIso }));
-    } catch {
-      // Best-effort — a provider outage should not block the other provider.
-    }
-  }
-  const microsoftToken = await getConnectedAccountAccessToken(user, "microsoft", supabase).catch(() => null);
-  if (microsoftToken) {
-    try {
-      raw.push(...await listMicrosoftCalendarEvents(microsoftToken, { timeMinIso, timeMaxIso }));
-    } catch {
-      // Best-effort.
-    }
-  }
-  if (!raw.length) return [];
+  const [google, microsoft] = await Promise.all([
+    fetchProviderEvents("google", user, supabase, window),
+    fetchProviderEvents("microsoft", user, supabase, window),
+  ]);
+  const providerStatus = { google: google.status, microsoft: microsoft.status };
+  const raw = [...google.events, ...microsoft.events];
+  if (!raw.length) return { candidates: [], providerStatus, syncedAt };
 
   const worthy = raw.filter((item) => isEventCandidateWorthy({
     startsAt: item.startsAt,
@@ -112,11 +145,11 @@ export async function syncCalendarCandidates(
     userEmail: user.email,
     isRecurring: item.isRecurring,
   }));
-  if (!worthy.length) return [];
+  if (!worthy.length) return { candidates: [], providerStatus, syncedAt };
 
   const suppressed = await fetchSuppressedCandidateKeys(supabase, user.id);
-  const surviving = worthy.filter((item) => !suppressed.has(candidateSuppressionKey(item.organizerEmail, item.title)));
-  if (!surviving.length) return [];
+  const surviving = worthy.filter((item) => !suppressed.has(candidateSuppressionKey(item.organizerEmail, item.title, item.startsAt)));
+  if (!surviving.length) return { candidates: [], providerStatus, syncedAt };
 
   const { data, error } = await supabase
     .from("events")
@@ -133,8 +166,8 @@ export async function syncCalendarCandidates(
     })), { onConflict: "workspace_id,external_id" })
     .select("*");
 
-  if (error || !data) return [];
-  return (data as EventRow[]).map(eventFromRow);
+  if (error || !data) return { candidates: [], providerStatus, syncedAt };
+  return { candidates: (data as EventRow[]).map(eventFromRow), providerStatus, syncedAt };
 }
 
 export type GoingEventWindow = { id: string; startsAt: string; endsAt: string | null; leftAt: string | null };

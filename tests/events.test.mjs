@@ -154,15 +154,29 @@ describe("resolveCurrentEvent", () => {
 describe("candidateSuppressionKey", () => {
   it("normalizes case and whitespace so the same candidate always keys the same", () => {
     assert.equal(
-      candidateSuppressionKey(" Organizer@Example.com ", "  Weekly Sync "),
-      candidateSuppressionKey("organizer@example.com", "weekly sync"),
+      candidateSuppressionKey(" Organizer@Example.com ", "  Weekly Sync ", "2026-08-11T14:00:00Z"),
+      candidateSuppressionKey("organizer@example.com", "weekly sync", "2026-08-11T14:00:00Z"),
     );
   });
 
   it("differs for different organizers or titles", () => {
     assert.notEqual(
-      candidateSuppressionKey("a@example.com", "Weekly Sync"),
-      candidateSuppressionKey("b@example.com", "Weekly Sync"),
+      candidateSuppressionKey("a@example.com", "Weekly Sync", "2026-08-11T14:00:00Z"),
+      candidateSuppressionKey("b@example.com", "Weekly Sync", "2026-08-11T14:00:00Z"),
+    );
+  });
+
+  it("matches across different dates at the same time of day, catching a standing weekly block", () => {
+    assert.equal(
+      candidateSuppressionKey("a@example.com", "Dentist", "2026-08-11T14:00:00Z"),
+      candidateSuppressionKey("a@example.com", "Dentist", "2026-08-25T14:05:00Z"),
+    );
+  });
+
+  it("differs for the same organizer+title at an unrelated time of day, so declining one meeting doesn't blacklist every future meeting sharing its name", () => {
+    assert.notEqual(
+      candidateSuppressionKey("manager@example.com", "1:1", "2026-08-11T09:00:00Z"),
+      candidateSuppressionKey("manager@example.com", "1:1", "2026-08-11T16:00:00Z"),
     );
   });
 });
