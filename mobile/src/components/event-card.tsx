@@ -37,6 +37,9 @@ export function EventCard({
   onLeave?: (event: EventItem) => void;
 }) {
   const when = formatEventWhen(event.startsAt);
+  const showCandidateActions = variant === 'candidate';
+  const showLeaveAction = variant === 'current' && Boolean(onLeave);
+  const showCaret = !showCandidateActions && !showLeaveAction && variant !== 'past' && Boolean(onPress);
 
   return (
     <Pressable
@@ -44,57 +47,63 @@ export function EventCard({
       onPress={onPress}
       disabled={!onPress}
       style={({ pressed }) => [styles.card, onPress && pressed && styles.cardPressed]}>
-      <View style={styles.icon}>
-        <CalendarBlank size={20} color={colors.ink} weight="bold" />
-      </View>
-      <View style={styles.copy}>
-        <Text style={styles.title} numberOfLines={1}>{event.title}</Text>
-        <View style={styles.metaRow}>
-          <Text style={styles.meta} numberOfLines={1}>
-            {when}{event.location ? ` · ${event.location}` : ''}
-          </Text>
-          {variant === 'current' ? (
-            <View style={styles.statusTag}><Text style={styles.statusText}>You&apos;re here</Text></View>
-          ) : null}
-          {variant === 'going' ? (
-            <View style={styles.statusTag}><Text style={styles.statusText}>Going</Text></View>
-          ) : null}
+      <View style={styles.topRow}>
+        <View style={styles.icon}>
+          <CalendarBlank size={20} color={colors.ink} weight="bold" />
         </View>
-        {variant === 'candidate' ? <Text style={styles.suggested}>Suggested from your calendar</Text> : null}
-      </View>
-      {variant === 'candidate' ? (
-        busy ? (
-          <ActivityIndicator color={colors.ink} />
-        ) : (
-          <View style={styles.actions}>
-            <Pressable
-              accessibilityRole="button"
-              onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onGoing?.(event); }}
-              style={styles.actionPrimary}>
-              <Text style={styles.actionPrimaryText}>Going</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing?.(event); }}
-              style={styles.actionGhost}>
-              <Text style={styles.actionGhostText}>Not going</Text>
-            </Pressable>
+        <View style={styles.copy}>
+          <Text style={styles.title} numberOfLines={1}>{event.title}</Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.meta} numberOfLines={1}>
+              {when}{event.location ? ` · ${event.location}` : ''}
+            </Text>
+            {variant === 'current' ? (
+              <View style={styles.statusTag}><Text style={styles.statusText}>You&apos;re here</Text></View>
+            ) : null}
+            {variant === 'going' ? (
+              <View style={styles.statusTag}><Text style={styles.statusText}>Going</Text></View>
+            ) : null}
+            {showCandidateActions ? <Text style={styles.suggested} numberOfLines={1}>From calendar</Text> : null}
           </View>
-        )
-      ) : variant === 'current' && onLeave ? (
-        busy ? (
-          <ActivityIndicator color={colors.ink} />
-        ) : (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="I've left this event"
-            onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onLeave(event); }}
-            style={styles.actionGhost}>
-            <Text style={styles.actionGhostText}>I&apos;ve left</Text>
-          </Pressable>
-        )
-      ) : variant === 'past' ? null : onPress ? (
-        <CaretRight size={14} color={colors.muted} weight="bold" />
+        </View>
+        {showCaret ? <CaretRight size={14} color={colors.muted} weight="bold" /> : null}
+      </View>
+      {showCandidateActions ? (
+        <View style={styles.actionRow}>
+          {busy ? (
+            <ActivityIndicator color={colors.ink} />
+          ) : (
+            <View style={styles.actions}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onGoing?.(event); }}
+                style={styles.actionPrimary}>
+                <Text style={styles.actionPrimaryText}>Going</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing?.(event); }}
+                style={styles.actionGhost}>
+                <Text style={styles.actionGhostText}>Not going</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+      ) : null}
+      {showLeaveAction ? (
+        <View style={styles.actionRow}>
+          {busy ? (
+            <ActivityIndicator color={colors.ink} />
+          ) : (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="I've left this event"
+              onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onLeave?.(event); }}
+              style={styles.actionGhost}>
+              <Text style={styles.actionGhostText}>I&apos;ve left</Text>
+            </Pressable>
+          )}
+        </View>
       ) : null}
     </Pressable>
   );
@@ -102,9 +111,6 @@ export function EventCard({
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.x3,
     padding: spacing.x4,
     borderRadius: radius.large,
     backgroundColor: colors.surface,
@@ -112,6 +118,11 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   cardPressed: { opacity: 0.92 },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
+  // Indented to start under the title/meta text (icon width + topRow gap),
+  // not the icon — a full-width right-aligned row left an orphaned gap
+  // under the icon that read as a layout mistake.
+  actionRow: { flexDirection: 'row', marginTop: spacing.x3, marginLeft: 40 + spacing.x3 },
   icon: {
     width: 40,
     height: 40,
@@ -132,7 +143,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
   },
   statusText: { color: colors.ink, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
-  suggested: { color: colors.muted, fontSize: 11, marginTop: 2 },
+  suggested: { flexShrink: 0, color: colors.muted, fontSize: 12 },
   actions: { flexDirection: 'row', gap: spacing.x2 },
   actionPrimary: {
     paddingHorizontal: spacing.x3,
