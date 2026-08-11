@@ -46,18 +46,16 @@ const MIN_CANDIDATE_DURATION_MINUTES = 45;
 
 /**
  * Decides whether a calendar entry is worth surfacing as an event
- * candidate, using only structural signals (attendees, recurrence,
- * duration) rather than matching event-sounding words in the title — title
- * keyword matching has no reliable stopping point across languages/styles
- * and produces exactly the false positives ("are you attending your
- * dentist?") that make an inference feature feel dumb. Virtual and physical
- * locations are treated the same — an RSVP is an RSVP regardless of venue.
- *
- * Known limitation: a personal calendar block with no attendee list at all
- * (e.g. "ProductCon 2-6pm" added as a bare block, not an invite) will not
- * surface here even though it's exactly the case a user would want caught.
- * Precision is favored over recall for v1 — missing an event costs one tap
- * to add it manually; a wrong guess costs trust in the whole feature.
+ * candidate, using only structural signals (recurrence, duration) rather
+ * than matching event-sounding words in the title — title keyword matching
+ * has no reliable stopping point across languages/styles and produces
+ * exactly the false positives ("are you attending your dentist?") that make
+ * an inference feature feel dumb. Virtual and physical locations are
+ * treated the same — an RSVP is an RSVP regardless of venue, and a bare
+ * self-added block (no formal invite, no attendees) is just as often a real
+ * event as a calendar invite is — many physical events get added to a
+ * calendar by hand, not sent as an invite, so attendee presence isn't
+ * required.
  */
 export function isEventCandidateWorthy(input: CalendarCandidateInput): boolean {
   if (input.isRecurring) return false;
@@ -67,7 +65,7 @@ export function isEventCandidateWorthy(input: CalendarCandidateInput): boolean {
   if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return false;
   if ((end - start) / 60_000 < MIN_CANDIDATE_DURATION_MINUTES) return false;
 
-  return externalAttendeeCount(input.attendeeEmails, input.userEmail) >= 1;
+  return true;
 }
 
 export type GoingEventWindow = {

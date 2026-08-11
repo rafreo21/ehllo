@@ -70,14 +70,21 @@ describe("isEventCandidateWorthy", () => {
     }), false);
   });
 
-  it("rejects an event with no external attendees (internal-only)", () => {
+  it("accepts an event with only internal attendees", () => {
     assert.equal(isEventCandidateWorthy({
       ...baseCandidate,
       attendeeEmails: ["colleague@aftermeet.app"],
-    }), false);
+    }), true);
   });
 
-  it("accepts a video-call meeting with a single external attendee, same as a physical one", () => {
+  it("accepts a bare self-added block with no attendees at all — a real event can be added by hand, not just invited to", () => {
+    assert.equal(isEventCandidateWorthy({
+      ...baseCandidate,
+      attendeeEmails: [],
+    }), true);
+  });
+
+  it("accepts a video-call meeting the same as a physical one", () => {
     assert.equal(isEventCandidateWorthy({
       ...baseCandidate,
       location: "https://zoom.us/j/123456",

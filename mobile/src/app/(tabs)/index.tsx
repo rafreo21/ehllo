@@ -64,7 +64,7 @@ type ActiveWorkItem = {
 export default function HomeScreen() {
   const insets = useAppInsets();
   const tabBarHeight = useTabBarHeight();
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const { card, cards, loading: cardLoading } = useCard();
   const [followUps, setFollowUps] = useState<FollowUpItem[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -135,13 +135,19 @@ export default function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      // Wait for the auth session to finish restoring from storage before the
+      // first load — otherwise this can fire once with session still null,
+      // render the signed-out/empty state, and latch hasLoadedOnce true
+      // before the real session (and real data) ever arrives, permanently
+      // skipping the skeleton on the load that actually matters.
+      if (authLoading) return;
       void load().finally(() => {
         setLoading(false);
         setHasLoadedOnce(true);
       });
       const interval = setInterval(() => void load(), 30_000);
       return () => clearInterval(interval);
-    }, [load]),
+    }, [load, authLoading]),
   );
 
   const attention = useMemo(() => {
@@ -280,7 +286,7 @@ export default function HomeScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: fabClearance }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
-        {loading && !hasLoadedOnce ? (
+        {authLoading || (loading && !hasLoadedOnce) ? (
           <HomeSkeleton />
         ) : (
           <>
