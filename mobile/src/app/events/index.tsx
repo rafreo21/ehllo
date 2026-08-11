@@ -1,21 +1,23 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import * as Clipboard from 'expo-clipboard';
-import { CalendarBlank, CaretRight, CheckCircle, LinkSimple, NotePencil, Plus } from 'phosphor-react-native';
+import { CalendarBlank, CaretRight, LinkSimple, NotePencil, Plus } from 'phosphor-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { EventCard } from '@/components/event-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { SettingsSkeleton } from '@/components/skeleton';
 import { Button, HeaderActionButton, PageHeader, Panel, Screen } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { fetchAddressSuggestions, type AddressSuggestion } from '@/features/events/address-autocomplete';
-import { bucketEvents } from '@/features/events/event-home-state';
+import { bucketEvents, isEventCurrentlyHappening } from '@/features/events/event-home-state';
 import {
   createEvent,
   extractEventFromLink,
   fetchEventCandidates,
   fetchMyEvents,
+  markEventLeft,
   setEventAttendance,
   type EventItem,
 } from '@/features/events/events-api';
@@ -73,6 +75,10 @@ export default function EventsScreen() {
   }, [refresh]);
 
   const { upcoming, past } = bucketEvents(events);
+  const combinedUpcoming = [
+    ...upcoming.map((event) => ({ event, candidate: false })),
+    ...candidates.map((event) => ({ event, candidate: true })),
+  ].sort((a, b) => a.event.startsAt.localeCompare(b.event.startsAt));
 
   async function decide(event: EventItem, status: 'going' | 'not_going') {
     if (!accessToken) return;
@@ -82,6 +88,20 @@ export default function EventsScreen() {
       await setEventAttendance(accessToken, event.id, status);
       setCandidates((current) => current.filter((item) => item.id !== event.id));
       if (status === 'going') setEvents((current) => [...current, event]);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not update this event.');
+    } finally {
+      setBusyId('');
+    }
+  }
+
+  async function leaveEvent(event: EventItem) {
+    if (!accessToken) return;
+    setBusyId(event.id);
+    setError('');
+    try {
+      await markEventLeft(accessToken, event.id);
+      await refresh();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not update this event.');
     } finally {
@@ -126,28 +146,6 @@ export default function EventsScreen() {
         </Panel>
       ) : null}
 
-      {!loading && accessToken && candidates.length ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Suggested from your calendar</Text>
-          {candidates.map((event) => (
-            <Panel key={event.id} style={styles.card}>
-              <View style={styles.cardCopy}>
-                <Text style={styles.cardTitle} numberOfLines={1}>{event.title}</Text>
-                <Text style={styles.cardMeta} numberOfLines={1}>
-                  {formatEventWhen(event)}{event.location ? ` · ${event.location}` : ''}
-                </Text>
-              </View>
-              {busyId === event.id ? <ActivityIndicator color={colors.ink} /> : (
-                <View style={styles.cardActions}>
-                  <Button onPress={() => void decide(event, 'going')}>Going</Button>
-                  <Button variant="ghost" onPress={() => void decide(event, 'not_going')}>Not going</Button>
-                </View>
-              )}
-            </Panel>
-          ))}
-        </View>
-      ) : null}
-
       {!loading && accessToken ? (
         <View style={styles.section}>
           <View style={styles.tabRow}>
@@ -168,7 +166,17 @@ export default function EventsScreen() {
           </View>
 
           {activeTab === 'upcoming' ? (
-            upcoming.length ? upcoming.map((event) => <EventRow key={event.id} event={event} />) : (
+            combinedUpcoming.length ? combinedUpcoming.map(({ event, candidate }) => (
+              <EventCard
+                key={event.id}
+                event={event}
+                variant={candidate ? 'candidate' : isEventCurrentlyHappening(event) ? 'current' : 'going'}
+                busy={busyId === event.id}
+                onGoing={candidate ? (item) => void decide(item, 'going') : undefined}
+                onNotGoing={candidate ? (item) => void decide(item, 'not_going') : undefined}
+                onLeave={!candidate && isEventCurrentlyHappening(event) ? (item) => void leaveEvent(item) : undefined}
+              />
+            )) : (
               <Panel>
                 <Text style={styles.panelCopy}>
                   {calendarConnected
@@ -178,7 +186,7 @@ export default function EventsScreen() {
               </Panel>
             )
           ) : (
-            past.length ? past.map((event) => <EventRow key={event.id} event={event} isPast />) : (
+            past.length ? past.map((event) => <EventCard key={event.id} event={event} variant="past" />) : (
               <Panel>
                 <Text style={styles.panelCopy}>No past events yet.</Text>
               </Panel>
@@ -195,20 +203,6 @@ export default function EventsScreen() {
       />
       <OutcomeErrorSheet visible={Boolean(error)} message={error} onClose={() => setError('')} />
     </Screen>
-  );
-}
-
-function EventRow({ event, isPast }: { event: EventItem; isPast?: boolean }) {
-  return (
-    <Panel style={styles.card}>
-      <View style={styles.cardCopy}>
-        <Text style={styles.cardTitle} numberOfLines={1}>{event.title}</Text>
-        <Text style={styles.cardMeta} numberOfLines={1}>
-          {formatEventWhen(event)}{event.location ? ` · ${event.location}` : ''}
-        </Text>
-      </View>
-      {isPast ? null : <CheckCircle size={18} color={colors.ink} weight="fill" />}
-    </Panel>
   );
 }
 
@@ -561,7 +555,6 @@ const styles = StyleSheet.create({
   panelTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
   panelCopy: { color: colors.muted, fontSize: 13, lineHeight: 19 },
   section: { gap: spacing.x2, marginTop: spacing.x4 },
-  sectionTitle: { color: colors.ink, fontSize: 13, fontWeight: '800', textTransform: 'uppercase' },
   tabRow: {
     flexDirection: 'row',
     gap: spacing.x1,
@@ -574,11 +567,6 @@ const styles = StyleSheet.create({
   tabActive: { backgroundColor: colors.surface },
   tabText: { color: colors.muted, fontSize: 13, fontWeight: '800' },
   tabTextActive: { color: colors.ink },
-  card: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3, padding: spacing.x4 },
-  cardCopy: { flex: 1, gap: 2 },
-  cardTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  cardMeta: { color: colors.muted, fontSize: 13 },
-  cardActions: { gap: spacing.x2 },
   chooseList: { gap: spacing.x2 },
   chooseOption: {
     flexDirection: 'row',
