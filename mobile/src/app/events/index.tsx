@@ -1,6 +1,7 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import * as Clipboard from 'expo-clipboard';
-import { CalendarBlank, CaretRight, LinkSimple, NotePencil, Plus } from 'phosphor-react-native';
+import { useFocusEffect } from 'expo-router';
+import { ArrowsClockwise, CalendarBlank, CaretRight, LinkSimple, NotePencil, Plus } from 'phosphor-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -43,6 +44,11 @@ export default function EventsScreen() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [candidates, setCandidates] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
+  // Separate from `loading`, which only ever gates the first-load skeleton —
+  // this drives the header refresh icon's spin without re-blanking the screen
+  // on every focus/manual refresh (same flash `loading` caused on Home before
+  // it got its own hasLoadedOnce guard).
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState('');
   const [addOpen, setAddOpen] = useState(false);
@@ -54,6 +60,7 @@ export default function EventsScreen() {
       setLoading(false);
       return;
     }
+    setRefreshing(true);
     try {
       const [mine, suggested, accounts] = await Promise.all([
         fetchMyEvents(accessToken),
@@ -67,12 +74,19 @@ export default function EventsScreen() {
       setError(caught instanceof Error ? caught.message : 'Could not load your events.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [accessToken]);
 
-  useEffect(() => {
-    void Promise.resolve().then(refresh);
-  }, [refresh]);
+  // Calendar candidates come from a live Google Calendar fetch on every call
+  // (see syncCalendarCandidates) — there's no push/webhook, so re-syncing
+  // every time this screen regains focus is what actually surfaces a newly
+  // created calendar event, not just the one-time mount fetch this replaced.
+  useFocusEffect(
+    useCallback(() => {
+      void refresh();
+    }, [refresh]),
+  );
 
   const { upcoming, past } = bucketEvents(events);
   const combinedUpcoming = [
@@ -128,9 +142,16 @@ export default function EventsScreen() {
       title="Events you're going to"
       description="Follow-ups you capture while you're at an event are automatically linked to it."
       rightAction={accessToken ? (
-        <HeaderActionButton accessibilityLabel="Add event" onPress={() => setAddOpen(true)}>
-          <Plus size={18} color={colors.ink} weight="bold" />
-        </HeaderActionButton>
+        <View style={styles.headerActions}>
+          <HeaderActionButton accessibilityLabel="Refresh events" onPress={() => void refresh()}>
+            {refreshing
+              ? <ActivityIndicator size="small" color={colors.ink} />
+              : <ArrowsClockwise size={18} color={colors.ink} weight="bold" />}
+          </HeaderActionButton>
+          <HeaderActionButton accessibilityLabel="Add event" onPress={() => setAddOpen(true)}>
+            <Plus size={18} color={colors.ink} weight="bold" />
+          </HeaderActionButton>
+        </View>
       ) : undefined}
     />
   );
@@ -552,6 +573,7 @@ function AddressAutocompleteField({ value, onChange }: { value: string; onChange
 }
 
 const styles = StyleSheet.create({
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
   panelTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
   panelCopy: { color: colors.muted, fontSize: 13, lineHeight: 19 },
   section: { gap: spacing.x2, marginTop: spacing.x4 },
