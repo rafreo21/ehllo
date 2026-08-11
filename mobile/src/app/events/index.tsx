@@ -8,6 +8,7 @@ import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, Vi
 import { BottomSheet } from '@/components/bottom-sheet';
 import { EventCard } from '@/components/event-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
+import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { SettingsSkeleton } from '@/components/skeleton';
 import { Button, HeaderActionButton, PageHeader, Panel, Screen } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
@@ -49,29 +50,54 @@ export default function EventsScreen() {
   // on every focus/manual refresh (same flash `loading` caused on Home before
   // it got its own hasLoadedOnce guard).
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshMessage, setRefreshMessage] = useState('');
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState('');
   const [addOpen, setAddOpen] = useState(false);
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (options?: { manual?: boolean }) => {
     if (!accessToken) {
       setLoading(false);
       return;
     }
     setRefreshing(true);
+    if (options?.manual) setError('');
+    // fetchEventCandidates swallows its own errors below so a flaky Google
+    // Calendar call never blocks the rest of the screen — but for a manual
+    // refresh the user explicitly asked to be told, so track it separately
+    // instead of letting it disappear silently like it used to.
+    let candidateSyncFailed = false;
     try {
       const [mine, suggested, accounts] = await Promise.all([
         fetchMyEvents(accessToken),
-        fetchEventCandidates(accessToken).catch(() => [] as EventItem[]),
+        fetchEventCandidates(accessToken).catch(() => {
+          candidateSyncFailed = true;
+          return [] as EventItem[];
+        }),
         fetchConnectedAccounts(accessToken).catch(() => null),
       ]);
       setEvents(mine);
       setCandidates(suggested);
       if (accounts) setCalendarConnected(accounts.google.capabilities.calendar || accounts.microsoft.capabilities.calendar);
+
+      if (options?.manual) {
+        if (candidateSyncFailed) {
+          setError('Could not reach your calendar. Check your connection and try again.');
+        } else {
+          setRefreshMessage(suggested.length
+            ? `Synced with your calendar — ${suggested.length} suggestion${suggested.length === 1 ? '' : 's'} found.`
+            : "Synced with your calendar — you're all caught up.");
+        }
+      }
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not load your events.');
+      // fetchMyEvents isn't wrapped like candidates above, so a total outage
+      // lands here — raw fetch/DNS errors ("UnknownHostException…") aren't
+      // fit to show, so a manual refresh always gets the friendly copy.
+      setError(options?.manual
+        ? 'Could not refresh your events. Check your connection and try again.'
+        : caught instanceof Error ? caught.message : 'Could not load your events.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -143,7 +169,7 @@ export default function EventsScreen() {
       description="Follow-ups you capture while you're at an event are automatically linked to it."
       rightAction={accessToken ? (
         <View style={styles.headerActions}>
-          <HeaderActionButton accessibilityLabel="Refresh events" onPress={() => void refresh()}>
+          <HeaderActionButton accessibilityLabel="Refresh events" onPress={() => void refresh({ manual: true })}>
             {refreshing
               ? <ActivityIndicator size="small" color={colors.ink} />
               : <ArrowsClockwise size={18} color={colors.ink} weight="bold" />}
@@ -223,6 +249,12 @@ export default function EventsScreen() {
         accessToken={accessToken}
       />
       <OutcomeErrorSheet visible={Boolean(error)} message={error} onClose={() => setError('')} />
+      <OutcomeSuccessSheet
+        visible={Boolean(refreshMessage)}
+        title="Calendar synced"
+        message={refreshMessage}
+        onClose={() => setRefreshMessage('')}
+      />
     </Screen>
   );
 }
