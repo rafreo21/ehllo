@@ -23,6 +23,8 @@ export type CardVcardInput = {
   methods: CardVcardMethod[];
   showCompanyDetails?: boolean;
   scannedAt?: Date;
+  /** The card owner's currently-happening event, if any — an activator: omit it and the note is unchanged. */
+  eventTitle?: string | null;
   profilePhoto?: VcardEmbeddedImage | null;
   companyLogoPhoto?: VcardEmbeddedImage | null;
   profilePhotoUrl?: string | null;
@@ -373,7 +375,7 @@ export async function fetchVcardImage(url: string): Promise<VcardEmbeddedImage |
 }
 
 export function buildCardVcard(input: CardVcardInput) {
-  const whenWeMetNote = buildWhenWeMetNote(input.cardUrl, input.scannedAt);
+  const whenWeMetNote = buildWhenWeMetNote(input.cardUrl, input.scannedAt, input.eventTitle ?? undefined);
   const showCompany = input.showCompanyDetails ?? true;
   const lines = [
     "BEGIN:VCARD",

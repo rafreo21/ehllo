@@ -1,5 +1,5 @@
 import type { PropsWithChildren, ReactNode } from 'react';
-import { CaretLeft } from 'phosphor-react-native';
+import { ArrowLeft } from 'phosphor-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   Keyboard,
@@ -110,7 +110,7 @@ export function BottomSheet({ visible, title, onClose, footer, onBack, children 
                   onPress={onBack}
                   hitSlop={12}
                   style={styles.backButton}>
-                  <CaretLeft size={18} color={colors.ink} weight="bold" />
+                  <ArrowLeft size={18} color={colors.ink} weight="bold" />
                 </Pressable>
               ) : null}
               <Text style={styles.title} numberOfLines={1}>{title}</Text>

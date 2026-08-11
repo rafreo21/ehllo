@@ -19,14 +19,19 @@ function splitFullName(fullName: string) {
   return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
 }
 
-/** Mirrors lib/card-share-links.ts's buildWhenWeMetNote (web) so both vCard exports match. */
-function buildWhenWeMetNote(cardUrl: string, scannedAt = new Date()) {
+/**
+ * Mirrors lib/card-share-links.ts's buildWhenWeMetNote (web) so both vCard exports match.
+ * eventTitle is an activator: omit it and this note reads exactly as before.
+ */
+function buildWhenWeMetNote(cardUrl: string, scannedAt = new Date(), eventTitle?: string) {
   const date = scannedAt.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
-  return `When we met: ${date}\nSaved from AfterMeet\n${cardUrl}`;
+  const trimmedEvent = eventTitle?.trim();
+  const whereLine = trimmedEvent ? `Where we met: ${trimmedEvent}\n` : '';
+  return `${whereLine}When we met: ${date}\nSaved from AfterMeet\n${cardUrl}`;
 }
 
 export type MobileContactQrOptions = {
@@ -40,6 +45,8 @@ export type MobileContactQrOptions = {
   omitBioCover?: boolean;
   /** Embed a pre-built tiny thumbnail instead of a profile photo URL, when it fits. */
   embeddedPhoto?: VcardEmbeddedImage | null;
+  /** The sharer's currently-happening event, if any — an activator: omit it and the note is unchanged. */
+  eventTitle?: string;
 };
 
 function vcardImageFields(card: MobileCard, options: MobileContactQrOptions): VcardImageFields {
@@ -113,7 +120,7 @@ export function buildMobileContactQrPayload(
     noteParts.push(...noteExtras);
   }
   if (!options.minimal && cardPage) {
-    noteParts.push(buildWhenWeMetNote(cardPage));
+    noteParts.push(buildWhenWeMetNote(cardPage, new Date(), options.eventTitle));
   }
   if (noteParts.length) {
     lines.push(`NOTE:${escapeVcard(noteParts.join('\n\n'))}`);

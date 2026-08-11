@@ -31,3 +31,15 @@ test("buildWhenWeMetNote includes date and card url", () => {
   assert.match(note, /When we met: 26 July 2026/);
   assert.match(note, /Saved from AfterMeet/);
 });
+
+test("buildWhenWeMetNote omits the where-we-met line when there's no event", () => {
+  const note = buildWhenWeMetNote("https://aftermeet.app/c/alex", new Date("2026-07-26T12:00:00.000Z"));
+  assert.doesNotMatch(note, /Where we met/);
+});
+
+test("buildWhenWeMetNote adds a where-we-met line ahead of the date when an event is active", () => {
+  const note = buildWhenWeMetNote("https://aftermeet.app/c/alex", new Date("2026-07-26T12:00:00.000Z"), "ProductCon London");
+  const lines = note.split("\n");
+  assert.equal(lines[0], "Where we met: ProductCon London");
+  assert.match(lines[1], /When we met: 26 July 2026/);
+});
