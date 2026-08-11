@@ -43,6 +43,12 @@ export type ExtractionOwnerContext = {
   }>;
 };
 
+/** The event this encounter was passively attached to (see resolveCurrentEvent), if any — used only as an optional hint for the summary/follow-up, never required. */
+export type ExtractionEventContext = {
+  title: string;
+  location?: string;
+};
+
 function isValidIsoDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const [year, month, day] = value.split("-").map(Number);

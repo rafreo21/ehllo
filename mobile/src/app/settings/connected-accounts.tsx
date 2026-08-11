@@ -6,6 +6,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { CalendarBlank, EnvelopeSimple, GoogleLogo, LinkedinLogo } from 'phosphor-react-native';
 
 import { Body, Button, PageHeader, Panel, Screen } from '@/components/ui';
+import { DisconnectAccountSheet } from '@/components/disconnect-account-sheet';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { SettingsSkeleton } from '@/components/skeleton';
@@ -68,6 +69,7 @@ export default function ConnectedAccountsScreen() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busyProvider, setBusyProvider] = useState<string | null>(null);
+  const [pendingDisconnect, setPendingDisconnect] = useState<'google' | 'microsoft' | null>(null);
 
   const refresh = useCallback(async () => {
     if (!accessToken) {
@@ -254,7 +256,7 @@ export default function ConnectedAccountsScreen() {
                   {provider.id === 'microsoft' && !status?.microsoft.capabilities.onedrive ? (
                     <Button onPress={() => void connectProvider('microsoft')}>Reconnect for OneDrive</Button>
                   ) : null}
-                  <Button variant="secondary" onPress={() => void disconnect(provider.id as 'google' | 'microsoft')}>
+                  <Button variant="secondary" onPress={() => setPendingDisconnect(provider.id as 'google' | 'microsoft')}>
                     Disconnect
                   </Button>
                 </View>
@@ -280,6 +282,17 @@ export default function ConnectedAccountsScreen() {
         message={error}
         hint="Your existing AfterMeet data has not been changed."
         onClose={() => setError('')}
+      />
+      <DisconnectAccountSheet
+        visible={Boolean(pendingDisconnect)}
+        providerName={pendingDisconnect === 'google' ? 'Google' : 'Microsoft'}
+        loading={Boolean(pendingDisconnect) && busyProvider === pendingDisconnect}
+        onCancel={() => setPendingDisconnect(null)}
+        onConfirm={() => {
+          const provider = pendingDisconnect;
+          if (!provider) return;
+          void disconnect(provider).then(() => setPendingDisconnect(null));
+        }}
       />
     </Screen>
   );

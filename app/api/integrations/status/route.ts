@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { resolveApiUser } from "../../../../lib/auth/api-request";
+import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
 import { connectedAccountStatus } from "../../../../lib/integrations/connected-accounts";
 import { emptyConnectedAccountStatus } from "../../../../lib/integrations/types";
 
@@ -11,6 +11,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ status: emptyConnectedAccountStatus(), preview: true }, { headers: { "Cache-Control": "private, no-store" } });
   }
 
-  const status = await connectedAccountStatus(user);
+  const client = await createApiSupabaseClient(request);
+  const status = await connectedAccountStatus(user, client);
   return NextResponse.json({ status }, { headers: { "Cache-Control": "private, no-store" } });
 }

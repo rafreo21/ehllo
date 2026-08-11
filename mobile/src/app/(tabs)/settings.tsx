@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Bell, CaretRight, CloudArrowUp, DeviceMobile, IdentificationBadge, ListChecks, Microphone, Plugs, Scan, UsersThree } from 'phosphor-react-native';
+import { Bell, CalendarBlank, CaretRight, CloudArrowUp, DeviceMobile, IdentificationBadge, ListChecks, Microphone, Plugs, Scan, UsersThree } from 'phosphor-react-native';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BottomSheet } from '@/components/bottom-sheet';
@@ -99,6 +99,20 @@ export default function SettingsScreen() {
             <Text style={styles.label}>Capture context</Text>
           </View>
           <Text style={styles.linkHint}>Recordings, drafts, and captures needing review</Text>
+        </View>
+        <CaretRight size={18} color={colors.muted} weight="bold" />
+      </Pressable>
+
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push('/events')}
+        style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
+        <View style={styles.linkCopy}>
+          <View style={styles.linkTitleRow}>
+            <CalendarBlank size={18} color={colors.ink} weight="bold" />
+            <Text style={styles.label}>My events</Text>
+          </View>
+          <Text style={styles.linkHint}>Events you&apos;re going to, and ones from your calendar</Text>
         </View>
         <CaretRight size={18} color={colors.muted} weight="bold" />
       </Pressable>

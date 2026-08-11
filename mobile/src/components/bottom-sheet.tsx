@@ -1,4 +1,5 @@
 import type { PropsWithChildren, ReactNode } from 'react';
+import { CaretLeft } from 'phosphor-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   Keyboard,
@@ -20,9 +21,11 @@ type BottomSheetProps = PropsWithChildren<{
   title: string;
   onClose: () => void;
   footer?: ReactNode;
+  /** Shows a back icon beside the title instead of a separate row — for a multi-step sheet stepping back to a previous screen rather than closing. */
+  onBack?: () => void;
 }>;
 
-export function BottomSheet({ visible, title, onClose, footer, children }: BottomSheetProps) {
+export function BottomSheet({ visible, title, onClose, footer, onBack, children }: BottomSheetProps) {
   const insets = useAppInsets();
   const { height: windowHeight } = useWindowDimensions();
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -99,7 +102,19 @@ export function BottomSheet({ visible, title, onClose, footer, children }: Botto
           ]}>
           <View style={styles.handle} />
           <View style={styles.header}>
-            <Text style={styles.title}>{title}</Text>
+            <View style={styles.headerLeft}>
+              {onBack ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Back"
+                  onPress={onBack}
+                  hitSlop={12}
+                  style={styles.backButton}>
+                  <CaretLeft size={18} color={colors.ink} weight="bold" />
+                </Pressable>
+              ) : null}
+              <Text style={styles.title} numberOfLines={1}>{title}</Text>
+            </View>
             <Pressable
               accessibilityRole="button"
               onPress={() => {
@@ -170,7 +185,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing.x4,
   },
-  title: { color: colors.ink, fontSize: 18, fontWeight: '800' },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2, flexShrink: 1 },
+  backButton: { flexShrink: 0 },
+  title: { color: colors.ink, fontSize: 18, fontWeight: '800', flexShrink: 1 },
   close: { color: colors.muted, fontSize: 14, fontWeight: '700' },
   bodyWrap: {
     flexGrow: 1,

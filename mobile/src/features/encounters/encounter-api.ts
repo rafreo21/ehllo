@@ -98,6 +98,8 @@ export type EncounterPayload = {
   contactId?: string;
   exchangeId?: string;
   campaignId?: string;
+  /** The event this meeting happened at, if any — see events-api.ts. Optional context, never required. */
+  eventId?: string;
   startedAt: string;
   endedAt: string;
   durationSeconds: number;
@@ -653,7 +655,7 @@ export async function saveEncounter(
   accessToken: string,
   encounter: EncounterPayload,
   options?: { expectedUpdatedAt?: string },
-): Promise<{ updatedAt?: string; newGuestNames: string[] }> {
+): Promise<{ updatedAt?: string; newGuestNames: string[]; eventId: string | null }> {
   const response = await mobileFetch('/api/encounters', accessToken, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -665,6 +667,11 @@ export async function saveEncounter(
       contactId: encounter.contactId ?? null,
       exchangeId: encounter.exchangeId ?? null,
       campaignId: encounter.campaignId ?? null,
+      // Omitted (not `?? null`) when unset — see lib/encounters.ts on the
+      // server for why: this must NOT clear a passively-attached event on a
+      // routine re-save that has no opinion about it. `eventId: ''` (the
+      // correction flow's "No event") is a real value and is still sent.
+      ...(encounter.eventId !== undefined ? { eventId: encounter.eventId } : {}),
       startedAt: encounter.startedAt,
       endedAt: encounter.endedAt,
       durationSeconds: encounter.durationSeconds,
@@ -705,6 +712,7 @@ export async function saveEncounter(
     serverUpdatedAt?: string;
     updatedAt?: string;
     newGuestNames?: string[];
+    eventId?: string | null;
   }>(
     response,
     'Could not read the meeting save response.',
@@ -719,7 +727,7 @@ export async function saveEncounter(
     throw new Error(payload.error || 'Could not save this meeting.');
   }
   requestFollowUpNotificationSync();
-  return { updatedAt: payload.updatedAt, newGuestNames: payload.newGuestNames ?? [] };
+  return { updatedAt: payload.updatedAt, newGuestNames: payload.newGuestNames ?? [], eventId: payload.eventId ?? null };
 }
 
 export async function getEncounter(accessToken: string, id: string) {

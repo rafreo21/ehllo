@@ -144,6 +144,8 @@ export type Encounter = {
   contactId?: string;
   exchangeId?: string;
   campaignId?: string;
+  /** The event this meeting happened at, if any — see lib/events.ts. Optional context, never required. */
+  eventId?: string;
   startedAt: string;
   endedAt: string;
   durationSeconds: number;
@@ -218,6 +220,7 @@ type EncounterRow = {
   contact_id: string | null;
   exchange_id: string | null;
   campaign_id?: string | null;
+  event_id?: string | null;
   started_at: string;
   ended_at: string;
   duration_seconds: number;
@@ -246,6 +249,7 @@ export function encounterFromApi(row: EncounterRow | Record<string, unknown>): E
     contactId: record.contact_id ?? undefined,
     exchangeId: record.exchange_id ?? undefined,
     campaignId: typeof record.campaign_id === "string" ? record.campaign_id : undefined,
+    eventId: typeof record.event_id === "string" ? record.event_id : undefined,
     startedAt: record.started_at,
     endedAt: record.ended_at,
     durationSeconds: record.duration_seconds ?? 0,
@@ -330,6 +334,13 @@ export function encounterToApiBody(encounter: Encounter) {
     contactId: encounter.contactId ?? null,
     exchangeId: encounter.exchangeId ?? null,
     campaignId: encounter.campaignId ?? null,
+    // No `?? null` here deliberately: an unset eventId (undefined) must be
+    // dropped by JSON.stringify so the save route treats it as "the client
+    // has no opinion" and preserves whatever the server already inferred,
+    // rather than being sent as an explicit null that would clear it. An
+    // explicit clear (the correction UI's "No event") sets eventId to "",
+    // which survives serialization and does clear it server-side.
+    eventId: encounter.eventId,
     startedAt: encounter.startedAt,
     endedAt: encounter.endedAt,
     durationSeconds: encounter.durationSeconds,

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { resolveApiUser } from "../../../../lib/auth/api-request";
+import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
 import { extractEncounterDraft } from "../../../../lib/encounter-extraction-server";
+import type { ExtractionEventContext } from "../../../../lib/encounter-extraction";
+import { resolveCurrentEventIdForUser } from "../../../../lib/events-server";
 import { loadExtractionOwnerContext } from "../../../../lib/extraction-context-server";
 
 export async function POST(request: Request) {
@@ -37,11 +39,30 @@ export async function POST(request: Request) {
 
   try {
     const ownerContext = await loadExtractionOwnerContext(request, user);
+
+    // Best-effort: if this encounter would passively attach to an event
+    // (see resolveCurrentEventIdForUser), let the model know so it can
+    // reference it naturally — never required, never invented if absent.
+    const supabase = await createApiSupabaseClient(request);
+    const currentEventId = await resolveCurrentEventIdForUser(supabase, user.id).catch(() => null);
+    let eventContext: ExtractionEventContext | undefined;
+    if (currentEventId) {
+      const { data: eventRow } = await supabase
+        .from("events")
+        .select("title, location")
+        .eq("id", currentEventId)
+        .eq("workspace_id", user.workspaceId)
+        .maybeSingle();
+      if (eventRow?.title) {
+        eventContext = { title: eventRow.title, location: eventRow.location || undefined };
+      }
+    }
+
     const result = await extractEncounterDraft(transcript, personName, ownerContext, {
       personEmail,
       personPhone,
       people,
-    });
+    }, eventContext);
     return NextResponse.json(result, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not extract meeting context.";

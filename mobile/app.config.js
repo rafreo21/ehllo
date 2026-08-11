@@ -205,6 +205,10 @@ module.exports = {
       publicCardBaseUrl: BACKEND.publicCardBaseUrl,
       supabaseUrl: BACKEND.supabaseUrl,
       supabaseAnonKey: BACKEND.supabaseAnonKey,
+      // Not yet provisioned — the address-autocomplete field falls back to a
+      // plain text input until this is set. Same key for both variants
+      // (Places is billing-account-scoped, not staging/production-split).
+      googlePlacesApiKey: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || "",
       buildNumber: 4,
       buildStamp: IS_STAGING ? "2026-07-28-standalone-staging" : "2026-07-28-standalone",
       appVariant: APP_VARIANT,

@@ -35,6 +35,8 @@
 .auth-provider-error { margin: 12px 0 0; color: #c83221; font-size: 12px; line-height: 1.45; text-align: center; }
 .auth-provider-notice { margin: -4px 0 14px; padding: 11px 13px; border-radius: 6px; background: var(--a-pale); color: var(--a-ink); font-size: 12px; line-height: 1.45; text-align: center; }
 .auth-terms { color: #6f746d; text-align: center; font-size: 11px; line-height: 1.45; margin: 25px 20px 0; }
+.auth-terms a { text-decoration: underline; }
+.auth-terms a:hover { color: var(--a-ink); }
 .auth-success { text-align: center; }
 .auth-success > div { width: 64px; height: 64px; margin: 0 auto 24px; display: grid; place-items: center; border-radius: 50%; background: var(--a-pale); color: var(--a-ink); }
 .auth-success > p strong { color: var(--a-ink); }

@@ -7,6 +7,7 @@ import {
   buildHeuristicDraft,
   normalizeExtractionCommitments,
   type EncounterExtractionDraft,
+  type ExtractionEventContext,
   type ExtractionOwnerContext,
 } from "./encounter-extraction";
 import { isAiConfigured, languageModel, prepareAiAuth, textTemperature } from "./ai-provider";
@@ -115,6 +116,7 @@ function buildExtractionPrompt(
     personPhone?: string;
     people?: Array<{ name: string; email?: string; phone?: string }>;
   },
+  eventContext?: ExtractionEventContext,
 ) {
   const attendeeLines = personHints?.people?.length
     ? personHints.people.map((person, index) => {
@@ -127,6 +129,9 @@ function buildExtractionPrompt(
     attendeeLines.length ? `Confirmed attendees:\n${attendeeLines.join("\n")}` : `Attendee hint: ${personName || "unknown. Detect from transcript"}`,
     personHints?.personEmail ? `Primary email hint: ${personHints.personEmail}` : "",
     personHints?.personPhone ? `Primary phone hint: ${personHints.personPhone}` : "",
+    eventContext?.title
+      ? `Event this was captured at: ${eventContext.title}${eventContext.location ? ` (${eventContext.location})` : ""}. Mention it naturally in the summary or follow-up only if it adds real value — do not force it into every sentence, and never invent event details beyond what's given here.`
+      : "",
   ].filter(Boolean);
 
   return [
@@ -152,6 +157,7 @@ export async function extractEncounterDraft(
     personPhone?: string;
     people?: Array<{ name: string; email?: string; phone?: string }>;
   },
+  eventContext?: ExtractionEventContext,
 ): Promise<{
   draft: EncounterExtractionDraft;
   source: "ai" | "heuristic";
@@ -181,7 +187,7 @@ export async function extractEncounterDraft(
       model: languageModel(),
       output: Output.object({ schema: extractionSchema }),
       system: buildExtractionSystemPrompt(ownerContext),
-      prompt: buildExtractionPrompt(normalizedTranscript, personName, ownerContext, personHints),
+      prompt: buildExtractionPrompt(normalizedTranscript, personName, ownerContext, personHints, eventContext),
       temperature: textTemperature(0.2),
     });
 

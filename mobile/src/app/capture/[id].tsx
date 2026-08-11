@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { CaretDown, CaretUp, CheckCircle, CloudArrowUp, EnvelopeSimple, PencilSimple, Plus, ShareNetwork, Trash } from 'phosphor-react-native';
+import { CalendarBlank, CaretDown, CaretUp, CheckCircle, CloudArrowUp, EnvelopeSimple, PencilSimple, Plus, ShareNetwork, Trash } from 'phosphor-react-native';
 import * as Sharing from 'expo-sharing';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, Share, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
@@ -27,6 +27,7 @@ import {
   uploadEncounterRecording,
   type EncounterPayload,
 } from '@/features/encounters/encounter-api';
+import { fetchMyEvents, type EventItem } from '@/features/events/events-api';
 import {
   defaultFollowUpTitle,
   FOLLOW_UP_CHANNELS,
@@ -75,6 +76,17 @@ export default function CaptureDetailScreen() {
   const [newActionOwner, setNewActionOwner] = useState<'me' | 'guest'>('me');
   const [newActionDueAt, setNewActionDueAt] = useState('');
   const [newActionParticipantId, setNewActionParticipantId] = useState('');
+  const [myEvents, setMyEvents] = useState<EventItem[]>([]);
+  const [eventPickerOpen, setEventPickerOpen] = useState(false);
+
+  useEffect(() => {
+    if (!session?.access_token) return;
+    void fetchMyEvents(session.access_token).then(setMyEvents).catch(() => undefined);
+  }, [session?.access_token]);
+
+  const attachedEventTitle = encounter?.eventId
+    ? myEvents.find((event) => event.id === encounter.eventId)?.title ?? ''
+    : '';
 
   const guestUrl = encounter && readEnv()
     ? `${readEnv()!.publicCardBaseUrl}/e/${encounter.shareToken}`
@@ -209,7 +221,14 @@ export default function CaptureDetailScreen() {
     if (!session?.access_token) return null;
     try {
       const result = await saveEncounter(session.access_token, next, { expectedUpdatedAt: encounter?.updatedAt });
-      const saved = { ...next, updatedAt: result.updatedAt ?? next.updatedAt };
+      // Picks up the server's passive-presence guess on first save (see
+      // resolveCurrentEventIdForUser) without a separate refetch — next.eventId
+      // stays authoritative whenever the client sent an explicit opinion.
+      const saved = {
+        ...next,
+        updatedAt: result.updatedAt ?? next.updatedAt,
+        eventId: next.eventId !== undefined ? next.eventId : (result.eventId ?? undefined),
+      };
       setEncounter(saved);
       return saved;
     } catch (caught) {
@@ -502,6 +521,17 @@ export default function CaptureDetailScreen() {
           {openActions.length} follow-up{openActions.length === 1 ? '' : 's'}{isReviewed ? '' : ' (pending)'}
         </Text>
       </View>
+
+      {attachedEventTitle || myEvents.length ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={attachedEventTitle ? `Event: ${attachedEventTitle}. Change` : 'Add event context'}
+          onPress={() => setEventPickerOpen(true)}
+          style={styles.eventChip}>
+          <CalendarBlank size={14} color={colors.ink} weight="bold" />
+          <Text style={styles.eventChipText} numberOfLines={1}>{attachedEventTitle || 'No event'}</Text>
+        </Pressable>
+      ) : null}
     </>
   );
 
@@ -1000,6 +1030,37 @@ export default function CaptureDetailScreen() {
         ) : null}
       </Panel>
 
+      <BottomSheet
+        visible={eventPickerOpen}
+        title="Event context"
+        onClose={() => setEventPickerOpen(false)}>
+        <View style={styles.eventPickerList}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              setEncounter((current) => (current ? { ...current, eventId: '' } : current));
+              setEventPickerOpen(false);
+            }}
+            style={styles.eventPickerRow}>
+            <Text style={styles.eventPickerRowText}>No event</Text>
+            {!encounter?.eventId ? <CheckCircle size={18} color={colors.accent} weight="fill" /> : null}
+          </Pressable>
+          {myEvents.map((event) => (
+            <Pressable
+              key={event.id}
+              accessibilityRole="button"
+              onPress={() => {
+                setEncounter((current) => (current ? { ...current, eventId: event.id } : current));
+                setEventPickerOpen(false);
+              }}
+              style={styles.eventPickerRow}>
+              <Text style={styles.eventPickerRowText} numberOfLines={1}>{event.title}</Text>
+              {encounter?.eventId === event.id ? <CheckCircle size={18} color={colors.accent} weight="fill" /> : null}
+            </Pressable>
+          ))}
+        </View>
+      </BottomSheet>
+
       <OutcomeErrorSheet
         visible={errorSheetOpen}
         message={errorMessage}
@@ -1026,6 +1087,30 @@ const styles = StyleSheet.create({
   reviewStatusLine: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.x2 },
   reviewStatusText: { color: colors.muted, fontSize: 12, lineHeight: 18, fontWeight: '600' },
   reviewStatusDot: { width: 3, height: 3, borderRadius: radius.round, backgroundColor: colors.muted },
+  eventChip: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.x2,
+    paddingHorizontal: spacing.x3,
+    paddingVertical: 6,
+    borderRadius: radius.round,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+  },
+  eventChipText: { color: colors.ink, fontSize: 12, fontWeight: '700', maxWidth: 220 },
+  eventPickerList: { gap: spacing.x1 },
+  eventPickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.x2,
+    paddingVertical: spacing.x3,
+    paddingHorizontal: spacing.x2,
+  },
+  eventPickerRowText: { flex: 1, color: colors.ink, fontSize: 15, fontWeight: '700' },
   recorderCard: {
     gap: spacing.x5,
     padding: spacing.x6,

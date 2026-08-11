@@ -40,8 +40,8 @@ export function clearIntegrationStateCookie(response: NextResponse) {
 
 export function sanitizeMobileReturnTo(value: string | null | undefined) {
   const trimmed = value?.trim() ?? "";
-  if (!trimmed.startsWith("aftermeet://") && !trimmed.startsWith("/app")) return "";
-  return trimmed;
+  if (/^aftermeet(-[a-z0-9]+)?:\/\//i.test(trimmed) || trimmed.startsWith("/app")) return trimmed;
+  return "";
 }
 
 export function appendIntegrationParam(returnTo: string, integration: string) {

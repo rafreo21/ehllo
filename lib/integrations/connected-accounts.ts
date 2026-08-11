@@ -1,4 +1,5 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { AppUser } from "../auth/context";
 import { createClient } from "../supabase/server";
@@ -20,8 +21,8 @@ function isExpired(expiresAt: string | null) {
   return new Date(expiresAt).getTime() <= Date.now() + 60_000;
 }
 
-export async function listConnectedAccounts(user: AppUser) {
-  const supabase = await createClient();
+export async function listConnectedAccounts(user: AppUser, client?: SupabaseClient) {
+  const supabase = client ?? await createClient();
   const { data, error } = await supabase
     .from("connected_accounts")
     .select("*")
@@ -32,12 +33,12 @@ export async function listConnectedAccounts(user: AppUser) {
   return (data ?? []) as ConnectedAccountRow[];
 }
 
-export async function connectedAccountStatus(user: AppUser): Promise<ConnectedAccountStatus> {
+export async function connectedAccountStatus(user: AppUser, client?: SupabaseClient): Promise<ConnectedAccountStatus> {
   const status = emptyConnectedAccountStatus();
   status.configured.google = Boolean(process.env.GOOGLE_INTEGRATION_CLIENT_ID && process.env.GOOGLE_INTEGRATION_CLIENT_SECRET);
   status.configured.microsoft = Boolean(process.env.MICROSOFT_INTEGRATION_CLIENT_ID && process.env.MICROSOFT_INTEGRATION_CLIENT_SECRET);
 
-  for (const row of await listConnectedAccounts(user)) {
+  for (const row of await listConnectedAccounts(user, client)) {
     if (row.provider === "google") {
       status.google = {
         connected: true,
@@ -77,8 +78,9 @@ export async function saveConnectedAccount(
     expiresAt?: string | null;
     scopes: string[];
   },
+  client?: SupabaseClient,
 ) {
-  const supabase = await createClient();
+  const supabase = client ?? await createClient();
   const { error } = await supabase.from("connected_accounts").upsert({
     workspace_id: user.workspaceId,
     user_id: user.id,
@@ -94,8 +96,8 @@ export async function saveConnectedAccount(
   if (error) throw new Error("We couldn’t save this connected account.");
 }
 
-export async function deleteConnectedAccount(user: AppUser, provider: IntegrationProvider) {
-  const supabase = await createClient();
+export async function deleteConnectedAccount(user: AppUser, provider: IntegrationProvider, client?: SupabaseClient) {
+  const supabase = client ?? await createClient();
   await supabase
     .from("connected_accounts")
     .delete()
@@ -135,8 +137,20 @@ export async function connectProviderFromCode(
   return email;
 }
 
-export async function getConnectedAccountAccessToken(user: AppUser, provider: IntegrationProvider) {
-  const supabase = await createClient();
+/**
+ * `client` lets a bearer-token (mobile) request pass its own
+ * request-scoped Supabase client instead of the cookie-based default, which
+ * has no session outside a web request and would silently see zero rows
+ * under RLS. Every internal call (including the refresh-then-persist path)
+ * threads the same client through, so a refreshed token actually persists
+ * against the identity that requested it.
+ */
+export async function getConnectedAccountAccessToken(
+  user: AppUser,
+  provider: IntegrationProvider,
+  client?: SupabaseClient,
+) {
+  const supabase = client ?? await createClient();
   const { data, error } = await supabase
     .from("connected_accounts")
     .select("*")
@@ -159,7 +173,7 @@ export async function getConnectedAccountAccessToken(user: AppUser, provider: In
       refreshToken: row.refresh_token,
       expiresAt: expiresAtFromNow(refreshed.expires_in),
       scopes: row.scopes,
-    });
+    }, supabase);
     return refreshed.access_token;
   }
 
@@ -170,6 +184,6 @@ export async function getConnectedAccountAccessToken(user: AppUser, provider: In
     refreshToken: refreshed.refresh_token ?? row.refresh_token,
     expiresAt: expiresAtFromNow(refreshed.expires_in),
     scopes: row.scopes,
-  });
+  }, supabase);
   return refreshed.access_token;
 }

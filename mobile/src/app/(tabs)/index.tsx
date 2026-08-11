@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
 import {
   Bell,
+  CalendarBlank,
   CaretRight,
   Clock,
   IdentificationCard,
@@ -11,7 +12,7 @@ import {
   UsersThree,
 } from 'phosphor-react-native';
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OfflineBanner } from '@/components/offline-banner';
@@ -35,6 +36,8 @@ import {
   sortConnections,
   type ConnectionItem,
 } from '@/features/connections/connections-api';
+import { resolveHomeEventCardState, type HomeEventCardState } from '@/features/events/event-home-state';
+import { fetchEventCandidates, fetchMyEvents, markEventLeft, setEventAttendance, type EventItem } from '@/features/events/events-api';
 import { fetchFollowUps, type FollowUpItem } from '@/features/follow-ups/follow-up-api';
 import { summarizeFollowUpNudges } from '@/features/follow-ups/follow-up-nudges';
 import { resolveFollowUpUserName } from '@/features/follow-ups/follow-up-participants';
@@ -42,6 +45,14 @@ import { fetchNotifications } from '@/features/notifications/notification-center
 import { formatRelativeTime } from '@/lib/relative-time';
 import { useAppInsets, useTabBarHeight } from '@/lib/safe-area';
 import { colors, radius, spacing } from '@/theme/tokens';
+
+function formatEventWhen(startsAt: string) {
+  const start = new Date(startsAt);
+  if (Number.isNaN(start.getTime())) return '';
+  const datePart = start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const timePart = start.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  return `${datePart} · ${timePart}`;
+}
 
 function timeGreeting() {
   const hour = new Date().getHours();
@@ -68,6 +79,9 @@ export default function HomeScreen() {
   const [encounters, setEncounters] = useState<EncounterSummary[]>([]);
   const [drafts, setDrafts] = useState<CaptureDraftSummary[]>([]);
   const [connections, setConnections] = useState<ConnectionItem[]>([]);
+  const [goingEvents, setGoingEvents] = useState<EventItem[]>([]);
+  const [eventCandidates, setEventCandidates] = useState<EventItem[]>([]);
+  const [eventCardBusy, setEventCardBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -98,6 +112,8 @@ export default function HomeScreen() {
       setUnreadNotifications(0);
       setEncounters([]);
       setConnections([]);
+      setGoingEvents([]);
+      setEventCandidates([]);
       return;
     }
 
@@ -117,6 +133,12 @@ export default function HomeScreen() {
     if ([followUpsResult, notificationsResult, encountersResult, connectionsResult].every((result) => result.status === 'rejected')) {
       setLoadError('Could not load your Home data. Check your connection and try again.');
     }
+
+    // Events are independent of the "did Home data load" error banner above
+    // — a user with no calendar connected (the common case) has candidates
+    // fail by design, and that must stay silent, not read as an outage.
+    void fetchMyEvents(token).then(setGoingEvents).catch(() => undefined);
+    void fetchEventCandidates(token).then(setEventCandidates).catch(() => setEventCandidates([]));
   }, [session]);
 
   useFocusEffect(
@@ -143,6 +165,39 @@ export default function HomeScreen() {
     }
     return { headline: 'No follow-ups yet', completed: 0, total: 0, rate: 0, urgent: false, hasData: false };
   }, [followUps]);
+
+  const homeEventCard = useMemo(
+    () => resolveHomeEventCardState(goingEvents, eventCandidates, new Date()),
+    [goingEvents, eventCandidates],
+  );
+
+  async function decideEventCandidate(event: EventItem, status: 'going' | 'not_going') {
+    if (!session?.access_token) return;
+    setEventCardBusy(true);
+    try {
+      await setEventAttendance(session.access_token, event.id, status);
+      setEventCandidates((current) => current.filter((item) => item.id !== event.id));
+      if (status === 'going') setGoingEvents((current) => [...current, event]);
+    } catch {
+      // The event stays in the candidate list; the user can retry from Home or My Events.
+    } finally {
+      setEventCardBusy(false);
+    }
+  }
+
+  async function leaveEvent(event: EventItem) {
+    if (!session?.access_token) return;
+    setEventCardBusy(true);
+    try {
+      const leftAt = new Date().toISOString();
+      await markEventLeft(session.access_token, event.id);
+      setGoingEvents((current) => current.map((item) => (item.id === event.id ? { ...item, leftAt } : item)));
+    } catch {
+      // The card stays showing "You're here"; the user can retry from Home.
+    } finally {
+      setEventCardBusy(false);
+    }
+  }
 
   const pendingReviewCount = useMemo(
     () => encounters.filter((item) => item.status === 'draft').length,
@@ -298,6 +353,16 @@ export default function HomeScreen() {
               </Pressable>
             )}
 
+            {session && homeEventCard.type !== 'none' ? (
+              <HomeEventCard
+                state={homeEventCard}
+                busy={eventCardBusy}
+                onGoing={(event) => void decideEventCandidate(event, 'going')}
+                onNotGoing={(event) => void decideEventCandidate(event, 'not_going')}
+                onLeave={(event) => void leaveEvent(event)}
+              />
+            ) : null}
+
             {activeWorkItems.length ? (
               <View style={styles.activeWork}>
                 {activeWorkItems.map((item) => (
@@ -386,6 +451,88 @@ export default function HomeScreen() {
 
       <QuickActionsFab />
     </View>
+  );
+}
+
+/**
+ * The one Home event card, in the state resolveHomeEventCardState picked.
+ * Deliberately renders at most one thing — no separate "Events" section —
+ * so Home stays quiet except when something's actually relevant right now.
+ */
+function HomeEventCard({
+  state,
+  busy,
+  onGoing,
+  onNotGoing,
+  onLeave,
+}: {
+  state: HomeEventCardState;
+  busy: boolean;
+  onGoing: (event: EventItem) => void;
+  onNotGoing: (event: EventItem) => void;
+  onLeave: (event: EventItem) => void;
+}) {
+  if (state.type === 'none') return null;
+  const { event } = state;
+  const when = formatEventWhen(event.startsAt);
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => router.push('/events')}
+      style={({ pressed }) => [styles.eventCard, pressed && styles.eventCardPressed]}>
+      <View style={styles.eventCardIcon}>
+        <CalendarBlank size={20} color={colors.ink} weight="bold" />
+      </View>
+      <View style={styles.eventCardCopy}>
+        <Text style={styles.eventCardTitle} numberOfLines={1}>{event.title}</Text>
+        <View style={styles.eventCardMetaRow}>
+          <Text style={styles.eventCardMeta} numberOfLines={1}>
+            {when}{event.location ? ` · ${event.location}` : ''}
+          </Text>
+          {state.type === 'current' ? (
+            <View style={styles.eventCardStatusTag}><Text style={styles.eventCardStatusText}>You&apos;re here</Text></View>
+          ) : null}
+          {state.type === 'upcoming' ? (
+            <View style={styles.eventCardStatusTag}><Text style={styles.eventCardStatusText}>Going</Text></View>
+          ) : null}
+        </View>
+      </View>
+      {state.type === 'candidate' ? (
+        busy ? (
+          <ActivityIndicator color={colors.ink} />
+        ) : (
+          <View style={styles.eventCardActions}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onGoing(event); }}
+              style={styles.eventCardActionPrimary}>
+              <Text style={styles.eventCardActionPrimaryText}>Going</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing(event); }}
+              style={styles.eventCardActionGhost}>
+              <Text style={styles.eventCardActionGhostText}>Not going</Text>
+            </Pressable>
+          </View>
+        )
+      ) : state.type === 'current' ? (
+        busy ? (
+          <ActivityIndicator color={colors.ink} />
+        ) : (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="I've left this event"
+            onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onLeave(event); }}
+            style={styles.eventCardActionGhost}>
+            <Text style={styles.eventCardActionGhostText}>I&apos;ve left</Text>
+          </Pressable>
+        )
+      ) : (
+        <CaretRight size={14} color={colors.muted} weight="bold" />
+      )}
+    </Pressable>
   );
 }
 
@@ -535,6 +682,53 @@ const styles = StyleSheet.create({
   attentionHeadline: { color: colors.ink, fontSize: 19, fontWeight: '800', letterSpacing: -0.3 },
   attentionSubline: { color: colors.muted, fontSize: 13, lineHeight: 18 },
   attentionStat: { color: colors.ink, fontWeight: '800' },
+  eventCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.x3,
+    padding: spacing.x4,
+    borderRadius: radius.large,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  eventCardPressed: { opacity: 0.92 },
+  eventCardIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.round,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceMuted,
+  },
+  eventCardCopy: { flex: 1, minWidth: 0, gap: 2 },
+  eventCardTitle: { color: colors.ink, fontSize: 14, fontWeight: '800' },
+  eventCardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
+  eventCardMeta: { flexShrink: 1, color: colors.muted, fontSize: 12 },
+  eventCardStatusTag: {
+    flexShrink: 0,
+    paddingHorizontal: spacing.x2,
+    paddingVertical: 3,
+    borderRadius: radius.round,
+    backgroundColor: colors.accent,
+  },
+  eventCardStatusText: { color: colors.ink, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
+  eventCardActions: { flexDirection: 'row', gap: spacing.x2 },
+  eventCardActionPrimary: {
+    paddingHorizontal: spacing.x3,
+    paddingVertical: spacing.x2,
+    borderRadius: radius.round,
+    backgroundColor: colors.ink,
+  },
+  eventCardActionPrimaryText: { color: colors.white, fontSize: 12, fontWeight: '800' },
+  eventCardActionGhost: {
+    paddingHorizontal: spacing.x3,
+    paddingVertical: spacing.x2,
+    borderRadius: radius.round,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  eventCardActionGhostText: { color: colors.muted, fontSize: 12, fontWeight: '800' },
   activeWork: { gap: spacing.x2 },
   activeWorkRow: {
     flexDirection: 'row',
