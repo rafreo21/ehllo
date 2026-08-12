@@ -1,6 +1,7 @@
 import { CalendarBlank, CaretRight } from 'phosphor-react-native';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { PillButton } from '@/components/ui';
 import type { EventItem } from '@/features/events/events-api';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -77,18 +78,16 @@ export function EventCard({
             <ActivityIndicator color={colors.ink} />
           ) : (
             <View style={styles.actions}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onGoing?.(event); }}
-                style={styles.actionPrimary}>
-                <Text style={styles.actionPrimaryText}>Going</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing?.(event); }}
-                style={styles.actionGhost}>
-                <Text style={styles.actionGhostText}>Not going</Text>
-              </Pressable>
+              <PillButton
+                tone="solid"
+                onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onGoing?.(event); }}>
+                Going
+              </PillButton>
+              <PillButton
+                tone="outline"
+                onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing?.(event); }}>
+                Not going
+              </PillButton>
             </View>
           )}
         </View>
@@ -98,13 +97,12 @@ export function EventCard({
           {busy ? (
             <ActivityIndicator color={colors.ink} />
           ) : (
-            <Pressable
-              accessibilityRole="button"
+            <PillButton
+              tone="outline"
               accessibilityLabel="I've left this event"
-              onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onLeave?.(event); }}
-              style={styles.actionGhost}>
-              <Text style={styles.actionGhostText}>I&apos;ve left</Text>
-            </Pressable>
+              onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onLeave?.(event); }}>
+              I&apos;ve left
+            </PillButton>
           )}
         </View>
       ) : null}
@@ -148,19 +146,4 @@ const styles = StyleSheet.create({
   statusText: { color: colors.ink, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
   suggested: { flexShrink: 0, color: colors.muted, fontSize: 12 },
   actions: { flexDirection: 'row', gap: spacing.x2 },
-  actionPrimary: {
-    paddingHorizontal: spacing.x3,
-    paddingVertical: spacing.x2,
-    borderRadius: radius.round,
-    backgroundColor: colors.ink,
-  },
-  actionPrimaryText: { color: colors.white, fontSize: 12, fontWeight: '800' },
-  actionGhost: {
-    paddingHorizontal: spacing.x3,
-    paddingVertical: spacing.x2,
-    borderRadius: radius.round,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  actionGhostText: { color: colors.muted, fontSize: 12, fontWeight: '800' },
 });

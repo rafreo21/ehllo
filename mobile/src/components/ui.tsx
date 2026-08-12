@@ -1,6 +1,7 @@
 import { Children, Fragment, isValidElement, type PropsWithChildren, type ReactNode } from 'react';
 import {
   ActivityIndicator,
+  type GestureResponderEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -183,7 +184,7 @@ export function PageHeader({
 type ButtonProps = {
   children: ReactNode;
   onPress?: () => void | Promise<void>;
-  variant?: 'primary' | 'secondary' | 'ghost' | 'solid' | 'outline';
+  variant?: 'primary' | 'secondary' | 'ghost';
   disabled?: boolean;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -239,33 +240,78 @@ export function Button({ children, onPress, variant = 'primary', disabled, loadi
         styles.button,
         variant === 'secondary' && styles.buttonSecondary,
         variant === 'ghost' && styles.buttonGhost,
-        variant === 'solid' && styles.buttonSolid,
-        variant === 'outline' && styles.buttonOutline,
         pressed && !loading && styles.buttonPressed,
         (disabled || loading) && styles.buttonDisabled,
         style,
       ]}>
       <View style={styles.buttonContent}>
         {loading ? (
-          <ActivityIndicator color={variant === 'solid' ? colors.white : variant === 'primary' ? colors.ink : colors.muted} />
+          <ActivityIndicator color={variant === 'primary' ? colors.ink : colors.muted} />
         ) : null}
         {items.map((child, index) =>
           typeof child === 'string' || typeof child === 'number'
             ? (
               <Text
                 key={`label-${index}`}
-                style={[
-                  styles.buttonText,
-                  variant !== 'primary' && styles.buttonTextSecondary,
-                  variant === 'solid' && styles.buttonTextSolid,
-                  variant === 'outline' && styles.buttonTextOutline,
-                ]}>
+                style={[styles.buttonText, variant !== 'primary' && styles.buttonTextSecondary]}>
                 {child}
               </Text>
             )
             : isValidElement(child) ? child : null
         )}
       </View>
+    </Pressable>
+  );
+}
+
+type PillButtonProps = {
+  children: string;
+  onPress?: (event: GestureResponderEvent) => void;
+  /** solid = event "Going" pill (ink fill, white label); outline = "Not going" pill (line outline, muted label). */
+  tone?: 'solid' | 'outline';
+  accessibilityLabel?: string;
+  disabled?: boolean;
+  loading?: boolean;
+  style?: StyleProp<ViewStyle>;
+};
+
+/**
+ * Compact pill action used for event RSVP controls and, reusing the same
+ * treatment/tokens, the Connected Accounts connect/disconnect actions. Single
+ * source of truth so the two screens can never drift apart.
+ */
+export function PillButton({
+  children,
+  onPress,
+  tone = 'solid',
+  accessibilityLabel,
+  disabled,
+  loading,
+  style,
+}: PillButtonProps) {
+  const solid = tone === 'solid';
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? children}
+      accessibilityState={{ disabled: Boolean(disabled || loading) }}
+      disabled={disabled || loading}
+      // Keep the small visual size while lifting the touch target toward the
+      // ~44pt iOS / 48dp Android minimum without changing layout.
+      hitSlop={{ top: 8, bottom: 8 }}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.pill,
+        solid ? styles.pillSolid : styles.pillOutline,
+        pressed && !loading && styles.buttonPressed,
+        (disabled || loading) && styles.buttonDisabled,
+        style,
+      ]}>
+      {loading ? (
+        <ActivityIndicator color={solid ? colors.white : colors.muted} />
+      ) : (
+        <Text style={[styles.pillText, solid ? styles.pillTextSolid : styles.pillTextOutline]}>{children}</Text>
+      )}
     </Pressable>
   );
 }
@@ -295,16 +341,23 @@ const styles = StyleSheet.create({
   button: { minHeight: 48, paddingHorizontal: spacing.x5, alignItems: 'center', justifyContent: 'center', borderRadius: radius.small, backgroundColor: colors.accent },
   buttonSecondary: { backgroundColor: colors.surfaceMuted },
   buttonGhost: { backgroundColor: 'transparent' },
-  // RSVP "Going" treatment: dark forest-green fill, white label.
-  buttonSolid: { backgroundColor: colors.ink },
-  // RSVP "Not going" treatment: white fill, subtle line outline, muted label.
-  buttonOutline: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
   buttonPressed: { opacity: 0.78, transform: [{ scale: 0.99 }] },
   buttonDisabled: { opacity: 0.45 },
   buttonText: { color: colors.ink, fontSize: 15, fontWeight: '800' },
   buttonTextSecondary: { color: colors.ink },
-  buttonTextSolid: { color: colors.white },
-  buttonTextOutline: { color: colors.muted },
+  pill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.x3,
+    paddingVertical: spacing.x2,
+    borderRadius: radius.round,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pillSolid: { backgroundColor: colors.ink },
+  pillOutline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.line },
+  pillText: { fontSize: 12, fontWeight: '800' },
+  pillTextSolid: { color: colors.white },
+  pillTextOutline: { color: colors.muted },
   buttonContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.x2 },
   backButton: {
     width: 44,
