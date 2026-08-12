@@ -301,8 +301,9 @@ export default function ShareCardScreen() {
           {tapSupported ? (
             <PillButton
               style={styles.sharePill}
+              textStyle={styles.sharePillText}
               tone="solid"
-              icon={<ContactlessPayment size={16} color={colors.white} weight="bold" />}
+              icon={<ContactlessPayment size={21} color={colors.white} weight="bold" />}
               loading={tapBusy}
               disabled={!publicUrl}
               onPress={() => void toggleTapToShare()}>
@@ -311,8 +312,9 @@ export default function ShareCardScreen() {
           ) : null}
           <PillButton
             style={styles.sharePill}
+            textStyle={styles.sharePillText}
             tone="outline"
-            icon={<ShareNetwork size={16} color={colors.muted} weight="bold" />}
+            icon={<ShareNetwork size={21} color={colors.muted} weight="bold" />}
             onPress={shareCard}>
             Share
           </PillButton>
@@ -411,6 +413,7 @@ const styles = StyleSheet.create({
   actions: { gap: spacing.x2 },
   shareActionRow: { flexDirection: 'row', gap: spacing.x2 },
   sharePill: { flex: 1, alignSelf: 'stretch', height: 50 },
+  sharePillText: { fontSize: 15, lineHeight: 19 },
   actionButton: { alignSelf: 'stretch' },
   whiteActionButton: { backgroundColor: colors.white },
   helper: { color: colors.muted, fontSize: 11, textAlign: 'center' },

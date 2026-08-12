@@ -274,6 +274,7 @@ type PillButtonProps = {
   disabled?: boolean;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
 };
 
 /**
@@ -290,6 +291,7 @@ export function PillButton({
   disabled,
   loading,
   style,
+  textStyle,
 }: PillButtonProps) {
   const solid = tone === 'solid';
   return (
@@ -314,7 +316,7 @@ export function PillButton({
       ) : (
         <View style={styles.pillContent}>
           {icon}
-          <Text style={[styles.pillText, solid ? styles.pillTextSolid : styles.pillTextOutline]}>{children}</Text>
+          <Text style={[styles.pillText, solid ? styles.pillTextSolid : styles.pillTextOutline, textStyle]}>{children}</Text>
         </View>
       )}
     </Pressable>
