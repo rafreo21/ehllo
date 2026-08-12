@@ -38,7 +38,7 @@ export function GoogleWalletButton({ onPress, loading, disabled, mode = 'add', s
       <View style={[styles.assetFrame, { width: viewing ? 287 : 283 }]}>
         {viewing ? (
           <View style={styles.viewContent}>
-            <GoogleWalletIcon size={25} />
+            <GoogleWalletIcon size={21} />
             <Text style={styles.viewLabel}>{VIEW_LABEL}</Text>
           </View>
         ) : (
@@ -73,8 +73,8 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  viewContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
-  viewLabel: { color: '#FFFFFF', fontSize: 17, lineHeight: 21, fontWeight: '600' },
+  viewContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  viewLabel: { color: '#FFFFFF', fontSize: 15, lineHeight: 19, fontWeight: '600' },
   loadingOverlay: {
     position: 'absolute',
     top: 0,
