@@ -198,6 +198,16 @@ module.exports = {
     experiments: {
       typedRoutes: true,
     },
+    ...(IS_STAGING
+      ? {
+          updates: {
+            url: `https://u.expo.dev/${EAS_PROJECT.projectId}`,
+          },
+          runtimeVersion: {
+            policy: "appVersion",
+          },
+        }
+      : {}),
     extra: {
       eas: {
         projectId: EAS_PROJECT.projectId,
