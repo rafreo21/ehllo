@@ -49,24 +49,6 @@ export function resolveGoogleWalletLogoUrl(card: WalletCardPayload) {
   }
 }
 
-function resolveAfterMeetMarkUrl(card: WalletCardPayload) {
-  try {
-    const origin = new URL(card.cardUrl).origin.replace(/\/+$/, "");
-    return `${origin}/aftermeet-mark.png`;
-  } catch {
-    return "";
-  }
-}
-
-function resolveBrandedQrImageUrl(card: WalletCardPayload) {
-  try {
-    const origin = new URL(card.cardUrl).origin.replace(/\/+$/, "");
-    return `${origin}/api/public/branded-qr/${encodeURIComponent(card.slug)}?size=512`;
-  } catch {
-    return "";
-  }
-}
-
 export function buildGoogleWalletSaveUrl(card: WalletCardPayload, config: GoogleWalletConfig) {
   const classId = `${config.issuerId}.${config.classSuffix}`;
   const objectId = `${config.issuerId}.${card.slug}`;
@@ -119,50 +101,6 @@ export function buildGoogleWalletSaveUrl(card: WalletCardPayload, config: Google
     genericObject.logo = { sourceUri: { uri: logoUrl } };
   }
 
-  const brandedQrUrl = resolveBrandedQrImageUrl(card);
-  if (brandedQrUrl) {
-    genericObject.imageModulesData = [
-      {
-        id: "aftermeet_qr",
-        mainImage: {
-          sourceUri: { uri: brandedQrUrl },
-          contentDescription: {
-            defaultValue: { language: "en-US", value: "AfterMeet branded QR code" },
-          },
-        },
-      },
-    ];
-  }
-
-  const afterMeetMarkUrl = resolveAfterMeetMarkUrl(card);
-  const genericClass: Record<string, unknown> = {
-    id: classId,
-    classTemplateInfo: {
-      cardTemplateOverride: {
-        cardRowTemplateInfos: [
-          {
-            twoItems: {
-              startItem: {
-                firstValue: {
-                  fields: [{ fieldPath: "object.textModulesData['role']" }],
-                },
-              },
-              endItem: {
-                firstValue: {
-                  fields: [{ fieldPath: "object.textModulesData['company']" }],
-                },
-              },
-            },
-          },
-        ],
-      },
-    },
-  };
-
-  if (afterMeetMarkUrl) {
-    genericClass.logo = { sourceUri: { uri: afterMeetMarkUrl } };
-  }
-
   const payload = {
     iss: config.serviceAccountEmail,
     aud: "google",
@@ -170,7 +108,10 @@ export function buildGoogleWalletSaveUrl(card: WalletCardPayload, config: Google
     iat: Math.floor(Date.now() / 1000),
     origins: walletJwtOrigins(card.cardUrl),
     payload: {
-      genericClasses: [genericClass],
+      // The shared AfterMeet class is provisioned once in Google Wallet.
+      // Save links create only the card-specific object and reference it.
+      // Re-sending an existing class can make the Wallet handoff fail before
+      // the object is created.
       genericObjects: [genericObject],
     },
   };

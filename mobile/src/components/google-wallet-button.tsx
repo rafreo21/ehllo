@@ -4,6 +4,7 @@ import { spacing } from '@/theme/tokens';
 
 const WALLET_LABEL = 'Add to Google Wallet';
 const OFFICIAL_BUTTON = require('@/assets/images/add-to-google-wallet-en-gb.png');
+const OFFICIAL_ASPECT_RATIO = 283 / 50;
 
 type GoogleWalletButtonProps = {
   onPress?: () => void | Promise<void>;
@@ -47,14 +48,17 @@ export function GoogleWalletButton({ onPress, loading, disabled, style }: Google
 
 const styles = StyleSheet.create({
   touchTarget: {
-    minHeight: 50 + spacing.x4,
+    width: '100%',
+    minHeight: 48 + spacing.x4,
     paddingVertical: spacing.x2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   assetFrame: {
-    width: 283,
-    height: 50,
+    width: '100%',
+    maxWidth: 360,
+    minHeight: 48,
+    aspectRatio: OFFICIAL_ASPECT_RATIO,
   },
   asset: {
     width: '100%',

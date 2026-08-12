@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { GoogleLogoIcon } from "@phosphor-icons/react/dist/csr/GoogleLogo";
 import { Button } from "../components/Button";
 import { TextField } from "../components/FormField";
+import { GoogleProviderIcon } from "../components/ProviderIcons";
 
 export function VisitorOnboardingForm({
   initialName,
@@ -83,7 +83,7 @@ export function VisitorGoogleButton({
 }) {
   return (
     <Button className="provider-button" fullWidth variant="secondary" disabled={disabled} onClick={() => { window.location.href = authHref; }}>
-      <GoogleLogoIcon size={21} weight="bold" />
+      <GoogleProviderIcon />
       Continue with Google
     </Button>
   );

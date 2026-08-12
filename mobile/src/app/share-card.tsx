@@ -249,17 +249,6 @@ export default function ShareCardScreen() {
         )}
       </ScrollView>
       <View style={styles.actions}>
-        {tapSupported ? (
-          <Button
-            style={[styles.actionButton, styles.whiteActionButton]}
-            variant="secondary"
-            loading={tapBusy}
-            disabled={!publicUrl}
-            onPress={() => void toggleTapToShare()}>
-            <ContactlessPayment size={18} color={colors.ink} weight="bold" />
-            {tapActive ? 'Stop tap to share' : 'Tap to share'}
-          </Button>
-        ) : null}
         {walletAvailable ? (
           Platform.OS === 'android' ? (
             <GoogleWalletButton
@@ -280,8 +269,22 @@ export default function ShareCardScreen() {
         ) : walletNote ? (
           <Text style={styles.walletNote}>{walletNote}</Text>
         ) : null}
-        <Button style={styles.actionButton} onPress={shareCard}>
-          <ShareNetwork size={18} color={colors.ink} /> Share
+        {tapSupported ? (
+          <Button
+            style={[styles.actionButton, styles.whiteActionButton]}
+            variant="secondary"
+            loading={tapBusy}
+            disabled={!publicUrl}
+            onPress={() => void toggleTapToShare()}>
+            <ContactlessPayment size={18} color={colors.ink} weight="bold" />
+            {tapActive ? 'Stop tap to share' : 'Tap to share'}
+          </Button>
+        ) : null}
+        <Button
+          style={[styles.actionButton, styles.whiteActionButton]}
+          variant="secondary"
+          onPress={shareCard}>
+          <ShareNetwork size={18} color={colors.ink} weight="bold" /> Share
         </Button>
       </View>
       <Text style={styles.helper}>Brightness is temporarily increased while this screen is open.</Text>

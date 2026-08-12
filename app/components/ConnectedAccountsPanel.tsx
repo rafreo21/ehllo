@@ -4,11 +4,10 @@ import { useEffect, useState } from "react";
 import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
 import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { CloudArrowUpIcon } from "@phosphor-icons/react/dist/csr/CloudArrowUp";
-import { GoogleLogoIcon } from "@phosphor-icons/react/dist/csr/GoogleLogo";
-import { MicrosoftOutlookLogoIcon } from "@phosphor-icons/react/dist/csr/MicrosoftOutlookLogo";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { LinkButton } from "./Button";
 import { StatusMessage } from "./AsyncState";
+import { GoogleProviderIcon, MicrosoftProviderIcon } from "./ProviderIcons";
 import type { ConnectedAccountStatus } from "../../lib/integrations/types";
 import { emptyConnectedAccountStatus } from "../../lib/integrations/types";
 
@@ -64,7 +63,7 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
           <div className="connected-account-content">
             <div className="connected-account-top">
               <div className="connected-provider-heading">
-                <span><GoogleLogoIcon size={23} weight="bold" /></span>
+                <span><GoogleProviderIcon size={23} /></span>
                 <div><strong>Google</strong><small>Google Workspace</small></div>
               </div>
               <div className="connected-capabilities">
@@ -96,7 +95,7 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
           <div className="connected-account-content">
             <div className="connected-account-top">
               <div className="connected-provider-heading">
-                <span><MicrosoftOutlookLogoIcon size={23} weight="bold" /></span>
+                <span><MicrosoftProviderIcon size={23} /></span>
                 <div><strong>Microsoft</strong><small>Microsoft 365</small></div>
               </div>
               <div className="connected-capabilities">

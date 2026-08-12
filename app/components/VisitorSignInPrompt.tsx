@@ -1,6 +1,6 @@
 "use client";
 
-import { GoogleLogoIcon } from "@phosphor-icons/react/dist/csr/GoogleLogo";
+import { GoogleProviderIcon } from "./ProviderIcons";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
 import { buildAuthHref } from "../../lib/auth/visitor-intent";
 import { LinkButton } from "../components/Button";
@@ -28,7 +28,7 @@ export function VisitorSignInPrompt({
         <p>Sign in with Google to save cards and shared meeting records. No full CRM setup.</p>
       </div>
       <LinkButton href={authHref} variant="secondary">
-        <GoogleLogoIcon size={18} weight="bold" />
+        <GoogleProviderIcon size={18} />
         Continue with Google
       </LinkButton>
     </section>
