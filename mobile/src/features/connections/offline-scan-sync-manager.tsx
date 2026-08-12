@@ -16,7 +16,7 @@ export function OfflineScanSyncManager() {
     const queue = await readOfflineScanQueue();
     for (const entry of queue) {
       try {
-        await connectionFromScannedSlug(accessToken, entry.slug);
+        await connectionFromScannedSlug(accessToken, entry.slug, entry.eventSnapshot);
         await dequeueOfflineScan(entry.slug);
       } catch {
         // Leave queued; retry next cycle.

@@ -282,11 +282,18 @@ export async function POST(request: Request) {
   // neither needs its own copy of this decision); an existing encounter
   // being re-saved for an unrelated edit keeps whatever event it already had.
   const isNewEncounter = !existingRow;
+  const occurredAt = typeof body.startedAt === "string" && !Number.isNaN(Date.parse(body.startedAt))
+    ? new Date(body.startedAt)
+    : new Date();
   let nextEventId: string | null;
   if ("eventId" in body) {
     nextEventId = typeof body.eventId === "string" && body.eventId.trim() ? body.eventId.trim() : null;
+    if (isNewEncounter && nextEventId) {
+      const resolvedAtOccurrence = await resolveCurrentEventIdForUser(supabase, user.id, occurredAt).catch(() => null);
+      if (resolvedAtOccurrence !== nextEventId) nextEventId = resolvedAtOccurrence;
+    }
   } else if (isNewEncounter) {
-    nextEventId = await resolveCurrentEventIdForUser(supabase, user.id).catch(() => null);
+    nextEventId = await resolveCurrentEventIdForUser(supabase, user.id, occurredAt).catch(() => null);
   } else {
     nextEventId = (existingRow?.event_id as string | null | undefined) ?? null;
   }

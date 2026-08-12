@@ -25,14 +25,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "private, no-store" } });
   }
 
-  const payload = await request.json().catch(() => null) as { slug?: string } | null;
+  const payload = await request.json().catch(() => null) as {
+    slug?: string;
+    eventSnapshot?: { eventId?: string; eventTitle?: string; eventLocation?: string; occurredAt?: string };
+  } | null;
   const slug = payload?.slug?.trim().toLowerCase();
   if (!slug) {
     return NextResponse.json({ error: "A card slug is required." }, { status: 400 });
   }
 
   const supabase = await createApiSupabaseClient(request);
-  const { data, error } = await supabase.rpc("link_people_connection_from_scan", { p_slug: slug });
+  const snapshot = payload?.eventSnapshot;
+  const { data, error } = await supabase.rpc("link_people_connection_from_scan", {
+    p_slug: slug,
+    p_event_id: snapshot?.eventId || null,
+    p_event_title: snapshot?.eventTitle?.trim().slice(0, 160) || null,
+    p_event_location: snapshot?.eventLocation?.trim().slice(0, 320) || null,
+    p_occurred_at: snapshot?.occurredAt || null,
+  });
   if (error) {
     return NextResponse.json({ error: "We couldn’t link that card to your people list." }, { status: 500 });
   }

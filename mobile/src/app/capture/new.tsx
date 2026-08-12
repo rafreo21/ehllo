@@ -19,6 +19,7 @@ import { CaptureInteractionStep } from '@/components/capture-interaction-step';
 import { FollowUpDuePicker } from '@/components/follow-up-due-picker';
 import { CaptureStepIndicator } from '@/components/capture-step-indicator';
 import { OfflineBanner } from '@/components/offline-banner';
+import { resolveCachedEventSnapshot, type EventSnapshot } from '@/features/events/event-cache';
 import { Body, Button, FooterBackButton, PageHeader } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import {
@@ -144,6 +145,7 @@ export default function CaptureWizardScreen() {
   const { session } = useAuth();
   const insets = useAppInsets();
   const [draft, setDraft] = useState<CaptureWizardDraft>(EMPTY_CAPTURE_DRAFT);
+  const [eventContext, setEventContext] = useState<EventSnapshot | undefined>();
   const captureDeviceRef = useRef<{ id: string; label: string } | null>(null);
   const remoteSyncDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSyncedDraftAtRef = useRef('');
@@ -172,6 +174,10 @@ export default function CaptureWizardScreen() {
   const [priorMeetingCounts, setPriorMeetingCounts] = useState<Record<string, number>>({});
   const [draftReady, setDraftReady] = useState(false);
   const [interactionPathStarted, setInteractionPathStarted] = useState(false);
+
+  useEffect(() => {
+    void resolveCachedEventSnapshot().then(setEventContext);
+  }, []);
   const [manualFollowUpSheetOpen, setManualFollowUpSheetOpen] = useState(false);
   const [editingManualFollowUpId, setEditingManualFollowUpId] = useState('');
   const [newFollowUpTitle, setNewFollowUpTitle] = useState('');
@@ -977,6 +983,10 @@ export default function CaptureWizardScreen() {
         }
       }
 
+      const occurredAtIso = draft.recordingStartedAt || draft.gatherSessionStartedAt || draft.updatedAt;
+      const occurredAt = new Date(occurredAtIso);
+      const safeOccurredAt = Number.isNaN(occurredAt.getTime()) ? new Date() : occurredAt;
+      const eventSnapshot = await resolveCachedEventSnapshot(safeOccurredAt);
       const payload = buildEncounterPayload({
         id: draft.encounterId,
         transcript: draft.transcript,
@@ -1006,6 +1016,8 @@ export default function CaptureWizardScreen() {
         status: 'draft',
         durationSeconds: draft.durationSeconds || recorder.seconds,
         recording: recording ?? undefined,
+        startedAt: safeOccurredAt.toISOString(),
+        eventId: eventSnapshot?.eventId,
       });
       await saveEncounter(token, payload);
 
@@ -1108,6 +1120,11 @@ export default function CaptureWizardScreen() {
             ) : undefined}
           />
           <OfflineBanner style={styles.offlineBanner} />
+          {eventContext ? (
+            <Text style={styles.eventContext}>
+              At {eventContext.eventTitle}{eventContext.eventLocation ? ` · ${eventContext.eventLocation}` : ''}
+            </Text>
+          ) : null}
         </View>
 
         {!activeRecording && draft.step > 0 ? <View style={styles.stepperWrap}>
@@ -1647,6 +1664,7 @@ const styles = StyleSheet.create({
   page: { flex: 1 },
   header: { paddingHorizontal: spacing.x5 },
   offlineBanner: { marginTop: spacing.x2, alignSelf: 'stretch' },
+  eventContext: { color: colors.ink, fontSize: 13, lineHeight: 18, fontWeight: '700' },
   headerModeAction: {
     minHeight: 44,
     justifyContent: 'center',

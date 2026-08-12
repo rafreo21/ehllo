@@ -300,6 +300,7 @@ export function buildEncounterPayload(input: {
   contactId?: string;
   exchangeId?: string;
   campaignId?: string;
+  eventId?: string;
   sharedSummary: string;
   privateNotes: string;
   manualFollowUps?: Array<{
@@ -410,6 +411,7 @@ export function buildEncounterPayload(input: {
     contactId: input.contactId || undefined,
     exchangeId: input.exchangeId || undefined,
     campaignId: input.campaignId || undefined,
+    eventId: input.eventId || undefined,
     startedAt,
     endedAt: now,
     durationSeconds,

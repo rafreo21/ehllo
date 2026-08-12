@@ -360,6 +360,12 @@ export default function ConnectionDetailScreen() {
               <Title style={styles.name}>{connection.name}</Title>
               <Eyebrow>{connectionSourceLabel(connection.source)}</Eyebrow>
               <Body>{contextLine}</Body>
+              {connection.eventTitle ? (
+                <Text style={styles.eventContext}>
+                  Where we met: {connection.eventTitle}
+                  {connection.eventLocation ? ` · ${connection.eventLocation}` : ''}
+                </Text>
+              ) : null}
               {recordedMeetings.length ? <Body style={styles.countLine}>{meetingCountLabel}</Body> : null}
               <View style={styles.relationshipActions}>
                 <Button
@@ -642,6 +648,7 @@ const styles = StyleSheet.create({
   headerCopy: { gap: spacing.x2 },
   name: { fontSize: 32, lineHeight: 34 },
   countLine: { color: colors.muted, fontSize: 13 },
+  eventContext: { color: colors.ink, fontSize: 13, lineHeight: 18, fontWeight: '700' },
   relationshipActions: { flexDirection: 'row', gap: spacing.x2, marginTop: spacing.x1 },
   relationshipAction: { flex: 1 },
   scroll: { flex: 1, marginTop: spacing.x5 },

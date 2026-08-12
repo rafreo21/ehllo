@@ -28,6 +28,7 @@ import { buildEncounterPayload, fetchInboundExchanges, saveEncounter, type Inbou
 import { displayFollowUpTitle, SELECTABLE_FOLLOW_UP_CHANNELS, type FollowUpChannel } from '@/features/follow-ups/follow-up-channels';
 import { clearQuickFollowUpDraft, readQuickFollowUpDraft, writeQuickFollowUpDraft } from '@/features/follow-ups/quick-follow-up-draft';
 import { enqueueQuickFollowUp } from '@/features/follow-ups/quick-follow-up-queue';
+import { resolveCachedEventSnapshot, type EventSnapshot } from '@/features/events/event-cache';
 import type { QuickFollowUpItem } from '@/features/follow-ups/quick-follow-up-types';
 import { formatDueLabel } from '@/lib/due-date';
 import { isOnline } from '@/lib/connectivity';
@@ -80,6 +81,11 @@ export default function QuickFollowUpScreen() {
   const [queuedOffline, setQueuedOffline] = useState(false);
   const [newGuestName, setNewGuestName] = useState('');
   const [draftHydrated, setDraftHydrated] = useState(false);
+  const [eventContext, setEventContext] = useState<EventSnapshot | undefined>();
+
+  useEffect(() => {
+    void resolveCachedEventSnapshot().then(setEventContext);
+  }, []);
 
   // Resume an in-progress Quick Follow-up if the app was backgrounded or
   // closed before it was saved. Only when there's no explicit navigation
@@ -191,6 +197,7 @@ export default function QuickFollowUpScreen() {
   const editingPronoun = editingItem?.owner === 'guest' ? 'they' : 'you';
 
   async function queueForLater(cleanName: string) {
+    const occurredAt = new Date();
     await enqueueQuickFollowUp({
       personName: cleanName,
       personEmail: personEmail.trim(),
@@ -198,6 +205,7 @@ export default function QuickFollowUpScreen() {
       contactId: params.contactId,
       exchangeId: params.exchangeId,
       followUps,
+      eventSnapshot: await resolveCachedEventSnapshot(occurredAt),
     });
     await clearQuickFollowUpDraft();
     setSaving(false);
@@ -231,6 +239,8 @@ export default function QuickFollowUpScreen() {
     }
 
     try {
+      const occurredAt = new Date();
+      const eventSnapshot = await resolveCachedEventSnapshot(occurredAt);
       const encounter = buildEncounterPayload({
         transcript: '',
         title: `Follow-up with ${cleanName}`,
@@ -256,7 +266,8 @@ export default function QuickFollowUpScreen() {
         consentConfirmed: false,
         status: 'reviewed',
         durationSeconds: 0,
-        startedAt: new Date().toISOString(),
+        startedAt: occurredAt.toISOString(),
+        eventId: eventSnapshot?.eventId,
       });
       const result = await saveEncounter(session.access_token, encounter);
       await clearQuickFollowUpDraft();
@@ -283,6 +294,11 @@ export default function QuickFollowUpScreen() {
           onBack={() => router.back()}
         />
         <Body>Create a reminder without recording a conversation. Nothing is sent automatically.</Body>
+        {eventContext ? (
+          <Text style={styles.eventContext}>
+            At {eventContext.eventTitle}{eventContext.eventLocation ? ` · ${eventContext.eventLocation}` : ''}
+          </Text>
+        ) : null}
       </View>
 
       <ScrollView
@@ -770,6 +786,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
+  eventContext: { color: colors.ink, fontSize: 13, lineHeight: 18, fontWeight: '700' },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',

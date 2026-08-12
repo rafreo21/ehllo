@@ -1,5 +1,6 @@
 import { normalizeEmailForMatching } from '@/lib/contact-identity';
 import { mobileFetch } from '@/lib/mobile-api';
+import type { EventSnapshot } from '@/features/events/event-cache';
 
 import { lookupPublishedCardSlug } from './connection-card-loader';
 import type { SavedDirectoryContact } from './connection-directory';
@@ -25,6 +26,10 @@ export type ConnectionItem = {
   source: ConnectionSource;
   cardSlug?: string;
   connectedAt?: string;
+  eventId?: string;
+  eventTitle?: string;
+  eventLocation?: string;
+  occurredAt?: string;
 };
 
 type PeopleConnection = {
@@ -36,6 +41,10 @@ type PeopleConnection = {
   cardSlug?: string;
   cardOwnerName?: string;
   connectedAt?: string;
+  eventId?: string;
+  eventTitle?: string;
+  eventLocation?: string;
+  occurredAt?: string;
 };
 
 type InboundExchange = {
@@ -144,14 +153,18 @@ export async function enrichConnectionPhotos(accessToken: string, connections: C
   });
 }
 
-export async function registerScannedCard(accessToken: string, slug: string): Promise<ConnectionItem | null> {
+export async function registerScannedCard(
+  accessToken: string,
+  slug: string,
+  eventSnapshot?: EventSnapshot,
+): Promise<ConnectionItem | null> {
   const normalized = slug.trim().toLowerCase();
   if (!normalized) throw new Error('This QR code is not a valid AfterMeet card.');
 
   const response = await mobileFetch('/api/people/connections', accessToken, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ slug: normalized }),
+    body: JSON.stringify({ slug: normalized, eventSnapshot }),
   });
   const payload = await response.json() as { error?: string; connectionId?: string };
   if (!response.ok) {
@@ -175,7 +188,7 @@ export async function registerScannedCard(accessToken: string, slug: string): Pr
   )) ?? null;
 }
 
-export async function connectionFromScannedSlug(accessToken: string, slug: string) {
+export async function connectionFromScannedSlug(accessToken: string, slug: string, eventSnapshot?: EventSnapshot) {
   const normalized = slug.trim().toLowerCase();
   const connections = await fetchAllConnectionsMerged(accessToken);
   const existing = connections.find((item) => (
@@ -183,7 +196,7 @@ export async function connectionFromScannedSlug(accessToken: string, slug: strin
   ));
   if (existing) return existing;
 
-  return registerScannedCard(accessToken, normalized);
+  return registerScannedCard(accessToken, normalized, eventSnapshot);
 }
 
 export async function fetchAllConnectionsMerged(accessToken: string): Promise<ConnectionItem[]> {
@@ -206,6 +219,10 @@ export async function fetchAllConnectionsMerged(accessToken: string): Promise<Co
       source: 'met',
       cardSlug: row.cardSlug?.trim() || undefined,
       connectedAt: row.connectedAt,
+      eventId: row.eventId,
+      eventTitle: row.eventTitle,
+      eventLocation: row.eventLocation,
+      occurredAt: row.occurredAt,
       photoUrl: connectionAvatarUrl({ name, email: row.personEmail?.trim() || undefined } as ConnectionItem),
     };
     merged.set(mergeKey(name, item.email), item);

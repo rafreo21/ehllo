@@ -42,7 +42,8 @@ export function QuickFollowUpSyncManager() {
           consentConfirmed: false,
           status: 'reviewed',
           durationSeconds: 0,
-          startedAt: entry.queuedAt,
+          startedAt: entry.eventSnapshot?.occurredAt ?? entry.queuedAt,
+          eventId: entry.eventSnapshot?.eventId,
         });
         await saveEncounter(accessToken, encounter);
         await dequeueQuickFollowUp(entry.id);

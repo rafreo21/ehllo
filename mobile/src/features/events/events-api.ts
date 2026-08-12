@@ -1,4 +1,5 @@
 import { mobileFetch, readMobileApiJson } from '@/lib/mobile-api';
+import { readCachedEvents, writeCachedEvents } from '@/features/events/event-cache';
 
 export type EventSource = 'manual' | 'link' | 'calendar';
 export type EventAttendanceStatus = 'going' | 'not_going';
@@ -46,13 +47,21 @@ function mapEvent(row: Record<string, unknown>): EventItem {
 
 /** Events the user is going to — see GET /api/events. Candidates awaiting a decision are separate, see fetchEventCandidates. */
 export async function fetchMyEvents(accessToken: string): Promise<EventItem[]> {
-  const response = await mobileFetch('/api/events', accessToken);
-  const payload = await readMobileApiJson<{ events?: Array<Record<string, unknown>>; error?: string }>(
-    response,
-    'Could not read your events from AfterMeet.',
-  );
-  if (!response.ok) throw new Error(payload.error || 'Could not load your events.');
-  return (payload.events ?? []).map(mapEvent);
+  try {
+    const response = await mobileFetch('/api/events', accessToken);
+    const payload = await readMobileApiJson<{ events?: Array<Record<string, unknown>>; error?: string }>(
+      response,
+      'Could not read your events from AfterMeet.',
+    );
+    if (!response.ok) throw new Error(payload.error || 'Could not load your events.');
+    const events = (payload.events ?? []).map(mapEvent);
+    await writeCachedEvents(events);
+    return events;
+  } catch (error) {
+    const cached = await readCachedEvents();
+    if (cached.length) return cached;
+    throw error;
+  }
 }
 
 export async function fetchEventCandidates(accessToken: string): Promise<EventCandidatesResult> {
