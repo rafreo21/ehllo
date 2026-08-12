@@ -1,11 +1,9 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { GoogleWalletIcon } from '@/components/google-wallet-icon';
-import { radius, spacing } from '@/theme/tokens';
+import { spacing } from '@/theme/tokens';
 
-// The official button "only comes in black" per Google's brand guidelines.
-const WALLET_BLACK = '#000000';
 const WALLET_LABEL = 'Add to Google Wallet';
+const OFFICIAL_BUTTON = require('@/assets/images/add-to-google-wallet-en-gb.png');
 
 type GoogleWalletButtonProps = {
   onPress?: () => void | Promise<void>;
@@ -15,53 +13,64 @@ type GoogleWalletButtonProps = {
 };
 
 /**
- * "Add to Google Wallet" button.
- *
- * Google brand guidelines
- * (developers.google.com/wallet/.../brand-guidelines) require the official
- * black button with the exact "Add to Google Wallet" label, a 48dp minimum
- * height, ≥8dp clear space on all sides, correct aspect ratio, and no
- * recoloring, relabeling, or distortion of the mark.
- *
- * INTERIM: this renders the compliant black treatment with the official
- * multicolor Wallet logo (undistorted) and the exact English label. For full
- * compliance — especially localized markets — replace this with Google's
- * downloadable, per-locale button asset and do not restyle it. The 8dp clear
- * space is provided by the parent action row's gap; keep it ≥8dp.
+ * Google's official localized English (Great Britain) Add to Google Wallet
+ * primary button. The image is rendered at its intrinsic aspect ratio and is
+ * not recolored, relabeled, cropped, or distorted.
  */
 export function GoogleWalletButton({ onPress, loading, disabled, style }: GoogleWalletButtonProps) {
+  const unavailable = Boolean(disabled || loading);
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={WALLET_LABEL}
-      accessibilityState={{ disabled: Boolean(disabled || loading) }}
-      disabled={disabled || loading}
+      accessibilityState={{ busy: Boolean(loading), disabled: unavailable }}
+      disabled={unavailable}
       onPress={onPress}
       style={({ pressed }) => [
-        styles.button,
-        pressed && !loading && styles.pressed,
-        (disabled || loading) && styles.disabledState,
+        styles.touchTarget,
+        pressed && !unavailable && styles.pressed,
+        unavailable && styles.disabledState,
         style,
       ]}>
-      <View style={styles.content}>
-        {loading ? <ActivityIndicator color="#FFFFFF" /> : <GoogleWalletIcon size={20} />}
-        <Text style={styles.label}>{WALLET_LABEL}</Text>
+      <View style={styles.assetFrame}>
+        <Image source={OFFICIAL_BUTTON} resizeMode="contain" style={styles.asset} />
+        {loading ? (
+          <View pointerEvents="none" style={styles.loadingOverlay}>
+            <ActivityIndicator color="#FFFFFF" />
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
-    minHeight: 48,
-    paddingHorizontal: spacing.x5,
-    borderRadius: radius.small,
+  touchTarget: {
+    minHeight: 50 + spacing.x4,
+    paddingVertical: spacing.x2,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: WALLET_BLACK,
   },
-  content: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.x2 },
-  label: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  assetFrame: {
+    width: 283,
+    height: 50,
+  },
+  asset: {
+    width: '100%',
+    height: '100%',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    borderRadius: 25,
+  },
   pressed: { opacity: 0.85 },
   disabledState: { opacity: 0.45 },
 });
