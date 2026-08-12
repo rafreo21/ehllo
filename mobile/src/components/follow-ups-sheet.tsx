@@ -3,7 +3,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { GroupedFollowUpActions, GroupedFollowUpCell } from '@/components/grouped-follow-up-cell';
-import { Button } from '@/components/ui';
+import { PillButton } from '@/components/ui';
 import type { FollowUpItem } from '@/features/follow-ups/follow-up-api';
 import { groupFollowUpItems, type FollowUpGroup } from '@/features/follow-ups/follow-up-groups';
 import { colors, radius, spacing } from '@/theme/tokens';
@@ -80,16 +80,18 @@ export function FollowUpsSheet({
               style={styles.search}
             />
             <View style={styles.sortRow}>
-              <Button
-                variant={sortMode === 'urgency' ? 'primary' : 'secondary'}
+              <PillButton
+                tone={sortMode === 'urgency' ? 'solid' : 'outline'}
+                style={styles.sortButton}
                 onPress={() => setSortMode('urgency')}>
                 By urgency
-              </Button>
-              <Button
-                variant={sortMode === 'recent' ? 'primary' : 'secondary'}
+              </PillButton>
+              <PillButton
+                tone={sortMode === 'recent' ? 'solid' : 'outline'}
+                style={styles.sortButton}
                 onPress={() => setSortMode('recent')}>
                 Most recent
-              </Button>
+              </PillButton>
             </View>
           </View>
         ) : null}
@@ -162,6 +164,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.canvas,
   },
   sortRow: { flexDirection: 'row', gap: spacing.x2 },
+  sortButton: { flex: 1, alignSelf: 'stretch' },
   list: { gap: spacing.x3 },
   empty: { color: colors.muted, fontSize: 14, lineHeight: 20 },
 });

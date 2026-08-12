@@ -109,6 +109,9 @@ export default function ConnectionDetailScreen() {
   const activeMeetingEventTitle = activeMeeting?.eventId
     ? myEvents.find((event) => event.id === activeMeeting.eventId)?.title
     : undefined;
+  const activeMeetingEventLocation = activeMeeting?.eventId
+    ? myEvents.find((event) => event.id === activeMeeting.eventId)?.location
+    : undefined;
 
   const showError = useCallback((message: string) => {
     setErrorMessage(message);
@@ -257,16 +260,25 @@ export default function ConnectionDetailScreen() {
     () => meetings.filter((meeting) => meeting.durationSeconds > 0 || meeting.recording),
     [meetings],
   );
+  const eventById = useMemo(
+    () => new Map(myEvents.map((event) => [event.id, event])),
+    [myEvents],
+  );
   const timeline = useMemo(() => [
-    ...recordedMeetings.map((meeting) => ({
-      id: `meeting-${meeting.id}`,
-      kind: 'meeting' as const,
-      occurredAt: meeting.startedAt,
-      title: meeting.title.trim() || 'Meeting',
-      copy: meeting.sharedSummary.trim(),
-      encounterId: meeting.id,
-      meeting,
-    })),
+    ...recordedMeetings.map((meeting) => {
+      const event = meeting.eventId ? eventById.get(meeting.eventId) : undefined;
+      return {
+        id: `meeting-${meeting.id}`,
+        kind: 'meeting' as const,
+        occurredAt: meeting.startedAt,
+        title: meeting.title.trim() || 'Meeting',
+        copy: meeting.sharedSummary.trim(),
+        eventTitle: event?.title || '',
+        eventLocation: event?.location || '',
+        encounterId: meeting.id,
+        meeting,
+      };
+    }),
     ...followUps
       .filter((item) => item.status === 'completed' && item.completedAt)
       .map((item) => ({
@@ -278,10 +290,12 @@ export default function ConnectionDetailScreen() {
         // already appears as its own History cell in this same list, so
         // repeating its title read as duplicated text right next to it.
         copy: '',
+        eventTitle: item.eventTitle || '',
+        eventLocation: item.eventId ? eventById.get(item.eventId)?.location || '' : '',
         encounterId: item.encounterId,
         meeting: meetings.find((meeting) => meeting.id === item.encounterId) || null,
       })),
-  ].sort((left, right) => right.occurredAt.localeCompare(left.occurredAt)), [followUps, meetings, recordedMeetings]);
+  ].sort((left, right) => right.occurredAt.localeCompare(left.occurredAt)), [eventById, followUps, meetings, recordedMeetings]);
 
   async function confirmDelete() {
     if (!accessToken || !connection) return;
@@ -338,6 +352,9 @@ export default function ConnectionDetailScreen() {
   const meetingCountLabel = recordedMeetings.length === 1
     ? '1 conversation'
     : `${recordedMeetings.length} conversations`;
+  const latestMeetingPlace = timeline.find((item) => item.kind === 'meeting' && item.eventTitle);
+  const latestPlaceTitle = latestMeetingPlace?.eventTitle || connection?.eventTitle || '';
+  const latestPlaceLocation = latestMeetingPlace?.eventLocation || connection?.eventLocation || '';
 
   return (
     <View style={[styles.safe, { paddingTop: insets.top + spacing.x2 }]}>
@@ -360,10 +377,10 @@ export default function ConnectionDetailScreen() {
               <Title style={styles.name}>{connection.name}</Title>
               <Eyebrow>{connectionSourceLabel(connection.source)}</Eyebrow>
               <Body>{contextLine}</Body>
-              {connection.eventTitle ? (
+              {latestPlaceTitle ? (
                 <Text style={styles.eventContext}>
-                  Where we met: {connection.eventTitle}
-                  {connection.eventLocation ? ` · ${connection.eventLocation}` : ''}
+                  Last met at: {latestPlaceTitle}
+                  {latestPlaceLocation ? ` · ${latestPlaceLocation}` : ''}
                 </Text>
               ) : null}
               {recordedMeetings.length ? <Body style={styles.countLine}>{meetingCountLabel}</Body> : null}
@@ -438,6 +455,11 @@ export default function ConnectionDetailScreen() {
                           {item.title}
                         </Text>
                         <Text style={styles.meetingMeta}>{item.kind === 'completed' ? 'Follow-up completed' : 'Meeting'} · {formatMeetingDate(item.occurredAt)}</Text>
+                        {item.eventTitle ? (
+                          <Text style={styles.meetingPlace} numberOfLines={1}>
+                            At {item.eventTitle}{item.eventLocation ? ` · ${item.eventLocation}` : ''}
+                          </Text>
+                        ) : null}
                         {item.copy ? (
                           <Text style={styles.meetingSummary} numberOfLines={2}>{item.copy}</Text>
                         ) : null}
@@ -540,6 +562,11 @@ export default function ConnectionDetailScreen() {
               <View style={styles.meetingCopy}>
                 <Text style={styles.meetingTitle} numberOfLines={1}>{item.title}</Text>
                 <Text style={styles.meetingMeta}>{item.kind === 'completed' ? 'Follow-up completed' : 'Meeting'} · {formatMeetingDate(item.occurredAt)}</Text>
+                {item.eventTitle ? (
+                  <Text style={styles.meetingPlace} numberOfLines={1}>
+                    At {item.eventTitle}{item.eventLocation ? ` · ${item.eventLocation}` : ''}
+                  </Text>
+                ) : null}
               </View>
               <CaretRight size={16} color={colors.muted} weight="bold" />
             </Pressable>
@@ -552,6 +579,7 @@ export default function ConnectionDetailScreen() {
         encounter={activeMeeting}
         recordingUri={meetingRecordingUri}
         eventTitle={activeMeetingEventTitle}
+        eventLocation={activeMeetingEventLocation}
         followUps={activeMeeting ? followUps.filter((item) => item.encounterId === activeMeeting.id) : []}
         onClose={() => {
           setActiveMeeting(null);
@@ -686,6 +714,7 @@ const styles = StyleSheet.create({
   meetingCopy: { flex: 1, gap: 2 },
   meetingTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
   meetingMeta: { color: colors.muted, fontSize: 12, fontWeight: '700' },
+  meetingPlace: { color: colors.inkSoft, fontSize: 12, lineHeight: 17, fontWeight: '700' },
   meetingSummary: { color: colors.inkSoft, fontSize: 13, lineHeight: 18 },
   cardButton: {
     flexDirection: 'row',
