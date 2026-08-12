@@ -52,7 +52,10 @@ export async function GET(request: Request, { params }: { params: Params }) {
     process.env.SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) return new Response("Contact card unavailable.", { status: 503 });
 
-  const supabase = createClient(url, key, { auth: { persistSession: false } });
+  // Prefer the server credential when available: some deployments intentionally
+  // block anonymous table reads even though this route exposes published cards.
+  // The status filter below remains the public-data boundary.
+  const supabase = createServiceSupabaseClient() ?? createClient(url, key, { auth: { persistSession: false } });
   const { data: card } = await supabase
     .from("cards")
     .select("*, card_methods(*)")
