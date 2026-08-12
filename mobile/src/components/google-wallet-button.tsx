@@ -36,11 +36,13 @@ export function GoogleWalletButton({ onPress, loading, disabled, mode = 'add', s
         style,
       ]}>
       <View style={[styles.assetFrame, { width: viewing ? 287 : 283 }]}>
-        <Image
-          source={viewing ? VIEW_BUTTON : OFFICIAL_BUTTON}
-          resizeMode="contain"
-          style={viewing ? styles.viewAsset : styles.asset}
-        />
+        {viewing ? (
+          <View style={styles.viewAssetFrame}>
+            <Image source={VIEW_BUTTON} resizeMode="stretch" style={styles.viewAsset} />
+          </View>
+        ) : (
+          <Image source={OFFICIAL_BUTTON} resizeMode="contain" style={styles.asset} />
+        )}
         {loading ? (
           <View pointerEvents="none" style={styles.loadingOverlay}>
             <ActivityIndicator color="#FFFFFF" />
@@ -70,9 +72,18 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  viewAsset: {
+  viewAssetFrame: {
     width: '88%',
     height: '88%',
+    overflow: 'hidden',
+    backgroundColor: '#1F1F1F',
+  },
+  viewAsset: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    bottom: -2,
+    left: -2,
   },
   loadingOverlay: {
     position: 'absolute',
