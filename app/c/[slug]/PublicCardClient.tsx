@@ -160,6 +160,7 @@ function PublicCardView({
 
 export function PublicCardClient({
   slug,
+  eventTitle,
   ownerName,
   jobTitle,
   company,
@@ -172,6 +173,7 @@ export function PublicCardClient({
   methods,
 }: {
   slug: string;
+  eventTitle: string;
   ownerName: string;
   jobTitle: string | null;
   company: string | null;
@@ -187,7 +189,7 @@ export function PublicCardClient({
   const [showCoach, setShowCoach] = useState(false);
   const [showAppDownload, setShowAppDownload] = useState(false);
   const [visitorEmail, setVisitorEmail] = useState("");
-  const vcardUrl = `/c/${encodeURIComponent(slug)}/contact.vcf`;
+  const vcardUrl = `/c/${encodeURIComponent(slug)}/contact.vcf${eventTitle ? `?event=${encodeURIComponent(eventTitle)}` : ""}`;
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });

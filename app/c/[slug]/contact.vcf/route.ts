@@ -42,6 +42,7 @@ type Params = Promise<{ slug: string }>;
 
 export async function GET(request: Request, { params }: { params: Params }) {
   const { slug } = await params;
+  const eventHint = new URL(request.url).searchParams.get("event")?.trim().slice(0, 160) || undefined;
   const url =
     process.env.NEXT_PUBLIC_SUPABASE_URL ??
     process.env.SUPABASE_URL;
@@ -70,10 +71,10 @@ export async function GET(request: Request, { params }: { params: Params }) {
   const profilePhotoUrl = publicCardImageUrl(card.profile_image_url);
   const companyLogoUrl = publicCardImageUrl(publicCompanyLogoUrl(card.company_logo_url, showCompanyDetails));
   const coverPhotoUrl = publicCardImageUrl(card.cover_image_url);
-  const [profilePhoto, companyLogoPhoto, eventTitle] = await Promise.all([
+  const [profilePhoto, companyLogoPhoto, currentEventTitle] = await Promise.all([
     profilePhotoUrl ? fetchVcardImage(profilePhotoUrl) : null,
     showCompanyDetails && companyLogoUrl ? fetchVcardImage(companyLogoUrl) : null,
-    currentEventTitleForCardOwner(card.workspace_id),
+    eventHint ? Promise.resolve(undefined) : currentEventTitleForCardOwner(card.workspace_id),
   ]);
   const { body, filename } = buildCardVcard({
     fullName: card.full_name,
@@ -87,7 +88,7 @@ export async function GET(request: Request, { params }: { params: Params }) {
     profilePhotoUrl,
     companyLogoUrl,
     coverPhotoUrl,
-    eventTitle,
+    eventTitle: eventHint ?? currentEventTitle,
     methods: methods.map((method) => ({
       method_type: method.method_type,
       value: method.value,

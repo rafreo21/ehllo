@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Params = Promise<{ slug: string }>;
+type SearchParams = Promise<{ event?: string | string[] }>;
 
 async function getCard(slug: string) {
   const url =
@@ -46,8 +47,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     : { title: "Contact card · AfterMeet" };
 }
 
-export default async function PublicCardPage({ params }: { params: Params }) {
+export default async function PublicCardPage({ params, searchParams }: { params: Params; searchParams: SearchParams }) {
   const { slug } = await params;
+  const query = await searchParams;
+  const eventTitle = (Array.isArray(query.event) ? query.event[0] : query.event)?.trim().slice(0, 160) ?? "";
   const card = await getCard(slug);
   if (!card) notFound();
   const methods = [...(card.card_methods || [])].sort(
@@ -57,6 +60,7 @@ export default async function PublicCardPage({ params }: { params: Params }) {
   return (
     <PublicCardClient
       slug={slug}
+      eventTitle={eventTitle}
       ownerName={card.full_name}
       jobTitle={card.job_title}
       company={publicCompanyField(card.company, showCompanyDetails)}

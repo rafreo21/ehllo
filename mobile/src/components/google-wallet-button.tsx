@@ -1,9 +1,9 @@
-import { ActivityIndicator, Image, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { GoogleWalletIcon } from '@/components/google-wallet-icon';
 const WALLET_LABEL = 'Add to Google Wallet';
 const OFFICIAL_BUTTON = require('@/assets/images/add-to-google-wallet-en-gb.png');
 const VIEW_LABEL = 'View in Google Wallet';
-const VIEW_BUTTON = require('@/assets/images/view-in-google-wallet-en-gb.png');
 
 type GoogleWalletButtonProps = {
   onPress?: () => void | Promise<void>;
@@ -37,8 +37,9 @@ export function GoogleWalletButton({ onPress, loading, disabled, mode = 'add', s
       ]}>
       <View style={[styles.assetFrame, { width: viewing ? 287 : 283 }]}>
         {viewing ? (
-          <View style={styles.viewAssetFrame}>
-            <Image source={VIEW_BUTTON} resizeMode="stretch" style={styles.viewAsset} />
+          <View style={styles.viewContent}>
+            <GoogleWalletIcon size={25} />
+            <Text style={styles.viewLabel}>{VIEW_LABEL}</Text>
           </View>
         ) : (
           <Image source={OFFICIAL_BUTTON} resizeMode="contain" style={styles.asset} />
@@ -72,19 +73,8 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  viewAssetFrame: {
-    width: '88%',
-    height: '88%',
-    overflow: 'hidden',
-    backgroundColor: '#1F1F1F',
-  },
-  viewAsset: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    bottom: -2,
-    left: -2,
-  },
+  viewContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  viewLabel: { color: '#FFFFFF', fontSize: 17, lineHeight: 21, fontWeight: '600' },
   loadingOverlay: {
     position: 'absolute',
     top: 0,

@@ -51,6 +51,9 @@ export default function ShareCardScreen() {
   const [qrMode, setQrMode] = useState<QrShareMode>('online');
   const onlineQrEnabled = qrMode === 'online';
   const [activeEventTitle, setActiveEventTitle] = useState<string | undefined>(undefined);
+  const onlineCardUrl = publicUrl && activeEventTitle
+    ? `${publicUrl}?event=${encodeURIComponent(activeEventTitle)}`
+    : publicUrl;
 
   useEffect(() => {
     if (Platform.OS !== 'android' || !card.slug) return;
@@ -223,7 +226,7 @@ export default function ShareCardScreen() {
               <BrandedQrCode
                 key={qrMode}
                 card={card}
-                cardUrl={publicUrl}
+                cardUrl={onlineQrEnabled ? onlineCardUrl : publicUrl}
                 mode={qrMode}
                 size={280}
                 activeEventTitle={activeEventTitle}
