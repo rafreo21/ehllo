@@ -8,6 +8,7 @@ import {
   publicCompanyLogoUrl,
 } from "@/lib/card-company-display";
 import { publicCardImageUrl } from "@/lib/card-assets";
+import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import { PublicCardClient } from "./PublicCardClient";
 import "./public-card.css";
 
@@ -26,7 +27,8 @@ async function getCard(slug: string) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
     process.env.SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) return null;
-  const supabase = createClient(url, key, { auth: { persistSession: false } });
+  const supabase = createServiceSupabaseClient()
+    ?? createClient(url, key, { auth: { persistSession: false } });
   const { data } = await supabase
     .from("cards")
     .select("*, card_methods(*)")
