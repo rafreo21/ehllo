@@ -183,7 +183,7 @@ export function PageHeader({
 type ButtonProps = {
   children: ReactNode;
   onPress?: () => void | Promise<void>;
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'solid' | 'outline';
   disabled?: boolean;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -239,20 +239,27 @@ export function Button({ children, onPress, variant = 'primary', disabled, loadi
         styles.button,
         variant === 'secondary' && styles.buttonSecondary,
         variant === 'ghost' && styles.buttonGhost,
+        variant === 'solid' && styles.buttonSolid,
+        variant === 'outline' && styles.buttonOutline,
         pressed && !loading && styles.buttonPressed,
         (disabled || loading) && styles.buttonDisabled,
         style,
       ]}>
       <View style={styles.buttonContent}>
         {loading ? (
-          <ActivityIndicator color={variant === 'primary' ? colors.ink : colors.muted} />
+          <ActivityIndicator color={variant === 'solid' ? colors.white : variant === 'primary' ? colors.ink : colors.muted} />
         ) : null}
         {items.map((child, index) =>
           typeof child === 'string' || typeof child === 'number'
             ? (
               <Text
                 key={`label-${index}`}
-                style={[styles.buttonText, variant !== 'primary' && styles.buttonTextSecondary]}>
+                style={[
+                  styles.buttonText,
+                  variant !== 'primary' && styles.buttonTextSecondary,
+                  variant === 'solid' && styles.buttonTextSolid,
+                  variant === 'outline' && styles.buttonTextOutline,
+                ]}>
                 {child}
               </Text>
             )
@@ -288,10 +295,16 @@ const styles = StyleSheet.create({
   button: { minHeight: 48, paddingHorizontal: spacing.x5, alignItems: 'center', justifyContent: 'center', borderRadius: radius.small, backgroundColor: colors.accent },
   buttonSecondary: { backgroundColor: colors.surfaceMuted },
   buttonGhost: { backgroundColor: 'transparent' },
+  // RSVP "Going" treatment: dark forest-green fill, white label.
+  buttonSolid: { backgroundColor: colors.ink },
+  // RSVP "Not going" treatment: white fill, subtle line outline, muted label.
+  buttonOutline: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
   buttonPressed: { opacity: 0.78, transform: [{ scale: 0.99 }] },
   buttonDisabled: { opacity: 0.45 },
   buttonText: { color: colors.ink, fontSize: 15, fontWeight: '800' },
   buttonTextSecondary: { color: colors.ink },
+  buttonTextSolid: { color: colors.white },
+  buttonTextOutline: { color: colors.muted },
   buttonContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.x2 },
   backButton: {
     width: 44,

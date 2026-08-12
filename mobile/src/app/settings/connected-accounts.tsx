@@ -249,19 +249,17 @@ export default function ConnectedAccountsScreen() {
               ) : loading ? (
                 <ActivityIndicator color={colors.ink} />
               ) : connected ? (
-                <View style={styles.connectedActions}>
-                  {provider.id === 'google' && !status?.google.capabilities.drive ? (
-                    <Button onPress={() => void connectProvider('google')}>Reconnect for Drive</Button>
-                  ) : null}
-                  {provider.id === 'microsoft' && !status?.microsoft.capabilities.onedrive ? (
-                    <Button onPress={() => void connectProvider('microsoft')}>Reconnect for OneDrive</Button>
-                  ) : null}
-                  <Button variant="secondary" onPress={() => setPendingDisconnect(provider.id as 'google' | 'microsoft')}>
+                provider.id === 'google' && !status?.google.capabilities.drive ? (
+                  <Button variant="solid" onPress={() => void connectProvider('google')}>Reconnect for Drive</Button>
+                ) : provider.id === 'microsoft' && !status?.microsoft.capabilities.onedrive ? (
+                  <Button variant="solid" onPress={() => void connectProvider('microsoft')}>Reconnect for OneDrive</Button>
+                ) : (
+                  <Button variant="outline" onPress={() => setPendingDisconnect(provider.id as 'google' | 'microsoft')}>
                     Disconnect
                   </Button>
-                </View>
+                )
               ) : (
-                <Button onPress={() => void connectProvider(provider.id as 'google' | 'microsoft')}>
+                <Button variant="solid" onPress={() => void connectProvider(provider.id as 'google' | 'microsoft')}>
                   Connect {provider.name}
                 </Button>
               )}
@@ -325,7 +323,6 @@ const styles = StyleSheet.create({
   },
   capabilityEnabled: { backgroundColor: colors.surfaceMuted, opacity: 1 },
   capabilityText: { color: colors.ink, fontSize: 11, fontWeight: '800' },
-  connectedActions: { gap: spacing.x2 },
   panelTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
   panelCopy: { marginTop: 6, color: colors.muted, fontSize: 13, lineHeight: 19 },
   soon: { color: colors.muted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
