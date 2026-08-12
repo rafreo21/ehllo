@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, Share, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { BrandedQrCode, type QrShareMode } from '@/components/branded-qr-code';
-import { GoogleWalletIcon } from '@/components/google-wallet-icon';
+import { GoogleWalletButton } from '@/components/google-wallet-button';
 import { BackButton, Body, Button, Eyebrow, ScreenFrame } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
@@ -261,18 +261,22 @@ export default function ShareCardScreen() {
           </Button>
         ) : null}
         {walletAvailable ? (
-          <Button
-            style={[styles.actionButton, styles.whiteActionButton]}
-            variant="secondary"
-            loading={walletBusy}
-            onPress={() => void addToWallet()}>
-            {Platform.OS === 'android' ? (
-              <GoogleWalletIcon size={18} />
-            ) : (
+          Platform.OS === 'android' ? (
+            <GoogleWalletButton
+              style={styles.actionButton}
+              loading={walletBusy}
+              onPress={() => void addToWallet()}
+            />
+          ) : (
+            <Button
+              style={[styles.actionButton, styles.whiteActionButton]}
+              variant="secondary"
+              loading={walletBusy}
+              onPress={() => void addToWallet()}>
               <Wallet size={18} color={colors.ink} weight="bold" />
-            )}
-            {walletLabel}
-          </Button>
+              {walletLabel}
+            </Button>
+          )
         ) : walletNote ? (
           <Text style={styles.walletNote}>{walletNote}</Text>
         ) : null}
