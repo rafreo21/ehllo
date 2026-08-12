@@ -67,7 +67,11 @@ export function EventCard({
             {variant === 'going' ? (
               <View style={styles.statusTag}><Text style={styles.statusText}>Going</Text></View>
             ) : null}
-            {showCandidateActions ? <Text style={styles.suggested} numberOfLines={1}>From calendar</Text> : null}
+            {showCandidateActions ? (
+              <Text style={styles.suggested} numberOfLines={1}>
+                {event.source === 'calendar' ? 'From calendar' : 'Added by you'}
+              </Text>
+            ) : null}
           </View>
         </View>
         {showCaret ? <CaretRight size={14} color={colors.muted} weight="bold" /> : null}

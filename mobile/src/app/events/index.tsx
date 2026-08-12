@@ -196,7 +196,7 @@ export default function EventsScreen() {
       endsAt: input.endsAt || undefined,
       sourceUrl: input.sourceUrl || undefined,
     });
-    setEvents((current) => [...current, created]);
+    setCandidates((current) => [...current, created]);
     setAddOpen(false);
   }
 

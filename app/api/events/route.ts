@@ -71,20 +71,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "We couldn’t save this event." }, { status: 500 });
   }
 
-  // A user who bothered to add this event themselves is, by definition,
-  // going — no separate Going/Not going ask for a self-added event, that
-  // question only applies to calendar-suggested candidates.
-  const { error: attendanceError } = await supabase.from("event_attendance").upsert({
-    event_id: data.id,
-    user_id: user.id,
-    status: "going",
-    updated_at: new Date().toISOString(),
-  }, { onConflict: "event_id,user_id" });
-
-  if (attendanceError) {
-    return NextResponse.json({ error: "The event was saved but we couldn’t mark you as going." }, { status: 500 });
-  }
-
   return NextResponse.json(
     { ok: true, event: eventFromRow(data as EventRow) },
     { headers: { "Cache-Control": "private, no-store" } },

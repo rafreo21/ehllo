@@ -83,7 +83,7 @@ export async function fetchEventCandidates(accessToken: string): Promise<EventCa
   };
 }
 
-/** Manually-added or pasted-link events default to "going" server-side — no separate attendance call needed after this. */
+/** Manually-added and pasted-link events are returned undecided so the same Going/Not going flow applies to every source. */
 export async function createEvent(
   accessToken: string,
   input: { title: string; location?: string; startsAt: string; endsAt?: string; sourceUrl?: string },
