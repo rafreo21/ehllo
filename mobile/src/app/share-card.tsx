@@ -147,11 +147,16 @@ export default function ShareCardScreen() {
   async function addToWallet() {
     if (!card.slug || !session?.access_token) return;
     setWalletBusy(true);
+    setWalletNote('');
     try {
       if (Platform.OS === 'ios') {
         await addAppleWalletPass(card.slug, session.access_token);
       } else if (Platform.OS === 'android') {
         await addGoogleWalletPass(card.slug, session.access_token);
+        // The web save flow cannot report whether the user chose Add or
+        // Cancel. Keep the official Add button available and describe only
+        // the state we can confirm: Google Wallet was opened.
+        setWalletNote('Google Wallet opened. Complete Add there; if this pass is already saved, Google will show it.');
       }
     } catch (error) {
       setWalletNote(error instanceof Error ? error.message : 'Could not open Wallet.');
@@ -266,9 +271,8 @@ export default function ShareCardScreen() {
               {walletLabel}
             </Button>
           )
-        ) : walletNote ? (
-          <Text style={styles.walletNote}>{walletNote}</Text>
         ) : null}
+        {walletNote ? <Text style={styles.walletNote}>{walletNote}</Text> : null}
         {tapSupported ? (
           <Button
             style={[styles.actionButton, styles.whiteActionButton]}
