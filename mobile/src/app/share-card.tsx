@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   actions: { gap: spacing.x2 },
   shareActionRow: { flexDirection: 'row', gap: spacing.x2 },
   sharePill: { flex: 1, alignSelf: 'stretch', height: 50 },
-  sharePillText: { fontSize: 15, lineHeight: 19 },
+  sharePillText: { fontSize: 15, lineHeight: 19, fontWeight: '600' },
   actionButton: { alignSelf: 'stretch' },
   whiteActionButton: { backgroundColor: colors.white },
   helper: { color: colors.muted, fontSize: 11, textAlign: 'center' },
