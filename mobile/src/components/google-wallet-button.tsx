@@ -4,12 +4,14 @@ import { spacing } from '@/theme/tokens';
 
 const WALLET_LABEL = 'Add to Google Wallet';
 const OFFICIAL_BUTTON = require('@/assets/images/add-to-google-wallet-en-gb.png');
-const OFFICIAL_ASPECT_RATIO = 283 / 50;
+const VIEW_LABEL = 'View in Google Wallet';
+const VIEW_BUTTON = require('@/assets/images/view-in-google-wallet-en-gb.png');
 
 type GoogleWalletButtonProps = {
   onPress?: () => void | Promise<void>;
   loading?: boolean;
   disabled?: boolean;
+  mode?: 'add' | 'view';
   style?: StyleProp<ViewStyle>;
 };
 
@@ -18,13 +20,14 @@ type GoogleWalletButtonProps = {
  * primary button. The image is rendered at its intrinsic aspect ratio and is
  * not recolored, relabeled, cropped, or distorted.
  */
-export function GoogleWalletButton({ onPress, loading, disabled, style }: GoogleWalletButtonProps) {
+export function GoogleWalletButton({ onPress, loading, disabled, mode = 'add', style }: GoogleWalletButtonProps) {
   const unavailable = Boolean(disabled || loading);
+  const viewing = mode === 'view';
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={WALLET_LABEL}
+      accessibilityLabel={viewing ? VIEW_LABEL : WALLET_LABEL}
       accessibilityState={{ busy: Boolean(loading), disabled: unavailable }}
       disabled={unavailable}
       onPress={onPress}
@@ -34,8 +37,8 @@ export function GoogleWalletButton({ onPress, loading, disabled, style }: Google
         unavailable && styles.disabledState,
         style,
       ]}>
-      <View style={styles.assetFrame}>
-        <Image source={OFFICIAL_BUTTON} resizeMode="contain" style={styles.asset} />
+      <View style={[styles.assetFrame, { aspectRatio: viewing ? 287 / 50 : 283 / 50 }]}>
+        <Image source={viewing ? VIEW_BUTTON : OFFICIAL_BUTTON} resizeMode="contain" style={styles.asset} />
         {loading ? (
           <View pointerEvents="none" style={styles.loadingOverlay}>
             <ActivityIndicator color="#FFFFFF" />
@@ -58,7 +61,6 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 360,
     minHeight: 48,
-    aspectRatio: OFFICIAL_ASPECT_RATIO,
   },
   asset: {
     width: '100%',

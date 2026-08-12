@@ -1,12 +1,12 @@
 import * as Brightness from 'expo-brightness';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ContactlessPayment, Scan, ShareNetwork, Wallet } from 'phosphor-react-native';
+import { Scan, Wallet } from 'phosphor-react-native';
 import { useCallback, useEffect, useState } from 'react';
-import { Platform, Pressable, Share, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, Share, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { BrandedQrCode, type QrShareMode } from '@/components/branded-qr-code';
 import { GoogleWalletButton } from '@/components/google-wallet-button';
-import { BackButton, Body, Button, Eyebrow, ScreenFrame } from '@/components/ui';
+import { BackButton, Body, Button, Eyebrow, PillButton, ScreenFrame } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
 import { showsCompanyDetails } from '@/features/card/company-display';
@@ -26,6 +26,7 @@ import {
   addGoogleWalletPass,
   fetchWalletAvailability,
 } from '@/features/card/wallet-actions';
+import { readGoogleWalletSaved, writeGoogleWalletSaved } from '@/lib/google-wallet-state';
 import { readQuickShareQrMode, writeQuickShareQrMode } from '@/lib/quick-share-preferences';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -45,10 +46,16 @@ export default function ShareCardScreen() {
   const [tapMessage, setTapMessage] = useState(tapNativeReady ? '' : TAP_TO_SHARE_REBUILD_MESSAGE);
   const [walletAvailable, setWalletAvailable] = useState<boolean | null>(null);
   const [walletBusy, setWalletBusy] = useState(false);
+  const [googleWalletSaved, setGoogleWalletSaved] = useState(false);
   const [walletNote, setWalletNote] = useState('');
   const [qrMode, setQrMode] = useState<QrShareMode>('online');
   const onlineQrEnabled = qrMode === 'online';
   const [activeEventTitle, setActiveEventTitle] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !card.slug) return;
+    void readGoogleWalletSaved(card.slug).then(setGoogleWalletSaved);
+  }, [card.slug]);
 
   useEffect(() => {
     if (!session?.access_token) return;
@@ -153,10 +160,23 @@ export default function ShareCardScreen() {
         await addAppleWalletPass(card.slug, session.access_token);
       } else if (Platform.OS === 'android') {
         await addGoogleWalletPass(card.slug, session.access_token);
-        // The web save flow cannot report whether the user chose Add or
-        // Cancel. Keep the official Add button available and describe only
-        // the state we can confirm: Google Wallet was opened.
-        setWalletNote('Google Wallet opened. Complete Add there; if this pass is already saved, Google will show it.');
+        if (!googleWalletSaved) {
+          Alert.alert(
+            'Was the pass added?',
+            'Confirm only after Google Wallet shows that the pass was added.',
+            [
+              { text: 'Not yet', style: 'cancel' },
+              {
+                text: 'Yes, added',
+                onPress: () => {
+                  void writeGoogleWalletSaved(card.slug, true);
+                  setGoogleWalletSaved(true);
+                  setWalletNote('Saved to Google Wallet.');
+                },
+              },
+            ],
+          );
+        }
       }
     } catch (error) {
       setWalletNote(error instanceof Error ? error.message : 'Could not open Wallet.');
@@ -259,6 +279,7 @@ export default function ShareCardScreen() {
             <GoogleWalletButton
               style={styles.actionButton}
               loading={walletBusy}
+              mode={googleWalletSaved ? 'view' : 'add'}
               onPress={() => void addToWallet()}
             />
           ) : (
@@ -273,23 +294,21 @@ export default function ShareCardScreen() {
           )
         ) : null}
         {walletNote ? <Text style={styles.walletNote}>{walletNote}</Text> : null}
-        {tapSupported ? (
-          <Button
-            style={[styles.actionButton, styles.whiteActionButton]}
-            variant="secondary"
+        <View style={styles.shareActionRow}>
+          {tapSupported ? (
+            <PillButton
+            style={styles.sharePill}
+            tone="solid"
             loading={tapBusy}
             disabled={!publicUrl}
             onPress={() => void toggleTapToShare()}>
-            <ContactlessPayment size={18} color={colors.ink} weight="bold" />
             {tapActive ? 'Stop tap to share' : 'Tap to share'}
-          </Button>
-        ) : null}
-        <Button
-          style={[styles.actionButton, styles.whiteActionButton]}
-          variant="secondary"
-          onPress={shareCard}>
-          <ShareNetwork size={18} color={colors.ink} weight="bold" /> Share
-        </Button>
+            </PillButton>
+          ) : null}
+          <PillButton style={styles.sharePill} tone="outline" onPress={shareCard}>
+            Share
+          </PillButton>
+        </View>
       </View>
       <Text style={styles.helper}>Brightness is temporarily increased while this screen is open.</Text>
     </ScreenFrame>
@@ -382,6 +401,8 @@ const styles = StyleSheet.create({
   helperInline: { marginTop: spacing.x3, color: colors.muted, fontSize: 12, textAlign: 'center' },
   walletNote: { color: colors.muted, fontSize: 12, textAlign: 'center', lineHeight: 17 },
   actions: { gap: spacing.x2 },
+  shareActionRow: { flexDirection: 'row', gap: spacing.x3 },
+  sharePill: { flex: 1, alignSelf: 'stretch', minHeight: 48 },
   actionButton: { alignSelf: 'stretch' },
   whiteActionButton: { backgroundColor: colors.white },
   helper: { color: colors.muted, fontSize: 11, textAlign: 'center' },
