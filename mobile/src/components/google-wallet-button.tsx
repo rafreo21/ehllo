@@ -1,7 +1,5 @@
 import { ActivityIndicator, Image, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { spacing } from '@/theme/tokens';
-
 const WALLET_LABEL = 'Add to Google Wallet';
 const OFFICIAL_BUTTON = require('@/assets/images/add-to-google-wallet-en-gb.png');
 const VIEW_LABEL = 'View in Google Wallet';
@@ -37,7 +35,7 @@ export function GoogleWalletButton({ onPress, loading, disabled, mode = 'add', s
         unavailable && styles.disabledState,
         style,
       ]}>
-      <View style={[styles.assetFrame, { aspectRatio: viewing ? 287 / 50 : 283 / 50 }]}>
+      <View style={[styles.assetFrame, { width: viewing ? 287 : 283 }]}>
         <Image source={viewing ? VIEW_BUTTON : OFFICIAL_BUTTON} resizeMode="contain" style={styles.asset} />
         {loading ? (
           <View pointerEvents="none" style={styles.loadingOverlay}>
@@ -52,15 +50,12 @@ export function GoogleWalletButton({ onPress, loading, disabled, mode = 'add', s
 const styles = StyleSheet.create({
   touchTarget: {
     width: '100%',
-    minHeight: 48 + spacing.x4,
-    paddingVertical: spacing.x2,
+    minHeight: 50,
     alignItems: 'center',
     justifyContent: 'center',
   },
   assetFrame: {
-    width: '100%',
-    maxWidth: 360,
-    minHeight: 48,
+    height: 50,
   },
   asset: {
     width: '100%',

@@ -266,6 +266,7 @@ export function Button({ children, onPress, variant = 'primary', disabled, loadi
 
 type PillButtonProps = {
   children: string;
+  icon?: ReactNode;
   onPress?: (event: GestureResponderEvent) => void;
   /** solid = event "Going" pill (ink fill, white label); outline = "Not going" pill (line outline, muted label). */
   tone?: 'solid' | 'outline';
@@ -282,6 +283,7 @@ type PillButtonProps = {
  */
 export function PillButton({
   children,
+  icon,
   onPress,
   tone = 'solid',
   accessibilityLabel,
@@ -310,7 +312,10 @@ export function PillButton({
       {loading ? (
         <ActivityIndicator color={solid ? colors.white : colors.muted} />
       ) : (
-        <Text style={[styles.pillText, solid ? styles.pillTextSolid : styles.pillTextOutline]}>{children}</Text>
+        <View style={styles.pillContent}>
+          {icon}
+          <Text style={[styles.pillText, solid ? styles.pillTextSolid : styles.pillTextOutline]}>{children}</Text>
+        </View>
       )}
     </Pressable>
   );
@@ -355,6 +360,7 @@ const styles = StyleSheet.create({
   },
   pillSolid: { backgroundColor: colors.ink },
   pillOutline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.line },
+  pillContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.x2 },
   pillText: { fontSize: 12, fontWeight: '800' },
   pillTextSolid: { color: colors.white },
   pillTextOutline: { color: colors.muted },

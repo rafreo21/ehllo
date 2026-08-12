@@ -1,6 +1,6 @@
 import * as Brightness from 'expo-brightness';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Scan, Wallet } from 'phosphor-react-native';
+import { ContactlessPayment, Scan, ShareNetwork, Wallet } from 'phosphor-react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, Share, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
@@ -297,15 +297,20 @@ export default function ShareCardScreen() {
         <View style={styles.shareActionRow}>
           {tapSupported ? (
             <PillButton
-            style={styles.sharePill}
-            tone="solid"
-            loading={tapBusy}
-            disabled={!publicUrl}
-            onPress={() => void toggleTapToShare()}>
-            {tapActive ? 'Stop tap to share' : 'Tap to share'}
+              style={styles.sharePill}
+              tone="solid"
+              icon={<ContactlessPayment size={16} color={colors.white} weight="bold" />}
+              loading={tapBusy}
+              disabled={!publicUrl}
+              onPress={() => void toggleTapToShare()}>
+              {tapActive ? 'Stop tap to share' : 'Tap to share'}
             </PillButton>
           ) : null}
-          <PillButton style={styles.sharePill} tone="outline" onPress={shareCard}>
+          <PillButton
+            style={styles.sharePill}
+            tone="outline"
+            icon={<ShareNetwork size={16} color={colors.muted} weight="bold" />}
+            onPress={shareCard}>
             Share
           </PillButton>
         </View>
@@ -401,8 +406,8 @@ const styles = StyleSheet.create({
   helperInline: { marginTop: spacing.x3, color: colors.muted, fontSize: 12, textAlign: 'center' },
   walletNote: { color: colors.muted, fontSize: 12, textAlign: 'center', lineHeight: 17 },
   actions: { gap: spacing.x2 },
-  shareActionRow: { flexDirection: 'row', gap: spacing.x3 },
-  sharePill: { flex: 1, alignSelf: 'stretch', minHeight: 48 },
+  shareActionRow: { flexDirection: 'row', gap: spacing.x2 },
+  sharePill: { flex: 1, alignSelf: 'stretch', height: 50 },
   actionButton: { alignSelf: 'stretch' },
   whiteActionButton: { backgroundColor: colors.white },
   helper: { color: colors.muted, fontSize: 11, textAlign: 'center' },
