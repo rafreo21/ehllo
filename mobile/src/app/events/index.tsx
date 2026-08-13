@@ -33,6 +33,7 @@ import {
   revokeEventInvitation,
   setEventAttendance,
   updateEvent,
+  EventUpdateConflictError,
   type CalendarProviderStatus,
   type EventItem,
   type EventInvitation,
@@ -306,7 +307,7 @@ export default function EventsScreen() {
     setManageLoading(true);
     setManageError('');
     try {
-      const result = await updateEvent(accessToken, manageEvent.id, input);
+      const result = await updateEvent(accessToken, manageEvent.id, { ...input, expectedUpdatedAt: manageEvent.updatedAt });
       setEvents((current) => current.map((item) => item.id === result.event.id ? result.event : item));
       setManageEvent(null);
       setRefreshTitle('Event updated');
@@ -314,6 +315,10 @@ export default function EventsScreen() {
         ? `The event was updated. ${result.emailsSent} guest notification${result.emailsSent === 1 ? '' : 's'} sent; ${result.emailsFailed} could not be delivered.`
         : `The event was updated${result.emailsSent ? ` and ${result.emailsSent} guest${result.emailsSent === 1 ? '' : 's'} notified` : ''}.`);
     } catch (caught) {
+      if (caught instanceof EventUpdateConflictError && caught.latestEvent) {
+        setEvents((current) => current.map((item) => item.id === caught.latestEvent!.id ? caught.latestEvent! : item));
+        setManageEvent(caught.latestEvent);
+      }
       setManageError(caught instanceof Error ? caught.message : 'Could not update this event.');
     } finally {
       setManageLoading(false);
@@ -325,7 +330,7 @@ export default function EventsScreen() {
     setManageLoading(true);
     setManageError('');
     try {
-      const result = await updateEvent(accessToken, manageEvent.id, { status: 'cancelled' });
+      const result = await updateEvent(accessToken, manageEvent.id, { status: 'cancelled', expectedUpdatedAt: manageEvent.updatedAt });
       setEvents((current) => current.filter((item) => item.id !== manageEvent.id));
       setManageEvent(null);
       setRefreshTitle('Event cancelled');
@@ -333,6 +338,10 @@ export default function EventsScreen() {
         ? `The event was cancelled. ${result.emailsSent} guest notification${result.emailsSent === 1 ? '' : 's'} sent; ${result.emailsFailed} could not be delivered.`
         : `The event was cancelled${result.emailsSent ? ` and ${result.emailsSent} guest${result.emailsSent === 1 ? '' : 's'} notified` : ''}.`);
     } catch (caught) {
+      if (caught instanceof EventUpdateConflictError && caught.latestEvent) {
+        setEvents((current) => current.map((item) => item.id === caught.latestEvent!.id ? caught.latestEvent! : item));
+        setManageEvent(caught.latestEvent);
+      }
       setManageError(caught instanceof Error ? caught.message : 'Could not cancel this event.');
     } finally {
       setManageLoading(false);

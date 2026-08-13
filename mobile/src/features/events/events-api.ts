@@ -32,6 +32,7 @@ export type EventItem = {
   sourceUrl: string;
   organizerEmail: string;
   status: 'scheduled' | 'cancelled';
+  updatedAt: string;
 };
 
 function mapEvent(row: Record<string, unknown>): EventItem {
@@ -46,23 +47,40 @@ function mapEvent(row: Record<string, unknown>): EventItem {
     sourceUrl: String(row.sourceUrl ?? ''),
     organizerEmail: String(row.organizerEmail ?? ''),
     status: row.status === 'cancelled' ? 'cancelled' : 'scheduled',
+    updatedAt: String(row.updatedAt ?? ''),
   };
+}
+
+export class EventUpdateConflictError extends Error {
+  latestEvent?: EventItem;
+
+  constructor(message: string, latestEvent?: EventItem) {
+    super(message);
+    this.name = 'EventUpdateConflictError';
+    this.latestEvent = latestEvent;
+  }
 }
 
 export async function updateEvent(
   accessToken: string,
   eventId: string,
-  input: { title?: string; location?: string; startsAt?: string; endsAt?: string | null; status?: 'scheduled' | 'cancelled' },
+  input: { title?: string; location?: string; startsAt?: string; endsAt?: string | null; status?: 'scheduled' | 'cancelled'; expectedUpdatedAt?: string },
 ): Promise<{ event: EventItem; emailsSent: number; emailsFailed: number }> {
   const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}`, accessToken, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
-  const payload = await readMobileApiJson<{ event?: Record<string, unknown>; emailsSent?: number; emailsFailed?: number; error?: string }>(
+  const payload = await readMobileApiJson<{ event?: Record<string, unknown>; emailsSent?: number; emailsFailed?: number; error?: string; conflict?: boolean }>(
     response,
     'Could not read the event update response.',
   );
+  if (response.status === 409 && payload.conflict) {
+    throw new EventUpdateConflictError(
+      payload.error || 'This event changed on another device.',
+      payload.event ? mapEvent(payload.event) : undefined,
+    );
+  }
   if (!response.ok || !payload.event) throw new Error(payload.error || 'Could not update this event.');
   return { event: mapEvent(payload.event), emailsSent: payload.emailsSent ?? 0, emailsFailed: payload.emailsFailed ?? 0 };
 }

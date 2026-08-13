@@ -155,7 +155,9 @@ try {
     body: JSON.stringify({ title: `E2E event ${runId}`, location: "Staging test venue", startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() }),
   });
   assert.ok(created.event?.id, "event creation returns an id");
+  assert.ok(created.event?.updatedAt, "event creation returns a synchronization revision");
   const eventId = created.event.id;
+  const firstEventRevision = created.event.updatedAt;
 
   await api(`/api/events/${eventId}/attendance`, host.token, { method: "PATCH", body: JSON.stringify({ status: "going" }) });
 
@@ -241,7 +243,17 @@ try {
   assert.ok(guestEvents.events?.some((event) => event.id === eventId), "claimed event appears in the guest account");
 
   const movedStart = new Date(startsAt.getTime() + 60 * 60 * 1000);
-  await api(`/api/events/${eventId}`, host.token, { method: "PATCH", body: JSON.stringify({ startsAt: movedStart.toISOString(), endsAt: new Date(movedStart.getTime() + 2 * 60 * 60 * 1000).toISOString() }) });
+  const rescheduled = await api(`/api/events/${eventId}`, host.token, { method: "PATCH", body: JSON.stringify({ startsAt: movedStart.toISOString(), endsAt: new Date(movedStart.getTime() + 2 * 60 * 60 * 1000).toISOString(), expectedUpdatedAt: firstEventRevision }) });
+  assert.notEqual(rescheduled.event?.updatedAt, firstEventRevision, "fresh event revision updates successfully");
+  const staleEventResponse = await fetch(`${appUrl}/api/events/${eventId}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${host.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ title: "Stale event overwrite", expectedUpdatedAt: firstEventRevision }),
+  });
+  const staleEventPayload = await staleEventResponse.json();
+  assert.equal(staleEventResponse.status, 409, "stale event update is rejected atomically");
+  assert.equal(staleEventPayload.conflict, true, "event conflict is explicit to the client");
+  assert.equal(staleEventPayload.event?.startsAt, movedStart.toISOString(), "event conflict returns the latest version");
   const refreshedGuestEvents = await api("/api/events", guest.token);
   assert.equal(
     Date.parse(refreshedGuestEvents.events.find((event) => event.id === eventId)?.startsAt ?? ""),
@@ -249,14 +261,14 @@ try {
     "reschedule propagates to guest",
   );
 
-  await api(`/api/events/${eventId}`, host.token, { method: "PATCH", body: JSON.stringify({ status: "cancelled" }) });
+  await api(`/api/events/${eventId}`, host.token, { method: "PATCH", body: JSON.stringify({ status: "cancelled", expectedUpdatedAt: rescheduled.event.updatedAt }) });
   const cancelledGuestEvents = await api("/api/events", guest.token);
   assert.ok(!cancelledGuestEvents.events?.some((event) => event.id === eventId), "cancelled event leaves active guest events");
   const publicInvitation = await fetch(`${appUrl}/api/event-invitations/${encodeURIComponent(inviteToken)}`);
   const publicPayload = await publicInvitation.json();
   assert.equal(publicPayload.invitation?.event?.status, "cancelled", "original guest link shows cancellation");
 
-  console.log(JSON.stringify({ ok: true, journey: "signup-card-qr-vcard-wallet-card-conflict-contact-conflict-capture-conflict-followup-event-invite-rsvp-claim-reschedule-cancel", cleanup: "pending" }));
+  console.log(JSON.stringify({ ok: true, journey: "signup-card-qr-vcard-wallet-card-conflict-contact-conflict-capture-conflict-followup-event-invite-rsvp-claim-reschedule-event-conflict-cancel", cleanup: "pending" }));
 } finally {
   for (const id of createdAuthIds.reverse()) await admin.auth.admin.deleteUser(id);
   const { data: remaining } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });

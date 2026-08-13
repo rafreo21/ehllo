@@ -11,6 +11,7 @@ type UpdateBody = {
   startsAt?: string;
   endsAt?: string | null;
   status?: "scheduled" | "cancelled";
+  expectedUpdatedAt?: string;
 };
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -27,6 +28,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (current.created_by_user_id !== user.id) {
     return NextResponse.json({ error: "Only the person who added this event can change it." }, { status: 403 });
   }
+  if (body.expectedUpdatedAt && current.updated_at !== body.expectedUpdatedAt) {
+    return NextResponse.json({
+      error: "This event changed on another device. We loaded the latest version so you can review it before trying again.",
+      conflict: true,
+      event: eventFromRow(current as EventRow),
+    }, { status: 409, headers: { "Cache-Control": "private, no-store" } });
+  }
 
   const title = body.title?.trim().slice(0, 160) || current.title;
   const location = body.location === undefined ? current.location : body.location.trim().slice(0, 320);
@@ -42,12 +50,23 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   );
 
   const now = new Date().toISOString();
-  const { data: updated, error } = await supabase.from("events").update({
+  let updateQuery = supabase.from("events").update({
     title, location, starts_at: startsAt, ends_at: endsAt, status: nextStatus,
     cancelled_at: nextStatus === "cancelled" ? (current.cancelled_at || now) : null,
     updated_at: now,
-  }).eq("id", id).select("*").single();
-  if (error || !updated) return NextResponse.json({ error: "We couldn’t update this event." }, { status: 500 });
+  }).eq("id", id).eq("workspace_id", user.workspaceId);
+  if (body.expectedUpdatedAt) updateQuery = updateQuery.eq("updated_at", body.expectedUpdatedAt);
+  const { data: updated, error } = await updateQuery.select("*").maybeSingle();
+  if (error) return NextResponse.json({ error: "We couldn’t update this event." }, { status: 500 });
+  if (!updated) {
+    const { data: latest } = await supabase.from("events").select("*")
+      .eq("id", id).eq("workspace_id", user.workspaceId).maybeSingle();
+    return NextResponse.json({
+      error: "This event changed on another device. We loaded the latest version so you can review it before trying again.",
+      conflict: true,
+      event: latest ? eventFromRow(latest as EventRow) : undefined,
+    }, { status: 409, headers: { "Cache-Control": "private, no-store" } });
+  }
 
   let emailsSent = 0;
   let emailsFailed = 0;

@@ -51,6 +51,7 @@ export type EventRecord = {
   sourceUrl: string;
   organizerEmail: string;
   status: "scheduled" | "cancelled";
+  updatedAt: string;
 };
 
 export function eventFromRow(row: EventRow): EventRecord {
@@ -64,6 +65,7 @@ export function eventFromRow(row: EventRow): EventRecord {
     sourceUrl: row.source_url,
     organizerEmail: row.organizer_email,
     status: row.status ?? "scheduled",
+    updatedAt: row.updated_at,
   };
 }
 

@@ -88,7 +88,7 @@ Do not describe the app as store-ready until those items have recorded evidence.
 
 - Run `npm run test:e2e:staging` from `site/` before an event-lifecycle release.
 - The command is hard-coded to the staging web origin and refuses to run without the explicit staging flag and staging Supabase credentials.
-- It creates unique temporary host and guest auth users, exercises onboarding, card publishing, anonymous card/QR/vCard access, Google Wallet save-link creation, stale card/contact/encounter write rejection, event creation, event-linked capture, private-note synchronization, follow-up creation/completion, RSVP, guest claim, cross-workspace visibility, rescheduling, and cancellation, then deletes both users in a `finally` block.
+- It creates unique temporary host and guest auth users, exercises onboarding, card publishing, anonymous card/QR/vCard access, Google Wallet save-link creation, stale card/contact/encounter/event write rejection, event creation, event-linked capture, private-note synchronization, follow-up creation/completion, RSVP, guest claim, cross-workspace visibility, rescheduling, and cancellation, then deletes both users in a `finally` block.
 - A failed assertion is not evidence of leaked fixtures: the runner verifies both temporary auth users are gone before it exits.
 - Never point this runner at production or remove its staging-origin guard.
 - Verify sign-in, card sharing, QR exchange, capture, review, follow-ups, notifications, and three-day recording expiry before widening rollout.
