@@ -59,8 +59,14 @@ export function InteractiveAppDemo() {
       </div>
       <div className="draft-phone-wrap">
         <div className="draft-phone" aria-live="polite">
-          <div className="draft-phone-status"><span>9:41</span><b>ehllo</b><span>•••</span></div>
-          <div className={`draft-phone-screen direction-${direction}`} key={`${active}-${completed}`}>
+          <i className="draft-phone-button draft-phone-button--action" aria-hidden="true"/>
+          <i className="draft-phone-button draft-phone-button--volume-up" aria-hidden="true"/>
+          <i className="draft-phone-button draft-phone-button--volume-down" aria-hidden="true"/>
+          <i className="draft-phone-button draft-phone-button--power" aria-hidden="true"/>
+          <div className="draft-phone-glass">
+            <div className="draft-dynamic-island" aria-hidden="true"><span/></div>
+            <div className="draft-phone-status"><span>9:41</span><b>●●●</b><span>⌁</span></div>
+            <div className={`draft-phone-screen direction-${direction}`} key={`${active}-${completed}`}>
             <div className="draft-phone-screen-head"><small>{state.kicker}</small><span>{active===0?<QrCodeIcon/>:active===1?<UserPlusIcon/>:active===2?<MicrophoneIcon/>:<CheckIcon/>}</span></div>
             {active===0 && <div className="draft-qr"><div className="draft-qr-grid">{Array.from({length:49},(_,i)=><i className={(i*7+i*3)%5<2?"on":""} key={i}/>)}</div><strong>Rafael · ehllo</strong><small>Scan to connect</small></div>}
             {active===1 && <div className="draft-profile-visual"><span>EC</span><div><b>ProductCon London</b><small>Met just now</small></div></div>}
@@ -68,8 +74,9 @@ export function InteractiveAppDemo() {
             {active===3 && <div className={`draft-action-visual ${completed?"done":""}`}><span><CheckIcon size={18} weight="bold"/></span><div><b>{completed?"Follow-up complete":"Research deck"}</b><small>{completed?"Relationship moved forward":"Due Monday · 9:00 AM"}</small></div></div>}
             <div className="draft-phone-copy"><small>{active+1} of 4</small><h3>{completed?"Next move made.":state.title}</h3><p>{completed?"Eve’s context stays connected for the next conversation.":state.copy}</p></div>
             <button className="draft-phone-action" onClick={advance}>{completed?"Start again":state.action}<ArrowRightIcon size={17} weight="bold"/></button>
+            </div>
+            <div className="draft-phone-home"/>
           </div>
-          <div className="draft-phone-home"/>
         </div>
       </div>
     </div>
