@@ -38,6 +38,10 @@ export async function PATCH(
     event_id: id,
     user_id: user.id,
     status,
+    // A fresh RSVP always starts a fresh presence lifecycle. Without this,
+    // Going → I've left → Not going → Going kept the old left_at timestamp
+    // and immediately treated the user as having already left.
+    left_at: null,
     updated_at: new Date().toISOString(),
   }, { onConflict: "event_id,user_id" });
 

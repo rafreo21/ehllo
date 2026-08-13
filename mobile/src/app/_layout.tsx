@@ -15,8 +15,10 @@ import { QuickFollowUpSyncManager } from '@/features/follow-ups/quick-follow-up-
 import { OfflineScanSyncManager } from '@/features/connections/offline-scan-sync-manager';
 import { NotificationManager } from '@/features/notifications/notification-manager';
 import { ActiveCaptureBanner } from '@/components/active-capture-banner';
+import { AppErrorBoundary } from '@/components/app-error-boundary';
 import { CaptureRecorderProvider } from '@/features/encounters/capture-recorder-context';
 import { CaptureTranscriptionSyncManager } from '@/features/encounters/capture-transcription-sync-manager';
+import { EventActionSyncManager } from '@/features/events/event-action-sync-manager';
 import { WidgetQrRenderer } from '@/lib/widget-qr-renderer';
 import { colors } from '@/theme/tokens';
 
@@ -60,6 +62,7 @@ function RootNavigator() {
       <Stack.Screen name="settings/connected-accounts" />
       <Stack.Screen name="settings/follow-ups" />
       <Stack.Screen name="settings/follow-ups-history" />
+      <Stack.Screen name="settings/pending-sync" />
       <Stack.Screen name="notifications" />
       <Stack.Screen name="integrations/callback" options={{ presentation: 'modal', headerShown: false }} />
     </Stack>
@@ -86,27 +89,30 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.canvas }}>
-      <SafeAreaProvider>
-        <AuthProvider>
-          <NotificationManager />
-          <FollowUpSyncManager />
-          <QuickFollowUpSyncManager />
-          <OfflineScanSyncManager />
-          <CaptureTranscriptionSyncManager />
-          <CardProvider>
-            <CaptureRecorderProvider>
-              <StatusBar style="dark" />
-              {Platform.OS === 'android' ? <NavigationBar style="dark" /> : null}
-              <View style={{ flex: 1 }}>
-                <RootNavigator />
-                <ActiveCaptureBanner />
-                <WidgetQrRenderer />
-              </View>
-            </CaptureRecorderProvider>
-          </CardProvider>
-        </AuthProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <AppErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.canvas }}>
+        <SafeAreaProvider>
+          <AuthProvider>
+            <NotificationManager />
+            <FollowUpSyncManager />
+            <QuickFollowUpSyncManager />
+            <OfflineScanSyncManager />
+            <CaptureTranscriptionSyncManager />
+            <EventActionSyncManager />
+            <CardProvider>
+              <CaptureRecorderProvider>
+                <StatusBar style="dark" />
+                {Platform.OS === 'android' ? <NavigationBar style="dark" /> : null}
+                <View style={{ flex: 1 }}>
+                  <RootNavigator />
+                  <ActiveCaptureBanner />
+                  <WidgetQrRenderer />
+                </View>
+              </CaptureRecorderProvider>
+            </CardProvider>
+          </AuthProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </AppErrorBoundary>
   );
 }

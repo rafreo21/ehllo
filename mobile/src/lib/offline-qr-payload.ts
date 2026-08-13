@@ -44,7 +44,7 @@ function resolveEcl(payload: string): QrErrorCorrection {
  * Never drop social/contact methods until the absolute last resort (minimal).
  */
 export function buildOfflineQrPayload(card: MobileCard, cardUrl: string, eventTitle?: string): OfflineQrPayload {
-  const tiers: Array<{ tier: OfflineQrTier; build: () => string }> = [
+  const tiers: { tier: OfflineQrTier; build: () => string }[] = [
     { tier: 'full', build: () => buildMobileContactQrPayload(card, cardUrl, { eventTitle }) },
     {
       tier: 'lean',

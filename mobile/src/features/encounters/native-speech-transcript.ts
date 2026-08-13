@@ -6,7 +6,7 @@ import { joinSpeechResults } from '@/lib/live-transcript-merge';
 
 type SpeechResultEvent = {
   isFinal: boolean;
-  results: Array<{ transcript: string }>;
+  results: { transcript: string }[];
 };
 
 type SpeechErrorEvent = {
@@ -143,7 +143,7 @@ function resolveAndroidRecognitionService(): string | undefined {
 }
 
 export class NativeSpeechCapture {
-  private subscriptions: Array<{ remove: () => void }> = [];
+  private subscriptions: { remove: () => void }[] = [];
   private active = false;
   private recordingUri: string | null = null;
   private recordingDone: (() => void) | null = null;

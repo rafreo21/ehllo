@@ -1,6 +1,7 @@
-import { CalendarBlank, CaretRight } from 'phosphor-react-native';
+import { CalendarBlank, CaretRight, NotePencil, UserPlus } from 'phosphor-react-native';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { PillButton } from '@/components/ui';
 import type { EventItem } from '@/features/events/events-api';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -27,6 +28,8 @@ export function EventCard({
   onGoing,
   onNotGoing,
   onLeave,
+  onInvite,
+  onManage,
 }: {
   event: EventItem;
   variant: EventCardVariant;
@@ -35,10 +38,13 @@ export function EventCard({
   onGoing?: (event: EventItem) => void;
   onNotGoing?: (event: EventItem) => void;
   onLeave?: (event: EventItem) => void;
+  onInvite?: (event: EventItem) => void;
+  onManage?: (event: EventItem) => void;
 }) {
   const when = formatEventWhen(event.startsAt);
   const showCandidateActions = variant === 'candidate';
   const showLeaveAction = variant === 'current' && Boolean(onLeave);
+  const showGoingNotGoingAction = (variant === 'going' || variant === 'current') && Boolean(onNotGoing);
   // Independent of the action row below — this is Home's "tap the card to
   // see it in My Events" affordance. Events itself never passes onPress, so
   // this never shows there even when the same variant has action buttons.
@@ -66,7 +72,11 @@ export function EventCard({
             {variant === 'going' ? (
               <View style={styles.statusTag}><Text style={styles.statusText}>Going</Text></View>
             ) : null}
-            {showCandidateActions ? <Text style={styles.suggested} numberOfLines={1}>From calendar</Text> : null}
+            {showCandidateActions ? (
+              <Text style={styles.suggested} numberOfLines={1}>
+                {event.source === 'calendar' ? 'From calendar' : 'Added by you'}
+              </Text>
+            ) : null}
           </View>
         </View>
         {showCaret ? <CaretRight size={14} color={colors.muted} weight="bold" /> : null}
@@ -77,18 +87,24 @@ export function EventCard({
             <ActivityIndicator color={colors.ink} />
           ) : (
             <View style={styles.actions}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onGoing?.(event); }}
-                style={styles.actionPrimary}>
-                <Text style={styles.actionPrimaryText}>Going</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing?.(event); }}
-                style={styles.actionGhost}>
-                <Text style={styles.actionGhostText}>Not going</Text>
-              </Pressable>
+              {onInvite ? (
+                <PillButton
+                  tone="outline"
+                  icon={<UserPlus size={15} color={colors.ink} weight="bold" />}
+                  onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onInvite(event); }}>
+                  Invite
+                </PillButton>
+              ) : null}
+              <PillButton
+                tone="solid"
+                onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onGoing?.(event); }}>
+                Going
+              </PillButton>
+              <PillButton
+                tone="outline"
+                onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing?.(event); }}>
+                Not going
+              </PillButton>
             </View>
           )}
         </View>
@@ -98,13 +114,46 @@ export function EventCard({
           {busy ? (
             <ActivityIndicator color={colors.ink} />
           ) : (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="I've left this event"
-              onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onLeave?.(event); }}
-              style={styles.actionGhost}>
-              <Text style={styles.actionGhostText}>I&apos;ve left</Text>
-            </Pressable>
+            <View style={styles.actions}>
+              <PillButton
+                tone="outline"
+                accessibilityLabel="I've left this event"
+                onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onLeave?.(event); }}>
+                I&apos;ve left
+              </PillButton>
+              {showGoingNotGoingAction ? (
+                <PillButton
+                  tone="outline"
+                  onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing?.(event); }}>
+                  Not going
+                </PillButton>
+              ) : null}
+            </View>
+          )}
+        </View>
+      ) : null}
+      {showGoingNotGoingAction && !showLeaveAction ? (
+        <View style={styles.actionRow}>
+          {busy ? <ActivityIndicator color={colors.ink} /> : (
+            <View style={styles.actions}>
+              {onInvite ? (
+                <PillButton
+                  tone="outline"
+                  icon={<UserPlus size={15} color={colors.ink} weight="bold" />}
+                  onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onInvite(event); }}>
+                  Invite
+                </PillButton>
+              ) : null}
+              {onManage ? (
+                <PillButton
+                  tone="outline"
+                  icon={<NotePencil size={15} color={colors.ink} weight="bold" />}
+                  onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onManage(event); }}>
+                  Manage
+                </PillButton>
+              ) : null}
+              <PillButton tone="outline" onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing?.(event); }}>Not going</PillButton>
+            </View>
           )}
         </View>
       ) : null}
@@ -147,20 +196,5 @@ const styles = StyleSheet.create({
   },
   statusText: { color: colors.ink, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
   suggested: { flexShrink: 0, color: colors.muted, fontSize: 12 },
-  actions: { flexDirection: 'row', gap: spacing.x2 },
-  actionPrimary: {
-    paddingHorizontal: spacing.x3,
-    paddingVertical: spacing.x2,
-    borderRadius: radius.round,
-    backgroundColor: colors.ink,
-  },
-  actionPrimaryText: { color: colors.white, fontSize: 12, fontWeight: '800' },
-  actionGhost: {
-    paddingHorizontal: spacing.x3,
-    paddingVertical: spacing.x2,
-    borderRadius: radius.round,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  actionGhostText: { color: colors.muted, fontSize: 12, fontWeight: '800' },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2 },
 });

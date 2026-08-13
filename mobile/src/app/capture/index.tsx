@@ -38,8 +38,7 @@ import {
   type CaptureDraftSummary,
 } from '@/features/encounters/capture-draft';
 import { deleteEncounter, fetchCaptureSessions, fetchEncounters, type EncounterSummary } from '@/features/encounters/encounter-api';
-import { deleteLocalRecording } from '@/features/encounters/local-recordings';
-import { formatDuration } from '@/features/encounters/local-recordings';
+import { deleteLocalRecording, formatDuration } from '@/features/encounters/local-recordings';
 import { isLiveRecordingSession } from '@/features/encounters/capture-session-state';
 import {
   getActiveCaptureController,

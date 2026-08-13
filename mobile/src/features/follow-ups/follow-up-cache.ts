@@ -15,6 +15,7 @@ export type FollowUpQueueEntry = {
   action: FollowUpQueueAction;
   queuedAt: string;
   snoozedUntil?: string;
+  expectedStatusUpdatedAt?: string;
 };
 
 function queueKey(encounterId: string, actionId: string) {

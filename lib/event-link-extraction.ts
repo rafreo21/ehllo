@@ -60,8 +60,16 @@ function locationFromJsonLdValue(location: unknown): string {
  * attempted, per "don't invent missing information": a paste-link import
  * with a blank date/location is better than one with a wrong one.
  */
-function extractFromJsonLd(html: string): Partial<ExtractedEventInfo> {
+function jsonLdRecords(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) return value.flatMap(jsonLdRecords);
+  if (!value || typeof value !== "object") return [];
+  const record = value as Record<string, unknown>;
+  return [record, ...jsonLdRecords(record["@graph"]), ...jsonLdRecords(record.itemListElement)];
+}
+
+function extractFromJsonLd(html: string, now = new Date()): Partial<ExtractedEventInfo> {
   const blocks = html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+  const events: ExtractedEventInfo[] = [];
   for (const block of blocks) {
     let parsed: unknown;
     try {
@@ -69,11 +77,9 @@ function extractFromJsonLd(html: string): Partial<ExtractedEventInfo> {
     } catch {
       continue;
     }
-    const candidates = Array.isArray(parsed) ? parsed : [parsed];
+    const candidates = jsonLdRecords(parsed);
     for (const candidate of candidates) {
-      if (!candidate || typeof candidate !== "object") continue;
-      const record = candidate as Record<string, unknown>;
-      const type = record["@type"];
+      const type = candidate["@type"];
       // Matches "Event" and its schema.org subtypes (SocialEvent, BusinessEvent,
       // MusicEvent, Festival's sibling types, etc. — all end in "Event" except
       // Festival itself, handled by name below), which real event platforms
@@ -82,15 +88,28 @@ function extractFromJsonLd(html: string): Partial<ExtractedEventInfo> {
         typeof value === "string" && (value === "Event" || value === "Festival" || value.endsWith("Event"));
       const isEvent = Array.isArray(type) ? type.some(isEventType) : isEventType(type);
       if (!isEvent) continue;
-      return {
-        title: typeof record.name === "string" ? record.name.trim() : "",
-        location: locationFromJsonLdValue(record.location),
-        startsAt: isoOrNull(record.startDate),
-        endsAt: isoOrNull(record.endDate),
-      };
+      const startsAt = isoOrNull(candidate.startDate);
+      const endsAt = isoOrNull(candidate.endDate);
+      events.push({
+        title: typeof candidate.name === "string" ? candidate.name.trim() : "",
+        location: locationFromJsonLdValue(candidate.location),
+        startsAt,
+        endsAt: startsAt && endsAt && Date.parse(endsAt) > Date.parse(startsAt) ? endsAt : null,
+      });
     }
   }
-  return {};
+  if (!events.length) return {};
+
+  // Some event platforms leave multiple Event records in a page. Prefer the
+  // nearest future record; if every record is past, use the most recent one
+  // so the caller can explicitly ask the user to review the stale date.
+  const withValidDates = events.filter((event) => event.startsAt);
+  const future = withValidDates
+    .filter((event) => Date.parse(event.startsAt!) > now.getTime())
+    .sort((left, right) => Date.parse(left.startsAt!) - Date.parse(right.startsAt!));
+  if (future.length) return future[0];
+  const past = withValidDates.sort((left, right) => Date.parse(right.startsAt!) - Date.parse(left.startsAt!));
+  return past[0] ?? events[0];
 }
 
 /**
@@ -100,8 +119,8 @@ function extractFromJsonLd(html: string): Partial<ExtractedEventInfo> {
  * event" flow) is expected to ask the user to fill in whatever's missing,
  * not silently invent it.
  */
-export function extractEventInfoFromHtml(html: string): ExtractedEventInfo {
-  const structured = extractFromJsonLd(html);
+export function extractEventInfoFromHtml(html: string, now = new Date()): ExtractedEventInfo {
+  const structured = extractFromJsonLd(html, now);
   const title = structured.title?.trim()
     || readMetaContent(html, "og:title")
     || readTitleTag(html);

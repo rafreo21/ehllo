@@ -3,9 +3,9 @@ import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { CalendarBlank, EnvelopeSimple, GoogleLogo, LinkedinLogo } from 'phosphor-react-native';
 
-import { Body, Button, PageHeader, Panel, Screen } from '@/components/ui';
+import { AppleIcon, GoogleIcon, LinkedInIcon, MicrosoftIcon } from '@/components/provider-icons';
+import { Body, Button, PageHeader, Panel, PillButton, Screen } from '@/components/ui';
 import { DisconnectAccountSheet } from '@/components/disconnect-account-sheet';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
@@ -34,28 +34,28 @@ const PROVIDERS: ProviderRow[] = [
     id: 'google',
     name: 'Google',
     description: 'One connection for Gmail, Calendar, and recording storage in Drive.',
-    icon: <GoogleLogo size={20} color={colors.ink} weight="bold" />,
+    icon: <GoogleIcon size={20} />,
     connectable: true,
   },
   {
     id: 'microsoft',
     name: 'Microsoft',
     description: 'One connection for Outlook, Calendar, and recording storage in OneDrive.',
-    icon: <EnvelopeSimple size={20} color={colors.ink} weight="bold" />,
+    icon: <MicrosoftIcon size={20} />,
     connectable: true,
   },
   {
     id: 'linkedin',
     name: 'LinkedIn',
     description: 'Coming soon. Connect your LinkedIn profile for richer follow-ups.',
-    icon: <LinkedinLogo size={20} color={colors.ink} weight="bold" />,
+    icon: <LinkedInIcon size={20} />,
     connectable: false,
   },
   {
     id: 'apple',
     name: 'Apple',
     description: 'Coming soon. Connect Apple services for contacts and calendar.',
-    icon: <CalendarBlank size={20} color={colors.ink} weight="bold" />,
+    icon: <AppleIcon size={20} />,
     connectable: false,
   },
 ];
@@ -215,56 +215,58 @@ export default function ConnectedAccountsScreen() {
                     {connected && account?.email ? account.email : provider.description}
                   </Text>
                   {provider.id === 'google' && connected ? (
-                    <View style={styles.capabilities}>
-                      {(['gmail', 'calendar', 'drive'] as const).map((capability) => {
-                        const enabled = status?.google.capabilities[capability] ?? false;
-                        return (
-                          <View key={capability} style={[styles.capability, enabled && styles.capabilityEnabled]}>
-                            <Text style={styles.capabilityText}>
-                              {capability === 'gmail' ? 'Gmail' : capability === 'calendar' ? 'Calendar' : 'Drive'}
+                    <Text style={styles.capabilityLine}>
+                      {([['gmail', 'Gmail'], ['calendar', 'Calendar'], ['drive', 'Drive']] as const).map(
+                        ([capability, label], index) => {
+                          const enabled = status?.google.capabilities[capability] ?? false;
+                          return (
+                            <Text key={capability}>
+                              {index > 0 ? ' · ' : ''}
+                              <Text style={enabled ? undefined : styles.capabilityOff}>{label}</Text>
                             </Text>
-                          </View>
-                        );
-                      })}
-                    </View>
+                          );
+                        },
+                      )}
+                    </Text>
                   ) : null}
                   {provider.id === 'microsoft' && connected ? (
-                    <View style={styles.capabilities}>
-                      {(['outlook', 'calendar', 'onedrive'] as const).map((capability) => {
-                        const enabled = status?.microsoft.capabilities[capability] ?? false;
-                        return (
-                          <View key={capability} style={[styles.capability, enabled && styles.capabilityEnabled]}>
-                            <Text style={styles.capabilityText}>
-                              {capability === 'outlook' ? 'Outlook' : capability === 'calendar' ? 'Calendar' : 'OneDrive'}
+                    <Text style={styles.capabilityLine}>
+                      {([['outlook', 'Outlook'], ['calendar', 'Calendar'], ['onedrive', 'OneDrive']] as const).map(
+                        ([capability, label], index) => {
+                          const enabled = status?.microsoft.capabilities[capability] ?? false;
+                          return (
+                            <Text key={capability}>
+                              {index > 0 ? ' · ' : ''}
+                              <Text style={enabled ? undefined : styles.capabilityOff}>{label}</Text>
                             </Text>
-                          </View>
-                        );
-                      })}
-                    </View>
+                          );
+                        },
+                      )}
+                    </Text>
                   ) : null}
                 </View>
               </View>
-              {!provider.connectable ? (
-                <Text style={styles.soon}>Coming soon</Text>
-              ) : loading ? (
-                <ActivityIndicator color={colors.ink} />
-              ) : connected ? (
-                <View style={styles.connectedActions}>
-                  {provider.id === 'google' && !status?.google.capabilities.drive ? (
-                    <Button onPress={() => void connectProvider('google')}>Reconnect for Drive</Button>
-                  ) : null}
-                  {provider.id === 'microsoft' && !status?.microsoft.capabilities.onedrive ? (
-                    <Button onPress={() => void connectProvider('microsoft')}>Reconnect for OneDrive</Button>
-                  ) : null}
-                  <Button variant="secondary" onPress={() => setPendingDisconnect(provider.id as 'google' | 'microsoft')}>
-                    Disconnect
-                  </Button>
-                </View>
-              ) : (
-                <Button onPress={() => void connectProvider(provider.id as 'google' | 'microsoft')}>
-                  Connect {provider.name}
-                </Button>
-              )}
+              <View style={styles.actionRow}>
+                {!provider.connectable ? (
+                  <Text style={styles.soon}>Coming soon</Text>
+                ) : loading ? (
+                  <ActivityIndicator color={colors.ink} />
+                ) : connected ? (
+                  provider.id === 'google' && !status?.google.capabilities.drive ? (
+                    <PillButton tone="solid" onPress={() => void connectProvider('google')}>Reconnect for Drive</PillButton>
+                  ) : provider.id === 'microsoft' && !status?.microsoft.capabilities.onedrive ? (
+                    <PillButton tone="solid" onPress={() => void connectProvider('microsoft')}>Reconnect for OneDrive</PillButton>
+                  ) : (
+                    <PillButton tone="outline" onPress={() => setPendingDisconnect(provider.id as 'google' | 'microsoft')}>
+                      Disconnect
+                    </PillButton>
+                  )
+                ) : (
+                  <PillButton tone="solid" onPress={() => void connectProvider(provider.id as 'google' | 'microsoft')}>
+                    {`Connect ${provider.name}`}
+                  </PillButton>
+                )}
+              </View>
             </Panel>
           );
         })}
@@ -313,19 +315,11 @@ const styles = StyleSheet.create({
   cardCopy: { flex: 1, gap: 4 },
   cardTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
   cardDescription: { color: colors.muted, fontSize: 13, lineHeight: 19 },
-  capabilities: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2, marginTop: spacing.x2 },
-  capability: {
-    paddingHorizontal: spacing.x3,
-    paddingVertical: spacing.x1,
-    borderRadius: 999,
-    backgroundColor: colors.canvas,
-    borderWidth: 1,
-    borderColor: colors.line,
-    opacity: 0.55,
-  },
-  capabilityEnabled: { backgroundColor: colors.surfaceMuted, opacity: 1 },
-  capabilityText: { color: colors.ink, fontSize: 11, fontWeight: '800' },
-  connectedActions: { gap: spacing.x2 },
+  // Capability list styled like the event cell's dot-separated meta line.
+  capabilityLine: { color: colors.muted, fontSize: 12 },
+  capabilityOff: { opacity: 0.45 },
+  // Align the action with the title/description text column: icon width (40) + header gap.
+  actionRow: { marginLeft: 40 + spacing.x3 },
   panelTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
   panelCopy: { marginTop: 6, color: colors.muted, fontSize: 13, lineHeight: 19 },
   soon: { color: colors.muted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },

@@ -42,7 +42,7 @@ module.exports = {
     name: IS_STAGING ? "ehllo Staging" : "ehllo",
     owner: "rafreo",
     slug: EAS_PROJECT.slug,
-    version: "1.0.1",
+    version: "1.0.2",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     // Keep the AfterMeet schemes as inbound aliases for links already shared
@@ -56,6 +56,7 @@ module.exports = {
       bundleIdentifier: bundleId,
       supportsTablet: true,
       infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
         LSApplicationQueriesSchemes: [
           "linkedin",
           "twitter",
@@ -103,6 +104,9 @@ module.exports = {
     plugins: [
       "expo-router",
       "expo-dev-client",
+      "expo-asset",
+      "expo-image",
+      "expo-sharing",
       [
         "expo-notifications",
         {
@@ -205,6 +209,16 @@ module.exports = {
     experiments: {
       typedRoutes: true,
     },
+    ...(IS_STAGING
+      ? {
+          updates: {
+            url: `https://u.expo.dev/${EAS_PROJECT.projectId}`,
+          },
+          runtimeVersion: {
+            policy: "appVersion",
+          },
+        }
+      : {}),
     extra: {
       eas: {
         projectId: EAS_PROJECT.projectId,
@@ -216,8 +230,8 @@ module.exports = {
       // plain text input until this is set. Same key for both variants
       // (Places is billing-account-scoped, not staging/production-split).
       googlePlacesApiKey: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || "",
-      buildNumber: 4,
-      buildStamp: IS_STAGING ? "2026-08-13-ehllo-staging" : "2026-08-13-ehllo",
+      buildNumber: 5,
+      buildStamp: IS_STAGING ? "2026-08-14-ehllo-staging" : "2026-08-14-ehllo",
       appVariant: APP_VARIANT,
     },
   },

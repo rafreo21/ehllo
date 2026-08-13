@@ -115,3 +115,10 @@ export function queueCardSync(card: LibraryCard) {
 
   activeCardSyncs.set(card.id, run);
 }
+
+export async function flushCardSync(card: LibraryCard) {
+  const local = readCardLibrary(localStorage).find((item) => item.id === card.id);
+  const candidate = local ? { ...card, updatedAt: local.updatedAt } : card;
+  queueCardSync(candidate);
+  return activeCardSyncs.get(card.id) ?? null;
+}

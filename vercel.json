@@ -10,6 +10,10 @@
     {
       "path": "/api/cron/send-follow-up-reminders",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/send-event-reminders",
+      "schedule": "0 9 * * *"
     }
   ]
 }

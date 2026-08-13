@@ -4,7 +4,6 @@ import * as WebBrowser from 'expo-web-browser';
 import { Linking, Platform } from 'react-native';
 
 import { mobileFetch } from '@/lib/mobile-api';
-import { openUrlCandidates } from '@/lib/open-url-candidates';
 
 type WalletJson = {
   configured?: boolean;
@@ -57,11 +56,11 @@ export async function addGoogleWalletPass(slug: string, accessToken: string) {
     throw new Error(payload.error || 'Google Wallet is not available right now.');
   }
   if (Platform.OS === 'android') {
-    const opened = await openUrlCandidates([
-      payload.saveUrl,
-      payload.saveUrl.replace(/^https:\/\//, 'intent://') + '#Intent;scheme=https;package=com.google.android.apps.walletnfcrel;end',
-    ]);
-    if (opened) return;
+    // The save URL is a web handoff into Google Wallet. A browser/custom-tab
+    // launch is observable and reliable; Linking may resolve successfully on
+    // some Android versions without actually presenting a handler.
+    await WebBrowser.openBrowserAsync(payload.saveUrl);
+    return;
   }
 
   const canOpen = await Linking.canOpenURL(payload.saveUrl).catch(() => false);

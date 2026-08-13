@@ -26,4 +26,5 @@ export type MobileCard = {
   showCompanyDetails: boolean;
   status: 'draft' | 'published';
   methods: ContactMethod[];
+  serverUpdatedAt?: string;
 };

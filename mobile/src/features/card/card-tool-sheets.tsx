@@ -3,7 +3,6 @@ import {
   ContactlessPayment,
   Copy,
   EnvelopeSimple,
-  GoogleLogo,
   LinkSimple,
   Monitor,
   SquaresFour,
@@ -16,6 +15,7 @@ import { router } from 'expo-router';
 
 import { BrandedQrPreview } from '@/components/branded-qr-preview';
 import { VirtualBackgroundPreviewBackground, WalletPreviewBackground } from '@/components/card-tool-preview-backgrounds';
+import { GoogleWalletButton } from '@/components/google-wallet-button';
 import { Body, Button } from '@/components/ui';
 import { showsCompanyDetails } from '@/features/card/company-display';
 import type { themeSurfaceStyle } from '@/features/card/theme-colors';
@@ -137,16 +137,14 @@ export function WalletToolSheetContent({
       ) : null}
       {Platform.OS === 'android' ? (
         <>
-          <Button
+          <GoogleWalletButton
             loading={busy === 'google'}
             disabled={walletAvailable === false}
             onPress={() => void run('google', async () => {
               if (!accessToken) throw new Error('Sign in required.');
               await addGoogleWalletPass(card.slug, accessToken);
-            }, { successMessage: 'Finish adding the pass in Google Wallet.' })}>
-            <GoogleLogo size={18} color={colors.ink} weight="bold" />
-            Add to Google Wallet
-          </Button>
+            }, { successMessage: 'Finish adding the pass in Google Wallet.' })}
+          />
           {walletAvailable === false && walletNote ? (
             <Text style={styles.note}>{walletNote} Ask your admin to add GOOGLE_WALLET_ISSUER_ID and GOOGLE_WALLET_SERVICE_ACCOUNT_JSON on Vercel.</Text>
           ) : null}

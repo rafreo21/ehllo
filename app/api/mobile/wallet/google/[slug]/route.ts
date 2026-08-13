@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 import { getAppUserFromRequest } from "../../../../../../lib/auth/mobile-api-auth";
-import { buildGoogleWalletSaveUrl } from "../../../../../../lib/google-wallet-pass";
+import { prepareGoogleWalletSaveUrl } from "../../../../../../lib/google-wallet-pass";
 import { WALLET_CARD_SELECT, walletCardFromRow } from "../../../../../../lib/wallet-card-loader";
 import { readPublicSupabaseConfig } from "../../../../../../lib/supabase/env";
 import { isGoogleWalletConfigured, readGoogleWalletConfig } from "../../../../../../lib/wallet-config";
@@ -52,7 +52,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
   }
 
   try {
-    const saveUrl = buildGoogleWalletSaveUrl(card, readGoogleWalletConfig()!);
+    const saveUrl = await prepareGoogleWalletSaveUrl(card, readGoogleWalletConfig()!);
     return NextResponse.json({ configured: true, saveUrl }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     return NextResponse.json({

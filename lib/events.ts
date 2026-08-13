@@ -99,7 +99,7 @@ export function resolveCurrentEvent(goingEvents: GoingEventWindow[], now: Date =
     const start = Date.parse(event.startsAt);
     if (Number.isNaN(start)) return false;
     let end = event.endsAt ? Date.parse(event.endsAt) : start + DEFAULT_EVENT_WINDOW_MS;
-    if (Number.isNaN(end)) return false;
+    if (Number.isNaN(end) || end < start) end = start + DEFAULT_EVENT_WINDOW_MS;
     if (event.leftAt) {
       const leftAt = Date.parse(event.leftAt);
       if (!Number.isNaN(leftAt)) end = Math.min(end, leftAt);

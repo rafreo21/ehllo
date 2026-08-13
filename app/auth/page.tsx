@@ -36,7 +36,7 @@ async function readProviderAvailability(url: string, anonKey: string): Promise<P
 export default async function AuthPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string; intent?: string; slug?: string; exchangeId?: string; shareToken?: string; email?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; intent?: string; slug?: string; exchangeId?: string; shareToken?: string; eventInviteToken?: string; email?: string }>;
 }) {
   const params = await searchParams;
   const visitorIntent = parseVisitorIntent(new URLSearchParams(params as Record<string, string>));

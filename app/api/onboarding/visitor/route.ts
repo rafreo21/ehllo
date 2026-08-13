@@ -15,12 +15,13 @@ export async function POST(request: Request) {
   }
 
   const intent = parseVisitorIntent(new URLSearchParams(
-    typeof body?.slug === "string" || typeof body?.exchangeId === "string" || typeof body?.shareToken === "string"
+    typeof body?.slug === "string" || typeof body?.exchangeId === "string" || typeof body?.shareToken === "string" || typeof body?.eventInviteToken === "string"
       ? {
           intent: "visitor",
           ...(typeof body?.slug === "string" ? { slug: body.slug } : {}),
           ...(typeof body?.exchangeId === "string" ? { exchangeId: body.exchangeId } : {}),
           ...(typeof body?.shareToken === "string" ? { shareToken: body.shareToken } : {}),
+          ...(typeof body?.eventInviteToken === "string" ? { eventInviteToken: body.eventInviteToken } : {}),
         }
       : { intent: "visitor" },
   ));
@@ -39,6 +40,10 @@ export async function POST(request: Request) {
   } else if (intent?.shareToken) {
     await supabase.rpc("link_people_connection_from_share_token", { p_share_token: intent.shareToken });
     await supabase.rpc("claim_guest_encounter_participants", { p_share_token: intent.shareToken });
+  }
+  if (intent?.eventInviteToken) {
+    const { error: claimError } = await supabase.rpc("claim_event_invitation", { p_token: intent.eventInviteToken });
+    if (claimError) return NextResponse.json({ error: "This event invitation belongs to a different email or is no longer available." }, { status: 409 });
   }
 
   await supabase.rpc("link_people_connections_for_email");

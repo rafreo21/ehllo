@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import { publicCardImageUrl } from "../../../../../lib/card-assets";
 import { publicCompanyLogoUrl } from "../../../../../lib/card-company-display";
+import { createServiceSupabaseClient } from "../../../../../lib/supabase/service";
 
 export async function GET(_request: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params;
@@ -20,7 +21,8 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
     return NextResponse.json({ error: "This card is unavailable right now." }, { status: 503 });
   }
 
-  const supabase = createClient(url, key, { auth: { persistSession: false } });
+  const supabase = createServiceSupabaseClient()
+    ?? createClient(url, key, { auth: { persistSession: false } });
   const { data, error } = await supabase
     .from("cards")
     .select("id, slug, full_name, job_title, company, bio, theme_color, profile_image_url, company_logo_url, cover_image_url, show_company_details, card_methods(method_type, value, label, sort_order)")

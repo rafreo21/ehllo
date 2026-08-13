@@ -1,6 +1,7 @@
 import { Children, Fragment, isValidElement, type PropsWithChildren, type ReactNode } from 'react';
 import {
   ActivityIndicator,
+  type GestureResponderEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,7 +21,7 @@ type ScreenProps = PropsWithChildren<{
   scroll?: boolean;
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
-  edges?: Array<'top' | 'bottom' | 'left' | 'right'>;
+  edges?: ('top' | 'bottom' | 'left' | 'right')[];
   reserveTabBar?: boolean;
   /** Fixed content pinned below the scroll area, e.g. a primary action bar that shouldn't scroll away. */
   footer?: ReactNode;
@@ -86,7 +87,7 @@ export function ScreenFrame({
   paddingHorizontal = spacing.x5,
 }: PropsWithChildren<{
   style?: ViewStyle;
-  edges?: Array<'top' | 'bottom' | 'left' | 'right'>;
+  edges?: ('top' | 'bottom' | 'left' | 'right')[];
   paddingHorizontal?: number;
 }>) {
   const insets = useAppInsets();
@@ -153,6 +154,7 @@ export function PageHeader({
   title,
   titleStyle,
   description,
+  caption,
   onBack,
   rightAction,
   showBack = true,
@@ -161,6 +163,7 @@ export function PageHeader({
   title: string;
   titleStyle?: StyleProp<TextStyle>;
   description?: ReactNode;
+  caption?: ReactNode;
   onBack?: () => void;
   rightAction?: ReactNode;
   showBack?: boolean;
@@ -175,6 +178,7 @@ export function PageHeader({
         {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
         <Text style={[styles.title, styles.pageHeaderTitle, titleStyle]}>{title}</Text>
         {description ? <Body>{description}</Body> : null}
+        {caption ? <Text style={styles.pageHeaderCaption}>{caption}</Text> : null}
       </View>
     </View>
   );
@@ -263,6 +267,65 @@ export function Button({ children, onPress, variant = 'primary', disabled, loadi
   );
 }
 
+type PillButtonProps = {
+  children: string;
+  icon?: ReactNode;
+  onPress?: (event: GestureResponderEvent) => void;
+  /** solid = event "Going" pill (ink fill, white label); outline = "Not going" pill (line outline, muted label). */
+  tone?: 'solid' | 'outline';
+  accessibilityLabel?: string;
+  disabled?: boolean;
+  loading?: boolean;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
+};
+
+/**
+ * Compact pill action used for event RSVP controls and, reusing the same
+ * treatment/tokens, the Connected Accounts connect/disconnect actions. Single
+ * source of truth so the two screens can never drift apart.
+ */
+export function PillButton({
+  children,
+  icon,
+  onPress,
+  tone = 'solid',
+  accessibilityLabel,
+  disabled,
+  loading,
+  style,
+  textStyle,
+}: PillButtonProps) {
+  const solid = tone === 'solid';
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? children}
+      accessibilityState={{ disabled: Boolean(disabled || loading) }}
+      disabled={disabled || loading}
+      // Keep the small visual size while lifting the touch target toward the
+      // ~44pt iOS / 48dp Android minimum without changing layout.
+      hitSlop={{ top: 8, bottom: 8 }}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.pill,
+        solid ? styles.pillSolid : styles.pillOutline,
+        pressed && !loading && styles.buttonPressed,
+        (disabled || loading) && styles.buttonDisabled,
+        style,
+      ]}>
+      {loading ? (
+        <ActivityIndicator color={solid ? colors.white : colors.muted} />
+      ) : (
+        <View style={styles.pillContent}>
+          {icon}
+          <Text style={[styles.pillText, solid ? styles.pillTextSolid : styles.pillTextOutline, textStyle]}>{children}</Text>
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.canvas },
   scroll: { paddingBottom: spacing.x2 },
@@ -284,6 +347,7 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
   title: { color: colors.ink, fontSize: 40, lineHeight: 42, fontWeight: '700', letterSpacing: -1.5 },
   body: { color: colors.muted, fontSize: 15, lineHeight: 22 },
+  pageHeaderCaption: { color: colors.muted, fontSize: 11, lineHeight: 15 },
   panel: { padding: spacing.x5, borderRadius: radius.medium, backgroundColor: colors.surface },
   button: { minHeight: 48, paddingHorizontal: spacing.x5, alignItems: 'center', justifyContent: 'center', borderRadius: radius.small, backgroundColor: colors.accent },
   buttonSecondary: { backgroundColor: colors.surfaceMuted },
@@ -292,6 +356,20 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.45 },
   buttonText: { color: colors.ink, fontSize: 15, fontWeight: '800' },
   buttonTextSecondary: { color: colors.ink },
+  pill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.x3,
+    paddingVertical: spacing.x2,
+    borderRadius: radius.round,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pillSolid: { backgroundColor: colors.ink },
+  pillOutline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.line },
+  pillContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.x2 },
+  pillText: { fontSize: 12, fontWeight: '800' },
+  pillTextSolid: { color: colors.white },
+  pillTextOutline: { color: colors.muted },
   buttonContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.x2 },
   backButton: {
     width: 44,

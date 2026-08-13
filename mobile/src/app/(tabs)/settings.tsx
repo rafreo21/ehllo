@@ -9,6 +9,7 @@ import { SettingsSkeleton } from '@/components/skeleton';
 import { useAuth } from '@/features/auth/auth-context';
 import { fetchConnectedAccounts, type ConnectedAccountStatus } from '@/features/integrations/integrations-api';
 import { deactivatePushToken } from '@/features/notifications/push-token-service';
+import { formatBuildLabel, formatRuntimeLabel } from '@/lib/build-info';
 import {
   readRecordingStorageDestination,
   recordingStorageDestinationLabel,
@@ -147,6 +148,20 @@ export default function SettingsScreen() {
 
       <Pressable
         accessibilityRole="button"
+        onPress={() => router.push('/settings/pending-sync')}
+        style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
+        <View style={styles.linkCopy}>
+          <View style={styles.linkTitleRow}>
+            <CloudArrowUp size={18} color={colors.ink} weight="bold" />
+            <Text style={styles.label}>Pending sync</Text>
+          </View>
+          <Text style={styles.linkHint}>See work saved on this device and retry uploads</Text>
+        </View>
+        <CaretRight size={18} color={colors.muted} weight="bold" />
+      </Pressable>
+
+      <Pressable
+        accessibilityRole="button"
         onPress={() => router.push('/settings/connected-accounts')}
         style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
         <View style={styles.linkCopy}>
@@ -247,6 +262,12 @@ export default function SettingsScreen() {
         <Text style={styles.hint}>
           {configured ? session ? 'Secure session active' : 'Supabase connected · sign in to sync' : 'Add the mobile environment variables to enable sync'}
         </Text>
+      </Panel>
+      <Panel>
+        <Text style={styles.label}>App build</Text>
+        <Text selectable style={styles.value}>{formatBuildLabel()}</Text>
+        <Text selectable style={styles.hint}>{formatRuntimeLabel()}</Text>
+        <Text style={styles.hint}>Android and iOS staging should show the same runtime and update ID.</Text>
       </Panel>
       {!session ? (
         <Button onPress={() => router.push('/auth')}>Sign in or sign up</Button>

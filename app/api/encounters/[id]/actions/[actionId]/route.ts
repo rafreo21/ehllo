@@ -23,6 +23,7 @@ export async function PATCH(
     status?: string;
     snoozedUntil?: string;
     action?: EncounterAction;
+    expectedStatusUpdatedAt?: string | null;
   } | null;
   const status = body?.status?.trim();
 
@@ -61,6 +62,14 @@ export async function PATCH(
   }
 
   const currentAction = actions[index];
+  if (Object.hasOwn(body, "expectedStatusUpdatedAt")
+    && (currentAction.statusUpdatedAt ?? null) !== (body.expectedStatusUpdatedAt ?? null)) {
+    return NextResponse.json({
+      error: "This follow-up changed on another device. Refresh to see its latest state before changing it again.",
+      conflict: true,
+      encounter: encounterFromApi({ ...data, participants: (await fetchParticipantsByEncounter(supabase, [id])).get(id) ?? [] }),
+    }, { status: 409, headers: { "Cache-Control": "private, no-store" } });
+  }
   if (isFollowUpReviewGated(data.status, currentAction.status)) {
     return NextResponse.json(
       { error: "Confirm the encounter review before updating this follow-up." },
@@ -107,18 +116,34 @@ export async function PATCH(
     email: typeof data.person_email === "string" ? data.person_email : "",
   });
 
-  const { error: updateError } = await supabase
+  const updatedAt = new Date().toISOString();
+  const { data: updated, error: updateError } = await supabase
     .from("encounters")
-    .update({ actions: nextActions, updated_at: new Date().toISOString() })
+    .update({ actions: nextActions, updated_at: updatedAt })
     .eq("id", id)
-    .eq("workspace_id", user.workspaceId);
+    .eq("workspace_id", user.workspaceId)
+    .eq("updated_at", data.updated_at)
+    .select("*")
+    .maybeSingle();
 
   if (updateError) {
     return NextResponse.json({ error: "Could not update this follow-up." }, { status: 500 });
   }
+  if (!updated) {
+    const { data: latest } = await supabase.from("encounters").select("*")
+      .eq("id", id).eq("workspace_id", user.workspaceId).maybeSingle();
+    const latestParticipants = latest
+      ? (await fetchParticipantsByEncounter(supabase, [id])).get(id) ?? []
+      : [];
+    return NextResponse.json({
+      error: "This follow-up changed while it was saving. Refresh to see the latest state before trying again.",
+      conflict: true,
+      encounter: latest ? encounterFromApi({ ...latest, participants: latestParticipants }) : undefined,
+    }, { status: 409, headers: { "Cache-Control": "private, no-store" } });
+  }
 
   return NextResponse.json({
     ok: true,
-    encounter: encounterFromApi({ ...data, actions: nextActions, participants }),
+    encounter: encounterFromApi({ ...updated, participants }),
   });
 }
