@@ -22,6 +22,12 @@ AFTERMEET_ALLOW_PRODUCTION=1 npm run dev:production
 cd mobile && npm run ios:production
 ```
 
+## Local web environment policy
+
+- `npm run dev` and `npm run dev:staging` always use staging configuration.
+- `scripts/run-web-dev.mjs` selects `.env.staging.local` or `.env.production.local` explicitly; it does not select `.env.local`.
+- Production local access requires `AFTERMEET_ALLOW_PRODUCTION=1` for that single command and is not for exploratory testing.
+
 ## EAS and beta distribution
 
 - `development`, `staging`, and `staging-simulator` EAS profiles always build the staging app and staging backend.
@@ -65,6 +71,14 @@ Do not describe the app as store-ready until those items have recorded evidence.
 - CI scans every tracked file for privileged Supabase credentials.
 - Server-only credentials belong in Supabase, Vercel, GitHub, or EAS secret storage—not package scripts or source files.
 - A production secret previously shared in conversation or committed history must be rotated in Supabase, then updated in Vercel and any authorized local secret store. Removing it from the latest source does not invalidate the old credential.
+
+## Calendar OAuth refresh gate
+
+- Successful connection is not enough: each enabled calendar provider must prove an expired-token refresh on its deployed environment and persist the replacement access token.
+- Google and Microsoft OAuth client credentials are server-only, environment-specific Vercel configuration. A staging credential or staging verification cannot approve production.
+- Events must show provider state (`ok`, `not_connected`, `needs_reconnect`, or `error`) and a reconnect path; an unhealthy provider must never look like an empty calendar.
+- Suppression must apply only to the specific provider-event occurrence, using its provider identity and rounded start time — never title-only matching.
+- Current evidence: staging Google refresh is verified. Production Google and every enabled Microsoft provider require recorded deployed refresh proof before launch.
 
 ## Rollout and rollback
 

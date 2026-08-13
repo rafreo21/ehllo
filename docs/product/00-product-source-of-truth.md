@@ -254,6 +254,13 @@ Settings owns profile, authentication, notification preferences, storage prefere
 
 External providers may supply storage or execution, but AfterMeet remains responsible for clear errors, durable metadata, and safe fallbacks.
 
+#### Calendar integrations
+
+- Calendar availability is a provider health state, not an inference from an empty event list: `ok`, `not_connected`, `needs_reconnect`, or `error`.
+- Events must expose recovery for `not_connected`, `needs_reconnect`, and `error`, alongside the most recent successful sync time when available.
+- A provider is production-ready only after its deployed environment has completed an expired-token refresh and persisted the replacement access token. A successful initial OAuth connection alone is insufficient.
+- A dismissed calendar candidate is suppressed only for that provider-event occurrence, keyed by provider event identity and rounded start time. An event title alone must never suppress future events.
+
 ### 20. Public shared experiences
 
 The public card is useful without an AfterMeet account. A shared meeting page contains only the approved shared summary, assigned actions, and an explicitly shared recording.
