@@ -14,6 +14,7 @@ const loopImages = [
   "/homepage-app/share-conference.png",
   "/homepage-app/capture-conference.png",
   "/homepage-app/remember-conference.png",
+  "/homepage-app/act-conference.png",
 ] as const;
 
 export function HorizontalLoops() {
@@ -58,7 +59,7 @@ export function HorizontalLoops() {
                 <div className="draft-loop-card-top"><span>0{index + 1}</span><small>{index === 0 ? "Start here" : "Then"}</small></div>
                 {index < loopImages.length ? (
                   <div className="draft-loop-visual">
-                    <img src={loopImages[index]} alt={index === 0 ? "Two professionals exchanging contact details at a conference" : index === 1 ? "A professional saving a new connection on her phone" : "A professional recording context from a recent conversation"}/>
+                    <img src={loopImages[index]} alt={index === 0 ? "Two professionals exchanging contact details at a conference" : index === 1 ? "A professional saving a new connection on her phone" : index === 2 ? "A professional recording context from a recent conversation" : "A professional completing a thoughtful follow-up after a conference"}/>
                     <div className="draft-loop-example"><small>In ehllo</small><strong>{example}</strong><span>{meta}</span></div>
                   </div>
                 ) : (
