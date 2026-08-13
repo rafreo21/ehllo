@@ -299,7 +299,7 @@ export async function POST(request: Request) {
   }
 
   const nextUpdatedAt = new Date().toISOString();
-  const { error } = await supabase.from("encounters").upsert({
+  const encounterRow = {
     id: body.id,
     workspace_id: user.workspaceId,
     created_by_user_id: user.id,
@@ -322,7 +322,29 @@ export async function POST(request: Request) {
     status: nextStatus,
     share_token: typeof body.shareToken === "string" ? body.shareToken : crypto.randomUUID().replaceAll("-", ""),
     updated_at: nextUpdatedAt,
-  }, { onConflict: "id" });
+  };
+  const write = existingRow && expectedUpdatedAt
+    ? supabase
+        .from("encounters")
+        .update(encounterRow)
+        .eq("id", body.id)
+        .eq("workspace_id", user.workspaceId)
+        .eq("updated_at", expectedUpdatedAt)
+        .select("id")
+        .maybeSingle()
+    : supabase
+        .from("encounters")
+        .upsert(encounterRow, { onConflict: "id" })
+        .select("id")
+        .single();
+  const { data: savedEncounter, error } = await write;
+
+  if (!error && !savedEncounter && existingRow && expectedUpdatedAt) {
+    return NextResponse.json({
+      error: "This meeting changed on another device. Reload to see the latest version before saving your changes.",
+      conflict: true,
+    }, { status: 409 });
+  }
 
   if (error) {
     return NextResponse.json({ error: "The encounter was saved on this device but could not sync." }, { status: 500 });

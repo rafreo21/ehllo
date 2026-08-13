@@ -191,6 +191,23 @@ try {
   const savedEncounter = encounters.encounters?.find((encounter) => encounter.id === encounterId);
   assert.equal(savedEncounter?.eventId, eventId, "saved capture returns its event context");
   assert.equal(savedEncounter?.privateNotes, "Met at the automated staging event.", "private notes survive synchronization");
+  assert.ok(savedEncounter?.updatedAt, "capture load returns a synchronization revision");
+  const firstEncounterRevision = savedEncounter.updatedAt;
+  const revisedEncounter = await api("/api/encounters", host.token, {
+    method: "POST",
+    body: JSON.stringify({ ...savedEncounter, privateNotes: "Updated on the other device.", expectedUpdatedAt: firstEncounterRevision }),
+  });
+  assert.notEqual(revisedEncounter.updatedAt, firstEncounterRevision, "fresh encounter revision updates successfully");
+  const staleEncounterResponse = await fetch(`${appUrl}/api/encounters`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${host.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ ...savedEncounter, privateNotes: "Stale private note overwrite.", expectedUpdatedAt: firstEncounterRevision }),
+  });
+  const staleEncounterPayload = await staleEncounterResponse.json();
+  assert.equal(staleEncounterResponse.status, 409, "stale encounter update is rejected atomically");
+  assert.equal(staleEncounterPayload.conflict, true, "encounter conflict is explicit to the client");
+  const encounterAfterConflictResponse = await api(`/api/encounters/${encounterId}`, host.token);
+  assert.equal(encounterAfterConflictResponse.encounter?.privateNotes, "Updated on the other device.", "stale encounter update cannot overwrite newer private notes");
 
   const followUps = await api("/api/follow-ups", host.token);
   const openFollowUp = followUps.followUps?.find((item) => item.encounterId === encounterId && item.actionId === actionId);
@@ -239,7 +256,7 @@ try {
   const publicPayload = await publicInvitation.json();
   assert.equal(publicPayload.invitation?.event?.status, "cancelled", "original guest link shows cancellation");
 
-  console.log(JSON.stringify({ ok: true, journey: "signup-card-qr-vcard-wallet-card-conflict-contact-conflict-capture-followup-event-invite-rsvp-claim-reschedule-cancel", cleanup: "pending" }));
+  console.log(JSON.stringify({ ok: true, journey: "signup-card-qr-vcard-wallet-card-conflict-contact-conflict-capture-conflict-followup-event-invite-rsvp-claim-reschedule-cancel", cleanup: "pending" }));
 } finally {
   for (const id of createdAuthIds.reverse()) await admin.auth.admin.deleteUser(id);
   const { data: remaining } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
