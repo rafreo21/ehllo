@@ -51,7 +51,7 @@ function mapEvent(row: Record<string, unknown>): EventItem {
 export async function fetchMyEvents(accessToken: string): Promise<EventItem[]> {
   try {
     const response = await mobileFetch('/api/events', accessToken);
-    const payload = await readMobileApiJson<{ events?: Array<Record<string, unknown>>; error?: string }>(
+    const payload = await readMobileApiJson<{ events?: Record<string, unknown>[]; error?: string }>(
       response,
       'Could not read your events from AfterMeet.',
     );
@@ -69,7 +69,7 @@ export async function fetchMyEvents(accessToken: string): Promise<EventItem[]> {
 export async function fetchEventCandidates(accessToken: string): Promise<EventCandidatesResult> {
   const response = await mobileFetch('/api/events/candidates', accessToken);
   const payload = await readMobileApiJson<{
-    candidates?: Array<Record<string, unknown>>;
+    candidates?: Record<string, unknown>[];
     providerStatus?: { google?: CalendarProviderStatus; microsoft?: CalendarProviderStatus };
     syncedAt?: string;
     error?: string;

@@ -184,7 +184,7 @@ function mapEncounterSummary(row: Record<string, unknown>): EncounterSummary {
 
 export async function fetchEncounters(accessToken: string) {
   const response = await mobileFetch('/api/encounters', accessToken);
-  const payload = await readMobileApiJson<{ encounters?: Array<Record<string, unknown>>; error?: string; preview?: boolean }>(
+  const payload = await readMobileApiJson<{ encounters?: Record<string, unknown>[]; error?: string; preview?: boolean }>(
     response,
     'Could not read your captures from AfterMeet.',
   );
@@ -252,7 +252,7 @@ export async function extractEncounterDraft(
     personName?: string;
     personEmail?: string;
     personPhone?: string;
-    people?: Array<{ name: string; email?: string; phone?: string }>;
+    people?: { name: string; email?: string; phone?: string }[];
   },
 ) {
   const response = await mobileFetch('/api/encounters/extract', accessToken, {
@@ -296,20 +296,20 @@ export function buildEncounterPayload(input: {
   title: string;
   personName: string;
   personEmail?: string;
-  people?: Array<{ id?: string; name: string; email?: string; phone?: string; linkedIn?: string; exchangeId?: string }>;
+  people?: { id?: string; name: string; email?: string; phone?: string; linkedIn?: string; exchangeId?: string }[];
   contactId?: string;
   exchangeId?: string;
   campaignId?: string;
   eventId?: string;
   sharedSummary: string;
   privateNotes: string;
-  manualFollowUps?: Array<{
+  manualFollowUps?: {
     title: string;
     channel: FollowUpChannel;
     owner: 'me' | 'guest';
     targetPersonId: string;
     dueAt: string;
-  }>;
+  }[];
   commitments?: EncounterExtractionCommitment[];
   consentMethod?: 'verbal' | 'written';
   consentConfirmed?: boolean;
@@ -441,13 +441,13 @@ type TranscribePayload = {
   retryable?: boolean;
   diarized?: boolean;
   speakers?: string[];
-  segments?: Array<{
+  segments?: {
     id: string;
     speaker: string;
     text: string;
     start?: number;
     end?: number;
-  }>;
+  }[];
 };
 
 function transcribeFailureMessage(status: number, payload: TranscribePayload, raw: string) {

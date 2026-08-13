@@ -55,13 +55,13 @@ export function remoteRowToMobileCard(remote: {
   cover_image_url?: string | null;
   show_company_details?: boolean | null;
   status: 'draft' | 'published' | 'archived';
-  card_methods?: Array<{
+  card_methods?: {
     id: string;
     method_type: MobileCard['methods'][number]['type'];
     value: string;
     label: string;
     sort_order: number;
-  }>;
+  }[];
 }): MobileCard {
   return {
     id: remote.id,

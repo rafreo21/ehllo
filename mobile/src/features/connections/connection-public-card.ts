@@ -15,13 +15,13 @@ export type PublicConnectionCard = {
   coverImageUrl: string;
   companyLogoUrl: string;
   showCompanyDetails: boolean;
-  methods: Array<{
+  methods: {
     id: string;
     type: MobileCard['methods'][number]['type'];
     value: string;
     label: string;
     sortOrder: number;
-  }>;
+  }[];
 };
 
 export function publicCardToMobileCard(card: PublicConnectionCard): MobileCard {

@@ -66,7 +66,7 @@ export async function fetchFollowUps(
   if (connection?.exchangeId?.trim()) params.set('exchangeId', connection.exchangeId.trim());
   const query = params.toString();
   const response = await mobileFetch(`/api/follow-ups${query ? `?${query}` : ''}`, accessToken);
-  const payload = await readMobileApiJson<{ followUps?: Array<Record<string, unknown>>; error?: string }>(
+  const payload = await readMobileApiJson<{ followUps?: Record<string, unknown>[]; error?: string }>(
     response,
     'Could not read follow-ups from AfterMeet.',
   );
@@ -149,7 +149,7 @@ export async function snoozeFollowUp(
 
 export async function fetchEncounterRecords(accessToken: string) {
   const response = await mobileFetch('/api/encounters', accessToken);
-  const payload = await readMobileApiJson<{ encounters?: Array<Record<string, unknown>>; error?: string }>(
+  const payload = await readMobileApiJson<{ encounters?: Record<string, unknown>[]; error?: string }>(
     response,
     'Could not read meetings from AfterMeet.',
   );
@@ -170,7 +170,7 @@ export async function fetchEncountersForConnection(
   if (input.exchangeId?.trim()) params.set('exchangeId', input.exchangeId.trim());
 
   const response = await mobileFetch(`/api/encounters?${params.toString()}`, accessToken);
-  const payload = await readMobileApiJson<{ encounters?: Array<Record<string, unknown>>; error?: string }>(
+  const payload = await readMobileApiJson<{ encounters?: Record<string, unknown>[]; error?: string }>(
     response,
     'Could not read meetings for this person.',
   );

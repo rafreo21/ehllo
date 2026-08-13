@@ -30,7 +30,7 @@ import {
 } from '@/features/notifications/notification-center-api';
 import { colors, radius, spacing } from '@/theme/tokens';
 
-const NOTIFICATION_TYPE_ROWS: Array<{ type: NotificationType; icon: typeof Bell; label: string; hint: string }> = [
+const NOTIFICATION_TYPE_ROWS: { type: NotificationType; icon: typeof Bell; label: string; hint: string }[] = [
   { type: 'review_ready', icon: CheckCircle, label: 'Transcript ready', hint: 'A capture is ready for your review' },
   { type: 'follow_up_due', icon: CalendarCheck, label: 'Follow-up due', hint: 'A reviewed follow-up is due today' },
   { type: 'follow_up_overdue', icon: ClockCounterClockwise, label: 'Follow-up overdue', hint: 'A reviewed follow-up is overdue' },

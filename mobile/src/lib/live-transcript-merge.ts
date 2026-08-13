@@ -43,7 +43,7 @@ export function extractInterimTail(committed: string, partial: string) {
   return next;
 }
 
-export function joinSpeechResults(results: Array<{ transcript?: string }> | undefined) {
+export function joinSpeechResults(results: { transcript?: string }[] | undefined) {
   if (!results?.length) return '';
   return results
     .map((result) => result.transcript?.trim() ?? '')

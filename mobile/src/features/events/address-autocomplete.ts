@@ -20,7 +20,7 @@ export async function fetchAddressSuggestions(apiKey: string, input: string): Pr
 
   const payload = await response.json() as {
     status?: string;
-    predictions?: Array<{ place_id?: string; description?: string }>;
+    predictions?: { place_id?: string; description?: string }[];
   };
   if (payload.status !== 'OK') return [];
 

@@ -21,7 +21,7 @@ type ScreenProps = PropsWithChildren<{
   scroll?: boolean;
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
-  edges?: Array<'top' | 'bottom' | 'left' | 'right'>;
+  edges?: ('top' | 'bottom' | 'left' | 'right')[];
   reserveTabBar?: boolean;
   /** Fixed content pinned below the scroll area, e.g. a primary action bar that shouldn't scroll away. */
   footer?: ReactNode;
@@ -87,7 +87,7 @@ export function ScreenFrame({
   paddingHorizontal = spacing.x5,
 }: PropsWithChildren<{
   style?: ViewStyle;
-  edges?: Array<'top' | 'bottom' | 'left' | 'right'>;
+  edges?: ('top' | 'bottom' | 'left' | 'right')[];
   paddingHorizontal?: number;
 }>) {
   const insets = useAppInsets();

@@ -118,7 +118,7 @@ function defaultCommitmentKeys(commitments: EncounterExtractionCommitment[]): st
 
 function initialCommitmentAssignments(
   commitments: EncounterExtractionCommitment[],
-  people: Array<{ name: string }>,
+  people: { name: string }[],
 ): Record<string, CommitmentAssignment> {
   return Object.fromEntries(commitments.map((commitment, index) => {
     const matched = people.find((person) => (
@@ -203,7 +203,7 @@ export default function CaptureWizardScreen() {
   const updateDraft = useCallback((changes: Partial<CaptureWizardDraft>) => {
     setDraft((current) => {
       const next = { ...current, ...changes };
-      const unchanged = (Object.keys(changes) as Array<keyof CaptureWizardDraft>).every(
+      const unchanged = (Object.keys(changes) as (keyof CaptureWizardDraft)[]).every(
         (key) => Object.is(current[key], next[key]),
       );
       return unchanged ? current : { ...next, updatedAt: new Date().toISOString() };
@@ -782,7 +782,7 @@ export default function CaptureWizardScreen() {
     if (draft.recordingUri && draft.transcript.trim().length < 20 && session?.access_token) {
       void recorder.transcribeRecordingIfNeeded(draft.recordingUri);
     }
-  }, [draft.durationSeconds, draft.failureReason, draft.originDeviceId, draft.originDeviceLabel, draft.recordingSource, draft.recordingUri, draft.sessionStatus, draft.transcript, draftReady, recorder, session?.access_token, showCaptureError, updateDraft]);
+  }, [draft.durationSeconds, draft.failureReason, draft.originDeviceId, draft.originDeviceLabel, draft.recordingSegments, draft.recordingSource, draft.recordingUri, draft.sessionStatus, draft.transcript, draftReady, recorder, session?.access_token, showCaptureError, updateDraft]);
 
   useEffect(() => {
     if (!draftReady) return;

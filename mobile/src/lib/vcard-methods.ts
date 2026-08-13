@@ -112,7 +112,7 @@ export function appendMobileVcardMethods(
   methods: ContactMethod[],
   options: MobileVcardMethodOptions = {},
 ): { itemIndex: number; noteExtras: string[] } {
-  const labeledUrls: Array<{ label: string; href: string }> = [];
+  const labeledUrls: { label: string; href: string }[] = [];
   const noteExtras: string[] = [];
   let primaryWebsite: string | null = null;
   let itemIndex = 1;
