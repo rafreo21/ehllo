@@ -13,6 +13,7 @@
     "build:vercel": "NITRO_PRESET=vercel vinext build",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
     "test": "npm run build && node --test tests/*.test.mjs",
+    "test:e2e:staging": "AFTERMEET_E2E_STAGING=1 AFTERMEET_E2E_BASE_URL=https://aftermeet-staging.vercel.app node --env-file=.env.staging.local scripts/e2e-staging.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .vercel --ignore-pattern mobile",
     "db:generate": "drizzle-kit generate",
     "configure:supabase-auth": "node scripts/configure-supabase-auth.mjs",

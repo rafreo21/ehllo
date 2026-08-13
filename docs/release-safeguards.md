@@ -83,6 +83,14 @@ Do not describe the app as store-ready until those items have recorded evidence.
 ## Rollout and rollback
 
 - Release to staging first, then TestFlight/Play Internal Testing, then a limited production rollout.
+
+## Staging end-to-end journeys
+
+- Run `npm run test:e2e:staging` from `site/` before an event-lifecycle release.
+- The command is hard-coded to the staging web origin and refuses to run without the explicit staging flag and staging Supabase credentials.
+- It creates unique temporary host and guest auth users, exercises onboarding, event creation, RSVP, guest claim, cross-workspace visibility, rescheduling, and cancellation, then deletes both users in a `finally` block.
+- A failed assertion is not evidence of leaked fixtures: the runner verifies both temporary auth users are gone before it exits.
+- Never point this runner at production or remove its staging-origin guard.
 - Verify sign-in, card sharing, QR exchange, capture, review, follow-ups, notifications, and three-day recording expiry before widening rollout.
 - Roll back the client to the previous store build when possible. Database changes must be backward-compatible and use a tested corrective migration rather than destructive rollback.
 - Do not deploy directly from an unreviewed dirty worktree.
