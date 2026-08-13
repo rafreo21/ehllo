@@ -5,10 +5,43 @@ import { createEventInvitationToken, hashEventInvitationToken, normalizeInvitati
 import { buildEventInvitationEmail } from "../../../../../lib/event-invitation-email";
 import { sendEmail } from "../../../../../lib/send-email";
 
-export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+async function resolveOwnedEvent(request: Request, id: string) {
   const user = await resolveApiUser(request);
-  if (!user) return NextResponse.json({ error: "Your session has expired." }, { status: 401 });
+  if (!user) return { error: NextResponse.json({ error: "Your session has expired." }, { status: 401 }) };
 
+  const supabase = await createApiSupabaseClient(request);
+  const { data: event } = await supabase.from("events")
+    .select("id, title, starts_at, ends_at, location")
+    .eq("id", id)
+    .eq("workspace_id", user.workspaceId)
+    .maybeSingle();
+  if (!event) return { error: NextResponse.json({ error: "Event not found." }, { status: 404 }) };
+  return { supabase, event };
+}
+
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
+  const owned = await resolveOwnedEvent(request, id);
+  if (owned.error) return owned.error;
+
+  const { data, error } = await owned.supabase.from("event_invitations")
+    .select("id, invited_email, status, responded_at, claimed_at, created_at, updated_at")
+    .eq("event_id", id)
+    .order("created_at", { ascending: false });
+  if (error) return NextResponse.json({ error: "We couldn’t load this event’s invitations." }, { status: 500 });
+
+  return NextResponse.json({ invitations: (data ?? []).map((invitation) => ({
+    id: invitation.id,
+    email: invitation.invited_email,
+    status: invitation.status,
+    respondedAt: invitation.responded_at,
+    claimedAt: invitation.claimed_at,
+    createdAt: invitation.created_at,
+    updatedAt: invitation.updated_at,
+  })) }, { headers: { "Cache-Control": "private, no-store" } });
+}
+
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const body = await request.json().catch(() => null) as { email?: string; expiresAt?: string } | null;
   const email = normalizeInvitationEmail(body?.email ?? "");
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -16,9 +49,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
 
   const { id } = await context.params;
-  const supabase = await createApiSupabaseClient(request);
-  const { data: event } = await supabase.from("events").select("id, title, starts_at, ends_at, location").eq("id", id).eq("workspace_id", user.workspaceId).maybeSingle();
-  if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
+  const owned = await resolveOwnedEvent(request, id);
+  if (owned.error) return owned.error;
+  const { supabase, event } = owned;
 
   const token = createEventInvitationToken();
   const expiresAt = body?.expiresAt && !Number.isNaN(Date.parse(body.expiresAt)) ? body.expiresAt : null;
@@ -51,4 +84,26 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     emailSent: delivery.ok,
     warning: delivery.ok ? undefined : "Invitation saved, but email delivery is unavailable. Share the link instead.",
   }, { headers: { "Cache-Control": "private, no-store" } });
+}
+
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  const body = await request.json().catch(() => null) as { invitationId?: string } | null;
+  if (!body?.invitationId) return NextResponse.json({ error: "Invitation ID is required." }, { status: 400 });
+
+  const { id } = await context.params;
+  const owned = await resolveOwnedEvent(request, id);
+  if (owned.error) return owned.error;
+
+  const { data, error } = await owned.supabase.from("event_invitations")
+    .update({ status: "revoked", updated_at: new Date().toISOString() })
+    .eq("id", body.invitationId)
+    .eq("event_id", id)
+    .is("claimed_at", null)
+    .neq("status", "revoked")
+    .select("id")
+    .maybeSingle();
+  if (error) return NextResponse.json({ error: "We couldn’t revoke this invitation." }, { status: 500 });
+  if (!data) return NextResponse.json({ error: "This invitation is no longer active." }, { status: 404 });
+
+  return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "private, no-store" } });
 }

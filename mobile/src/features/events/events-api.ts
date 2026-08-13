@@ -122,6 +122,39 @@ export async function inviteEventGuest(accessToken: string, eventId: string, ema
   return { guestUrl: payload.guestUrl, emailSent: Boolean(payload.emailSent), warning: payload.warning || '' };
 }
 
+export type EventInvitation = {
+  id: string;
+  email: string;
+  status: 'invited' | 'going' | 'not_going' | 'revoked';
+  respondedAt: string | null;
+  claimedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function fetchEventInvitations(accessToken: string, eventId: string): Promise<EventInvitation[]> {
+  const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}/invitations`, accessToken);
+  const payload = await readMobileApiJson<{ invitations?: EventInvitation[]; error?: string }>(
+    response,
+    'Could not read this event’s invitations.',
+  );
+  if (!response.ok) throw new Error(payload.error || 'Could not load this event’s invitations.');
+  return payload.invitations ?? [];
+}
+
+export async function revokeEventInvitation(accessToken: string, eventId: string, invitationId: string) {
+  const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}/invitations`, accessToken, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ invitationId }),
+  });
+  const payload = await readMobileApiJson<{ ok?: boolean; error?: string }>(
+    response,
+    'Could not read the invitation update response.',
+  );
+  if (!response.ok || !payload.ok) throw new Error(payload.error || 'Could not revoke this invitation.');
+}
+
 export async function sendEventAttendance(accessToken: string, eventId: string, status: EventAttendanceStatus) {
   const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}/attendance`, accessToken, {
     method: 'PATCH',

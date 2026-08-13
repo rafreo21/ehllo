@@ -3,7 +3,7 @@ import * as Clipboard from 'expo-clipboard';
 import { router, useFocusEffect } from 'expo-router';
 import { ArrowsClockwise, CalendarBlank, CaretRight, LinkSimple, NotePencil, Plus, WarningCircle } from 'phosphor-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { EventCard } from '@/components/event-card';
@@ -25,12 +25,15 @@ import {
   createEvent,
   extractEventFromLink,
   fetchEventCandidates,
+  fetchEventInvitations,
   fetchMyEvents,
   markEventLeft,
   inviteEventGuest,
+  revokeEventInvitation,
   setEventAttendance,
   type CalendarProviderStatus,
   type EventItem,
+  type EventInvitation,
 } from '@/features/events/events-api';
 import { applyEventDateChange, resolveExtractedEventDates } from '@/features/events/event-form-state';
 import { cacheEventAttendance, cacheEventLeftAt } from '@/features/events/event-cache';
@@ -88,6 +91,9 @@ export default function EventsScreen() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [inviteEvent, setInviteEvent] = useState<EventItem | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [invitationsLoading, setInvitationsLoading] = useState(false);
+  const [invitations, setInvitations] = useState<EventInvitation[]>([]);
+  const [revokingInvitationId, setRevokingInvitationId] = useState('');
   const [inviteError, setInviteError] = useState('');
 
   const refresh = useCallback(async (options?: { manual?: boolean }) => {
@@ -236,7 +242,8 @@ export default function EventsScreen() {
     setInviteError('');
     try {
       const result = await inviteEventGuest(accessToken, inviteEvent.id, email);
-      setInviteEvent(null);
+      const updatedInvitations = await fetchEventInvitations(accessToken, inviteEvent.id).catch(() => null);
+      if (updatedInvitations) setInvitations(updatedInvitations);
       setRefreshTitle(result.emailSent ? 'Invitation sent' : 'Invitation link ready');
       setRefreshMessage(result.emailSent
         ? `${email} can RSVP without creating an account. Their response will stay with them if they sign up.`
@@ -247,6 +254,46 @@ export default function EventsScreen() {
     } finally {
       setInviteLoading(false);
     }
+  }
+
+  async function openInvitations(event: EventItem) {
+    setInviteEvent(event);
+    setInvitations([]);
+    setInviteError('');
+    if (!accessToken) return;
+    setInvitationsLoading(true);
+    try {
+      setInvitations(await fetchEventInvitations(accessToken, event.id));
+    } catch (caught) {
+      setInviteError(caught instanceof Error ? caught.message : 'Could not load this event’s invitations.');
+    } finally {
+      setInvitationsLoading(false);
+    }
+  }
+
+  function confirmRevoke(invitation: EventInvitation) {
+    if (!accessToken || !inviteEvent) return;
+    Alert.alert(
+      'Revoke invitation?',
+      `${invitation.email} will no longer be able to RSVP or claim this event with their invitation link.`,
+      [
+        { text: 'Keep invitation', style: 'cancel' },
+        {
+          text: 'Revoke',
+          style: 'destructive',
+          onPress: () => {
+            setRevokingInvitationId(invitation.id);
+            setInviteError('');
+            void revokeEventInvitation(accessToken, inviteEvent.id, invitation.id)
+              .then(() => setInvitations((current) => current.map((item) => (
+                item.id === invitation.id ? { ...item, status: 'revoked', updatedAt: new Date().toISOString() } : item
+              ))))
+              .catch((caught) => setInviteError(caught instanceof Error ? caught.message : 'Could not revoke this invitation.'))
+              .finally(() => setRevokingInvitationId(''));
+          },
+        },
+      ],
+    );
   }
 
   const header = (
@@ -322,7 +369,7 @@ export default function EventsScreen() {
                 onGoing={candidate ? (item) => void decide(item, 'going') : undefined}
                 onNotGoing={(item) => void decide(item, 'not_going')}
                 onLeave={!candidate && isEventCurrentlyHappening(event) ? (item) => void leaveEvent(item) : undefined}
-                onInvite={!candidate ? setInviteEvent : undefined}
+                onInvite={!candidate ? (item) => void openInvitations(item) : undefined}
               />
             )) : (
               <Panel>
@@ -362,9 +409,13 @@ export default function EventsScreen() {
         key={inviteEvent?.id ?? 'closed'}
         event={inviteEvent}
         loading={inviteLoading}
+        invitationsLoading={invitationsLoading}
+        invitations={invitations}
+        revokingInvitationId={revokingInvitationId}
         error={inviteError}
-        onClose={() => { setInviteEvent(null); setInviteError(''); }}
+        onClose={() => { setInviteEvent(null); setInviteError(''); setInvitations([]); }}
         onInvite={(email) => void sendInvite(email)}
+        onRevoke={confirmRevoke}
       />
       <OutcomeErrorSheet visible={Boolean(error)} message={error} onClose={() => setError('')} />
       <OutcomeSuccessSheet

@@ -1,23 +1,31 @@
 import { useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Button } from '@/components/ui';
-import type { EventItem } from '@/features/events/events-api';
+import type { EventInvitation, EventItem } from '@/features/events/events-api';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 export function EventInviteSheet({
   event,
   loading,
+  invitationsLoading,
+  invitations,
+  revokingInvitationId,
   error,
   onClose,
   onInvite,
+  onRevoke,
 }: {
   event: EventItem | null;
   loading: boolean;
+  invitationsLoading: boolean;
+  invitations: EventInvitation[];
+  revokingInvitationId: string;
   error: string;
   onClose: () => void;
   onInvite: (email: string) => void;
+  onRevoke: (invitation: EventInvitation) => void;
 }) {
   const [email, setEmail] = useState('');
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -45,6 +53,46 @@ export function EventInviteSheet({
         Send invitation
       </Button>
       <Text style={styles.privacy}>Their RSVP is private. Your captures, recordings and notes stay private too.</Text>
+      <View style={styles.divider} />
+      <View style={styles.listHeader}>
+        <Text style={styles.listTitle}>Invited guests</Text>
+        {invitationsLoading ? <ActivityIndicator size="small" color={colors.ink} /> : null}
+      </View>
+      {!invitationsLoading && invitations.length === 0 ? (
+        <Text style={styles.empty}>No invitations sent yet.</Text>
+      ) : null}
+      {invitations.map((invitation) => {
+        const canRevoke = invitation.status !== 'revoked' && !invitation.claimedAt;
+        const status = invitation.claimedAt
+          ? 'Joined AfterMeet'
+          : invitation.status === 'not_going'
+            ? 'Not going'
+            : invitation.status === 'going'
+              ? 'Going'
+              : invitation.status === 'revoked'
+                ? 'Revoked'
+                : 'Awaiting response';
+        return (
+          <View key={invitation.id} style={styles.invitationRow}>
+            <View style={styles.invitationCopy}>
+              <Text style={styles.email} numberOfLines={1}>{invitation.email}</Text>
+              <Text style={styles.status}>{status}</Text>
+            </View>
+            {canRevoke ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Revoke invitation for ${invitation.email}`}
+                disabled={Boolean(revokingInvitationId)}
+                onPress={() => onRevoke(invitation)}
+                style={styles.revokeButton}>
+                {revokingInvitationId === invitation.id
+                  ? <ActivityIndicator size="small" color={colors.danger} />
+                  : <Text style={styles.revokeText}>Revoke</Text>}
+              </Pressable>
+            ) : null}
+          </View>
+        );
+      })}
     </BottomSheet>
   );
 }
@@ -56,4 +104,14 @@ const styles = StyleSheet.create({
   input: { minHeight: 52, paddingHorizontal: spacing.x4, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, color: colors.ink, backgroundColor: colors.canvas },
   error: { color: colors.danger, fontSize: 13, fontWeight: '700' },
   privacy: { color: colors.muted, fontSize: 12, lineHeight: 18 },
+  divider: { height: 1, backgroundColor: colors.line },
+  listHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  listTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
+  empty: { color: colors.muted, fontSize: 14 },
+  invitationRow: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: spacing.x3, paddingVertical: spacing.x2, borderBottomWidth: 1, borderBottomColor: colors.line },
+  invitationCopy: { flex: 1, gap: 2 },
+  email: { color: colors.ink, fontSize: 14, fontWeight: '700' },
+  status: { color: colors.muted, fontSize: 12, fontWeight: '600' },
+  revokeButton: { minHeight: 44, minWidth: 68, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.x3 },
+  revokeText: { color: colors.danger, fontSize: 13, fontWeight: '800' },
 });
