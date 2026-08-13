@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 
 import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
 import { buildEventCancelledEmail, buildEventScheduleChangedEmail } from "../../../../lib/event-invitation-email";
+import { deliverQueuedEventEmail, enqueueEventEmail } from "../../../../lib/event-email-outbox";
 import { eventFromRow, type EventRow } from "../../../../lib/events-server";
-import { sendEmail } from "../../../../lib/send-email";
 
 type UpdateBody = {
   title?: string;
@@ -60,7 +60,17 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       ? buildEventCancelledEmail(title)
       : buildEventScheduleChangedEmail({ eventTitle: title, startsAt, location });
     for (const invitation of invitations ?? []) {
-      const delivery = await sendEmail({ to: invitation.invited_email, subject: message.subject, html: message.html });
+      const kind = cancelled ? "cancelled" as const : "schedule_changed" as const;
+      const queued = await enqueueEventEmail(supabase, {
+        eventId: id,
+        invitationId: invitation.id,
+        to: invitation.invited_email,
+        kind,
+        subject: message.subject,
+        html: message.html,
+        dedupeKey: `${kind}:${invitation.id}:${now}`,
+      });
+      const delivery = await deliverQueuedEventEmail(supabase, queued.id);
       if (delivery.ok) {
         emailsSent += 1;
         await supabase.from("event_invitations").update({

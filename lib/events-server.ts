@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { AppUser } from "./auth/context";
+import { deliverQueuedEventEmail, enqueueEventEmail, type EventEmailKind } from "./event-email-outbox";
 import { buildEventCancelledEmail, buildEventScheduleChangedEmail } from "./event-invitation-email";
 import { candidateSuppressionKey, isEventCandidateWorthy, resolveCurrentEvent, type EventSource } from "./events";
 import { getConnectedAccountAccessTokenStatus } from "./integrations/connected-accounts";
@@ -11,7 +12,6 @@ import {
   listMicrosoftCalendarEvents,
   type RawCalendarEvent,
 } from "./integrations/providers";
-import { sendEmail } from "./send-email";
 
 /**
  * "ok" — synced fine. "not_connected" — user never linked this provider (or
@@ -153,7 +153,7 @@ export async function syncCalendarCandidates(
     if (!existing || existing.status === "cancelled") continue;
     const nowIso = new Date().toISOString();
     await supabase.from("events").update({ status: "cancelled", cancelled_at: nowIso, updated_at: nowIso }).eq("id", existing.id);
-    await notifyCalendarEventGuests(supabase, existing.id, buildEventCancelledEmail(existing.title), "cancellation_notice_sent_at", false);
+    await notifyCalendarEventGuests(supabase, existing.id, buildEventCancelledEmail(existing.title), "cancellation_notice_sent_at", "cancelled", nowIso, false);
   }
 
   const worthy = raw.filter((item) => !item.cancelled && isEventCandidateWorthy({
@@ -201,7 +201,7 @@ export async function syncCalendarCandidates(
       eventTitle: item.title,
       startsAt: item.startsAt,
       location: item.location,
-    }), "schedule_notice_sent_at", true);
+    }), "schedule_notice_sent_at", "schedule_changed", syncedAt, true);
   }
   return { candidates: (data as EventRow[]).map(eventFromRow), providerStatus, syncedAt };
 }
@@ -218,12 +218,23 @@ async function notifyCalendarEventGuests(
   eventId: string,
   message: { subject: string; html: string },
   noticeColumn: "schedule_notice_sent_at" | "cancellation_notice_sent_at",
+  kind: EventEmailKind,
+  changeKey: string,
   resetReminder: boolean,
 ) {
   const { data: invitations } = await supabase.from("event_invitations")
     .select("id, invited_email").eq("event_id", eventId).neq("status", "revoked");
   for (const invitation of invitations ?? []) {
-    const delivery = await sendEmail({ to: invitation.invited_email, subject: message.subject, html: message.html });
+    const queued = await enqueueEventEmail(supabase, {
+      eventId,
+      invitationId: invitation.id,
+      to: invitation.invited_email,
+      kind,
+      subject: message.subject,
+      html: message.html,
+      dedupeKey: `${kind}:${invitation.id}:${changeKey}`,
+    });
+    const delivery = await deliverQueuedEventEmail(supabase, queued.id);
     if (!delivery.ok) continue;
     await supabase.from("event_invitations").update({
       [noticeColumn]: new Date().toISOString(),

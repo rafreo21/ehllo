@@ -63,7 +63,7 @@ export function EventInviteSheet({
       ) : null}
       {invitations.map((invitation) => {
         const canRevoke = invitation.status !== 'revoked' && !invitation.claimedAt;
-        const status = invitation.claimedAt
+        const rsvpStatus = invitation.claimedAt
           ? 'Joined AfterMeet'
           : invitation.status === 'not_going'
             ? 'Not going'
@@ -72,11 +72,18 @@ export function EventInviteSheet({
               : invitation.status === 'revoked'
                 ? 'Revoked'
                 : 'Awaiting response';
+        const deliveryStatus = invitation.deliveryStatus === 'failed'
+          ? 'Email failed — retry scheduled'
+          : invitation.deliveryStatus === 'pending' || invitation.deliveryStatus === 'processing'
+            ? 'Email queued'
+            : invitation.deliveryStatus === 'sent'
+              ? 'Email delivered to provider'
+              : '';
         return (
           <View key={invitation.id} style={styles.invitationRow}>
             <View style={styles.invitationCopy}>
               <Text style={styles.email} numberOfLines={1}>{invitation.email}</Text>
-              <Text style={styles.status}>{status}</Text>
+              <Text style={styles.status}>{rsvpStatus}{deliveryStatus ? ` · ${deliveryStatus}` : ''}</Text>
             </View>
             {canRevoke ? (
               <Pressable

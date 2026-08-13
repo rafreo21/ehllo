@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createApiSupabaseClient, resolveApiUser } from "../../../../../lib/auth/api-request";
 import { createEventInvitationToken, hashEventInvitationToken, normalizeInvitationEmail } from "../../../../../lib/event-invitations";
 import { buildEventInvitationEmail } from "../../../../../lib/event-invitation-email";
-import { sendEmail } from "../../../../../lib/send-email";
+import { deliverQueuedEventEmail, enqueueEventEmail } from "../../../../../lib/event-email-outbox";
 
 async function resolveOwnedEvent(request: Request, id: string) {
   const user = await resolveApiUser(request);
@@ -29,6 +29,14 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     .eq("event_id", id)
     .order("created_at", { ascending: false });
   if (error) return NextResponse.json({ error: "We couldn’t load this event’s invitations." }, { status: 500 });
+  const { data: deliveries } = await owned.supabase.from("event_email_outbox")
+    .select("invitation_id, status, last_error, updated_at")
+    .eq("event_id", id)
+    .order("updated_at", { ascending: false });
+  const latestDelivery = new Map<string, { status: string; last_error: string }>();
+  for (const delivery of deliveries ?? []) {
+    if (delivery.invitation_id && !latestDelivery.has(delivery.invitation_id)) latestDelivery.set(delivery.invitation_id, delivery);
+  }
 
   return NextResponse.json({ invitations: (data ?? []).map((invitation) => ({
     id: invitation.id,
@@ -38,6 +46,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     claimedAt: invitation.claimed_at,
     createdAt: invitation.created_at,
     updatedAt: invitation.updated_at,
+    deliveryStatus: latestDelivery.get(invitation.id)?.status ?? null,
+    deliveryError: latestDelivery.get(invitation.id)?.last_error ?? "",
   })) }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
@@ -55,7 +65,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   const token = createEventInvitationToken();
   const expiresAt = body?.expiresAt && !Number.isNaN(Date.parse(body.expiresAt)) ? body.expiresAt : null;
-  const { error } = await supabase.from("event_invitations").upsert({
+  const { data: invitation, error } = await supabase.from("event_invitations").upsert({
     event_id: id,
     invited_email: email,
     token_hash: hashEventInvitationToken(token),
@@ -65,8 +75,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     claimed_at: null,
     expires_at: expiresAt,
     updated_at: new Date().toISOString(),
-  }, { onConflict: "event_id,invited_email" });
-  if (error) return NextResponse.json({ error: "We couldn’t create this invitation." }, { status: 500 });
+  }, { onConflict: "event_id,invited_email" }).select("id, token_hash").single();
+  if (error || !invitation) return NextResponse.json({ error: "We couldn’t create this invitation." }, { status: 500 });
 
   const origin = new URL(request.url).origin;
   const guestUrl = `${origin}/event/${encodeURIComponent(token)}`;
@@ -77,7 +87,16 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     location: String(event.location ?? ""),
     guestUrl,
   });
-  const delivery = await sendEmail({ to: email, subject: message.subject, html: message.html });
+  const queued = await enqueueEventEmail(supabase, {
+    eventId: id,
+    invitationId: invitation.id,
+    to: email,
+    kind: "invitation",
+    subject: message.subject,
+    html: message.html,
+    dedupeKey: `invitation:${invitation.id}:${invitation.token_hash}`,
+  });
+  const delivery = await deliverQueuedEventEmail(supabase, queued.id);
   return NextResponse.json({
     ok: true,
     guestUrl,

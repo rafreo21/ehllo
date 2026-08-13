@@ -150,6 +150,8 @@ export type EventInvitation = {
   claimedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  deliveryStatus: 'pending' | 'processing' | 'sent' | 'failed' | null;
+  deliveryError: string;
 };
 
 export async function fetchEventInvitations(accessToken: string, eventId: string): Promise<EventInvitation[]> {
