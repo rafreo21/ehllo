@@ -283,11 +283,11 @@ footer a { font-size: 12px; text-decoration: underline; text-underline-offset: 5
 .draft-app-tabs button.active { color: var(--navy); background:var(--blue); transform:translateX(8px); }
 .draft-app-tabs button.active::after { background:var(--navy); }
 .draft-phone-wrap { min-height:0; height:100%; display:grid; place-items:center; padding:14px 0 28px; position:relative; perspective:1200px; }
-.draft-phone { width:min(100%,330px,calc((100vh - 210px) * .46)); padding:6px; border:1px solid #353538; border-radius:50px; background:#111113; box-shadow:0 32px 68px rgba(14,15,12,.2),0 10px 24px rgba(14,15,12,.12),inset 0 0 0 1px rgba(255,255,255,.12); position:relative; z-index:2; }
-.draft-phone::after { content:""; position:absolute; inset:2px; border-radius:49px; border:1px solid rgba(255,255,255,.09); pointer-events:none; }
-.draft-phone-glass { width:100%; aspect-ratio:1206/2622; border-radius:45px; background:#080809; overflow:hidden; position:relative; box-shadow:inset 0 0 0 1px rgba(255,255,255,.08); }
-.draft-phone-glass::after { content:""; position:absolute; inset:0; z-index:8; border-radius:inherit; background:linear-gradient(112deg,rgba(255,255,255,.08),transparent 18%,transparent 78%,rgba(255,255,255,.035)); pointer-events:none; }
-.draft-simulator-screen { width:100%; height:100%; overflow:hidden; animation:draft-phone-forward .46s cubic-bezier(.18,.85,.22,1); }
+.draft-phone { width:min(100%,330px,calc((100vh - 210px) * .46)); padding:7px; border:1px solid #3b3b3e; border-radius:50px; background:#09090a; box-shadow:0 32px 68px rgba(14,15,12,.2),0 10px 24px rgba(14,15,12,.12),inset 0 0 0 1px rgba(255,255,255,.14); position:relative; z-index:2; isolation:isolate; }
+.draft-phone::after { content:""; position:absolute; z-index:9; inset:2px; border-radius:48px; border:1px solid rgba(255,255,255,.1); pointer-events:none; }
+.draft-phone-glass { width:100%; aspect-ratio:1206/2622; border-radius:43px; background:#f2f5f0; overflow:hidden; overflow:clip; clip-path:inset(0 round 43px); position:relative; z-index:1; transform:translateZ(0); box-shadow:inset 0 0 0 1px rgba(255,255,255,.08); }
+.draft-phone-glass::after { content:""; position:absolute; inset:0; z-index:8; border-radius:inherit; box-shadow:inset 0 0 0 1px rgba(0,0,0,.08); pointer-events:none; }
+.draft-simulator-screen { width:100%; height:100%; overflow:hidden; border-radius:inherit; animation:draft-phone-forward .46s cubic-bezier(.18,.85,.22,1); }
 .draft-simulator-screen.direction--1 { animation-name:draft-phone-back; }
 .draft-simulator-screen img { width:100%; height:100%; display:block; object-fit:contain; }
 .draft-phone-button { position:absolute; z-index:-1; width:3px; border-radius:3px; background:linear-gradient(#2d2d30,#0b0b0c); box-shadow:0 0 0 1px #29292c; }
