@@ -22,7 +22,7 @@ export const WIDGET_DEMO_CARD: WidgetCardPayload = {
   name: 'Alex Morgan',
   role: 'Product Designer',
   company: 'ehllo',
-  cardUrl: 'https://aftermeet.app/c/demo',
+  cardUrl: 'https://ehllo.io/c/demo',
   shareDeepLink: 'aftermeet://share-card',
   initials: 'AM',
 };

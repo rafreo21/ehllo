@@ -21,12 +21,12 @@ function renderPreview(profile) {
 
 async function loadSettings() {
   const stored = await chrome.storage.sync.get(["aftermeetBaseUrl"]);
-  baseUrlInput.value = stored.aftermeetBaseUrl || "https://aftermeet-beta.vercel.app";
+  baseUrlInput.value = stored.aftermeetBaseUrl || "https://ehllo.io";
 }
 
 async function saveSettings() {
   await chrome.storage.sync.set({
-    aftermeetBaseUrl: baseUrlInput.value.trim() || "https://aftermeet-beta.vercel.app",
+    aftermeetBaseUrl: baseUrlInput.value.trim() || "https://ehllo.io",
   });
 }
 
@@ -125,7 +125,7 @@ captureButton.addEventListener("click", async () => {
   status.textContent = "Reading Contact info on this profile… Stay on the LinkedIn tab.";
   await saveSettings();
 
-  const baseUrl = baseUrlInput.value.trim().replace(/\/+$/, "") || "https://aftermeet-beta.vercel.app";
+  const baseUrl = baseUrlInput.value.trim().replace(/\/+$/, "") || "https://ehllo.io";
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) {
     status.textContent = "No active tab found.";

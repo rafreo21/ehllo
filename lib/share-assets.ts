@@ -191,7 +191,7 @@ export function shareAssetFilename(
   format: "jpg" | "jpeg" | "png" | "svg" = type === "virtual-background" ? "jpg" : "png",
 ) {
   const normalizedFormat = format === "jpeg" ? "jpg" : format;
-  return `aftermeet-${type}-${slug}.${normalizedFormat}`;
+  return `ehllo-${type}-${slug}.${normalizedFormat}`;
 }
 
 export function shareAssetMimeType(type: "virtual-background" | "watch-face") {

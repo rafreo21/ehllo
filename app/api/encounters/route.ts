@@ -127,7 +127,7 @@ async function syncParticipantsToContacts(
           displayName: participant.name.trim(),
         });
         if (provisioned.ok && provisioned.created) {
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://aftermeet.app";
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://ehllo.io";
           const { subject, html } = buildGuestAddedEmail({
             guestName: participant.name.trim(),
             addedByName,

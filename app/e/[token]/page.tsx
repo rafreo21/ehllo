@@ -204,7 +204,7 @@ export default function GuestEncounterPage() {
                   variant="secondary"
                   size="small"
                   loading={recordingDownloading}
-                  onClick={() => void downloadRecording(sharedRecordingUrl, `${encounter.title.replace(/[^\w\- ]+/g, "").trim() || "aftermeet"}-recording`)}
+                  onClick={() => void downloadRecording(sharedRecordingUrl, `${encounter.title.replace(/[^\w\- ]+/g, "").trim() || "ehllo"}-recording`)}
                 >
                   <DownloadSimpleIcon size={16} weight="bold" />
                   {recordingDownloading ? "Preparing…" : "Save to my device"}

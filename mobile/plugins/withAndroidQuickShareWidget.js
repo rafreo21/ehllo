@@ -274,7 +274,7 @@ import org.json.JSONObject
 import ${packageName}.R
 
 object WidgetRenderer {
-  private const val DEMO_URL = "https://aftermeet.app/c/demo"
+  private const val DEMO_URL = "https://ehllo.io/c/demo"
   private const val DEMO_DEEP_LINK = "aftermeet://share-card"
 
   private fun prefs(context: Context) =
@@ -772,7 +772,7 @@ function layoutBusinessCard() {
           android:layout_width="0dp"
           android:layout_height="wrap_content"
           android:layout_weight="1"
-          android:text="AFTERMEET"
+          android:text="ehllo"
           android:textColor="#9FE870"
           android:textSize="8sp"
           android:textStyle="bold" />

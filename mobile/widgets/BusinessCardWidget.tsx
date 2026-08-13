@@ -53,7 +53,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
     name: 'Alex Morgan',
     role: 'Product Designer',
     company: 'ehllo',
-    cardUrl: 'https://aftermeet.app/c/demo',
+    cardUrl: 'https://ehllo.io/c/demo',
     shareDeepLink: 'aftermeet://share-card',
     initials: 'AM',
   };
@@ -164,7 +164,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
         ) : null}
         <HStack modifiers={[padding({ top: 4 })]}>
           <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ size: 8, weight: 'bold' })]}>
-            AFTERMEET
+            ehllo
           </Text>
           {cards.length > 1 ? (
             <HStack modifiers={[padding({ leading: 8 })]}>

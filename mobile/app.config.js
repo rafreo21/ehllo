@@ -31,7 +31,7 @@ const BACKEND = IS_STAGING
   : {
       supabaseUrl: "https://tgpzxgrvdmmwnodxrooh.supabase.co",
       supabaseAnonKey: "sb_publishable_pKxGkQpYza-qmBXOMrP7qQ_D4BfJ3Uj",
-      publicCardBaseUrl: "https://aftermeet-beta.vercel.app",
+      publicCardBaseUrl: "https://ehllo.io",
     };
 
 module.exports = {
@@ -210,7 +210,7 @@ module.exports = {
       // (Places is billing-account-scoped, not staging/production-split).
       googlePlacesApiKey: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || "",
       buildNumber: 4,
-      buildStamp: IS_STAGING ? "2026-07-28-standalone-staging" : "2026-07-28-standalone",
+      buildStamp: IS_STAGING ? "2026-08-13-ehllo-staging" : "2026-08-13-ehllo",
       appVariant: APP_VARIANT,
     },
   },
