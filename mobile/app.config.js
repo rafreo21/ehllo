@@ -49,6 +49,7 @@ module.exports = {
       bundleIdentifier: bundleId,
       supportsTablet: true,
       infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
         LSApplicationQueriesSchemes: [
           "linkedin",
           "twitter",
