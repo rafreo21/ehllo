@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const extensionDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const source = path.join(extensionDir, "icons", "aftermeet-logo.svg");
+const source = path.join(extensionDir, "icons", "ehllo-logo.svg");
 const sizes = [16, 32, 48, 128];
 
 for (const size of sizes) {

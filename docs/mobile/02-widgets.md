@@ -8,7 +8,7 @@ ehllo ships three home-screen widgets:
 2. **Business Card** — QR plus name, role, and company (4×2 wide)
 3. **Recent Connections** — recent people who shared their details (4×2 wide)
 
-Tapping a widget opens the matching deep link (`aftermeet://share-card` or `aftermeet://connections`).
+Tapping a widget opens the matching deep link (`ehllo://share-card` or `ehllo://connections`). Legacy `aftermeet://` links remain accepted during migration.
 
 ## Shared data model
 
@@ -29,7 +29,7 @@ Both platforms read from the same snapshot built in `mobile/src/features/card/wi
 
 Widget configuration lives in `mobile/app.json` under the `expo-widgets` plugin.
 
-The app and extension share `group.com.aftermeet.app`. Apple Developer provisioning must enable that group for both targets.
+The app and extension share `group.com.ehllo.app` in production and `group.com.ehllo.app.staging` in staging. Apple Developer provisioning must enable the appropriate group for both targets.
 
 Business Card widgets support multi-card paging with ‹ › buttons (iOS 17+ interactive widgets).
 

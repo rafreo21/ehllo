@@ -54,7 +54,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
     role: 'Product Designer',
     company: 'ehllo',
     cardUrl: 'https://ehllo.io/c/demo',
-    shareDeepLink: 'aftermeet://share-card',
+    shareDeepLink: 'ehllo://share-card',
     initials: 'AM',
   };
 
@@ -96,7 +96,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
   const cards = parseCardsJson(props.cardsJson);
   const index = activeCardIndex(props.cardIndex);
   const card = activeCard(cards, index);
-  const deepLink = card.shareDeepLink || props.shareDeepLink || 'aftermeet://share-card';
+  const deepLink = card.shareDeepLink || props.shareDeepLink || 'ehllo://share-card';
   const qrImageUri = card.qrImageUri || props.qrImageUri;
   const photoImageUri = card.photoImageUri || props.photoImageUri;
   const initials = card.initials || props.initials || 'AM';

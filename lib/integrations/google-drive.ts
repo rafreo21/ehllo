@@ -24,8 +24,10 @@ async function driveFetch(url: string, accessToken: string, init?: RequestInit) 
   throw new GoogleDriveError("The recording could not be saved to Google Drive. Your local copy is still safe.", "upload");
 }
 
-async function ensureAfterMeetFolder(accessToken: string) {
-  const query = "name = 'ehllo' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+async function ensureEhlloFolder(accessToken: string) {
+  // Prefer the new folder, but keep using a legacy AfterMeet folder when one
+  // already exists so a rename never strands a user's recordings.
+  const query = "(name = 'ehllo' or name = 'AfterMeet') and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
   const search = await driveFetch(`${DRIVE_API}/files?q=${encodeURIComponent(query)}&spaces=drive&fields=files(id,name)&pageSize=1`, accessToken);
   const result = await search.json() as { files?: Array<{ id: string }> };
   if (result.files?.[0]?.id) return result.files[0].id;
@@ -45,12 +47,12 @@ export async function uploadRecordingToGoogleDrive(input: {
   encounterId: string;
   title: string;
 }) {
-  const folderId = await ensureAfterMeetFolder(input.accessToken);
-  const boundary = `aftermeet-${crypto.randomUUID()}`;
+  const folderId = await ensureEhlloFolder(input.accessToken);
+  const boundary = `ehllo-${crypto.randomUUID()}`;
   const metadata = JSON.stringify({
     name: `${input.title || "ehllo recording"} - ${new Date().toISOString().slice(0, 10)}.${input.audio.name.split(".").pop() || "webm"}`,
     parents: [folderId],
-    appProperties: { aftermeetEncounterId: input.encounterId },
+    appProperties: { ehlloEncounterId: input.encounterId, aftermeetEncounterId: input.encounterId },
   });
   const bytes = new Uint8Array(await input.audio.arrayBuffer());
   const prefix = new TextEncoder().encode(

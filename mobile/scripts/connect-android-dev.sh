@@ -11,11 +11,11 @@ export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH"
 
 export APP_VARIANT="${APP_VARIANT:-production}"
 if [[ "$APP_VARIANT" == "staging" ]]; then
-  PACKAGE="com.aftermeet.app.staging"
-  SCHEME="aftermeet-staging"
+  PACKAGE="com.ehllo.app.staging"
+  SCHEME="ehllo-staging"
 else
-  PACKAGE="com.aftermeet.app"
-  SCHEME="aftermeet"
+  PACKAGE="com.ehllo.app"
+  SCHEME="ehllo"
 fi
 
 APK="$ROOT/android/app/build/outputs/apk/debug/app-debug.apk"

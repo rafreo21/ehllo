@@ -10,7 +10,10 @@ if (!['staging', 'production'].includes(requestedVariant)) {
 const APP_VARIANT = requestedVariant;
 const IS_STAGING = APP_VARIANT === "staging";
 
-const BASE_BUNDLE_ID = "com.aftermeet.app";
+// `ehllo` is the public application identity. The EAS slugs/project IDs below
+// intentionally stay on their existing projects so build credentials and OTA
+// history are not orphaned during the brand migration.
+const BASE_BUNDLE_ID = "com.ehllo.app";
 const bundleId = IS_STAGING ? `${BASE_BUNDLE_ID}.staging` : BASE_BUNDLE_ID;
 const EAS_PROJECT = IS_STAGING
   ? {
@@ -42,7 +45,11 @@ module.exports = {
     version: "1.0.1",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: IS_STAGING ? "aftermeet-staging" : "aftermeet",
+    // Keep the AfterMeet schemes as inbound aliases for links already shared
+    // by staging builds. New links are always emitted with the ehllo scheme.
+    scheme: IS_STAGING
+      ? ["ehllo-staging", "aftermeet-staging"]
+      : ["ehllo", "aftermeet"],
     userInterfaceStyle: "automatic",
     ios: {
       icon: "./assets/images/icon.png",

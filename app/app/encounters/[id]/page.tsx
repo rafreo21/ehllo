@@ -633,7 +633,7 @@ export default function EncounterReviewPage() {
           {showEmailRecording ? (
             <>
               <a className="email-invite" href={recordingEmailHref}><EnvelopeSimpleIcon size={18} weight="bold" />Email recording + details</a>
-              <a className="email-invite" href={localAudioUrl ?? "#"} download={`${encounter.title.replace(/[^\w\- ]+/g, "").trim() || "aftermeet"}-recording.${localRecordingMimeType.includes("wav") ? "wav" : "m4a"}`}>Download recording for attachment</a>
+              <a className="email-invite" href={localAudioUrl ?? "#"} download={`${encounter.title.replace(/[^\w\- ]+/g, "").trim() || "ehllo"}-recording.${localRecordingMimeType.includes("wav") ? "wav" : "m4a"}`}>Download recording for attachment</a>
               <small>Email apps cannot attach files automatically. Download the recording, then attach it in your email draft.</small>
             </>
           ) : null}

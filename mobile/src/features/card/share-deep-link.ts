@@ -5,5 +5,5 @@ export function shareCardDeepLink(card: Pick<MobileCard, 'id' | 'slug'>) {
   if (card.id) params.set('id', card.id);
   if (card.slug) params.set('slug', card.slug);
   const query = params.toString();
-  return query ? `aftermeet://share-card?${query}` : 'aftermeet://share-card';
+  return query ? `ehllo://share-card?${query}` : 'ehllo://share-card';
 }

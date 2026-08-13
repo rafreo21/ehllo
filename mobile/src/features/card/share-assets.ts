@@ -27,7 +27,7 @@ export async function downloadShareAsset(
     params.set('themeColor', options.themeColor.trim());
   }
   const url = `${env.publicCardBaseUrl}/api/mobile/share-assets/${encodeURIComponent(slug)}?${params.toString()}`;
-  const filename = `aftermeet-${type}-${slug}.${assetExtension(type)}`;
+  const filename = `ehllo-${type}-${slug}.${assetExtension(type)}`;
   const path = `${FileSystem.cacheDirectory}${filename}`;
 
   const download = await FileSystem.downloadAsync(url, path, {

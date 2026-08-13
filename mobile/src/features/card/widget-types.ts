@@ -23,7 +23,7 @@ export const WIDGET_DEMO_CARD: WidgetCardPayload = {
   role: 'Product Designer',
   company: 'ehllo',
   cardUrl: 'https://ehllo.io/c/demo',
-  shareDeepLink: 'aftermeet://share-card',
+  shareDeepLink: 'ehllo://share-card',
   initials: 'AM',
 };
 

@@ -51,7 +51,7 @@ export async function GET(request: Request, context: { params: Promise<{ token: 
   const mimeType = detectAudioMimeType(buffer, recording?.mimeType || download.data.type);
   const totalLength = buffer.byteLength;
   const extension = audioFileExtension(mimeType);
-  const filename = `aftermeet-recording.${extension}`;
+  const filename = `ehllo-recording.${extension}`;
 
   // <audio> elements issue Range requests (Safari probes with `bytes=0-1`
   // before playback); without a 206 response here they surface a MediaError

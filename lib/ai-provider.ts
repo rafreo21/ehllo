@@ -17,11 +17,15 @@ function groqApiKey() {
   return process.env.GROQ_API_KEY?.trim() || "";
 }
 
-function transcriptionProvider() {
-  return process.env.AFTERMEET_TRANSCRIPTION_PROVIDER?.trim().toLowerCase() || "";
+function brandedEnv(name: string, legacyName: string) {
+  return process.env[name]?.trim() || process.env[legacyName]?.trim() || "";
 }
 
-/** Temporary test switch: AFTERMEET_TRANSCRIPTION_PROVIDER=groq routes audio transcription to Groq's free-tier, OpenAI-compatible Whisper endpoint instead of OpenAI's. */
+function transcriptionProvider() {
+  return brandedEnv("EHLLO_TRANSCRIPTION_PROVIDER", "AFTERMEET_TRANSCRIPTION_PROVIDER").toLowerCase();
+}
+
+/** EHLLO_TRANSCRIPTION_PROVIDER=groq routes audio transcription to Groq. The former AfterMeet variable remains a fallback during migration. */
 export function usesGroqTranscription() {
   return transcriptionProvider() === "groq" && Boolean(groqApiKey());
 }
@@ -29,13 +33,13 @@ export function usesGroqTranscription() {
 export function groqTranscriptionConfig() {
   return {
     apiKey: groqApiKey(),
-    model: process.env.AFTERMEET_GROQ_MODEL?.trim() || "whisper-large-v3-turbo",
+    model: brandedEnv("EHLLO_GROQ_MODEL", "AFTERMEET_GROQ_MODEL") || "whisper-large-v3-turbo",
   };
 }
 
-/** Temporary test switch: AFTERMEET_TEXT_PROVIDER=claude routes summaries/extraction/drafts to Claude. Transcription always stays on Whisper — Claude has no audio input. */
+/** EHLLO_TEXT_PROVIDER=claude routes summaries/extraction/drafts to Claude. Transcription stays on Whisper. */
 export function usesClaudeText() {
-  const provider = process.env.AFTERMEET_TEXT_PROVIDER?.trim().toLowerCase();
+  const provider = brandedEnv("EHLLO_TEXT_PROVIDER", "AFTERMEET_TEXT_PROVIDER").toLowerCase();
   return (provider === "claude" || provider === "anthropic") && Boolean(anthropicApiKey());
 }
 
@@ -79,7 +83,7 @@ function stripOpenAiPrefix(modelId: string) {
 }
 
 export function transcriptionModel() {
-  const configured = process.env.AFTERMEET_TRANSCRIPTION_MODEL?.trim() || "openai/whisper-1";
+  const configured = brandedEnv("EHLLO_TRANSCRIPTION_MODEL", "AFTERMEET_TRANSCRIPTION_MODEL") || "openai/whisper-1";
   if (usesDirectOpenAi()) {
     return openAiClient().transcription(stripOpenAiPrefix(configured) || "whisper-1");
   }
@@ -88,10 +92,10 @@ export function transcriptionModel() {
 
 export function languageModel() {
   if (usesClaudeText()) {
-    const configured = process.env.AFTERMEET_CLAUDE_MODEL?.trim() || "claude-opus-5";
+    const configured = brandedEnv("EHLLO_CLAUDE_MODEL", "AFTERMEET_CLAUDE_MODEL") || "claude-opus-5";
     return anthropicClient()(configured);
   }
-  const configured = process.env.AFTERMEET_EXTRACTION_MODEL?.trim() || "openai/gpt-4.1";
+  const configured = brandedEnv("EHLLO_EXTRACTION_MODEL", "AFTERMEET_EXTRACTION_MODEL") || "openai/gpt-4.1";
   if (usesDirectOpenAi()) {
     return openAiClient()(stripOpenAiPrefix(configured) || "gpt-4.1");
   }

@@ -43,16 +43,16 @@ export function resolveGoogleWalletLogoUrl(card: WalletCardPayload) {
 
   try {
     const origin = new URL(card.cardUrl).origin.replace(/\/+$/, "");
-    return `${origin}/aftermeet-mark.png`;
+    return `${origin}/ehllo-mark.png`;
   } catch {
     return "";
   }
 }
 
-function resolveAfterMeetMarkUrl(card: WalletCardPayload) {
+function resolveEhlloMarkUrl(card: WalletCardPayload) {
   try {
     const origin = new URL(card.cardUrl).origin.replace(/\/+$/, "");
-    return `${origin}/aftermeet-mark.png`;
+    return `${origin}/ehllo-mark.png`;
   } catch {
     return "";
   }
@@ -134,7 +134,7 @@ export function buildGoogleWalletSaveUrl(card: WalletCardPayload, config: Google
     ];
   }
 
-  const afterMeetMarkUrl = resolveAfterMeetMarkUrl(card);
+  const ehlloMarkUrl = resolveEhlloMarkUrl(card);
   const genericClass: Record<string, unknown> = {
     id: classId,
     classTemplateInfo: {
@@ -159,8 +159,8 @@ export function buildGoogleWalletSaveUrl(card: WalletCardPayload, config: Google
     },
   };
 
-  if (afterMeetMarkUrl) {
-    genericClass.logo = { sourceUri: { uri: afterMeetMarkUrl } };
+  if (ehlloMarkUrl) {
+    genericClass.logo = { sourceUri: { uri: ehlloMarkUrl } };
   }
 
   const payload = {

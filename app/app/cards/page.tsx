@@ -269,7 +269,7 @@ export default function CardsPage() {
     const href = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = href;
-    link.download = `aftermeet-${type}-${profile.slug}.${extension}`;
+    link.download = `ehllo-${type}-${profile.slug}.${extension}`;
     link.click();
     URL.revokeObjectURL(href);
   }
@@ -321,7 +321,7 @@ export default function CardsPage() {
   }
 
   function openInApp() {
-    window.location.href = `aftermeet://share-card?slug=${encodeURIComponent(profile.slug)}`;
+    window.location.href = `ehllo://share-card?slug=${encodeURIComponent(profile.slug)}`;
   }
 
   const initials = profile.name.split(" ").map((word) => word[0]).join("").slice(0, 2);
@@ -476,7 +476,7 @@ export default function CardsPage() {
             <div className="inline-qr-url"><span>Public card link</span><strong>{shareUrl}</strong></div>
             <div className="inline-qr-actions">
               <Button onClick={copyLink}><CopyIcon size={18} weight="bold" />{copied ? "Link copied" : "Copy link"}</Button>
-              {qr && <LinkButton variant="secondary" href={qr} download={qr.startsWith("data:image/svg+xml") ? "aftermeet-qr.svg" : "aftermeet-qr.png"}><DownloadSimpleIcon size={18} weight="bold" />Download QR</LinkButton>}
+              {qr && <LinkButton variant="secondary" href={qr} download={qr.startsWith("data:image/svg+xml") ? "ehllo-qr.svg" : "ehllo-qr.png"}><DownloadSimpleIcon size={18} weight="bold" />Download QR</LinkButton>}
             </div>
             <Button fullWidth size="small" variant="ghost" disabled={!qrSvg} onClick={copySvg}><CopyIcon size={16} weight="bold" />{svgCopied ? "SVG copied" : qrSvg ? "Copy QR as SVG" : "Generating QR…"}</Button>
             </> : null}

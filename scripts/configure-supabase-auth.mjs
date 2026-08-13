@@ -19,8 +19,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const PROJECT_REF = process.env.SUPABASE_PROJECT_REF ?? "tgpzxgrvdmmwnodxrooh";
-const PRODUCTION_URL = "https://aftermeet-beta.vercel.app";
-const SITE_URL = (process.env.AFTERMEET_SITE_URL ?? PRODUCTION_URL).replace(/\/+$/, "");
+const PRODUCTION_URL = "https://ehllo.io";
+const SITE_URL = (process.env.EHLLO_SITE_URL ?? process.env.AFTERMEET_SITE_URL ?? PRODUCTION_URL).replace(/\/+$/, "");
 const HOOK_FUNCTION = "send-auth-email";
 
 function loadEnvFile() {
@@ -49,6 +49,11 @@ const REDIRECT_URLS = [
   "http://localhost:3001/auth/callback",
   "http://localhost:3001/auth/mobile-return",
   "http://localhost:3001/**",
+  "ehllo://auth/callback",
+  "ehllo://**",
+  "ehllo-staging://auth/callback",
+  "ehllo-staging://**",
+  // Migration aliases for links emitted by earlier mobile builds.
   "aftermeet://auth/callback",
   "aftermeet://**",
   "aftermeet-staging://auth/callback",
@@ -212,7 +217,7 @@ async function main() {
   console.log("");
   if (useSupabaseEmail) {
     console.log("Using Supabase default email with OTP template (6-digit codes, not magic links).");
-    console.log("When aftermeet.app is verified in Resend, rerun without --supabase-email for Resend delivery.");
+    console.log("When ehllo.io is verified in Resend, rerun without --supabase-email for Resend delivery.");
   } else if (useResendSmtp) {
     console.log("Using Resend SMTP through Supabase Auth.");
     console.log("Verify your sender domain in Resend before inviting external users.");

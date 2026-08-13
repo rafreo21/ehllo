@@ -10,7 +10,7 @@ import { cacheWidgetPhotoUri, ensureWidgetLogoUri, readUriAsBase64 } from '@/lib
 import { readEnv } from '@/lib/env';
 import { buildWidgetQrFileUri } from '@/lib/widget-qr';
 
-export const CONNECTIONS_DEEP_LINK = 'aftermeet://connections';
+export const CONNECTIONS_DEEP_LINK = 'ehllo://connections';
 
 type WidgetBridge = {
   updateWidget?: (payload: Record<string, string | undefined>) => Promise<void>;

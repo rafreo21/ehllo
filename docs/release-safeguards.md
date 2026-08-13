@@ -5,7 +5,7 @@
 - Staging and production are separate Supabase projects and therefore contain separate accounts and data.
 - All ordinary local web and mobile commands default to staging.
 - Production mobile commands must include the explicit `:production` script.
-- Production web development requires both `.env.production.local` and the one-command opt-in `AFTERMEET_ALLOW_PRODUCTION=1`.
+- Production web development requires both `.env.production.local` and the one-command opt-in `EHLLO_ALLOW_PRODUCTION=1` (`AFTERMEET_ALLOW_PRODUCTION` remains a temporary migration alias).
 - Never copy production user data into staging. Use seeded or tester-created staging data.
 
 ## Local development
@@ -18,14 +18,14 @@
 Production verification must be brief and intentional:
 
 ```sh
-AFTERMEET_ALLOW_PRODUCTION=1 npm run dev:production
+EHLLO_ALLOW_PRODUCTION=1 npm run dev:production
 cd mobile && npm run ios:production
 ```
 
 ## EAS and beta distribution
 
 - `development`, `staging`, and `staging-simulator` EAS profiles always build the staging app and staging backend.
-- The `production` EAS profile builds `com.aftermeet.app` for TestFlight, Play Internal Testing, and eventual store release.
+- The `production` EAS profile builds `com.ehllo.app` for TestFlight, Play Internal Testing, and eventual store release.
 - Internal teammates may use staging builds. External beta testers should use store-managed production beta tracks so authentication, links, notifications, and data match the eventual release.
 - Never submit the staging bundle IDs to either store as the public app.
 

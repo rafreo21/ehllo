@@ -8,7 +8,7 @@ export function BrandMark({ className, size = 36 }: BrandMarkProps) {
     // Plain img keeps the SVG reliable across vinext/Vercel without image optimizer quirks.
     <img
       className={className}
-      src="/aftermeet-logo.svg?v=2"
+      src="/ehllo-logo.svg?v=2"
       width={size}
       height={size}
       alt=""

@@ -23,7 +23,7 @@ async function loadEhlloLogoBuffer() {
   if (!logoBufferPromise) {
     logoBufferPromise = (async () => {
       const candidates = [
-        join(process.cwd(), "public", "aftermeet-mark.png"),
+        join(process.cwd(), "public", "ehllo-mark.png"),
         join(process.cwd(), "mobile", "assets", "images", "splash-icon.png"),
       ];
       for (const path of candidates) {

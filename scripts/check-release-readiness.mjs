@@ -38,6 +38,14 @@ requireCondition(
   "Mobile app configuration must default APP_VARIANT to staging.",
 );
 requireCondition(
+  /const\s+BASE_BUNDLE_ID\s*=\s*["']com\.ehllo\.app["']/.test(appConfig),
+  "Mobile production identity must use com.ehllo.app.",
+);
+requireCondition(
+  /["']ehllo-staging["']/.test(appConfig) && /["']ehllo["']/.test(appConfig),
+  "Mobile configuration must register the ehllo production and staging schemes.",
+);
+requireCondition(
   /const\s+bundleId\s*=\s*IS_STAGING\s*\?\s*`\$\{BASE_BUNDLE_ID\}\.staging`\s*:\s*BASE_BUNDLE_ID/.test(appConfig)
     && /bundleIdentifier:\s*bundleId/.test(appConfig),
   "iOS staging and production bundle identifiers must remain distinct.",

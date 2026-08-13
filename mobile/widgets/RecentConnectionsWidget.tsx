@@ -79,7 +79,7 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
     return '';
   }
 
-  const deepLink = props.connectionsDeepLink || props.shareDeepLink || 'aftermeet://connections';
+  const deepLink = props.connectionsDeepLink || props.shareDeepLink || 'ehllo://connections';
   const rows = connectionSlots(props);
 
   return (

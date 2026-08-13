@@ -202,7 +202,7 @@ export default function NewEncounterPage() {
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [seconds, setSeconds] = useState(0);
   const [audioUrl, setAudioUrl] = useState("");
-  const [audioDownloadName, setAudioDownloadName] = useState("aftermeet-recording.audio");
+  const [audioDownloadName, setAudioDownloadName] = useState("ehllo-recording.audio");
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
   const [transcriptSupported, setTranscriptSupported] = useState(true);
@@ -908,7 +908,7 @@ export default function NewEncounterPage() {
     releaseRecorderResources();
     const blob = new Blob(recordedChunksRef.current, { type: mimeType });
     audioBlobRef.current = blob;
-    setAudioDownloadName(`aftermeet-recording.${mimeType.includes("wav") ? "wav" : mimeType.includes("mp4") ? "m4a" : "webm"}`);
+    setAudioDownloadName(`ehllo-recording.${mimeType.includes("wav") ? "wav" : mimeType.includes("mp4") ? "m4a" : "webm"}`);
     setRecordingSource("recorded");
     replaceAudioUrl(URL.createObjectURL(blob));
     setAudioLevel(0);
@@ -939,7 +939,7 @@ export default function NewEncounterPage() {
     }
     releaseRecorderResources();
     audioBlobRef.current = file;
-    setAudioDownloadName(file.name || "aftermeet-imported-recording.audio");
+    setAudioDownloadName(file.name || "ehllo-imported-recording.audio");
     setRecordingSource("imported");
     const url = URL.createObjectURL(file);
     replaceAudioUrl(url);

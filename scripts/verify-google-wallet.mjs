@@ -62,7 +62,7 @@ if (!isGoogleWalletConfigured()) {
 }
 
 const config = readGoogleWalletConfig();
-const cardUrl = `${(env.NEXT_PUBLIC_APP_URL || "https://aftermeet-beta.vercel.app").replace(/\/+$/, "")}/c/verify-wallet`;
+const cardUrl = `${(env.NEXT_PUBLIC_APP_URL || "https://ehllo.io").replace(/\/+$/, "")}/c/verify-wallet`;
 const saveUrl = buildGoogleWalletSaveUrl(
   {
     slug: "verify-wallet",

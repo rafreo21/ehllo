@@ -8,9 +8,9 @@ export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:
 
 export APP_VARIANT="${APP_VARIANT:-production}"
 if [[ "$APP_VARIANT" == "staging" ]]; then
-  PACKAGE="com.aftermeet.app.staging"
+  PACKAGE="com.ehllo.app.staging"
 else
-  PACKAGE="com.aftermeet.app"
+  PACKAGE="com.ehllo.app"
 fi
 
 REBUILD=0

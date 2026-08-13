@@ -190,7 +190,7 @@ export default function DiscoveryPage() {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `aftermeet-discovery-${today()}.json`;
+    anchor.download = `ehllo-discovery-${today()}.json`;
     anchor.click();
     URL.revokeObjectURL(url);
     setNotice("Discovery data exported.");
@@ -418,4 +418,3 @@ export default function DiscoveryPage() {
     </main>
   );
 }
-
