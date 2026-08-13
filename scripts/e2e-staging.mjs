@@ -58,6 +58,52 @@ try {
   const eventId = created.event.id;
 
   await api(`/api/events/${eventId}/attendance`, host.token, { method: "PATCH", body: JSON.stringify({ status: "going" }) });
+
+  const encounterId = crypto.randomUUID();
+  const actionId = crypto.randomUUID();
+  const captureStartedAt = new Date(startsAt.getTime() + 30 * 60 * 1000);
+  const captureEndedAt = new Date(captureStartedAt.getTime() + 12 * 60 * 1000);
+  const dueAt = new Date().toISOString().slice(0, 10);
+  const capture = await api("/api/encounters", host.token, {
+    method: "POST",
+    body: JSON.stringify({
+      id: encounterId,
+      title: `Meeting with E2E Connection ${runId}`,
+      personName: "E2E Connection",
+      personEmail: "",
+      participants: [{ id: crypto.randomUUID(), name: "E2E Connection", email: "", phone: "", linkedIn: "" }],
+      startedAt: captureStartedAt.toISOString(),
+      endedAt: captureEndedAt.toISOString(),
+      durationSeconds: 720,
+      consent: { confirmed: true, method: "verbal", confirmedAt: captureStartedAt.toISOString(), scriptVersion: "2026-07-26" },
+      transcript: "We discussed the staging release and agreed to send a concise project update tomorrow.",
+      privateNotes: "Met at the automated staging event.",
+      sharedSummary: "Discussed the staging release.",
+      actions: [{ id: actionId, title: "Send project update", channel: "email", owner: "me", dueAt, status: "open", assigneeName: "E2E Connection" }],
+      status: "reviewed",
+      shareToken: crypto.randomUUID().replaceAll("-", ""),
+      eventId,
+    }),
+  });
+  assert.equal(capture.eventId, eventId, "capture keeps explicit current-event context");
+
+  const encounters = await api("/api/encounters", host.token);
+  const savedEncounter = encounters.encounters?.find((encounter) => encounter.id === encounterId);
+  assert.equal(savedEncounter?.eventId, eventId, "saved capture returns its event context");
+  assert.equal(savedEncounter?.privateNotes, "Met at the automated staging event.", "private notes survive synchronization");
+
+  const followUps = await api("/api/follow-ups", host.token);
+  const openFollowUp = followUps.followUps?.find((item) => item.encounterId === encounterId && item.actionId === actionId);
+  assert.equal(openFollowUp?.status, "open", "reviewed capture creates an actionable follow-up");
+  assert.equal(openFollowUp?.eventId, eventId, "follow-up inherits event context");
+  assert.equal(openFollowUp?.eventTitle, `E2E event ${runId}`, "follow-up resolves the event title");
+
+  await api(`/api/encounters/${encounterId}/actions/${actionId}`, host.token, { method: "PATCH", body: JSON.stringify({ status: "completed" }) });
+  const completedFollowUps = await api("/api/follow-ups", host.token);
+  const completedFollowUp = completedFollowUps.followUps?.find((item) => item.encounterId === encounterId && item.actionId === actionId);
+  assert.equal(completedFollowUp?.status, "completed", "follow-up completion persists across refresh");
+  assert.ok(completedFollowUp?.completedAt, "completion receives an audit timestamp");
+
   const invitation = await api(`/api/events/${eventId}/invitations`, host.token, { method: "POST", body: JSON.stringify({ email: guestEmail }) });
   assert.match(invitation.guestUrl, /\/event\//, "invitation returns a guest URL");
   const inviteToken = decodeURIComponent(new URL(invitation.guestUrl).pathname.split("/").pop());
@@ -93,7 +139,7 @@ try {
   const publicPayload = await publicInvitation.json();
   assert.equal(publicPayload.invitation?.event?.status, "cancelled", "original guest link shows cancellation");
 
-  console.log(JSON.stringify({ ok: true, journey: "signup-event-invite-rsvp-claim-reschedule-cancel", cleanup: "pending" }));
+  console.log(JSON.stringify({ ok: true, journey: "signup-capture-followup-event-invite-rsvp-claim-reschedule-cancel", cleanup: "pending" }));
 } finally {
   for (const id of createdAuthIds.reverse()) await admin.auth.admin.deleteUser(id);
   const { data: remaining } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
