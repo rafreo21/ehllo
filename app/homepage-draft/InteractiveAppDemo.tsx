@@ -48,10 +48,6 @@ export function InteractiveAppDemo() {
       <div className="draft-app-copy">
         <h2>See the next move<br/><em>take shape.</em></h2>
         <p className="lede">Real screens from the ehllo iPhone 17 Pro simulator—from sharing a card to managing the next action.</p>
-        <div className="draft-build-note" role="note">
-          <strong>Preview</strong>
-          <span>Some screens, integrations and finishing details are still being added and may change before release.</span>
-        </div>
         <div className="draft-app-tabs" role="tablist" aria-label="Product demo states">
           {states.map((item,index)=><button role="tab" aria-selected={active===index} className={active===index?"active":""} onClick={()=>select(index)} key={item.key}><span>0{index+1}</span><strong>{item.label}</strong></button>)}
         </div>
