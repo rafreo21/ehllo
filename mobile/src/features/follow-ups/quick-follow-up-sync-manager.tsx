@@ -3,6 +3,7 @@ import { buildEncounterPayload, saveEncounter } from '@/features/encounters/enco
 import { dequeueQuickFollowUp, readQuickFollowUpQueue } from '@/features/follow-ups/quick-follow-up-queue';
 import { useForegroundSync } from '@/lib/background-sync';
 import { isOnline } from '@/lib/connectivity';
+import { clearSyncFailure, recordSyncFailure, syncFailureKey } from '@/features/sync/sync-failure-store';
 
 // Mounted globally, same reasoning as FollowUpSyncManager and
 // OfflineScanSyncManager — a Quick Follow-up saved while offline queues
@@ -47,8 +48,9 @@ export function QuickFollowUpSyncManager() {
         });
         await saveEncounter(accessToken, encounter);
         await dequeueQuickFollowUp(entry.id);
-      } catch {
-        // Leave queued; retry next cycle.
+        await clearSyncFailure(syncFailureKey.quickFollowUp(entry.id));
+      } catch (error) {
+        await recordSyncFailure(syncFailureKey.quickFollowUp(entry.id), error);
       }
     }
   });

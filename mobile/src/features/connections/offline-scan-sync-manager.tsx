@@ -3,6 +3,7 @@ import { connectionFromScannedSlug } from '@/features/connections/connections-ap
 import { dequeueOfflineScan, readOfflineScanQueue } from '@/features/connections/offline-scan-queue';
 import { useForegroundSync } from '@/lib/background-sync';
 import { isOnline } from '@/lib/connectivity';
+import { clearSyncFailure, recordSyncFailure, syncFailureKey } from '@/features/sync/sync-failure-store';
 
 // Mounted globally, same reasoning as FollowUpSyncManager — a scan queued
 // while offline should link into Connections the moment connectivity comes
@@ -18,8 +19,9 @@ export function OfflineScanSyncManager() {
       try {
         await connectionFromScannedSlug(accessToken, entry.slug, entry.eventSnapshot);
         await dequeueOfflineScan(entry.slug);
-      } catch {
-        // Leave queued; retry next cycle.
+        await clearSyncFailure(syncFailureKey.scan(entry.slug));
+      } catch (error) {
+        await recordSyncFailure(syncFailureKey.scan(entry.slug), error);
       }
     }
   });

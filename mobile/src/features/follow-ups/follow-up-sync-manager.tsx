@@ -8,6 +8,7 @@ import {
 import { dequeueFollowUpAction, readFollowUpQueue } from '@/features/follow-ups/follow-up-cache';
 import { useForegroundSync } from '@/lib/background-sync';
 import { isOnline } from '@/lib/connectivity';
+import { clearSyncFailure, recordSyncFailure, syncFailureKey } from '@/features/sync/sync-failure-store';
 
 // Mounted globally rather than scoped to the follow-ups screen — actions can
 // also be queued from notifications.tsx and connections/[id].tsx, and the
@@ -28,8 +29,9 @@ export function FollowUpSyncManager() {
           await dismissFollowUp(accessToken, entry.encounterId, entry.actionId);
         } else await reopenFollowUp(accessToken, entry.encounterId, entry.actionId);
         await dequeueFollowUpAction(entry.encounterId, entry.actionId);
-      } catch {
-        // Leave queued; retry next cycle.
+        await clearSyncFailure(syncFailureKey.followUpAction(entry.encounterId, entry.actionId));
+      } catch (error) {
+        await recordSyncFailure(syncFailureKey.followUpAction(entry.encounterId, entry.actionId), error);
       }
     }
   });

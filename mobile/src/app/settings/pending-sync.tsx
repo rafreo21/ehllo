@@ -11,7 +11,7 @@ import { useIsOnline } from '@/lib/connectivity';
 import { colors, spacing } from '@/theme/tokens';
 
 const EMPTY_STATUS: PendingSyncStatus = {
-  scans: [], quickFollowUps: [], followUpActions: [], transcriptions: [], eventActions: [], total: 0,
+  scans: [], quickFollowUps: [], followUpActions: [], transcriptions: [], eventActions: [], items: [], total: 0,
 };
 
 export default function PendingSyncScreen() {
@@ -73,6 +73,29 @@ export default function PendingSyncScreen() {
         ))}
       </View>
 
+      {status.items.length ? (
+        <View style={styles.detailSection}>
+          <Text style={styles.detailHeading}>Waiting on this device</Text>
+          {status.items.map((item) => (
+            <View key={item.key} style={styles.itemCard}>
+              <View style={styles.itemTopRow}>
+                <Text style={styles.itemTitle}>{item.title}</Text>
+                <Text style={styles.itemTime}>{new Date(item.queuedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</Text>
+              </View>
+              <Text style={styles.itemDetail}>{item.detail}</Text>
+              {item.failure ? (
+                <View style={styles.failureBox}>
+                  <Text style={styles.failureTitle}>Retry failed · {item.failure.attempts} attempt{item.failure.attempts === 1 ? '' : 's'}</Text>
+                  <Text style={styles.failureMessage}>{item.failure.message}</Text>
+                </View>
+              ) : (
+                <Text style={styles.waitingText}>{online ? 'Waiting for the next sync pass' : 'Will retry when you’re online'}</Text>
+              )}
+            </View>
+          ))}
+        </View>
+      ) : null}
+
       <Button
         disabled={!online || !session?.access_token || status.total === 0}
         loading={retrying}
@@ -101,4 +124,15 @@ const styles = StyleSheet.create({
   count: { minWidth: 28, height: 28, borderRadius: 14, textAlign: 'center', lineHeight: 28, overflow: 'hidden', backgroundColor: colors.accent, color: colors.ink, fontWeight: '800' },
   countZero: { backgroundColor: colors.surfaceMuted, color: colors.muted },
   note: { color: colors.muted, fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  detailSection: { gap: spacing.x2 },
+  detailHeading: { color: colors.ink, fontSize: 17, fontWeight: '800', marginBottom: spacing.x1 },
+  itemCard: { padding: spacing.x4, borderRadius: 16, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, gap: 4 },
+  itemTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.x2 },
+  itemTitle: { flex: 1, color: colors.ink, fontSize: 14, fontWeight: '800' },
+  itemTime: { color: colors.muted, fontSize: 11 },
+  itemDetail: { color: colors.muted, fontSize: 12, lineHeight: 17 },
+  waitingText: { color: colors.muted, fontSize: 11, fontWeight: '700', marginTop: spacing.x1 },
+  failureBox: { marginTop: spacing.x2, padding: spacing.x3, borderRadius: 12, backgroundColor: '#FFF1EE', gap: 3 },
+  failureTitle: { color: colors.danger, fontSize: 11, fontWeight: '800' },
+  failureMessage: { color: colors.danger, fontSize: 11, lineHeight: 16 },
 });

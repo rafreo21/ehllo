@@ -3,6 +3,7 @@ import { listCaptureDrafts, readCaptureDraft, writeCaptureDraft } from '@/featur
 import { transcribeEncounterAudio } from '@/features/encounters/encounter-api';
 import { MIN_USABLE_TRANSCRIPT_LENGTH } from '@/features/encounters/use-capture-recorder';
 import { isOnline } from '@/lib/connectivity';
+import { clearSyncFailure, recordSyncFailure, syncFailureKey } from '@/features/sync/sync-failure-store';
 
 export async function listPendingTranscriptionDrafts() {
   const activeEncounterId = getActiveCaptureController()?.snapshot.encounterId;
@@ -47,9 +48,11 @@ export async function flushPendingTranscriptions(accessToken: string): Promise<v
         transcriptPending: false,
         transcriptPendingError: '',
       });
+      await clearSyncFailure(syncFailureKey.transcription(summary.encounterId));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not transcribe this recording.';
       await writeCaptureDraft({ ...draft, transcriptPending: true, transcriptPendingError: message });
+      await recordSyncFailure(syncFailureKey.transcription(summary.encounterId), error);
     }
   }
 }

@@ -3,6 +3,7 @@ import { dequeueEventAction, readEventActionQueue } from '@/features/events/even
 import { sendEventAttendance, sendEventLeft } from '@/features/events/events-api';
 import { useForegroundSync } from '@/lib/background-sync';
 import { isOnline } from '@/lib/connectivity';
+import { clearSyncFailure, recordSyncFailure, syncFailureKey } from '@/features/sync/sync-failure-store';
 
 export function EventActionSyncManager() {
   const { session } = useAuth();
@@ -19,8 +20,9 @@ export function EventActionSyncManager() {
           await sendEventLeft(accessToken, entry.eventId, entry.left !== false);
         }
         await dequeueEventAction(entry.eventId, entry.action);
-      } catch {
-        // Keep the action queued for the next foreground/reconnect/manual retry.
+        await clearSyncFailure(syncFailureKey.eventAction(entry.eventId, entry.action));
+      } catch (error) {
+        await recordSyncFailure(syncFailureKey.eventAction(entry.eventId, entry.action), error);
       }
     }
   });
