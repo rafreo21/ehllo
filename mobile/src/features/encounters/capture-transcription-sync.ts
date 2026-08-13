@@ -4,20 +4,24 @@ import { transcribeEncounterAudio } from '@/features/encounters/encounter-api';
 import { MIN_USABLE_TRANSCRIPT_LENGTH } from '@/features/encounters/use-capture-recorder';
 import { isOnline } from '@/lib/connectivity';
 
-export async function flushPendingTranscriptions(accessToken: string): Promise<void> {
-  if (!isOnline()) return;
-
+export async function listPendingTranscriptionDrafts() {
   const activeEncounterId = getActiveCaptureController()?.snapshot.encounterId;
   const summaries = await listCaptureDrafts();
-  // The `hasLocalAudio && short transcript` heuristic is the authoritative
-  // filter here, not `transcriptPending` alone — if the app is killed in the
-  // narrow window after recordingUri is persisted but before the failure is
-  // even caught, transcriptPending never gets set. This self-heals that gap.
-  const candidates = summaries.filter((summary) => (
+  return summaries.filter((summary) => (
     summary.hasLocalAudio
     && summary.transcriptPreview.trim().length < MIN_USABLE_TRANSCRIPT_LENGTH
     && summary.encounterId !== activeEncounterId
   ));
+}
+
+export async function flushPendingTranscriptions(accessToken: string): Promise<void> {
+  if (!isOnline()) return;
+
+  // The `hasLocalAudio && short transcript` heuristic is the authoritative
+  // filter here, not `transcriptPending` alone — if the app is killed in the
+  // narrow window after recordingUri is persisted but before the failure is
+  // even caught, transcriptPending never gets set. This self-heals that gap.
+  const candidates = await listPendingTranscriptionDrafts();
 
   for (const summary of candidates) {
     const draft = await readCaptureDraft(summary.encounterId);

@@ -147,6 +147,20 @@ export default function SettingsScreen() {
 
       <Pressable
         accessibilityRole="button"
+        onPress={() => router.push('/settings/pending-sync')}
+        style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
+        <View style={styles.linkCopy}>
+          <View style={styles.linkTitleRow}>
+            <CloudArrowUp size={18} color={colors.ink} weight="bold" />
+            <Text style={styles.label}>Pending sync</Text>
+          </View>
+          <Text style={styles.linkHint}>See work saved on this device and retry uploads</Text>
+        </View>
+        <CaretRight size={18} color={colors.muted} weight="bold" />
+      </Pressable>
+
+      <Pressable
+        accessibilityRole="button"
         onPress={() => router.push('/settings/connected-accounts')}
         style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
         <View style={styles.linkCopy}>
