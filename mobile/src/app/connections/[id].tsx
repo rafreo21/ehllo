@@ -45,6 +45,7 @@ import {
   fetchFollowUps,
   type FollowUpItem,
 } from '@/features/follow-ups/follow-up-api';
+import { isOpenFollowUp } from '@/features/follow-ups/follow-up-list';
 import { useFollowUpActions } from '@/features/follow-ups/use-follow-up-actions';
 import { formatMeetingDate } from '@/lib/due-date';
 import { useAppInsets } from '@/lib/safe-area';
@@ -249,7 +250,7 @@ export default function ConnectionDetailScreen() {
   );
 
   const openFollowUps = useMemo(
-    () => followUps.filter((item) => item.status !== 'completed'),
+    () => followUps.filter(isOpenFollowUp),
     [followUps],
   );
   const followUpPreview = useMemo(() => openFollowUps.slice(0, 2), [openFollowUps]);
@@ -486,7 +487,7 @@ export default function ConnectionDetailScreen() {
                 )}
               </View>
 
-              {followUps.length ? (
+              {openFollowUps.length ? (
                 <View style={styles.section}>
                   <View style={styles.sectionHead}>
                     <Text style={styles.sectionTitle}>Follow-ups</Text>
@@ -600,7 +601,7 @@ export default function ConnectionDetailScreen() {
       <FollowUpsSheet
         visible={followUpsSheetOpen}
         title={`Follow-ups · ${connection?.name || ''}`}
-        items={followUps}
+        items={openFollowUps}
         onClose={() => setFollowUpsSheetOpen(false)}
         onPressItem={runConnectionFollowUp}
         onCompleteItem={(item) => void markComplete(item, refreshFollowUps)}

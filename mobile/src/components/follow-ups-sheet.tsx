@@ -5,7 +5,12 @@ import { BottomSheet } from '@/components/bottom-sheet';
 import { GroupedFollowUpActions, GroupedFollowUpCell } from '@/components/grouped-follow-up-cell';
 import { PillButton } from '@/components/ui';
 import type { FollowUpItem } from '@/features/follow-ups/follow-up-api';
-import { groupFollowUpItems, type FollowUpGroup } from '@/features/follow-ups/follow-up-groups';
+import type { FollowUpGroup } from '@/features/follow-ups/follow-up-groups';
+import {
+  buildFollowUpGroups,
+  filterFollowUpGroups,
+  sortFollowUpGroups,
+} from '@/features/follow-ups/follow-up-list';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 type FollowUpsSheetProps = {
@@ -37,22 +42,8 @@ export function FollowUpsSheet({
   const showTools = items.length > 10;
 
   const filtered = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    let next = groupFollowUpItems(items);
-    if (normalized) {
-      next = next.filter((group) => (
-        group.personName.toLowerCase().includes(normalized)
-        || group.encounterTitle.toLowerCase().includes(normalized)
-        || group.items.some((item) => (
-          item.title.toLowerCase().includes(normalized)
-          || item.channel.toLowerCase().includes(normalized)
-        ))
-      ));
-    }
-    if (sortMode === 'recent') {
-      next = [...next].sort((left, right) => right.startedAt.localeCompare(left.startedAt));
-    }
-    return next;
+    const currentGroups = buildFollowUpGroups(items, 'current');
+    return sortFollowUpGroups(filterFollowUpGroups(currentGroups, query), sortMode);
   }, [items, query, sortMode]);
 
   function runGroup(group: FollowUpGroup) {
@@ -116,7 +107,7 @@ export function FollowUpsSheet({
             ))}
           </View>
         ) : (
-          <Text style={styles.empty}>No follow-ups match your search.</Text>
+          <Text style={styles.empty}>{query.trim() ? 'No follow-ups match your search.' : 'No current follow-ups.'}</Text>
         )}
       </BottomSheet>
 
