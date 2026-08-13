@@ -281,8 +281,8 @@ footer a { font-size: 12px; text-decoration: underline; text-underline-offset: 5
 .draft-app-tabs button strong { font-size: 18px; }
 .draft-app-tabs button.active { color: var(--navy); background:var(--blue); transform:translateX(8px); }
 .draft-app-tabs button.active::after { background:var(--navy); }
-.draft-phone-wrap { min-height: 720px; display: grid; place-items: center; position: relative; perspective:1200px; }
-.draft-phone { width:min(100%,350px); padding:7px; border:1px solid #4a4a4c; border-radius:52px; background:linear-gradient(110deg,#1c1c1e 0%,#55555a 12%,#151517 25%,#050506 72%,#3b3b3e 100%); box-shadow:0 42px 80px rgba(14,15,12,.22),0 12px 28px rgba(14,15,12,.15),inset 0 0 0 1px rgba(255,255,255,.16); position:relative; z-index:2; }
+.draft-phone-wrap { min-height:0; height:100%; display:grid; place-items:center; padding:20px 0 34px; position:relative; perspective:1200px; }
+.draft-phone { width:min(100%,350px,calc((100vh - 150px) * .46)); padding:6px; border:1px solid #353538; border-radius:50px; background:#111113; box-shadow:0 32px 68px rgba(14,15,12,.2),0 10px 24px rgba(14,15,12,.12),inset 0 0 0 1px rgba(255,255,255,.12); position:relative; z-index:2; }
 .draft-phone::after { content:""; position:absolute; inset:2px; border-radius:49px; border:1px solid rgba(255,255,255,.09); pointer-events:none; }
 .draft-phone-glass { width:100%; aspect-ratio:1206/2622; border-radius:45px; background:#080809; overflow:hidden; position:relative; box-shadow:inset 0 0 0 1px rgba(255,255,255,.08); }
 .draft-phone-glass::after { content:""; position:absolute; inset:0; z-index:8; border-radius:inherit; background:linear-gradient(112deg,rgba(255,255,255,.08),transparent 18%,transparent 78%,rgba(255,255,255,.035)); pointer-events:none; }
@@ -376,8 +376,8 @@ footer a { font-size: 12px; text-decoration: underline; text-underline-offset: 5
   .draft-loop-grid article { min-height: 220px; }
   .draft-person-intro { align-items: flex-start; }
   .draft-person-intro > span { width: 58px; height: 58px; }
-  .draft-phone-wrap { min-height:0; padding:12px 0 34px; }
-  .draft-phone { width:min(88vw,340px); border-radius:48px; }
+  .draft-phone-wrap { height:auto; min-height:0; padding:12px 0 34px; }
+  .draft-phone { width:min(82vw,320px); border-radius:46px; }
   .draft-phone-glass { border-radius:41px; }
   .draft-phone-screen { gap:14px; }
 }
