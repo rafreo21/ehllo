@@ -31,6 +31,7 @@ import {
   fetchAllConnectionsMerged,
   type ConnectionItem,
 } from '@/features/connections/connections-api';
+import { isConversationEncounter } from '@/features/connections/connection-history-state';
 import {
   saveConnectionToAfterMeet,
   saveConnectionToDeviceContacts,
@@ -254,11 +255,11 @@ export default function ConnectionDetailScreen() {
     [followUps],
   );
   const followUpPreview = useMemo(() => openFollowUps.slice(0, 2), [openFollowUps]);
-  // Quick Follow-up creates a placeholder encounter just to hold its task —
-  // no conversation happened, so it shouldn't read as a "Meeting" in History.
-  // Follow-ups already covers that task; History is only real conversations.
+  // Quick Follow-up creates a placeholder encounter just to hold its task, but
+  // notes-only Capture also has zero duration. Hide only the actual placeholder
+  // so a notes capture remains a conversation with its event context.
   const recordedMeetings = useMemo(
-    () => meetings.filter((meeting) => meeting.durationSeconds > 0 || meeting.recording),
+    () => meetings.filter(isConversationEncounter),
     [meetings],
   );
   const eventById = useMemo(
