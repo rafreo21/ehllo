@@ -165,7 +165,8 @@ export default function EventsScreen() {
     try {
       await setEventAttendance(accessToken, event.id, status);
       setCandidates((current) => current.filter((item) => item.id !== event.id));
-      if (status === 'going') setEvents((current) => [...current, event]);
+      if (status === 'going') setEvents((current) => current.some((item) => item.id === event.id) ? current : [...current, event]);
+      else setEvents((current) => current.filter((item) => item.id !== event.id));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not update this event.');
     } finally {
@@ -269,7 +270,7 @@ export default function EventsScreen() {
                 variant={candidate ? 'candidate' : isEventCurrentlyHappening(event) ? 'current' : 'going'}
                 busy={busyId === event.id}
                 onGoing={candidate ? (item) => void decide(item, 'going') : undefined}
-                onNotGoing={candidate ? (item) => void decide(item, 'not_going') : undefined}
+                onNotGoing={(item) => void decide(item, 'not_going')}
                 onLeave={!candidate && isEventCurrentlyHappening(event) ? (item) => void leaveEvent(item) : undefined}
               />
             )) : (

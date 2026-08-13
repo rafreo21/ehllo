@@ -1,5 +1,7 @@
 import { mobileFetch, readMobileApiJson } from '@/lib/mobile-api';
 import { readCachedEvents, writeCachedEvents } from '@/features/events/event-cache';
+import { enqueueEventAction } from '@/features/events/event-action-queue';
+import { isOnline } from '@/lib/connectivity';
 
 export type EventSource = 'manual' | 'link' | 'calendar';
 export type EventAttendanceStatus = 'going' | 'not_going';
@@ -101,7 +103,7 @@ export async function createEvent(
   return mapEvent(payload.event);
 }
 
-export async function setEventAttendance(accessToken: string, eventId: string, status: EventAttendanceStatus) {
+export async function sendEventAttendance(accessToken: string, eventId: string, status: EventAttendanceStatus) {
   const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}/attendance`, accessToken, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -114,8 +116,16 @@ export async function setEventAttendance(accessToken: string, eventId: string, s
   if (!response.ok || !payload.ok) throw new Error(payload.error || 'Could not update your attendance.');
 }
 
+export async function setEventAttendance(accessToken: string, eventId: string, status: EventAttendanceStatus) {
+  if (!isOnline()) {
+    await enqueueEventAction({ eventId, action: 'attendance', attendanceStatus: status });
+    return;
+  }
+  await sendEventAttendance(accessToken, eventId, status);
+}
+
 /** "I've left" — caps this event's effective end at now for passive-attach, without changing its real end time. Pass left: false to undo. */
-export async function markEventLeft(accessToken: string, eventId: string, left = true) {
+export async function sendEventLeft(accessToken: string, eventId: string, left = true) {
   const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}/leave`, accessToken, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -126,6 +136,15 @@ export async function markEventLeft(accessToken: string, eventId: string, left =
     'Could not read the response.',
   );
   if (!response.ok || !payload.ok) throw new Error(payload.error || 'Could not update this event.');
+}
+
+
+export async function markEventLeft(accessToken: string, eventId: string, left = true) {
+  if (!isOnline()) {
+    await enqueueEventAction({ eventId, action: 'leave', left });
+    return;
+  }
+  await sendEventLeft(accessToken, eventId, left);
 }
 
 export type ExtractedEventInfo = {

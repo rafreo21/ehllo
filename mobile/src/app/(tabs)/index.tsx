@@ -177,7 +177,8 @@ export default function HomeScreen() {
     try {
       await setEventAttendance(session.access_token, event.id, status);
       setEventCandidates((current) => current.filter((item) => item.id !== event.id));
-      if (status === 'going') setGoingEvents((current) => [...current, event]);
+      if (status === 'going') setGoingEvents((current) => current.some((item) => item.id === event.id) ? current : [...current, event]);
+      else setGoingEvents((current) => current.filter((item) => item.id !== event.id));
     } catch {
       // The event stays in the candidate list, but the user needs to know the
       // tap didn't actually do anything — this used to fail silently.

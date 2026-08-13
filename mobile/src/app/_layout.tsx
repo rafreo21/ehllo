@@ -17,6 +17,7 @@ import { NotificationManager } from '@/features/notifications/notification-manag
 import { ActiveCaptureBanner } from '@/components/active-capture-banner';
 import { CaptureRecorderProvider } from '@/features/encounters/capture-recorder-context';
 import { CaptureTranscriptionSyncManager } from '@/features/encounters/capture-transcription-sync-manager';
+import { EventActionSyncManager } from '@/features/events/event-action-sync-manager';
 import { WidgetQrRenderer } from '@/lib/widget-qr-renderer';
 import { colors } from '@/theme/tokens';
 
@@ -95,6 +96,7 @@ export default function RootLayout() {
           <QuickFollowUpSyncManager />
           <OfflineScanSyncManager />
           <CaptureTranscriptionSyncManager />
+          <EventActionSyncManager />
           <CardProvider>
             <CaptureRecorderProvider>
               <StatusBar style="dark" />

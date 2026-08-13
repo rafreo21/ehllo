@@ -1,5 +1,5 @@
 import { useFocusEffect } from 'expo-router';
-import { ArrowsClockwise, CheckCircle, CloudArrowUp, ListChecks, Microphone, Scan } from 'phosphor-react-native';
+import { ArrowsClockwise, CalendarCheck, CheckCircle, CloudArrowUp, ListChecks, Microphone, Scan } from 'phosphor-react-native';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
@@ -11,7 +11,7 @@ import { useIsOnline } from '@/lib/connectivity';
 import { colors, spacing } from '@/theme/tokens';
 
 const EMPTY_STATUS: PendingSyncStatus = {
-  scans: [], quickFollowUps: [], followUpActions: [], transcriptions: [], total: 0,
+  scans: [], quickFollowUps: [], followUpActions: [], transcriptions: [], eventActions: [], total: 0,
 };
 
 export default function PendingSyncScreen() {
@@ -45,6 +45,7 @@ export default function PendingSyncScreen() {
     { key: 'quick', icon: ListChecks, label: 'Quick follow-ups', count: status.quickFollowUps.length, detail: 'Follow-ups waiting to be created' },
     { key: 'actions', icon: CheckCircle, label: 'Follow-up changes', count: status.followUpActions.length, detail: 'Complete, reopen, snooze, or dismiss changes' },
     { key: 'transcriptions', icon: Microphone, label: 'Transcriptions', count: status.transcriptions.length, detail: 'Local recordings waiting for transcription' },
+    { key: 'events', icon: CalendarCheck, label: 'Event attendance', count: status.eventActions.length, detail: 'Going, Not going, or I’ve left changes' },
   ];
 
   return (

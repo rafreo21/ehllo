@@ -40,6 +40,7 @@ export function EventCard({
   const when = formatEventWhen(event.startsAt);
   const showCandidateActions = variant === 'candidate';
   const showLeaveAction = variant === 'current' && Boolean(onLeave);
+  const showGoingNotGoingAction = (variant === 'going' || variant === 'current') && Boolean(onNotGoing);
   // Independent of the action row below — this is Home's "tap the card to
   // see it in My Events" affordance. Events itself never passes onPress, so
   // this never shows there even when the same variant has action buttons.
@@ -101,11 +102,31 @@ export function EventCard({
           {busy ? (
             <ActivityIndicator color={colors.ink} />
           ) : (
+            <View style={styles.actions}>
+              <PillButton
+                tone="outline"
+                accessibilityLabel="I've left this event"
+                onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onLeave?.(event); }}>
+                I&apos;ve left
+              </PillButton>
+              {showGoingNotGoingAction ? (
+                <PillButton
+                  tone="outline"
+                  onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing?.(event); }}>
+                  Not going
+                </PillButton>
+              ) : null}
+            </View>
+          )}
+        </View>
+      ) : null}
+      {showGoingNotGoingAction && !showLeaveAction ? (
+        <View style={styles.actionRow}>
+          {busy ? <ActivityIndicator color={colors.ink} /> : (
             <PillButton
               tone="outline"
-              accessibilityLabel="I've left this event"
-              onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onLeave?.(event); }}>
-              I&apos;ve left
+              onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing?.(event); }}>
+              Not going
             </PillButton>
           )}
         </View>
