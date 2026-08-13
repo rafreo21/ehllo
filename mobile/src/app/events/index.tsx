@@ -222,24 +222,44 @@ export default function EventsScreen() {
   }
 
   const header = (
-    <PageHeader
-      eyebrow="My events"
-      title="Events you're going to"
-      description="Follow-ups you capture while you're at an event are automatically linked to it."
-      caption={syncedAt ? formatSyncedAgo(syncedAt, now) : undefined}
-      rightAction={accessToken ? (
-        <View style={styles.headerActions}>
-          <HeaderActionButton accessibilityLabel="Refresh events" onPress={() => void refresh({ manual: true })}>
-            {refreshing
-              ? <ActivityIndicator size="small" color={colors.ink} />
-              : <ArrowsClockwise size={18} color={colors.ink} weight="bold" />}
-          </HeaderActionButton>
-          <HeaderActionButton accessibilityLabel="Add event" onPress={() => setAddOpen(true)}>
-            <Plus size={18} color={colors.ink} weight="bold" />
-          </HeaderActionButton>
+    <View style={styles.fixedHeader}>
+      <PageHeader
+        eyebrow="My events"
+        title="Events you're going to"
+        description="Follow-ups you capture while you're at an event are automatically linked to it."
+        caption={syncedAt ? formatSyncedAgo(syncedAt, now) : undefined}
+        rightAction={accessToken ? (
+          <View style={styles.headerActions}>
+            <HeaderActionButton accessibilityLabel="Refresh events" onPress={() => void refresh({ manual: true })}>
+              {refreshing
+                ? <ActivityIndicator size="small" color={colors.ink} />
+                : <ArrowsClockwise size={18} color={colors.ink} weight="bold" />}
+            </HeaderActionButton>
+            <HeaderActionButton accessibilityLabel="Add event" onPress={() => setAddOpen(true)}>
+              <Plus size={18} color={colors.ink} weight="bold" />
+            </HeaderActionButton>
+          </View>
+        ) : undefined}
+      />
+      {!loading && accessToken ? (
+        <View style={styles.tabRow}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: activeTab === 'upcoming' }}
+            onPress={() => setActiveTab('upcoming')}
+            style={[styles.tab, activeTab === 'upcoming' && styles.tabActive]}>
+            <Text style={[styles.tabText, activeTab === 'upcoming' && styles.tabTextActive]}>Upcoming</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: activeTab === 'past' }}
+            onPress={() => setActiveTab('past')}
+            style={[styles.tab, activeTab === 'past' && styles.tabActive]}>
+            <Text style={[styles.tabText, activeTab === 'past' && styles.tabTextActive]}>Past</Text>
+          </Pressable>
         </View>
-      ) : undefined}
-    />
+      ) : null}
+    </View>
   );
 
   return (
@@ -263,23 +283,6 @@ export default function EventsScreen() {
               onPress={() => router.push('/settings/connected-accounts')}
             />
           ) : null}
-
-          <View style={styles.tabRow}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected: activeTab === 'upcoming' }}
-              onPress={() => setActiveTab('upcoming')}
-              style={[styles.tab, activeTab === 'upcoming' && styles.tabActive]}>
-              <Text style={[styles.tabText, activeTab === 'upcoming' && styles.tabTextActive]}>Upcoming</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected: activeTab === 'past' }}
-              onPress={() => setActiveTab('past')}
-              style={[styles.tab, activeTab === 'past' && styles.tabActive]}>
-              <Text style={[styles.tabText, activeTab === 'past' && styles.tabTextActive]}>Past</Text>
-            </Pressable>
-          </View>
 
           {activeTab === 'upcoming' ? (
             combinedUpcoming.length ? combinedUpcoming.map(({ event, candidate }) => (
@@ -689,6 +692,7 @@ function AddressAutocompleteField({ value, onChange }: { value: string; onChange
 }
 
 const styles = StyleSheet.create({
+  fixedHeader: { gap: spacing.x2 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
   panelTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
   panelCopy: { color: colors.muted, fontSize: 13, lineHeight: 19 },
@@ -699,7 +703,6 @@ const styles = StyleSheet.create({
     padding: spacing.x1,
     borderRadius: radius.medium,
     backgroundColor: colors.surfaceMuted,
-    marginBottom: spacing.x2,
   },
   tab: { flex: 1, alignItems: 'center', paddingVertical: spacing.x2, borderRadius: radius.medium },
   tabActive: { backgroundColor: colors.surface },
