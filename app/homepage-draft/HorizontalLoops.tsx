@@ -10,6 +10,11 @@ const loops = [
   ["Activate data", "Move forward with a clear, timely action.", "Send research deck", "Monday · 9:00 AM"],
 ] as const;
 
+const loopImages = [
+  "/homepage-app/share-conference.png",
+  "/homepage-app/capture-conference.png",
+] as const;
+
 export function HorizontalLoops() {
   const sectionRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -50,9 +55,9 @@ export function HorizontalLoops() {
             {loops.map(([title, detail, example, meta], index) => (
               <article key={title}>
                 <div className="draft-loop-card-top"><span>0{index + 1}</span><small>{index === 0 ? "Start here" : "Then"}</small></div>
-                {index === 0 ? (
+                {index < loopImages.length ? (
                   <div className="draft-loop-visual">
-                    <img src="/homepage-app/share-conference.png" alt="Two professionals exchanging contact details at a conference"/>
+                    <img src={loopImages[index]} alt={index === 0 ? "Two professionals exchanging contact details at a conference" : "A professional saving a new connection on her phone"}/>
                     <div className="draft-loop-example"><small>In ehllo</small><strong>{example}</strong><span>{meta}</span></div>
                   </div>
                 ) : (
