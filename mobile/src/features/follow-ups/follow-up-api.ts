@@ -34,6 +34,13 @@ export type FollowUpItem = {
   eventTitle?: string;
 };
 
+export class FollowUpConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'FollowUpConflictError';
+  }
+}
+
 const followUpMethodTypes = new Set<ContactMethod['type']>([
   'email', 'phone', 'linkedin', 'whatsapp', 'instagram', 'x', 'tiktok',
 ]);
@@ -110,32 +117,36 @@ async function updateFollowUpStatus(
   actionId: string,
   status: EncounterAction['status'],
   snoozedUntil?: string,
+  expectedStatusUpdatedAt?: string,
 ) {
   const response = await mobileFetch(`/api/encounters/${encounterId}/actions/${actionId}`, accessToken, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status, snoozedUntil }),
+    body: JSON.stringify({ status, snoozedUntil, expectedStatusUpdatedAt: expectedStatusUpdatedAt ?? null }),
   });
-  const payload = await readMobileApiJson<{ ok?: boolean; error?: string }>(
+  const payload = await readMobileApiJson<{ ok?: boolean; error?: string; conflict?: boolean }>(
     response,
     'Could not read the follow-up completion response.',
   );
+  if (response.status === 409 && payload.conflict) {
+    throw new FollowUpConflictError(payload.error || 'This follow-up changed on another device.');
+  }
   if (!response.ok || !payload.ok) {
     throw new Error(payload.error || 'Could not update this follow-up.');
   }
   requestFollowUpNotificationSync();
 }
 
-export async function completeFollowUp(accessToken: string, encounterId: string, actionId: string) {
-  await updateFollowUpStatus(accessToken, encounterId, actionId, 'completed');
+export async function completeFollowUp(accessToken: string, encounterId: string, actionId: string, expectedStatusUpdatedAt?: string) {
+  await updateFollowUpStatus(accessToken, encounterId, actionId, 'completed', undefined, expectedStatusUpdatedAt);
 }
 
-export async function reopenFollowUp(accessToken: string, encounterId: string, actionId: string) {
-  await updateFollowUpStatus(accessToken, encounterId, actionId, 'open');
+export async function reopenFollowUp(accessToken: string, encounterId: string, actionId: string, expectedStatusUpdatedAt?: string) {
+  await updateFollowUpStatus(accessToken, encounterId, actionId, 'open', undefined, expectedStatusUpdatedAt);
 }
 
-export async function dismissFollowUp(accessToken: string, encounterId: string, actionId: string) {
-  await updateFollowUpStatus(accessToken, encounterId, actionId, 'dismissed');
+export async function dismissFollowUp(accessToken: string, encounterId: string, actionId: string, expectedStatusUpdatedAt?: string) {
+  await updateFollowUpStatus(accessToken, encounterId, actionId, 'dismissed', undefined, expectedStatusUpdatedAt);
 }
 
 export async function snoozeFollowUp(
@@ -143,8 +154,9 @@ export async function snoozeFollowUp(
   encounterId: string,
   actionId: string,
   snoozedUntil: string,
+  expectedStatusUpdatedAt?: string,
 ) {
-  await updateFollowUpStatus(accessToken, encounterId, actionId, 'snoozed', snoozedUntil);
+  await updateFollowUpStatus(accessToken, encounterId, actionId, 'snoozed', snoozedUntil, expectedStatusUpdatedAt);
 }
 
 export async function fetchEncounterRecords(accessToken: string) {

@@ -217,7 +217,19 @@ try {
   assert.equal(openFollowUp?.eventId, eventId, "follow-up inherits event context");
   assert.equal(openFollowUp?.eventTitle, `E2E event ${runId}`, "follow-up resolves the event title");
 
-  await api(`/api/encounters/${encounterId}/actions/${actionId}`, host.token, { method: "PATCH", body: JSON.stringify({ status: "completed" }) });
+  const firstActionRevision = savedEncounter.actions?.find((action) => action.id === actionId)?.statusUpdatedAt ?? null;
+  await api(`/api/encounters/${encounterId}/actions/${actionId}`, host.token, {
+    method: "PATCH",
+    body: JSON.stringify({ status: "completed", expectedStatusUpdatedAt: firstActionRevision }),
+  });
+  const staleFollowUpResponse = await fetch(`${appUrl}/api/encounters/${encounterId}/actions/${actionId}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${host.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "dismissed", expectedStatusUpdatedAt: firstActionRevision }),
+  });
+  const staleFollowUpPayload = await staleFollowUpResponse.json();
+  assert.equal(staleFollowUpResponse.status, 409, "stale follow-up lifecycle update is rejected");
+  assert.equal(staleFollowUpPayload.conflict, true, "follow-up conflict is explicit to the client");
   const completedFollowUps = await api("/api/follow-ups", host.token);
   const completedFollowUp = completedFollowUps.followUps?.find((item) => item.encounterId === encounterId && item.actionId === actionId);
   assert.equal(completedFollowUp?.status, "completed", "follow-up completion persists across refresh");
@@ -268,7 +280,7 @@ try {
   const publicPayload = await publicInvitation.json();
   assert.equal(publicPayload.invitation?.event?.status, "cancelled", "original guest link shows cancellation");
 
-  console.log(JSON.stringify({ ok: true, journey: "signup-card-qr-vcard-wallet-card-conflict-contact-conflict-capture-conflict-followup-event-invite-rsvp-claim-reschedule-event-conflict-cancel", cleanup: "pending" }));
+  console.log(JSON.stringify({ ok: true, journey: "signup-card-qr-vcard-wallet-card-conflict-contact-conflict-capture-conflict-followup-conflict-event-invite-rsvp-claim-reschedule-event-conflict-cancel", cleanup: "pending" }));
 } finally {
   for (const id of createdAuthIds.reverse()) await admin.auth.admin.deleteUser(id);
   const { data: remaining } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
