@@ -3,10 +3,11 @@ import * as Clipboard from 'expo-clipboard';
 import { router, useFocusEffect } from 'expo-router';
 import { ArrowsClockwise, CalendarBlank, CaretRight, LinkSimple, NotePencil, Plus, WarningCircle } from 'phosphor-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { EventCard } from '@/components/event-card';
+import { EventInviteSheet } from '@/components/event-invite-sheet';
 import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
@@ -26,6 +27,7 @@ import {
   fetchEventCandidates,
   fetchMyEvents,
   markEventLeft,
+  inviteEventGuest,
   setEventAttendance,
   type CalendarProviderStatus,
   type EventItem,
@@ -84,6 +86,9 @@ export default function EventsScreen() {
   });
   const [syncedAt, setSyncedAt] = useState('');
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [inviteEvent, setInviteEvent] = useState<EventItem | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState('');
 
   const refresh = useCallback(async (options?: { manual?: boolean }) => {
     if (!accessToken) {
@@ -225,6 +230,25 @@ export default function EventsScreen() {
     if (isOnline()) await refresh();
   }
 
+  async function sendInvite(email: string) {
+    if (!accessToken || !inviteEvent) return;
+    setInviteLoading(true);
+    setInviteError('');
+    try {
+      const result = await inviteEventGuest(accessToken, inviteEvent.id, email);
+      setInviteEvent(null);
+      setRefreshTitle(result.emailSent ? 'Invitation sent' : 'Invitation link ready');
+      setRefreshMessage(result.emailSent
+        ? `${email} can RSVP without creating an account. Their response will stay with them if they sign up.`
+        : result.warning || 'Email could not be sent, so share the invitation link instead.');
+      if (!result.emailSent) await Share.share({ message: `${inviteEvent.title}\n${result.guestUrl}`, url: result.guestUrl });
+    } catch (caught) {
+      setInviteError(caught instanceof Error ? caught.message : 'Could not invite this guest.');
+    } finally {
+      setInviteLoading(false);
+    }
+  }
+
   const header = (
     <View style={styles.fixedHeader}>
       <PageHeader
@@ -298,6 +322,7 @@ export default function EventsScreen() {
                 onGoing={candidate ? (item) => void decide(item, 'going') : undefined}
                 onNotGoing={(item) => void decide(item, 'not_going')}
                 onLeave={!candidate && isEventCurrentlyHappening(event) ? (item) => void leaveEvent(item) : undefined}
+                onInvite={!candidate ? setInviteEvent : undefined}
               />
             )) : (
               <Panel>
@@ -332,6 +357,14 @@ export default function EventsScreen() {
         onClose={() => setAddOpen(false)}
         onSubmit={addEvent}
         accessToken={accessToken}
+      />
+      <EventInviteSheet
+        key={inviteEvent?.id ?? 'closed'}
+        event={inviteEvent}
+        loading={inviteLoading}
+        error={inviteError}
+        onClose={() => { setInviteEvent(null); setInviteError(''); }}
+        onInvite={(email) => void sendInvite(email)}
       />
       <OutcomeErrorSheet visible={Boolean(error)} message={error} onClose={() => setError('')} />
       <OutcomeSuccessSheet

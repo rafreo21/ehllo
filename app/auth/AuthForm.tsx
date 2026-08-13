@@ -108,6 +108,13 @@ export function AuthForm({
       }
 
       await supabase.rpc("link_people_connections_for_email");
+      if (visitorIntent?.eventInviteToken) {
+        const { error: claimError } = await supabase.rpc("claim_event_invitation", { p_token: visitorIntent.eventInviteToken });
+        if (claimError) {
+          setError("This event invitation belongs to a different email or is no longer available.");
+          return;
+        }
+      }
 
       if (onboardingStatus !== "completed") {
         window.location.assign(visitorIntent ? visitorOnboardingPath(visitorIntent) : "/onboarding");

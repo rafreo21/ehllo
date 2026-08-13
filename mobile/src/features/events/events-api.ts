@@ -108,6 +108,20 @@ export async function createEvent(
   return mapEvent(payload.event);
 }
 
+export async function inviteEventGuest(accessToken: string, eventId: string, email: string) {
+  const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}/invitations`, accessToken, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  const payload = await readMobileApiJson<{ ok?: boolean; guestUrl?: string; emailSent?: boolean; warning?: string; error?: string }>(
+    response,
+    'Could not read the event invitation response.',
+  );
+  if (!response.ok || !payload.ok || !payload.guestUrl) throw new Error(payload.error || 'Could not invite this guest.');
+  return { guestUrl: payload.guestUrl, emailSent: Boolean(payload.emailSent), warning: payload.warning || '' };
+}
+
 export async function sendEventAttendance(accessToken: string, eventId: string, status: EventAttendanceStatus) {
   const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}/attendance`, accessToken, {
     method: 'PATCH',

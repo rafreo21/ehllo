@@ -11,11 +11,13 @@ export function VisitorOnboardingForm({
   slug,
   exchangeId,
   shareToken,
+  eventInviteToken,
 }: {
   initialName: string;
   slug?: string;
   exchangeId?: string;
   shareToken?: string;
+  eventInviteToken?: string;
 }) {
   const [displayName, setDisplayName] = useState(initialName);
   const [error, setError] = useState("");
@@ -26,7 +28,8 @@ export function VisitorOnboardingForm({
     ...(slug ? { slug } : {}),
     ...(exchangeId ? { exchangeId } : {}),
     ...(shareToken ? { shareToken } : {}),
-  }), [displayName, slug, exchangeId, shareToken]);
+    ...(eventInviteToken ? { eventInviteToken } : {}),
+  }), [displayName, slug, exchangeId, shareToken, eventInviteToken]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();

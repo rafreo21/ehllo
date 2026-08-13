@@ -1,4 +1,4 @@
-import { CalendarBlank, CaretRight } from 'phosphor-react-native';
+import { CalendarBlank, CaretRight, UserPlus } from 'phosphor-react-native';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PillButton } from '@/components/ui';
@@ -28,6 +28,7 @@ export function EventCard({
   onGoing,
   onNotGoing,
   onLeave,
+  onInvite,
 }: {
   event: EventItem;
   variant: EventCardVariant;
@@ -36,6 +37,7 @@ export function EventCard({
   onGoing?: (event: EventItem) => void;
   onNotGoing?: (event: EventItem) => void;
   onLeave?: (event: EventItem) => void;
+  onInvite?: (event: EventItem) => void;
 }) {
   const when = formatEventWhen(event.startsAt);
   const showCandidateActions = variant === 'candidate';
@@ -83,6 +85,14 @@ export function EventCard({
             <ActivityIndicator color={colors.ink} />
           ) : (
             <View style={styles.actions}>
+              {onInvite ? (
+                <PillButton
+                  tone="outline"
+                  icon={<UserPlus size={15} color={colors.ink} weight="bold" />}
+                  onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onInvite(event); }}>
+                  Invite
+                </PillButton>
+              ) : null}
               <PillButton
                 tone="solid"
                 onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onGoing?.(event); }}>
@@ -123,11 +133,17 @@ export function EventCard({
       {showGoingNotGoingAction && !showLeaveAction ? (
         <View style={styles.actionRow}>
           {busy ? <ActivityIndicator color={colors.ink} /> : (
-            <PillButton
-              tone="outline"
-              onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing?.(event); }}>
-              Not going
-            </PillButton>
+            <View style={styles.actions}>
+              {onInvite ? (
+                <PillButton
+                  tone="outline"
+                  icon={<UserPlus size={15} color={colors.ink} weight="bold" />}
+                  onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onInvite(event); }}>
+                  Invite
+                </PillButton>
+              ) : null}
+              <PillButton tone="outline" onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing?.(event); }}>Not going</PillButton>
+            </View>
           )}
         </View>
       ) : null}
@@ -170,5 +186,5 @@ const styles = StyleSheet.create({
   },
   statusText: { color: colors.ink, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
   suggested: { flexShrink: 0, color: colors.muted, fontSize: 12 },
-  actions: { flexDirection: 'row', gap: spacing.x2 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2 },
 });

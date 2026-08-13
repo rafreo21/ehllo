@@ -10,7 +10,7 @@ import "../../app/flow.css";
 export default async function VisitorOnboardingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ slug?: string; exchangeId?: string; shareToken?: string }>;
+  searchParams: Promise<{ slug?: string; exchangeId?: string; shareToken?: string; eventInviteToken?: string }>;
 }) {
   const user = await getAppUser();
   if (!user) redirect("/auth?intent=visitor");
@@ -21,6 +21,7 @@ export default async function VisitorOnboardingPage({
     ...(params.slug ? { slug: params.slug } : {}),
     ...(params.exchangeId ? { exchangeId: params.exchangeId } : {}),
     ...(params.shareToken ? { shareToken: params.shareToken } : {}),
+    ...(params.eventInviteToken ? { eventInviteToken: params.eventInviteToken } : {}),
   }));
 
   return (
@@ -38,6 +39,7 @@ export default async function VisitorOnboardingPage({
           slug={intent?.slug}
           exchangeId={intent?.exchangeId}
           shareToken={intent?.shareToken}
+          eventInviteToken={intent?.eventInviteToken}
         />
       </section>
     </main>
