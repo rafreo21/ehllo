@@ -32,6 +32,7 @@ import {
 } from '@/features/events/events-api';
 import { fetchConnectedAccounts } from '@/features/integrations/integrations-api';
 import { readEnv } from '@/lib/env';
+import { isOnline } from '@/lib/connectivity';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 function formatSyncedAgo(syncedAt: string, now: Date): string {
@@ -70,6 +71,7 @@ export default function EventsScreen() {
   // it got its own hasLoadedOnce guard).
   const [refreshing, setRefreshing] = useState(false);
   const [refreshMessage, setRefreshMessage] = useState('');
+  const [refreshTitle, setRefreshTitle] = useState('Events updated');
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState('');
   const [addOpen, setAddOpen] = useState(false);
@@ -95,7 +97,7 @@ export default function EventsScreen() {
     let candidateSyncFailed = false;
     try {
       const [mine, candidatesResult, accounts] = await Promise.all([
-        fetchMyEvents(accessToken),
+        fetchMyEvents(accessToken, { allowCacheFallback: !isOnline() }),
         fetchEventCandidates(accessToken).catch(() => {
           candidateSyncFailed = true;
           return null;
@@ -109,13 +111,17 @@ export default function EventsScreen() {
       if (candidatesResult) {
         setCandidates(candidatesResult.candidates);
         setProviderStatus(candidatesResult.providerStatus);
-        setSyncedAt(candidatesResult.syncedAt);
       }
+
+      // This timestamp means both the user's events and suggestions were
+      // refreshed on this device. Never stamp a stale cache as freshly synced.
+      if (!candidateSyncFailed) setSyncedAt(new Date().toISOString());
 
       if (options?.manual) {
         if (candidateSyncFailed) {
           setError('Could not reach your calendar. Check your connection and try again.');
         } else {
+          setRefreshTitle('Events synced');
           setRefreshMessage(suggested.length
             ? `Synced with your calendar — ${suggested.length} suggestion${suggested.length === 1 ? '' : 's'} found.`
             : "Synced with your calendar — you're all caught up.");
@@ -176,6 +182,7 @@ export default function EventsScreen() {
       setCandidates((current) => current.filter((item) => item.id !== event.id));
       if (status === 'going') setEvents((current) => current.some((item) => item.id === event.id) ? current : [...current, event]);
       else setEvents((current) => current.filter((item) => item.id !== event.id));
+      if (isOnline()) await refresh();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not update this event.');
     } finally {
@@ -207,7 +214,11 @@ export default function EventsScreen() {
       sourceUrl: input.sourceUrl || undefined,
     });
     setCandidates((current) => [...current, created]);
+    setActiveTab(isUpcomingEvent(created) ? 'upcoming' : 'past');
     setAddOpen(false);
+    setRefreshTitle('Event added');
+    setRefreshMessage('Choose Going or Not going on the event card. If you choose Going while the event is happening, I\'ve left will become available.');
+    if (isOnline()) await refresh();
   }
 
   const header = (
@@ -215,6 +226,7 @@ export default function EventsScreen() {
       eyebrow="My events"
       title="Events you're going to"
       description="Follow-ups you capture while you're at an event are automatically linked to it."
+      caption={syncedAt ? formatSyncedAgo(syncedAt, now) : undefined}
       rightAction={accessToken ? (
         <View style={styles.headerActions}>
           <HeaderActionButton accessibilityLabel="Refresh events" onPress={() => void refresh({ manual: true })}>
@@ -269,8 +281,6 @@ export default function EventsScreen() {
             </Pressable>
           </View>
 
-          {syncedAt ? <Text style={styles.syncedCaption}>{formatSyncedAgo(syncedAt, now)}</Text> : null}
-
           {activeTab === 'upcoming' ? (
             combinedUpcoming.length ? combinedUpcoming.map(({ event, candidate }) => (
               <EventCard
@@ -319,7 +329,7 @@ export default function EventsScreen() {
       <OutcomeErrorSheet visible={Boolean(error)} message={error} onClose={() => setError('')} />
       <OutcomeSuccessSheet
         visible={Boolean(refreshMessage)}
-        title="Calendar synced"
+        title={refreshTitle}
         message={refreshMessage}
         onClose={() => setRefreshMessage('')}
       />
@@ -677,7 +687,6 @@ const styles = StyleSheet.create({
   panelTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
   panelCopy: { color: colors.muted, fontSize: 13, lineHeight: 19 },
   section: { gap: spacing.x2, marginTop: spacing.x4 },
-  syncedCaption: { color: colors.muted, fontSize: 11, marginTop: -spacing.x1, marginBottom: spacing.x1 },
   tabRow: {
     flexDirection: 'row',
     gap: spacing.x1,

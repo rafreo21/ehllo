@@ -48,7 +48,10 @@ function mapEvent(row: Record<string, unknown>): EventItem {
 }
 
 /** Events the user is going to — see GET /api/events. Candidates awaiting a decision are separate, see fetchEventCandidates. */
-export async function fetchMyEvents(accessToken: string): Promise<EventItem[]> {
+export async function fetchMyEvents(
+  accessToken: string,
+  options: { allowCacheFallback?: boolean } = {},
+): Promise<EventItem[]> {
   try {
     const response = await mobileFetch('/api/events', accessToken);
     const payload = await readMobileApiJson<{ events?: Record<string, unknown>[]; error?: string }>(
@@ -60,8 +63,10 @@ export async function fetchMyEvents(accessToken: string): Promise<EventItem[]> {
     await writeCachedEvents(events);
     return events;
   } catch (error) {
-    const cached = await readCachedEvents();
-    if (cached.length) return cached;
+    if (options.allowCacheFallback !== false) {
+      const cached = await readCachedEvents();
+      if (cached.length) return cached;
+    }
     throw error;
   }
 }

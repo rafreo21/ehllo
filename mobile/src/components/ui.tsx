@@ -154,6 +154,7 @@ export function PageHeader({
   title,
   titleStyle,
   description,
+  caption,
   onBack,
   rightAction,
   showBack = true,
@@ -162,6 +163,7 @@ export function PageHeader({
   title: string;
   titleStyle?: StyleProp<TextStyle>;
   description?: ReactNode;
+  caption?: ReactNode;
   onBack?: () => void;
   rightAction?: ReactNode;
   showBack?: boolean;
@@ -176,6 +178,7 @@ export function PageHeader({
         {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
         <Text style={[styles.title, styles.pageHeaderTitle, titleStyle]}>{title}</Text>
         {description ? <Body>{description}</Body> : null}
+        {caption ? <Text style={styles.pageHeaderCaption}>{caption}</Text> : null}
       </View>
     </View>
   );
@@ -344,6 +347,7 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
   title: { color: colors.ink, fontSize: 40, lineHeight: 42, fontWeight: '700', letterSpacing: -1.5 },
   body: { color: colors.muted, fontSize: 15, lineHeight: 22 },
+  pageHeaderCaption: { color: colors.muted, fontSize: 11, lineHeight: 15 },
   panel: { padding: spacing.x5, borderRadius: radius.medium, backgroundColor: colors.surface },
   button: { minHeight: 48, paddingHorizontal: spacing.x5, alignItems: 'center', justifyContent: 'center', borderRadius: radius.small, backgroundColor: colors.accent },
   buttonSecondary: { backgroundColor: colors.surfaceMuted },
