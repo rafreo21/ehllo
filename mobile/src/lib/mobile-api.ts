@@ -10,7 +10,7 @@ import { getSupabase } from '@/lib/supabase';
 export function isNetworkError(error: unknown): boolean {
   if (!isOnline()) return true;
   if (error instanceof TypeError) return true;
-  return error instanceof Error && /network request failed/i.test(error.message);
+  return error instanceof Error && /(network request failed|fetch failed|internet connection appears to be offline)/i.test(error.message);
 }
 
 // Plain fetch() has no timeout — a request that hangs server-side (or a

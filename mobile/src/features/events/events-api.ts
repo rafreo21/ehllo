@@ -1,4 +1,4 @@
-import { mobileFetch, readMobileApiJson } from '@/lib/mobile-api';
+import { isNetworkError, mobileFetch, readMobileApiJson } from '@/lib/mobile-api';
 import { readCachedEvents, writeCachedEvents } from '@/features/events/event-cache';
 import { enqueueEventAction } from '@/features/events/event-action-queue';
 import { isOnline } from '@/lib/connectivity';
@@ -213,7 +213,15 @@ export async function setEventAttendance(accessToken: string, eventId: string, s
     await enqueueEventAction({ eventId, action: 'attendance', attendanceStatus: status });
     return;
   }
-  await sendEventAttendance(accessToken, eventId, status);
+  try {
+    await sendEventAttendance(accessToken, eventId, status);
+  } catch (error) {
+    // NetInfo can briefly retain the previous online state after iOS loses
+    // connectivity. A failed request is the authoritative offline signal:
+    // keep the user's choice locally and let foreground sync retry it.
+    if (!isNetworkError(error)) throw error;
+    await enqueueEventAction({ eventId, action: 'attendance', attendanceStatus: status });
+  }
 }
 
 /** "I've left" — caps this event's effective end at now for passive-attach, without changing its real end time. Pass left: false to undo. */
@@ -236,7 +244,12 @@ export async function markEventLeft(accessToken: string, eventId: string, left =
     await enqueueEventAction({ eventId, action: 'leave', left });
     return;
   }
-  await sendEventLeft(accessToken, eventId, left);
+  try {
+    await sendEventLeft(accessToken, eventId, left);
+  } catch (error) {
+    if (!isNetworkError(error)) throw error;
+    await enqueueEventAction({ eventId, action: 'leave', left });
+  }
 }
 
 export type ExtractedEventInfo = {
