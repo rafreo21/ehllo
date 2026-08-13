@@ -48,6 +48,44 @@ try {
   });
   if (hostOnboardingError) throw hostOnboardingError;
 
+  const cardSlug = `e2e-${runId.replace(/[^a-z0-9]/gi, "-").toLowerCase()}`;
+  const { data: cardId, error: publishCardError } = await host.client.rpc("publish_my_card", {
+    p_slug: cardSlug,
+    p_full_name: "E2E Host",
+    p_job_title: "Staging Tester",
+    p_company: "AfterMeet E2E",
+    p_bio: "Temporary automated test card.",
+    p_theme_color: "#9FE870",
+    p_profile_image_url: "",
+    p_company_logo_url: "",
+    p_cover_image_url: "",
+    p_methods: [{ type: "email", value: hostEmail, label: "Email", sortOrder: 0 }],
+    p_show_company_details: true,
+  });
+  if (publishCardError || !cardId) throw publishCardError ?? new Error("Could not publish E2E card.");
+
+  const publicCardResponse = await fetch(`${appUrl}/api/cards/public/${cardSlug}`);
+  const publicCardPayload = await publicCardResponse.json();
+  assert.equal(publicCardResponse.status, 200, "published card is anonymously readable");
+  assert.equal(publicCardPayload.card?.fullName, "E2E Host", "public card returns approved identity fields");
+
+  const qrResponse = await fetch(`${appUrl}/api/public/branded-qr/${cardSlug}?mode=contact&size=256`);
+  assert.equal(qrResponse.status, 200, "offline contact QR renders");
+  assert.equal(qrResponse.headers.get("content-type"), "image/png", "contact QR is a PNG");
+  assert.ok((await qrResponse.arrayBuffer()).byteLength > 1000, "contact QR is non-empty");
+
+  const vcardEventTitle = `E2E context ${runId}`;
+  const vcardResponse = await fetch(`${appUrl}/c/${cardSlug}/contact.vcf?event=${encodeURIComponent(vcardEventTitle)}`);
+  const vcard = await vcardResponse.text();
+  assert.equal(vcardResponse.status, 200, "vCard export is publicly available");
+  assert.match(vcard, /BEGIN:VCARD/);
+  assert.ok(vcard.includes(`Where we met: ${vcardEventTitle}`), "vCard Notes contains where-we-met context");
+
+  const walletStatus = await api("/api/mobile/wallet/status", host.token);
+  assert.equal(walletStatus.google?.configured, true, "Google Wallet is configured on staging");
+  const wallet = await api(`/api/mobile/wallet/google/${cardSlug}`, host.token);
+  assert.match(wallet.saveUrl ?? "", /^https:\/\/pay\.google\.com\/gp\/v\/save\//, "published card produces a Google Wallet save URL");
+
   const startsAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
   const endsAt = new Date(startsAt.getTime() + 2 * 60 * 60 * 1000);
   const created = await api("/api/events", host.token, {
@@ -139,7 +177,7 @@ try {
   const publicPayload = await publicInvitation.json();
   assert.equal(publicPayload.invitation?.event?.status, "cancelled", "original guest link shows cancellation");
 
-  console.log(JSON.stringify({ ok: true, journey: "signup-capture-followup-event-invite-rsvp-claim-reschedule-cancel", cleanup: "pending" }));
+  console.log(JSON.stringify({ ok: true, journey: "signup-card-qr-vcard-wallet-capture-followup-event-invite-rsvp-claim-reschedule-cancel", cleanup: "pending" }));
 } finally {
   for (const id of createdAuthIds.reverse()) await admin.auth.admin.deleteUser(id);
   const { data: remaining } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });

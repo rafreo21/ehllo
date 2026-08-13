@@ -5,6 +5,7 @@ import { publicCompanyField, filterMethodsForCompanyVisibility } from "../../../
 import { buildBrandedQrPngBuffer } from "../../../../../lib/branded-qr.ts";
 import { buildContactQrPayload } from "../../../../../lib/contact-qr.ts";
 import { cardUrlForSlug } from "../../../../../lib/wallet-card-loader";
+import { createServiceSupabaseClient } from "../../../../../lib/supabase/service";
 
 export async function GET(request: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params;
@@ -22,7 +23,11 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
     return NextResponse.json({ error: "Card lookup is not configured." }, { status: 503 });
   }
 
-  const supabase = createClient(url, key, { auth: { persistSession: false } });
+  // Published status is the public-data boundary. Prefer the server client
+  // because production RLS intentionally denies anonymous table reads; the
+  // public card and vCard routes use the same pattern.
+  const supabase = createServiceSupabaseClient()
+    ?? createClient(url, key, { auth: { persistSession: false } });
   const { data } = await supabase
     .from("cards")
     .select("slug, full_name, job_title, company, bio, show_company_details, status, card_methods(method_type, value, label, sort_order)")

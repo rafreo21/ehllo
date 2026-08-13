@@ -7,8 +7,6 @@ export function sharpAvailable() {
   return process.env.VERCEL === "1" || process.env.NITRO_PRESET === "vercel";
 }
 
-const SH_SPEC = ["sh", "arp"].join("");
-
 type SharpInstance = {
   resize: (...args: unknown[]) => SharpInstance;
   extend: (...args: unknown[]) => SharpInstance;
@@ -25,6 +23,8 @@ type SharpModule = ((input?: unknown) => SharpInstance) & {
 };
 
 export async function loadSharp(): Promise<SharpModule> {
-  const mod = (await import(/* @vite-ignore */ SH_SPEC)) as { default: SharpModule };
+  // Keep this lazy so workerd never evaluates sharp, but leave the module
+  // specifier static so Vinext/Vite can include it in Vercel's server bundle.
+  const mod = (await import("sharp")) as unknown as { default: SharpModule };
   return mod.default;
 }
