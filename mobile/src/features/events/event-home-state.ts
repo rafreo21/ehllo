@@ -15,6 +15,20 @@ function eventEndsAtMs(event: EventItem): number {
   return end;
 }
 
+function eventStartsAtMs(event: EventItem): number {
+  const start = Date.parse(event.startsAt);
+  return Number.isNaN(start) ? Number.POSITIVE_INFINITY : start;
+}
+
+/** Orders events by their scheduled date and time, never by when they were added or synced. */
+export function compareEventsByStart(left: EventItem, right: EventItem): number {
+  const leftStart = eventStartsAtMs(left);
+  const rightStart = eventStartsAtMs(right);
+  if (leftStart < rightStart) return -1;
+  if (leftStart > rightStart) return 1;
+  return left.id.localeCompare(right.id);
+}
+
 export function isEventCurrentlyHappening(event: EventItem, now = new Date()): boolean {
   const start = Date.parse(event.startsAt);
   const end = eventEndsAtMs(event);
@@ -34,8 +48,8 @@ export function bucketEvents(events: EventItem[], now = new Date()): { upcoming:
   for (const event of events) {
     (isUpcomingEvent(event, now) ? upcoming : past).push(event);
   }
-  upcoming.sort((left, right) => left.startsAt.localeCompare(right.startsAt));
-  past.sort((left, right) => right.startsAt.localeCompare(left.startsAt));
+  upcoming.sort(compareEventsByStart);
+  past.sort((left, right) => compareEventsByStart(right, left));
   return { upcoming, past };
 }
 
@@ -71,7 +85,9 @@ export function resolveHomeEventCardState(
   const { upcoming } = bucketEvents(goingEvents, now);
   if (upcoming.length) return { type: 'upcoming', event: upcoming[0] };
 
-  const sortedCandidates = [...candidates].sort((left, right) => left.startsAt.localeCompare(right.startsAt));
+  const sortedCandidates = candidates
+    .filter((event) => isUpcomingEvent(event, now))
+    .sort(compareEventsByStart);
   if (sortedCandidates.length) return { type: 'candidate', event: sortedCandidates[0] };
 
   return { type: 'none' };

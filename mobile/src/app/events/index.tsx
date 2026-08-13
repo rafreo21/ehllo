@@ -14,7 +14,12 @@ import { SettingsSkeleton } from '@/components/skeleton';
 import { Button, HeaderActionButton, PageHeader, Panel, Screen } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { fetchAddressSuggestions, type AddressSuggestion } from '@/features/events/address-autocomplete';
-import { bucketEvents, isEventCurrentlyHappening } from '@/features/events/event-home-state';
+import {
+  bucketEvents,
+  compareEventsByStart,
+  isEventCurrentlyHappening,
+  isUpcomingEvent,
+} from '@/features/events/event-home-state';
 import {
   createEvent,
   extractEventFromLink,
@@ -155,8 +160,8 @@ export default function EventsScreen() {
   const { upcoming, past } = bucketEvents(events);
   const combinedUpcoming = [
     ...upcoming.map((event) => ({ event, candidate: false })),
-    ...candidates.map((event) => ({ event, candidate: true })),
-  ].sort((a, b) => a.event.startsAt.localeCompare(b.event.startsAt));
+    ...candidates.filter((event) => isUpcomingEvent(event)).map((event) => ({ event, candidate: true })),
+  ].sort((a, b) => compareEventsByStart(a.event, b.event));
 
   async function decide(event: EventItem, status: 'going' | 'not_going') {
     if (!accessToken) return;

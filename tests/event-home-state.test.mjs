@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   bucketEvents,
+  compareEventsByStart,
   isEventCurrentlyHappening,
   isUpcomingEvent,
   resolveHomeEventCardState,
@@ -67,6 +68,24 @@ describe("isUpcomingEvent / bucketEvents", () => {
     assert.deepEqual(upcoming.map((item) => item.id), ["soon", "later"]);
     assert.deepEqual(past.map((item) => item.id), ["recent-past", "older-past"]);
   });
+
+  it("sorts by the actual timestamp rather than record insertion order or timezone text", () => {
+    const newlyAddedLater = event({
+      id: "newly-added-later",
+      startsAt: "2026-08-11T10:00:00+01:00",
+      createdAt: "2026-08-10T14:59:00.000Z",
+    });
+    const olderRecordSooner = event({
+      id: "older-record-sooner",
+      startsAt: "2026-08-11T08:30:00.000Z",
+      createdAt: "2026-08-01T09:00:00.000Z",
+    });
+
+    assert.deepEqual(
+      [newlyAddedLater, olderRecordSooner].sort(compareEventsByStart).map((item) => item.id),
+      ["older-record-sooner", "newly-added-later"],
+    );
+  });
 });
 
 describe("resolveHomeEventCardState", () => {
@@ -99,6 +118,16 @@ describe("resolveHomeEventCardState", () => {
     const state = resolveHomeEventCardState([], [candidate], now);
     assert.equal(state.type, "candidate");
     assert.equal(state.event.id, "candidate");
+  });
+
+  it("does not promote an expired candidate on Home", () => {
+    const expired = event({
+      id: "expired-candidate",
+      startsAt: "2026-08-09T09:00:00.000Z",
+      endsAt: "2026-08-09T10:00:00.000Z",
+      source: "calendar",
+    });
+    assert.deepEqual(resolveHomeEventCardState([], [expired], now), { type: "none" });
   });
 
   it("returns none when there is nothing relevant", () => {
