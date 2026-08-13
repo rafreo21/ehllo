@@ -50,7 +50,14 @@ export function HorizontalLoops() {
             {loops.map(([title, detail, example, meta], index) => (
               <article key={title}>
                 <div className="draft-loop-card-top"><span>0{index + 1}</span><small>{index === 0 ? "Start here" : "Then"}</small></div>
-                <div className="draft-loop-example"><small>In ehllo</small><strong>{example}</strong><span>{meta}</span></div>
+                {index === 0 ? (
+                  <div className="draft-loop-visual">
+                    <img src="/homepage-app/share-conference.png" alt="Two professionals exchanging contact details at a conference"/>
+                    <div className="draft-loop-example"><small>In ehllo</small><strong>{example}</strong><span>{meta}</span></div>
+                  </div>
+                ) : (
+                  <div className="draft-loop-example"><small>In ehllo</small><strong>{example}</strong><span>{meta}</span></div>
+                )}
                 <div className="draft-loop-card-copy"><h3>{title}</h3><p>{detail}</p></div>
                 {index < 3 && <b className="draft-loop-connector"><ArrowRightIcon size={17} weight="bold"/></b>}
               </article>
