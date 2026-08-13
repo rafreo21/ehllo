@@ -32,7 +32,7 @@ export function ConnectionAddSheet({
           </View>
           <View style={styles.optionCopy}>
             <Text style={styles.optionTitle}>Scan QR code</Text>
-            <Text style={styles.optionSubtitle}>Scan an AfterMeet card to start a capture.</Text>
+            <Text style={styles.optionSubtitle}>Scan an Ehllo card to start a capture.</Text>
           </View>
         </Pressable>
         <Pressable

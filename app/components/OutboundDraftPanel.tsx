@@ -193,7 +193,7 @@ export function OutboundDraftPanel({
       <header className="outbound-draft-header">
         <div>
           <strong>Review-first outbound</strong>
-          <small>Draft, edit, approve, then send yourself. AfterMeet never auto-sends.</small>
+          <small>Draft, edit, approve, then send yourself. Ehllo never auto-sends.</small>
         </div>
         {!draft || draft.status === "dismissed" ? (
           <Button size="small" loading={loading} onClick={() => void generateDraft()}>

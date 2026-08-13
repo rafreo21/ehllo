@@ -187,7 +187,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export function parseDiscoveryData(raw: string): DiscoveryData {
   const parsed: unknown = JSON.parse(raw);
   if (!isRecord(parsed) || parsed.version !== DISCOVERY_SCHEMA_VERSION) {
-    throw new Error("This file is not a supported AfterMeet discovery export.");
+    throw new Error("This file is not a supported Ehllo discovery export.");
   }
   if (!Array.isArray(parsed.participants) || !Array.isArray(parsed.interviews) || !Array.isArray(parsed.evidence)) {
     throw new Error("The discovery export is missing required record collections.");

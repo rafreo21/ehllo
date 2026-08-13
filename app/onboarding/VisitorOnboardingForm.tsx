@@ -31,7 +31,7 @@ export function VisitorOnboardingForm({
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (displayName.trim().length < 2) {
-      setError("Enter the name you want AfterMeet to use.");
+      setError("Enter the name you want Ehllo to use.");
       return;
     }
     setLoading(true);
@@ -49,7 +49,7 @@ export function VisitorOnboardingForm({
       }
       window.location.assign("/app/people");
     } catch {
-      setError("We couldn’t reach AfterMeet. Check your connection and try again.");
+      setError("We couldn’t reach Ehllo. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ export function VisitorOnboardingForm({
         error={error}
         autoFocus
       />
-      <p className="visitor-onboarding-copy">No card setup required. AfterMeet will remember the people you meet and shared meeting records.</p>
+      <p className="visitor-onboarding-copy">No card setup required. Ehllo will remember the people you meet and shared meeting records.</p>
       <Button type="submit" loading={loading}>
         {loading ? "Saving…" : "Continue to people you've met"} {!loading && <ArrowRightIcon weight="bold" />}
       </Button>

@@ -28,7 +28,7 @@ export function ActionDoButton({ action, context, size = "small", showSecondary 
   const [integrations, setIntegrations] = useState<ConnectedAccountStatus>(emptyConnectedAccountStatus());
   const [scheduling, setScheduling] = useState<"" | "google" | "microsoft">("");
   const [scheduleMessage, setScheduleMessage] = useState("");
-  // AfterMeet never auto-sends anything external — creating a private event
+  // Ehllo never auto-sends anything external — creating a private event
   // on your own calendar needs no review, but inviting the other person is
   // an outward-facing action, so it always stops here for an explicit
   // choice instead of firing straight from the dropdown.
@@ -59,7 +59,7 @@ export function ActionDoButton({ action, context, size = "small", showSecondary 
 
   async function scheduleViaConnected(provider: "google" | "microsoft", attendeeEmail?: string) {
     const title = action.title.trim() || `Meeting with ${context.personName || "contact"}`;
-    const details = `Scheduled from AfterMeet${context.encounterTitle ? `: ${context.encounterTitle}` : ""}.`;
+    const details = `Scheduled from Ehllo${context.encounterTitle ? `: ${context.encounterTitle}` : ""}.`;
     setScheduling(provider);
     setScheduleMessage("");
     try {

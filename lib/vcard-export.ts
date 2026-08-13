@@ -80,7 +80,7 @@ function buildStructuredName(fullName: string) {
 }
 
 function vcardFilename(fullName: string) {
-  return fullName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "aftermeet-contact";
+  return fullName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "ehllo-contact";
 }
 
 function methodLabel(method: CardVcardMethod) {
@@ -380,7 +380,7 @@ export function buildCardVcard(input: CardVcardInput) {
   const lines = [
     "BEGIN:VCARD",
     "VERSION:3.0",
-    "PRODID:-//AfterMeet//Contact Card//EN",
+    "PRODID:-//Ehllo//Contact Card//EN",
     `N:${buildStructuredName(input.fullName)}`,
     `FN:${escapeVcard(input.fullName.trim())}`,
   ];
@@ -399,7 +399,7 @@ export function buildCardVcard(input: CardVcardInput) {
   if (cardPage) {
     const cardAlreadyLinked = lines.some((line) => line.includes(cardPage));
     if (!cardAlreadyLinked) {
-      appendLabeledUrl(lines, nextItemIndex, "AfterMeet card", cardPage);
+      appendLabeledUrl(lines, nextItemIndex, "Ehllo card", cardPage);
       nextItemIndex += 1;
     }
   }

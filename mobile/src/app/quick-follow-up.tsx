@@ -688,7 +688,7 @@ export default function QuickFollowUpScreen() {
         message={queuedOffline
           ? "You're offline — this will be added to Follow-ups automatically the moment you reconnect."
           : newGuestName
-            ? `It is now in Follow-ups. We also emailed ${newGuestName} to let them know and invite them to claim their own AfterMeet card.`
+            ? `It is now in Follow-ups. We also emailed ${newGuestName} to let them know and invite them to claim their own Ehllo card.`
             : 'It is now in Follow-ups and will stay there until you complete it.'}
         onClose={() => router.replace('/settings/follow-ups')}
       />

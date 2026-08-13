@@ -1291,7 +1291,7 @@ export default function NewEncounterPage() {
                 }}
                 placeholder={transcriptSupported ? "Your transcript will appear here while you record…" : "Live transcription is unavailable in this browser. Paste or type the transcript here."}
               />
-              {!transcriptSupported && <small>Audio recording is working, but this browser could not provide live speech-to-text. AfterMeet will transcribe the recording when you stop, or you can type or paste a transcript here.</small>}
+              {!transcriptSupported && <small>Audio recording is working, but this browser could not provide live speech-to-text. Ehllo will transcribe the recording when you stop, or you can type or paste a transcript here.</small>}
               {transcriptionRetryable && audioUrl ? (
                 <Button variant="secondary" onClick={() => void maybeTranscribeFromServer(audioBlobRef.current!, finalTranscriptRef.current)}>
                   Retry transcription
@@ -1503,7 +1503,7 @@ export default function NewEncounterPage() {
               </button>
               {audioSettingsOpen && (
                 <div className="local-audio-settings">
-                  <div><strong>Where should the recording live?</strong><small>Transcript, summary, and reviewed follow-ups sync separately in AfterMeet.</small></div>
+                  <div><strong>Where should the recording live?</strong><small>Transcript, summary, and reviewed follow-ups sync separately in Ehllo.</small></div>
                   <SelectField label="Recording storage" value={recordingDestination} onChange={(event) => setRecordingDestination(event.target.value as RecordingDestination)}>
                     <option value="local_only">Local only on this device</option>
                     <option value="shared_3_days">Share online for 3 days</option>
@@ -1582,7 +1582,7 @@ export default function NewEncounterPage() {
               {confirmedPeople.length > 1 && (
                 <div className="encounter-followup-people">
                   <strong>Applies to everyone</strong>
-                  <small>AfterMeet creates one reminder per person so each relationship stays separate.</small>
+                  <small>Ehllo creates one reminder per person so each relationship stays separate.</small>
                   <div>{confirmedPeople.map((person) => <span key={`${person.name}-${person.email}`}>{person.name}</span>)}</div>
                 </div>
               )}

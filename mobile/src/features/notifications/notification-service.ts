@@ -74,7 +74,7 @@ export async function configureNotificationChannel() {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
     name: 'Follow-up reminders',
-    description: 'Reminders for follow-ups you chose in AfterMeet.',
+    description: 'Reminders for follow-ups you chose in Ehllo.',
     importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 250, 180, 250],
     lightColor: '#9FE870',
@@ -141,7 +141,7 @@ export async function syncFollowUpNotifications(items: FollowUpItem[]) {
       identifier: `aftermeet-followup-${item.encounterId}-${item.actionId}`,
       content: {
         title: `Follow up with ${item.personName.trim() || 'your connection'}`,
-        body: item.title.trim() || 'You have a follow-up waiting in AfterMeet.',
+        body: item.title.trim() || 'You have a follow-up waiting in Ehllo.',
         sound: 'default',
         badge: open.length,
         data: {
@@ -175,7 +175,7 @@ export async function recordNotification(notification: Notifications.Notificatio
   const data = content.data as { route?: unknown } | undefined;
   const item: NotificationHistoryItem = {
     id: notification.request.identifier,
-    title: content.title || 'AfterMeet reminder',
+    title: content.title || 'Ehllo reminder',
     body: content.body || '',
     receivedAt: new Date().toISOString(),
     route: typeof data?.route === 'string' ? data.route : '/settings/follow-ups',

@@ -42,7 +42,7 @@ export function MobileReturnClient({ appBaseUrl }: { appBaseUrl: string }) {
         <section className="auth-panel">
           <BrandMark size={40} />
           <h1>Missing sign-in response</h1>
-          <p className="auth-copy">Request a new email link from the AfterMeet app, then open it on this phone.</p>
+          <p className="auth-copy">Request a new email link from the Ehllo app, then open it on this phone.</p>
         </section>
       </main>
     );
@@ -52,9 +52,9 @@ export function MobileReturnClient({ appBaseUrl }: { appBaseUrl: string }) {
     <main className="auth-shell">
       <section className="auth-panel">
         <BrandMark size={40} />
-        <h1>Continue in AfterMeet</h1>
+        <h1>Continue in Ehllo</h1>
         <p className="auth-copy">
-          Your email sign-in succeeded. Tap below to return to the AfterMeet app and finish signing in.
+          Your email sign-in succeeded. Tap below to return to the Ehllo app and finish signing in.
         </p>
         <button
           type="button"
@@ -63,11 +63,11 @@ export function MobileReturnClient({ appBaseUrl }: { appBaseUrl: string }) {
             setOpened(true);
             window.location.assign(appLink);
           }}>
-          Open AfterMeet
+          Open Ehllo
         </button>
         {opened ? (
           <p className="auth-copy">
-            If nothing opened, switch back to AfterMeet and enter the 6-digit code from your email instead.
+            If nothing opened, switch back to Ehllo and enter the 6-digit code from your email instead.
           </p>
         ) : null}
       </section>

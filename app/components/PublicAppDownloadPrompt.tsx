@@ -39,8 +39,8 @@ export function PublicAppDownloadPrompt({
         <p>
           {ownerName} has your details.
           {visitorEmail
-            ? ` Sign in with ${visitorEmail} on AfterMeet to keep everyone you meet in one place.`
-            : " Sign in on AfterMeet to keep everyone you meet in one place."}
+            ? ` Sign in with ${visitorEmail} on Ehllo to keep everyone you meet in one place.`
+            : " Sign in on Ehllo to keep everyone you meet in one place."}
         </p>
 
         <div className="public-app-download-actions">

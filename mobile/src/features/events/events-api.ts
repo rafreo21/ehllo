@@ -49,7 +49,7 @@ export async function fetchMyEvents(accessToken: string): Promise<EventItem[]> {
   const response = await mobileFetch('/api/events', accessToken);
   const payload = await readMobileApiJson<{ events?: Array<Record<string, unknown>>; error?: string }>(
     response,
-    'Could not read your events from AfterMeet.',
+    'Could not read your events from Ehllo.',
   );
   if (!response.ok) throw new Error(payload.error || 'Could not load your events.');
   return (payload.events ?? []).map(mapEvent);

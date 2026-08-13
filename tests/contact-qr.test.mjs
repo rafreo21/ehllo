@@ -19,7 +19,7 @@ test("buildContactQrPayload encodes offline contact data with labeled card URL",
   assert.match(payload, /EMAIL;TYPE=INTERNET:alex@example.com/);
   assert.match(payload, /TEL;TYPE=CELL,VOICE:\+15550100/);
   assert.match(payload, /item1\.URL:https:\/\/aftermeet\.app\/c\/alex/);
-  assert.match(payload, /item1\.X-ABLabel:AfterMeet card/);
+  assert.match(payload, /item1\.X-ABLabel:Ehllo card/);
   assert.match(payload, /END:VCARD$/);
 });
 

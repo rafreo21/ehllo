@@ -32,7 +32,7 @@ export function buildHubSpotContactProperties(payload: CrmSyncPayload) {
 
 export function buildHubSpotNoteBody(payload: CrmSyncPayload) {
   const lines = [
-    "AfterMeet relationship sync",
+    "Ehllo relationship sync",
     "",
     contactSummary(payload.contact),
   ];

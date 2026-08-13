@@ -14,8 +14,8 @@ export function BrandMark({ size = 36 }: BrandMarkProps) {
         source={logo}
         style={{ width: size, height: size, borderRadius: radius }}
         contentFit="contain"
-        accessibilityLabel="AfterMeet"
-        alt="AfterMeet"
+        accessibilityLabel="Ehllo"
+        alt="Ehllo"
       />
     </View>
   );

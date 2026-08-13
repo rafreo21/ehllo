@@ -19,7 +19,7 @@ export function nfcManufacturerPayload(cardUrl: string, vcard?: string) {
       {
         recordType: "MIME",
         mimeType: "text/vcard",
-        payload: vcard || "Generate from your AfterMeet card contact export.",
+        payload: vcard || "Generate from your Ehllo card contact export.",
       },
       {
         recordType: "URI",

@@ -132,7 +132,7 @@ export default function NotificationPreferencesScreen() {
       setDevicePermission(granted);
       if (!granted) {
         setDeviceEnabled(false);
-        setNotificationMessage('Notifications are blocked. Enable them for AfterMeet in your device settings.');
+        setNotificationMessage('Notifications are blocked. Enable them for Ehllo in your device settings.');
         return;
       }
 
@@ -159,7 +159,7 @@ export default function NotificationPreferencesScreen() {
       <Screen header={header}>
         <Panel>
           <Text style={styles.preferenceTitle}>Sign in required</Text>
-          <Text style={styles.linkHint}>Sign in to choose how AfterMeet reminds you about follow-ups.</Text>
+          <Text style={styles.linkHint}>Sign in to choose how Ehllo reminds you about follow-ups.</Text>
         </Panel>
       </Screen>
     );
@@ -273,7 +273,7 @@ export default function NotificationPreferencesScreen() {
           ))}
         </View>
         <Text style={styles.linkHint}>
-          {pushActive ? 'Background alerts are on.' : 'Reminders work while AfterMeet is open or recently used.'}
+          {pushActive ? 'Background alerts are on.' : 'Reminders work while Ehllo is open or recently used.'}
         </Text>
       </BottomSheet>
 

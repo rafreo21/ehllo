@@ -32,7 +32,7 @@ test("buildCardVcard writes structured name fields for iOS and Android", () => {
   assert.match(body, /item1\.URL:https:\/\/linkedin\.com\/in\/rafreo/);
   assert.match(body, /item1\.X-ABLabel:LinkedIn/);
   assert.match(body, /item2\.URL:https:\/\/aftermeet-beta\.vercel\.app\/c\/card-abc/);
-  assert.match(body, /item2\.X-ABLabel:AfterMeet card/);
+  assert.match(body, /item2\.X-ABLabel:Ehllo card/);
   assert.doesNotMatch(body, /^URL:https:\/\/aftermeet-beta\.vercel\.app/m);
   assert.match(body, /NOTE:.*When we met: 26 July 2026/s);
   assert.match(body, /END:VCARD\r\n$/);

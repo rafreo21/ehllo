@@ -44,7 +44,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
       slug: normalized,
       fullName: "Preview User",
       role: "Consultant",
-      company: "AfterMeet",
+      company: "Ehllo",
       bio: "Preview pass for local development.",
       themeColor: "#9fe870",
       cardUrl: cardUrlForSlug(normalized, request),

@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       retention: "never",
     };
     const { error } = await supabase.from("encounters").update({ recording_metadata: recording }).eq("id", encounterId).eq("workspace_id", user.workspaceId);
-    if (error) return NextResponse.json({ error: "Saved to Drive, but AfterMeet could not update the encounter." }, { status: 500 });
+    if (error) return NextResponse.json({ error: "Saved to Drive, but Ehllo could not update the encounter." }, { status: 500 });
     return NextResponse.json({ ok: true, recording });
   } catch (error) {
     if (error instanceof GoogleDriveError) {

@@ -10,7 +10,7 @@ import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
 import { fetchContacts } from '@/features/connections/connections-api';
 import type { SavedDirectoryContact } from '@/features/connections/connection-directory';
-import { saveConnectionToAfterMeet } from '@/features/connections/save-connection-contact';
+import { saveConnectionToEhllo } from '@/features/connections/save-connection-contact';
 import { fetchInboundExchanges, type InboundExchange } from '@/features/encounters/encounter-api';
 import { normalizeEmailForMatching, normalizePhoneForMatching } from '@/lib/contact-identity';
 import { mobileFetch } from '@/lib/mobile-api';
@@ -115,7 +115,7 @@ export default function RecentScansScreen() {
     setError('');
     const exchange = group.latest;
     try {
-      await saveConnectionToAfterMeet(accessToken, {
+      await saveConnectionToEhllo(accessToken, {
         id: `inbound-${exchange.id}`,
         sourceId: exchange.id,
         name: exchange.visitor_name || 'Unknown visitor',

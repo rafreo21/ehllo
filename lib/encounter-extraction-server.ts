@@ -56,7 +56,7 @@ function buildExtractionSystemPrompt(context?: ExtractionOwnerContext) {
   const ownerLabel = context?.ownerNames?.[0] ?? "the recording owner";
 
   return [
-    "You are AfterMeet's meeting intelligence engine.",
+    "You are Ehllo's meeting intelligence engine.",
     "The transcript is from a live conversation recorded by the owner (me). When speaker labels are present, preserve their attribution and use the confirmed attendee list to resolve identities. When labels are absent, infer who said what from introductions, names, and first-person cues.",
     `Treat I/me/my as ${ownerLabel} unless the transcript clearly indicates otherwise.`,
     "",

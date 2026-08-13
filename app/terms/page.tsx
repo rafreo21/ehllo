@@ -3,8 +3,8 @@ import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
 import { BrandMark } from "../components/BrandMark";
 
 export const metadata: Metadata = {
-  title: "Terms of Use · AfterMeet",
-  description: "The terms that govern your use of AfterMeet.",
+  title: "Terms of Use · Ehllo",
+  description: "The terms that govern your use of Ehllo.",
 };
 
 const LAST_UPDATED = "August 10, 2026";
@@ -14,7 +14,7 @@ export default function TermsPage() {
     <main className="mx-auto w-full max-w-[760px] px-6 py-16 text-[#163300]">
       <a href="/" className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-[#163300] hover:text-[#0e0f0c]">
         <ArrowLeftIcon size={15} weight="bold" />
-        AfterMeet
+        Ehllo
       </a>
       <div className="mb-10 flex items-center gap-3">
         <BrandMark size={36} />
@@ -27,8 +27,8 @@ export default function TermsPage() {
       <div className="space-y-10 text-[15px] leading-relaxed text-[#163300]">
         <section>
           <p>
-            These terms govern your use of AfterMeet. By creating an account or using the product, you agree
-            to them. If you&apos;re using AfterMeet on behalf of an organization, you&apos;re agreeing on its
+            These terms govern your use of Ehllo. By creating an account or using the product, you agree
+            to them. If you&apos;re using Ehllo on behalf of an organization, you&apos;re agreeing on its
             behalf and confirming you have the authority to do so.
           </p>
         </section>
@@ -36,7 +36,7 @@ export default function TermsPage() {
         <section>
           <h2 className="mb-3 text-xl font-bold tracking-tight">The service</h2>
           <p>
-            AfterMeet helps you capture people you meet, record context from those meetings, and turn that
+            Ehllo helps you capture people you meet, record context from those meetings, and turn that
             into follow-ups and event tracking. Some features are AI-assisted (note summarization, follow-up
             drafting) &mdash; you review and approve AI-generated content before it&apos;s sent or acted on.
           </p>
@@ -54,10 +54,10 @@ export default function TermsPage() {
         <section>
           <h2 className="mb-3 text-xl font-bold tracking-tight">Connected accounts (Google, Microsoft)</h2>
           <p>
-            If you connect a Google or Microsoft account, you authorize AfterMeet to act within the specific
+            If you connect a Google or Microsoft account, you authorize Ehllo to act within the specific
             scopes you grant &mdash; sending an email only when you approve a draft, reading calendar events to
             suggest and link events, and creating files only within an app-scoped folder. You can revoke this
-            access at any time from Settings, and doing so stops AfterMeet from making further requests to that
+            access at any time from Settings, and doing so stops Ehllo from making further requests to that
             account. See our <a className="font-bold underline" href="/privacy">Privacy Policy</a> for details
             on how this data is used.
           </p>
@@ -67,7 +67,7 @@ export default function TermsPage() {
           <h2 className="mb-3 text-xl font-bold tracking-tight">Acceptable use</h2>
           <p>You agree not to:</p>
           <ul className="list-disc space-y-2 pl-5">
-            <li>Use AfterMeet to send spam, unsolicited bulk email, or harassing messages.</li>
+            <li>Use Ehllo to send spam, unsolicited bulk email, or harassing messages.</li>
             <li>Attempt to access another user&apos;s account or data without authorization.</li>
             <li>Reverse engineer, scrape, or interfere with the operation of the service.</li>
             <li>Use the service in a way that violates applicable law, including data protection law.</li>
@@ -86,7 +86,7 @@ export default function TermsPage() {
         <section>
           <h2 className="mb-3 text-xl font-bold tracking-tight">Service availability</h2>
           <p>
-            AfterMeet is provided &ldquo;as is&rdquo; while we build and improve it. We don&apos;t guarantee
+            Ehllo is provided &ldquo;as is&rdquo; while we build and improve it. We don&apos;t guarantee
             uninterrupted availability and may change or discontinue features. We&apos;ll do our best to give
             notice of material changes that affect your data.
           </p>
@@ -95,7 +95,7 @@ export default function TermsPage() {
         <section>
           <h2 className="mb-3 text-xl font-bold tracking-tight">Termination</h2>
           <p>
-            You can stop using AfterMeet and delete your account at any time from Settings. We may suspend or
+            You can stop using Ehllo and delete your account at any time from Settings. We may suspend or
             terminate accounts that violate these terms.
           </p>
         </section>

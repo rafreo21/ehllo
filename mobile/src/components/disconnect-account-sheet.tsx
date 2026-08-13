@@ -28,7 +28,7 @@ export function DisconnectAccountSheet({
         </>
       }>
       <Body>
-        AfterMeet will lose access to {providerName} until you reconnect. Approved drafts already sent and existing AfterMeet data are not affected.
+        Ehllo will lose access to {providerName} until you reconnect. Approved drafts already sent and existing Ehllo data are not affected.
       </Body>
     </BottomSheet>
   );

@@ -168,7 +168,7 @@ export function resolveActionLink(
   action: Pick<EncounterAction, "channel" | "title" | "dueAt">,
   context: ActionLinkContext,
 ): ActionLink {
-  const subject = context.encounterTitle || "Follow-up from AfterMeet";
+  const subject = context.encounterTitle || "Follow-up from Ehllo";
   const body = action.title.trim();
 
   switch (action.channel) {
@@ -192,7 +192,7 @@ export function resolveActionLink(
     }
     case "meeting": {
       const title = body || `Meeting with ${context.personName || "contact"}`;
-      const details = `Scheduled from AfterMeet${context.encounterTitle ? `: ${context.encounterTitle}` : ""}.`;
+      const details = `Scheduled from Ehllo${context.encounterTitle ? `: ${context.encounterTitle}` : ""}.`;
       return {
         href: googleCalendarLink(title, details, action.dueAt),
         label: "Schedule in Google Calendar",
@@ -268,7 +268,7 @@ export function resolveSecondaryActionLinks(
   action: Pick<EncounterAction, "channel" | "title" | "dueAt">,
   context: ActionLinkContext,
 ): ActionLink[] {
-  const subject = context.encounterTitle || "Follow-up from AfterMeet";
+  const subject = context.encounterTitle || "Follow-up from Ehllo";
   const body = action.title.trim();
   const links: ActionLink[] = [];
 
@@ -292,7 +292,7 @@ export function resolveSecondaryActionLinks(
 
   if (action.channel === "meeting") {
     const title = body || `Meeting with ${context.personName || "contact"}`;
-    const details = `Scheduled from AfterMeet${context.encounterTitle ? `: ${context.encounterTitle}` : ""}.`;
+    const details = `Scheduled from Ehllo${context.encounterTitle ? `: ${context.encounterTitle}` : ""}.`;
     links.push({
       href: outlookCalendarLink(title, details, action.dueAt),
       label: "Outlook Calendar",

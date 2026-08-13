@@ -45,7 +45,7 @@ export function buildReminderDigestEmail(items: FollowUpItem[], appUrl: string) 
       <table role="presentation" width="100%" style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;" cellpadding="0" cellspacing="0">
         <tr>
           <td style="padding:24px 24px 0;">
-            <img src="data:image/png;base64,${AFTERMEET_LOGO_PNG_BASE64}" alt="AfterMeet" width="36" height="36" style="display:block;border-radius:8px;" />
+            <img src="data:image/png;base64,${AFTERMEET_LOGO_PNG_BASE64}" alt="Ehllo" width="36" height="36" style="display:block;border-radius:8px;" />
           </td>
         </tr>
         <tr>
@@ -72,7 +72,7 @@ export function buildReminderDigestEmail(items: FollowUpItem[], appUrl: string) 
         </tr>
         <tr>
           <td style="padding:0 24px 24px;">
-            <p style="margin:0;font-size:11px;color:#8b948a;">You're getting this because you have overdue follow-ups in AfterMeet. Turn this off any time in Settings.</p>
+            <p style="margin:0;font-size:11px;color:#8b948a;">You're getting this because you have overdue follow-ups in Ehllo. Turn this off any time in Settings.</p>
           </td>
         </tr>
       </table>

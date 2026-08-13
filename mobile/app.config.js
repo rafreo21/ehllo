@@ -36,7 +36,7 @@ const BACKEND = IS_STAGING
 
 module.exports = {
   expo: {
-    name: IS_STAGING ? "AfterMeet Staging" : "AfterMeet",
+    name: IS_STAGING ? "Ehllo Staging" : "Ehllo",
     owner: "rafreo",
     slug: EAS_PROJECT.slug,
     version: "1.0.1",
@@ -123,33 +123,33 @@ module.exports = {
       [
         "expo-camera",
         {
-          cameraPermission: "Allow AfterMeet to scan contact card QR codes.",
+          cameraPermission: "Allow Ehllo to scan contact card QR codes.",
         },
       ],
       [
         "expo-contacts",
         {
-          contactsPermission: "Allow AfterMeet to save people you meet to your contacts.",
+          contactsPermission: "Allow Ehllo to save people you meet to your contacts.",
         },
       ],
       [
         "expo-image-picker",
         {
-          photosPermission: "Allow AfterMeet to use photos on your contact card.",
+          photosPermission: "Allow Ehllo to use photos on your contact card.",
         },
       ],
       [
         "expo-audio",
         {
-          microphonePermission: "Allow AfterMeet to record meetings you choose to capture.",
+          microphonePermission: "Allow Ehllo to record meetings you choose to capture.",
           enableBackgroundRecording: true,
         },
       ],
       [
         "expo-speech-recognition",
         {
-          microphonePermission: "Allow AfterMeet to record meetings you choose to capture.",
-          speechRecognitionPermission: "Allow AfterMeet to transcribe your meetings while you record.",
+          microphonePermission: "Allow Ehllo to record meetings you choose to capture.",
+          speechRecognitionPermission: "Allow Ehllo to transcribe your meetings while you record.",
           androidSpeechServicePackages: [
             "com.google.android.googlequicksearchbox",
             "com.google.android.tts",
@@ -165,19 +165,19 @@ module.exports = {
           widgets: [
             {
               name: "QrScanWidget",
-              displayName: "AfterMeet QR Scan",
+              displayName: "Ehllo QR Scan",
               description: "Large scannable QR code for your card.",
               supportedFamilies: ["systemSmall"],
             },
             {
               name: "BusinessCardWidget",
-              displayName: "AfterMeet Business Card",
+              displayName: "Ehllo Business Card",
               description: "QR code plus your name, role, and company.",
               supportedFamilies: ["systemMedium"],
             },
             {
               name: "RecentConnectionsWidget",
-              displayName: "AfterMeet Recent Connections",
+              displayName: "Ehllo Recent Connections",
               description: "Recent people who shared their details with you.",
               supportedFamilies: ["systemMedium"],
             },
@@ -189,7 +189,7 @@ module.exports = {
       [
         "react-native-nfc-manager",
         {
-          nfcPermission: "Allow AfterMeet to program NFC tags and share your card when someone taps your phone.",
+          nfcPermission: "Allow Ehllo to program NFC tags and share your card when someone taps your phone.",
         },
       ],
       "./plugins/withAndroidNfcHce",

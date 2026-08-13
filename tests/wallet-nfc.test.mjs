@@ -68,7 +68,7 @@ test("html email signature includes structured layout and card link", async () =
   assert.match(html, /View my card/);
   assert.match(html, /alex@aftermeet.app/);
   assert.match(html, /Product designer/);
-  assert.match(html, /AfterMeet email signature/);
+  assert.match(html, /Ehllo email signature/);
   assert.match(html, /data:image\/png;base64,abc/);
 });
 

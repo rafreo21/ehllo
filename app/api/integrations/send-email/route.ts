@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
   const accessToken = await getConnectedAccountAccessToken(user, provider);
   if (!accessToken) {
-    return NextResponse.json({ error: `Connect ${provider === "google" ? "Google" : "Microsoft"} before sending from AfterMeet.` }, { status: 409 });
+    return NextResponse.json({ error: `Connect ${provider === "google" ? "Google" : "Microsoft"} before sending from Ehllo.` }, { status: 409 });
   }
 
   try {

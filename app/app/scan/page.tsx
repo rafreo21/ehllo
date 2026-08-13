@@ -125,7 +125,7 @@ export default function ScanPage() {
     if (parsed.type === "aftermeet_card") {
       const response = await fetch(`/api/cards/public/${encodeURIComponent(parsed.slug)}`);
       if (!response.ok) {
-        setLoadError("We found an AfterMeet card, but it isn’t published yet.");
+        setLoadError("We found an Ehllo card, but it isn’t published yet.");
         setCard(null);
         return;
       }
@@ -248,7 +248,7 @@ export default function ScanPage() {
             <div className="flow-heading">
               <div>
                 <h1>Scan a badge or card QR</h1>
-                <p>AfterMeet cards, LinkedIn profile codes, and vCards all work here.</p>
+                <p>Ehllo cards, LinkedIn profile codes, and vCards all work here.</p>
               </div>
             </div>
             <div className="scan-panel">
@@ -308,7 +308,7 @@ export default function ScanPage() {
             <header>
               <h1>{target.type === "aftermeet_card" ? card?.fullName || `@${target.slug}` : target.type === "linkedin" ? `@${target.handle}` : "Ready to add"}</h1>
               {target.type === "aftermeet_card" && card ? (
-                <p>{[card.role, card.company].filter(Boolean).join(" · ") || "AfterMeet card"}</p>
+                <p>{[card.role, card.company].filter(Boolean).join(" · ") || "Ehllo card"}</p>
               ) : null}
             </header>
             {loadError ? <StatusMessage tone="error">{loadError}</StatusMessage> : null}

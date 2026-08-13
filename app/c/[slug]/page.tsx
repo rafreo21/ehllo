@@ -40,10 +40,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const card = await getCard(slug);
   return card
     ? {
-        title: `${card.full_name} · AfterMeet`,
+        title: `${card.full_name} · Ehllo`,
         description: [card.job_title, card.company].filter(Boolean).join(" at "),
       }
-    : { title: "Contact card · AfterMeet" };
+    : { title: "Contact card · Ehllo" };
 }
 
 export default async function PublicCardPage({ params }: { params: Params }) {

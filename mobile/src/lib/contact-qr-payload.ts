@@ -31,13 +31,13 @@ function buildWhenWeMetNote(cardUrl: string, scannedAt = new Date(), eventTitle?
   });
   const trimmedEvent = eventTitle?.trim();
   const whereLine = trimmedEvent ? `Where we met: ${trimmedEvent}\n` : '';
-  return `${whereLine}When we met: ${date}\nSaved from AfterMeet\n${cardUrl}`;
+  return `${whereLine}When we met: ${date}\nSaved from Ehllo\n${cardUrl}`;
 }
 
 export type MobileContactQrOptions = {
   /** Keep every contact method; drop bio / cover / photos to shrink QR. */
   lean?: boolean;
-  /** Name, primary email/phone, and AfterMeet card URL only (last resort). */
+  /** Name, primary email/phone, and Ehllo card URL only (last resort). */
   minimal?: boolean;
   /** Omit photo/logo URI lines (methods stay complete). */
   omitImages?: boolean;
@@ -79,7 +79,7 @@ export function buildMobileContactQrPayload(
   const lines = [
     'BEGIN:VCARD',
     'VERSION:3.0',
-    'PRODID:-//AfterMeet//Contact Card//EN',
+    'PRODID:-//Ehllo//Contact Card//EN',
     `N:${escapeVcard(lastName)};${escapeVcard(firstName)};;;`,
     `FN:${escapeVcard(visible.name.trim())}`,
   ];
@@ -101,7 +101,7 @@ export function buildMobileContactQrPayload(
     const cardAlreadyLinked = lines.some((line) => line.includes(cardPage));
     if (!cardAlreadyLinked) {
       lines.push(`item${nextItemIndex}.URL:${escapeVcard(cardPage)}`);
-      lines.push(`item${nextItemIndex}.X-ABLabel:${escapeVcard('AfterMeet card')}`);
+      lines.push(`item${nextItemIndex}.X-ABLabel:${escapeVcard('Ehllo card')}`);
       nextItemIndex += 1;
     }
   }

@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   let response: Response;
   try {
     response = await fetchExternalUrlSafely(url, {
-      headers: { "User-Agent": "AfterMeet-EventLinkPreview/1.0" },
+      headers: { "User-Agent": "Ehllo-EventLinkPreview/1.0" },
       signal: AbortSignal.timeout(8_000),
     });
   } catch (error) {

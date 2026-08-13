@@ -21,7 +21,7 @@ export type WidgetCardPayload = {
 export const WIDGET_DEMO_CARD: WidgetCardPayload = {
   name: 'Alex Morgan',
   role: 'Product Designer',
-  company: 'AfterMeet',
+  company: 'Ehllo',
   cardUrl: 'https://aftermeet.app/c/demo',
   shareDeepLink: 'aftermeet://share-card',
   initials: 'AM',

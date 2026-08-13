@@ -11,7 +11,7 @@ import {
 test("buildEmailShareUrl encodes subject and body", () => {
   const url = buildEmailShareUrl("https://aftermeet.app/c/alex", "Alex Morgan");
   assert.match(url, /^mailto:\?subject=/);
-  assert.match(decodeURIComponent(url), /Alex Morgan's AfterMeet card/);
+  assert.match(decodeURIComponent(url), /Alex Morgan's Ehllo card/);
 });
 
 test("buildSmsShareUrl includes card url in body", () => {
@@ -29,7 +29,7 @@ test("buildLinkedInShareUrl wraps the public card url", () => {
 test("buildWhenWeMetNote includes date and card url", () => {
   const note = buildWhenWeMetNote("https://aftermeet.app/c/alex", new Date("2026-07-26T12:00:00.000Z"));
   assert.match(note, /When we met: 26 July 2026/);
-  assert.match(note, /Saved from AfterMeet/);
+  assert.match(note, /Saved from Ehllo/);
 });
 
 test("buildWhenWeMetNote omits the where-we-met line when there's no event", () => {

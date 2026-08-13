@@ -19,7 +19,7 @@ const EMBEDDED_LOGO_BUFFER = Buffer.from(AFTERMEET_LOGO_PNG_BASE64, "base64");
 
 let logoBufferPromise: Promise<Buffer> | null = null;
 
-async function loadAfterMeetLogoBuffer() {
+async function loadEhlloLogoBuffer() {
   if (!logoBufferPromise) {
     logoBufferPromise = (async () => {
       const candidates = [
@@ -52,7 +52,7 @@ export async function buildBrandedQrPngBuffer(payload: string, size = 1024) {
   if (!sharpAvailable()) return qrBuffer;
   const sharp = await loadSharp();
 
-  const logoBuffer = await loadAfterMeetLogoBuffer();
+  const logoBuffer = await loadEhlloLogoBuffer();
   const logoSize = Math.round(size * 0.24);
   const badgePadding = Math.max(5, Math.round(size * 0.014));
   const badgeSize = logoSize + badgePadding * 2;
@@ -95,7 +95,7 @@ export async function buildBrandedQrPngBuffer(payload: string, size = 1024) {
 export async function buildBrandedQrDataUri(payload: string, size = 1024) {
   const [qrSvg, logoBuffer] = await Promise.all([
     QRCode.toString(payload, { ...QR_OPTIONS, type: "svg", width: size }),
-    loadAfterMeetLogoBuffer(),
+    loadEhlloLogoBuffer(),
   ]);
   const qrDataUri = `data:image/svg+xml;base64,${Buffer.from(qrSvg).toString("base64")}`;
 
@@ -132,7 +132,7 @@ export async function buildWalletLogoBuffers() {
     throw new Error("Wallet pass images require sharp, which isn't available in this local dev sandbox. Test this against a Vercel preview instead.");
   }
   const sharp = await loadSharp();
-  const logoBuffer = await loadAfterMeetLogoBuffer();
+  const logoBuffer = await loadEhlloLogoBuffer();
   const [icon, icon2x, logo, logo2x] = await Promise.all([
     sharp(logoBuffer).resize(29, 29, { fit: "contain", background: { r: 135, g: 234, b: 92, alpha: 1 } }).png().toBuffer(),
     sharp(logoBuffer).resize(58, 58, { fit: "contain", background: { r: 135, g: 234, b: 92, alpha: 1 } }).png().toBuffer(),

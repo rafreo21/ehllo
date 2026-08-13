@@ -32,7 +32,7 @@ import {
   type ConnectionItem,
 } from '@/features/connections/connections-api';
 import {
-  saveConnectionToAfterMeet,
+  saveConnectionToEhllo,
   saveConnectionToDeviceContacts,
   updateConnectionDirectory,
 } from '@/features/connections/save-connection-contact';
@@ -306,7 +306,7 @@ export default function ConnectionDetailScreen() {
         await updateConnectionDirectory(accessToken, connection, card);
         showSuccess('Directory updated with the latest card details.');
       } else {
-        await saveConnectionToAfterMeet(accessToken, connection, card);
+        await saveConnectionToEhllo(accessToken, connection, card);
         await saveConnectionToDeviceContacts(connection, card);
         showSuccess('Saved to your directory.');
       }
@@ -314,7 +314,7 @@ export default function ConnectionDetailScreen() {
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : 'Could not save this connection.';
       if (message.toLowerCase().includes('session has expired')) {
-        showError('Your app session could not reach AfterMeet. Sign out from Settings, sign in again, then retry.');
+        showError('Your app session could not reach Ehllo. Sign out from Settings, sign in again, then retry.');
       } else {
         showError(message);
       }

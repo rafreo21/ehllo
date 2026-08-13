@@ -10,7 +10,7 @@ import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
 const SETTINGS_LINKS: { href: string; icon: React.ReactNode; label: string; hint: string }[] = [
   { href: "/app/settings/edit-profile", icon: <IdentificationBadgeIcon size={20} weight="bold" />, label: "Edit profile", hint: "Full name and phone number" },
   { href: "/app/settings/recent-scans", icon: <ScanIcon size={20} weight="bold" />, label: "Recent scans", hint: "People who scanned your card but aren't saved yet" },
-  { href: "/app/settings/notifications", icon: <BellIcon size={20} weight="bold" />, label: "Notification preferences", hint: "How AfterMeet reminds you about follow-ups" },
+  { href: "/app/settings/notifications", icon: <BellIcon size={20} weight="bold" />, label: "Notification preferences", hint: "How Ehllo reminds you about follow-ups" },
   { href: "/app/settings/connected-accounts", icon: <PlugsIcon size={20} weight="bold" />, label: "Connected accounts", hint: "Google, Microsoft, and future integrations" },
   { href: "/app/settings/recording-storage", icon: <CloudArrowUpIcon size={20} weight="bold" />, label: "Recording storage", hint: "Where new recordings are stored by default" },
 ];

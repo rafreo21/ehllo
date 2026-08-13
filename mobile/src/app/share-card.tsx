@@ -138,7 +138,7 @@ export default function ShareCardScreen() {
 
   async function shareCard() {
     await Share.share({
-      title: `${card.name} · AfterMeet`,
+      title: `${card.name} · Ehllo`,
       message: `${card.name}\n${card.role}${showCompany && card.company ? ` at ${card.company}` : ''}\n${publicUrl}`,
       url: publicUrl,
     });

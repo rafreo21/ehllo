@@ -28,10 +28,10 @@ function buildSummary(execution: FollowUpExecution) {
   const methodLabel = missingMethodLabel(execution);
 
   if (hasEmail) {
-    return `${execution.message} We can notify them in AfterMeet, or open your mail app with a draft asking for ${methodLabel}.`;
+    return `${execution.message} We can notify them in Ehllo, or open your mail app with a draft asking for ${methodLabel}.`;
   }
 
-  return `${execution.message} We can notify them in AfterMeet so they can add ${methodLabel} to their card.`;
+  return `${execution.message} We can notify them in Ehllo so they can add ${methodLabel} to their card.`;
 }
 
 export function FollowUpMissingSheet({
@@ -53,7 +53,7 @@ export function FollowUpMissingSheet({
 
       {execution.type === 'request' ? (
         <Button loading={loading} onPress={onRequest}>
-          Request via AfterMeet
+          Request via Ehllo
         </Button>
       ) : null}
 
