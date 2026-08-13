@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { MAX_CARDS } from "../../../../lib/card-library";
+import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
 import { resolveCardImagesForPublish } from "../../../../lib/card-publish-images";
-import { createClient } from "../../../../lib/supabase/server";
 import { createServiceSupabaseClient } from "../../../../lib/supabase/service";
 
 const slugPattern = /^card-[a-f0-9]{16}$|^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -14,6 +14,7 @@ export async function POST(request: Request) {
   const slug = typeof body?.slug === "string" ? body.slug.trim() : "";
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   const theme = typeof body?.theme === "string" ? body.theme : "";
+  const expectedUpdatedAt = typeof body?.expectedUpdatedAt === "string" ? body.expectedUpdatedAt : null;
 
   if (!slugPattern.test(slug) || name.length < 2 || name.length > 100 || !themePattern.test(theme)) {
     return NextResponse.json({ error: "Complete the card name and design before publishing." }, { status: 400 });
@@ -42,11 +43,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, preview: true, maxCards: MAX_CARDS });
   }
 
-  const supabase = await createClient();
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData.user) {
+  const user = await resolveApiUser(request);
+  if (!user) {
     return NextResponse.json({ error: "Your session has expired." }, { status: 401 });
   }
+  const supabase = await createApiSupabaseClient(request);
 
   const cardId = typeof body?.id === "string" ? body.id.trim() : "";
   let photo = typeof body?.photo === "string" ? body.photo : "";
@@ -55,11 +56,9 @@ export async function POST(request: Request) {
 
   const service = createServiceSupabaseClient();
   if (service && cardId) {
-    const { data: context } = await supabase.rpc("get_my_app_context").single();
-    const workspaceId = (context as { workspace_id?: string } | null)?.workspace_id;
-    if (workspaceId) {
+    if (user.workspaceId) {
       try {
-        const resolved = await resolveCardImagesForPublish(service, workspaceId, cardId, {
+        const resolved = await resolveCardImagesForPublish(service, user.workspaceId, cardId, {
           photo,
           coverPhoto,
           companyLogo,
@@ -85,14 +84,31 @@ export async function POST(request: Request) {
     p_cover_image_url: coverPhoto,
     p_show_company_details: body?.showCompanyDetails !== false,
     p_methods: safeMethods,
+    p_expected_updated_at: expectedUpdatedAt,
   });
 
   if (error) {
     const limitReached = error.message.toLowerCase().includes("five active cards");
+    const conflict = error.message.toLowerCase().includes("card_conflict");
     return NextResponse.json(
-      { error: limitReached ? `You can publish a maximum of ${MAX_CARDS} cards.` : "We couldn’t publish this card." },
-      { status: limitReached ? 409 : 500 },
+      {
+        error: conflict
+          ? "This card changed on another device. Reload the latest card before publishing again."
+          : limitReached ? `You can publish a maximum of ${MAX_CARDS} cards.` : "We couldn’t publish this card.",
+        ...(conflict ? { conflict: true } : {}),
+      },
+      { status: limitReached || conflict ? 409 : 500 },
     );
   }
-  return NextResponse.json({ ok: true, cardId: data }, { headers: { "Cache-Control": "private, no-store" } });
+  const { data: publishedCard } = await supabase
+    .from("cards")
+    .select("updated_at")
+    .eq("id", data)
+    .eq("workspace_id", user.workspaceId)
+    .maybeSingle();
+  return NextResponse.json({
+    ok: true,
+    cardId: data,
+    updatedAt: publishedCard?.updated_at,
+  }, { headers: { "Cache-Control": "private, no-store" } });
 }

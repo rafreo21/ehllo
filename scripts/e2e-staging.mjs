@@ -86,6 +86,35 @@ try {
   const wallet = await api(`/api/mobile/wallet/google/${cardSlug}`, host.token);
   assert.match(wallet.saveUrl ?? "", /^https:\/\/pay\.google\.com\/gp\/v\/save\//, "published card produces a Google Wallet save URL");
 
+  const cardLibrary = await api("/api/cards", host.token);
+  const syncedCard = cardLibrary.cards?.find((card) => card.slug === cardSlug);
+  assert.ok(syncedCard?.updatedAt, "card load returns a synchronization revision");
+  const firstCardRevision = syncedCard.updatedAt;
+  const updatedCard = await api("/api/cards", host.token, {
+    method: "POST",
+    body: JSON.stringify({ ...syncedCard, label: "Updated elsewhere", expectedUpdatedAt: firstCardRevision }),
+  });
+  assert.notEqual(updatedCard.card?.updatedAt, firstCardRevision, "fresh card revision updates successfully");
+  const staleCardResponse = await fetch(`${appUrl}/api/cards`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${host.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ ...syncedCard, label: "Stale overwrite", expectedUpdatedAt: firstCardRevision }),
+  });
+  const staleCardPayload = await staleCardResponse.json();
+  assert.equal(staleCardResponse.status, 409, "stale card update is rejected");
+  assert.equal(staleCardPayload.conflict, true, "card save conflict is explicit to the client");
+  const stalePublishResponse = await fetch(`${appUrl}/api/cards/publish`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${host.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ ...syncedCard, expectedUpdatedAt: firstCardRevision }),
+  });
+  const stalePublishPayload = await stalePublishResponse.json();
+  assert.equal(stalePublishResponse.status, 409, "stale card publish is rejected");
+  assert.equal(stalePublishPayload.conflict, true, "card publish conflict is explicit to the client");
+  const cardsAfterConflict = await api("/api/cards", host.token);
+  const cardAfterConflict = cardsAfterConflict.cards?.find((card) => card.id === updatedCard.card.id);
+  assert.equal(cardAfterConflict?.label, "Updated elsewhere", "stale card writes cannot overwrite newer data");
+
   const contactSeed = {
     id: `e2e-contact-${runId}`,
     firstName: "Conflict",
@@ -210,7 +239,7 @@ try {
   const publicPayload = await publicInvitation.json();
   assert.equal(publicPayload.invitation?.event?.status, "cancelled", "original guest link shows cancellation");
 
-  console.log(JSON.stringify({ ok: true, journey: "signup-card-qr-vcard-wallet-contact-conflict-capture-followup-event-invite-rsvp-claim-reschedule-cancel", cleanup: "pending" }));
+  console.log(JSON.stringify({ ok: true, journey: "signup-card-qr-vcard-wallet-card-conflict-contact-conflict-capture-followup-event-invite-rsvp-claim-reschedule-cancel", cleanup: "pending" }));
 } finally {
   for (const id of createdAuthIds.reverse()) await admin.auth.admin.deleteUser(id);
   const { data: remaining } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });

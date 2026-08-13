@@ -55,6 +55,7 @@ export function remoteRowToMobileCard(remote: {
   cover_image_url?: string | null;
   show_company_details?: boolean | null;
   status: 'draft' | 'published' | 'archived';
+  updated_at?: string | null;
   card_methods?: {
     id: string;
     method_type: MobileCard['methods'][number]['type'];
@@ -77,6 +78,7 @@ export function remoteRowToMobileCard(remote: {
     coverPhoto: remote.cover_image_url || '',
     showCompanyDetails: remote.show_company_details ?? true,
     status: remote.status === 'published' ? 'published' : 'draft',
+    serverUpdatedAt: remote.updated_at || undefined,
     methods: (remote.card_methods || [])
       .sort((left, right) => left.sort_order - right.sort_order)
       .map((method) => ({
@@ -103,6 +105,7 @@ export function libraryPayloadToMobileCard(card: {
   showCompanyDetails?: boolean;
   status?: 'draft' | 'published';
   methods?: MobileCard['methods'];
+  updatedAt?: string;
 }): MobileCard {
   return normalizePayloadCard({
     id: card.id,
@@ -119,6 +122,7 @@ export function libraryPayloadToMobileCard(card: {
     showCompanyDetails: card.showCompanyDetails ?? true,
     status: card.status || 'draft',
     methods: card.methods || [],
+    serverUpdatedAt: card.updatedAt,
   });
 }
 
@@ -146,5 +150,6 @@ export function mobileCardToLibraryPayload(card: MobileCard) {
     methods: card.methods,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    expectedUpdatedAt: card.serverUpdatedAt,
   };
 }
