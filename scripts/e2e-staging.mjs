@@ -253,7 +253,7 @@ try {
   const staleEventPayload = await staleEventResponse.json();
   assert.equal(staleEventResponse.status, 409, "stale event update is rejected atomically");
   assert.equal(staleEventPayload.conflict, true, "event conflict is explicit to the client");
-  assert.equal(staleEventPayload.event?.startsAt, movedStart.toISOString(), "event conflict returns the latest version");
+  assert.equal(Date.parse(staleEventPayload.event?.startsAt ?? ""), movedStart.getTime(), "event conflict returns the latest version");
   const refreshedGuestEvents = await api("/api/events", guest.token);
   assert.equal(
     Date.parse(refreshedGuestEvents.events.find((event) => event.id === eventId)?.startsAt ?? ""),
