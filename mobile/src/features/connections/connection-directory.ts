@@ -18,6 +18,7 @@ export type SavedDirectoryContact = {
   role: string;
   exchangeId?: string;
   legacyId?: string;
+  updatedAt?: string;
 };
 
 export type DirectoryFieldSnapshot = {

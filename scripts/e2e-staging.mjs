@@ -86,6 +86,39 @@ try {
   const wallet = await api(`/api/mobile/wallet/google/${cardSlug}`, host.token);
   assert.match(wallet.saveUrl ?? "", /^https:\/\/pay\.google\.com\/gp\/v\/save\//, "published card produces a Google Wallet save URL");
 
+  const contactSeed = {
+    id: `e2e-contact-${runId}`,
+    firstName: "Conflict",
+    lastName: "Check",
+    email: `contact-${runId}@example.com`,
+    company: "AfterMeet E2E",
+    role: "Original",
+    context: "Temporary cross-device conflict fixture.",
+    source: "manual",
+  };
+  const savedContact = await api("/api/contacts", host.token, {
+    method: "POST",
+    body: JSON.stringify(contactSeed),
+  });
+  assert.ok(savedContact.contact?.updatedAt, "contact save returns a synchronization revision");
+  const firstRevision = savedContact.contact.updatedAt;
+  const updatedContact = await api("/api/contacts", host.token, {
+    method: "POST",
+    body: JSON.stringify({ ...savedContact.contact, role: "Updated elsewhere", updatedAt: firstRevision }),
+  });
+  assert.notEqual(updatedContact.contact?.updatedAt, firstRevision, "fresh contact revision updates successfully");
+  const staleContactResponse = await fetch(`${appUrl}/api/contacts`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${host.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ ...savedContact.contact, role: "Stale overwrite", updatedAt: firstRevision }),
+  });
+  const staleContactPayload = await staleContactResponse.json();
+  assert.equal(staleContactResponse.status, 409, "stale contact update is rejected");
+  assert.equal(staleContactPayload.conflict, true, "contact conflict is explicit to the client");
+  const contactsAfterConflict = await api("/api/contacts", host.token);
+  const contactAfterConflict = contactsAfterConflict.contacts?.find((contact) => contact.id === updatedContact.contact.id);
+  assert.equal(contactAfterConflict?.role, "Updated elsewhere", "stale contact update cannot overwrite newer data");
+
   const startsAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
   const endsAt = new Date(startsAt.getTime() + 2 * 60 * 60 * 1000);
   const created = await api("/api/events", host.token, {
@@ -177,7 +210,7 @@ try {
   const publicPayload = await publicInvitation.json();
   assert.equal(publicPayload.invitation?.event?.status, "cancelled", "original guest link shows cancellation");
 
-  console.log(JSON.stringify({ ok: true, journey: "signup-card-qr-vcard-wallet-capture-followup-event-invite-rsvp-claim-reschedule-cancel", cleanup: "pending" }));
+  console.log(JSON.stringify({ ok: true, journey: "signup-card-qr-vcard-wallet-contact-conflict-capture-followup-event-invite-rsvp-claim-reschedule-cancel", cleanup: "pending" }));
 } finally {
   for (const id of createdAuthIds.reverse()) await admin.auth.admin.deleteUser(id);
   const { data: remaining } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });

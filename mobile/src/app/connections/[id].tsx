@@ -318,7 +318,7 @@ export default function ConnectionDetailScreen() {
     setSaving(true);
     try {
       if (directoryState === 'needs_update') {
-        await updateConnectionDirectory(accessToken, connection, card);
+        await updateConnectionDirectory(accessToken, connection, card, savedContact?.updatedAt);
         showSuccess('Directory updated with the latest card details.');
       } else {
         await saveConnectionToAfterMeet(accessToken, connection, card);

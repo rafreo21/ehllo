@@ -73,6 +73,7 @@ type ContactRow = {
   instagramUrl?: string;
   xUrl?: string;
   tiktokUrl?: string;
+  updatedAt?: string;
 };
 
 function subtitle(role?: string, company?: string, fallback = 'Connected through AfterMeet') {
@@ -116,6 +117,7 @@ export async function fetchContacts(accessToken: string): Promise<SavedDirectory
     role: contact.role?.trim() || '',
     exchangeId: contact.exchangeId,
     legacyId: contact.legacyId,
+    updatedAt: contact.updatedAt,
   }));
 }
 
