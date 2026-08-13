@@ -429,11 +429,13 @@ function AddEventSheet({
     setError('');
     try {
       const extracted = await extractEventFromLink(accessToken, url);
+      const extractedStart = extracted.startsAt ? new Date(extracted.startsAt) : defaultForm().start;
+      const extractedEnd = extracted.endsAt ? new Date(extracted.endsAt) : null;
       setForm({
         title: extracted.title || '',
         location: extracted.location || '',
-        start: extracted.startsAt ? new Date(extracted.startsAt) : defaultForm().start,
-        end: extracted.endsAt ? new Date(extracted.endsAt) : null,
+        start: extractedStart,
+        end: extractedEnd && extractedEnd.getTime() >= extractedStart.getTime() ? extractedEnd : null,
         sourceUrl: url,
       });
       setCameFromLink(true);
@@ -447,6 +449,10 @@ function AddEventSheet({
   async function submit() {
     if (!form.title.trim()) {
       setError('Give this event a name.');
+      return;
+    }
+    if (form.end && form.end.getTime() < form.start.getTime()) {
+      setError('The event end time must be after its start time.');
       return;
     }
     setSaving(true);
@@ -686,7 +692,7 @@ const styles = StyleSheet.create({
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
   panelTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
   panelCopy: { color: colors.muted, fontSize: 13, lineHeight: 19 },
-  section: { gap: spacing.x2, marginTop: spacing.x4 },
+  section: { gap: spacing.x2 },
   tabRow: {
     flexDirection: 'row',
     gap: spacing.x1,

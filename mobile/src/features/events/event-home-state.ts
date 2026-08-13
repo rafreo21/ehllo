@@ -5,7 +5,10 @@ const DEFAULT_EVENT_WINDOW_MS = 4 * 60 * 60 * 1000;
 function eventEndsAtMs(event: EventItem): number {
   const start = Date.parse(event.startsAt);
   let end = event.endsAt ? Date.parse(event.endsAt) : Number.NaN;
-  if (Number.isNaN(end)) {
+  // Link metadata is not always trustworthy: some pages expose an end time
+  // with the wrong date or timezone. An end before the start is equivalent
+  // to no usable end, not evidence that a future event belongs in Past.
+  if (Number.isNaN(end) || (!Number.isNaN(start) && end < start)) {
     end = Number.isNaN(start) ? Number.NaN : start + DEFAULT_EVENT_WINDOW_MS;
   }
   if (event.leftAt) {

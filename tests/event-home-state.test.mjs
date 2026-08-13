@@ -58,6 +58,14 @@ describe("isUpcomingEvent / bucketEvents", () => {
     assert.equal(isUpcomingEvent(ended, now), false);
   });
 
+  it("does not classify a future event as past when pasted metadata has an end before its start", () => {
+    const futureWithBrokenEnd = event({
+      startsAt: "2026-08-29T18:00:00.000Z",
+      endsAt: "2026-08-09T22:00:00.000Z",
+    });
+    assert.equal(isUpcomingEvent(futureWithBrokenEnd, now), true);
+  });
+
   it("splits and sorts upcoming (soonest first) and past (most recent first)", () => {
     const soon = event({ id: "soon", startsAt: "2026-08-11T09:00:00.000Z", endsAt: "2026-08-11T10:00:00.000Z" });
     const later = event({ id: "later", startsAt: "2026-08-12T09:00:00.000Z", endsAt: "2026-08-12T10:00:00.000Z" });
