@@ -90,5 +90,16 @@
     "export:web": "expo export --platform web",
     "prebuild": "expo prebuild"
   },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "expo-audio-segment-stitcher",
+          "react-native-hce",
+          "react-native-nfc-manager"
+        ]
+      }
+    }
+  },
   "private": true
 }
