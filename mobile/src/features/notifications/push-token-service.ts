@@ -41,7 +41,7 @@ export async function registerPushToken(accessToken: string): Promise<boolean> {
         deviceId: device.id,
         platform: Platform.OS,
         expoPushToken: tokenResponse.data,
-        deviceLabel: Platform.OS === 'ios' ? 'iPhone' : 'Android device',
+        deviceLabel: Device.deviceName || Device.modelName || (Platform.OS === 'ios' ? 'iOS device' : 'Android device'),
         deviceModel: Device.modelName || '',
       }),
     });
