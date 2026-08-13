@@ -1,4 +1,4 @@
-import { CalendarBlank, CaretRight, UserPlus } from 'phosphor-react-native';
+import { CalendarBlank, CaretRight, NotePencil, UserPlus } from 'phosphor-react-native';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PillButton } from '@/components/ui';
@@ -29,6 +29,7 @@ export function EventCard({
   onNotGoing,
   onLeave,
   onInvite,
+  onManage,
 }: {
   event: EventItem;
   variant: EventCardVariant;
@@ -38,6 +39,7 @@ export function EventCard({
   onNotGoing?: (event: EventItem) => void;
   onLeave?: (event: EventItem) => void;
   onInvite?: (event: EventItem) => void;
+  onManage?: (event: EventItem) => void;
 }) {
   const when = formatEventWhen(event.startsAt);
   const showCandidateActions = variant === 'candidate';
@@ -140,6 +142,14 @@ export function EventCard({
                   icon={<UserPlus size={15} color={colors.ink} weight="bold" />}
                   onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onInvite(event); }}>
                   Invite
+                </PillButton>
+              ) : null}
+              {onManage ? (
+                <PillButton
+                  tone="outline"
+                  icon={<NotePencil size={15} color={colors.ink} weight="bold" />}
+                  onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onManage(event); }}>
+                  Manage
                 </PillButton>
               ) : null}
               <PillButton tone="outline" onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onNotGoing?.(event); }}>Not going</PillButton>

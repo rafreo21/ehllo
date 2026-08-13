@@ -31,6 +31,7 @@ export type EventItem = {
   source: EventSource;
   sourceUrl: string;
   organizerEmail: string;
+  status: 'scheduled' | 'cancelled';
 };
 
 function mapEvent(row: Record<string, unknown>): EventItem {
@@ -44,7 +45,26 @@ function mapEvent(row: Record<string, unknown>): EventItem {
     source: (row.source as EventSource) ?? 'manual',
     sourceUrl: String(row.sourceUrl ?? ''),
     organizerEmail: String(row.organizerEmail ?? ''),
+    status: row.status === 'cancelled' ? 'cancelled' : 'scheduled',
   };
+}
+
+export async function updateEvent(
+  accessToken: string,
+  eventId: string,
+  input: { title?: string; location?: string; startsAt?: string; endsAt?: string | null; status?: 'scheduled' | 'cancelled' },
+): Promise<{ event: EventItem; emailsSent: number; emailsFailed: number }> {
+  const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}`, accessToken, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  const payload = await readMobileApiJson<{ event?: Record<string, unknown>; emailsSent?: number; emailsFailed?: number; error?: string }>(
+    response,
+    'Could not read the event update response.',
+  );
+  if (!response.ok || !payload.event) throw new Error(payload.error || 'Could not update this event.');
+  return { event: mapEvent(payload.event), emailsSent: payload.emailsSent ?? 0, emailsFailed: payload.emailsFailed ?? 0 };
 }
 
 /** Events the user is going to — see GET /api/events. Candidates awaiting a decision are separate, see fetchEventCandidates. */

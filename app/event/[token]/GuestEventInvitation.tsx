@@ -6,7 +6,7 @@ import { buildAuthHref } from "../../../lib/auth/visitor-intent";
 type Invitation = {
   email: string;
   status: "invited" | "going" | "not_going";
-  event: { id: string; title: string; location: string; startsAt: string; endsAt: string | null };
+  event: { id: string; title: string; location: string; startsAt: string; endsAt: string | null; status: "scheduled" | "cancelled" };
 };
 
 function eventWhen(invitation: Invitation) {
@@ -57,18 +57,23 @@ export function GuestEventInvitation({ token }: { token: string }) {
   if (!invitation) return <main className="event-invite-page"><section className="event-invite-card"><p>Loading your event…</p></section></main>;
 
   const authHref = buildAuthHref({ eventInviteToken: token, email: invitation.email });
+  const cancelled = invitation.event.status === "cancelled";
   return (
     <main className="event-invite-page">
       <section className="event-invite-card">
-        <p className="event-invite-kicker">You’re invited</p>
+        <p className="event-invite-kicker">{cancelled ? "Event cancelled" : "You’re invited"}</p>
         <h1>{invitation.event.title}</h1>
         <p className="event-invite-when">{eventWhen(invitation)}</p>
         {invitation.event.location ? <p>{invitation.event.location}</p> : null}
-        <div className="event-invite-actions" aria-label="Your RSVP">
-          <button disabled={saving} data-active={invitation.status === "going"} onClick={() => void respond("going")}>Going</button>
-          <button disabled={saving} data-active={invitation.status === "not_going"} onClick={() => void respond("not_going")}>Not going</button>
-        </div>
-        {invitation.status !== "invited" ? <p className="event-invite-saved">Response saved. You can change it here at any time.</p> : null}
+        {cancelled ? <p className="event-invite-error">This event has been cancelled. Your private notes and captures have not been deleted.</p> : (
+          <>
+            <div className="event-invite-actions" aria-label="Your RSVP">
+              <button disabled={saving} data-active={invitation.status === "going"} onClick={() => void respond("going")}>Going</button>
+              <button disabled={saving} data-active={invitation.status === "not_going"} onClick={() => void respond("not_going")}>Not going</button>
+            </div>
+            {invitation.status !== "invited" ? <p className="event-invite-saved">Response saved. You can change it here at any time.</p> : null}
+          </>
+        )}
         <div className="event-invite-continuity">
           <strong>Keep this event with you</strong>
           <p>Create an account with {invitation.email}. Your RSVP will move with you, and anything you capture at the event can stay connected to the people and follow-ups it creates.</p>

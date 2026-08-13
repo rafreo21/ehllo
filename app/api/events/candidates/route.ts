@@ -26,6 +26,7 @@ export async function GET(request: Request) {
     .select("*")
     .eq("created_by_user_id", user.id)
     .in("source", ["manual", "link"])
+    .eq("status", "scheduled")
     .order("starts_at", { ascending: true })
     .limit(250);
 

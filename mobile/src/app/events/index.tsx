@@ -8,6 +8,7 @@ import { ActivityIndicator, Alert, Platform, Pressable, Share, StyleSheet, Text,
 import { BottomSheet } from '@/components/bottom-sheet';
 import { EventCard } from '@/components/event-card';
 import { EventInviteSheet } from '@/components/event-invite-sheet';
+import { EventManageSheet } from '@/components/event-manage-sheet';
 import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
@@ -31,6 +32,7 @@ import {
   inviteEventGuest,
   revokeEventInvitation,
   setEventAttendance,
+  updateEvent,
   type CalendarProviderStatus,
   type EventItem,
   type EventInvitation,
@@ -95,6 +97,9 @@ export default function EventsScreen() {
   const [invitations, setInvitations] = useState<EventInvitation[]>([]);
   const [revokingInvitationId, setRevokingInvitationId] = useState('');
   const [inviteError, setInviteError] = useState('');
+  const [manageEvent, setManageEvent] = useState<EventItem | null>(null);
+  const [manageLoading, setManageLoading] = useState(false);
+  const [manageError, setManageError] = useState('');
 
   const refresh = useCallback(async (options?: { manual?: boolean }) => {
     if (!accessToken) {
@@ -296,6 +301,44 @@ export default function EventsScreen() {
     );
   }
 
+  async function saveEventChanges(input: { title: string; location: string; startsAt: string; endsAt: string | null }) {
+    if (!accessToken || !manageEvent) return;
+    setManageLoading(true);
+    setManageError('');
+    try {
+      const result = await updateEvent(accessToken, manageEvent.id, input);
+      setEvents((current) => current.map((item) => item.id === result.event.id ? result.event : item));
+      setManageEvent(null);
+      setRefreshTitle('Event updated');
+      setRefreshMessage(result.emailsFailed
+        ? `The event was updated. ${result.emailsSent} guest notification${result.emailsSent === 1 ? '' : 's'} sent; ${result.emailsFailed} could not be delivered.`
+        : `The event was updated${result.emailsSent ? ` and ${result.emailsSent} guest${result.emailsSent === 1 ? '' : 's'} notified` : ''}.`);
+    } catch (caught) {
+      setManageError(caught instanceof Error ? caught.message : 'Could not update this event.');
+    } finally {
+      setManageLoading(false);
+    }
+  }
+
+  async function cancelManagedEvent() {
+    if (!accessToken || !manageEvent) return;
+    setManageLoading(true);
+    setManageError('');
+    try {
+      const result = await updateEvent(accessToken, manageEvent.id, { status: 'cancelled' });
+      setEvents((current) => current.filter((item) => item.id !== manageEvent.id));
+      setManageEvent(null);
+      setRefreshTitle('Event cancelled');
+      setRefreshMessage(result.emailsFailed
+        ? `The event was cancelled. ${result.emailsSent} guest notification${result.emailsSent === 1 ? '' : 's'} sent; ${result.emailsFailed} could not be delivered.`
+        : `The event was cancelled${result.emailsSent ? ` and ${result.emailsSent} guest${result.emailsSent === 1 ? '' : 's'} notified` : ''}.`);
+    } catch (caught) {
+      setManageError(caught instanceof Error ? caught.message : 'Could not cancel this event.');
+    } finally {
+      setManageLoading(false);
+    }
+  }
+
   const header = (
     <View style={styles.fixedHeader}>
       <PageHeader
@@ -370,6 +413,7 @@ export default function EventsScreen() {
                 onNotGoing={(item) => void decide(item, 'not_going')}
                 onLeave={!candidate && isEventCurrentlyHappening(event) ? (item) => void leaveEvent(item) : undefined}
                 onInvite={!candidate ? (item) => void openInvitations(item) : undefined}
+                onManage={!candidate && event.source !== 'calendar' ? (item) => { setManageError(''); setManageEvent(item); } : undefined}
               />
             )) : (
               <Panel>
@@ -416,6 +460,15 @@ export default function EventsScreen() {
         onClose={() => { setInviteEvent(null); setInviteError(''); setInvitations([]); }}
         onInvite={(email) => void sendInvite(email)}
         onRevoke={confirmRevoke}
+      />
+      <EventManageSheet
+        key={manageEvent?.id ?? 'closed-manage'}
+        event={manageEvent}
+        loading={manageLoading}
+        error={manageError}
+        onClose={() => { setManageEvent(null); setManageError(''); }}
+        onSave={(input) => void saveEventChanges(input)}
+        onCancelEvent={() => void cancelManagedEvent()}
       />
       <OutcomeErrorSheet visible={Boolean(error)} message={error} onClose={() => setError('')} />
       <OutcomeSuccessSheet

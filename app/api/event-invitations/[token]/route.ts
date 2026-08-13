@@ -8,14 +8,14 @@ type InvitationRow = {
   invited_email: string;
   status: "invited" | "going" | "not_going" | "revoked";
   expires_at: string | null;
-  events: { id: string; title: string; location: string; starts_at: string; ends_at: string | null } | null;
+  events: { id: string; title: string; location: string; starts_at: string; ends_at: string | null; status: "scheduled" | "cancelled" } | null;
 };
 
 async function readInvitation(token: string) {
   const service = createServiceSupabaseClient();
   if (!service) return { service: null, invitation: null };
   const { data } = await service.from("event_invitations")
-    .select("id, invited_email, status, expires_at, events!inner(id, title, location, starts_at, ends_at)")
+    .select("id, invited_email, status, expires_at, events!inner(id, title, location, starts_at, ends_at, status)")
     .eq("token_hash", hashEventInvitationToken(token))
     .maybeSingle();
   return { service, invitation: data as unknown as InvitationRow | null };
@@ -39,6 +39,7 @@ export async function GET(_request: Request, context: { params: Promise<{ token:
         location: invitation.events.location,
         startsAt: invitation.events.starts_at,
         endsAt: invitation.events.ends_at,
+        status: invitation.events.status,
       },
     },
   }, { headers: { "Cache-Control": "private, no-store" } });
@@ -52,6 +53,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ token
   }
   const { service, invitation } = await readInvitation(token);
   if (!service || !available(invitation)) return NextResponse.json({ error: "This event invitation is no longer available." }, { status: 404 });
+  if (invitation?.events?.status === "cancelled") {
+    return NextResponse.json({ error: "This event has been cancelled." }, { status: 409 });
+  }
   const { error } = await service.from("event_invitations").update({
     status: body.status,
     responded_at: new Date().toISOString(),

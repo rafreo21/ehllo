@@ -20,6 +20,7 @@ export async function GET(request: Request) {
     .select("left_at, events!inner(*)")
     .eq("user_id", user.id)
     .eq("status", "going")
+    .eq("events.status", "scheduled")
     .order("starts_at", { referencedTable: "events", ascending: true });
 
   if (error) {
