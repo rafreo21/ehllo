@@ -162,6 +162,10 @@ export default function EventsScreen() {
     ...upcoming.map((event) => ({ event, candidate: false })),
     ...candidates.filter((event) => isUpcomingEvent(event)).map((event) => ({ event, candidate: true })),
   ].sort((a, b) => compareEventsByStart(a.event, b.event));
+  const combinedPast = [
+    ...past.map((event) => ({ event, candidate: false })),
+    ...candidates.filter((event) => !isUpcomingEvent(event)).map((event) => ({ event, candidate: true })),
+  ].sort((a, b) => compareEventsByStart(b.event, a.event));
 
   async function decide(event: EventItem, status: 'going' | 'not_going') {
     if (!accessToken) return;
@@ -288,7 +292,16 @@ export default function EventsScreen() {
               </Panel>
             )
           ) : (
-            past.length ? past.map((event) => <EventCard key={event.id} event={event} variant="past" />) : (
+            combinedPast.length ? combinedPast.map(({ event, candidate }) => (
+              <EventCard
+                key={event.id}
+                event={event}
+                variant={candidate ? 'candidate' : 'past'}
+                busy={busyId === event.id}
+                onGoing={candidate ? (item) => void decide(item, 'going') : undefined}
+                onNotGoing={candidate ? (item) => void decide(item, 'not_going') : undefined}
+              />
+            )) : (
               <Panel>
                 <Text style={styles.panelCopy}>No past events yet.</Text>
               </Panel>
