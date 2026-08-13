@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import { parseEhlloCardSlug, parseScanTarget } from "../lib/scan-targets.ts";
 
-test("parseScanTarget detects Ehllo card URLs", () => {
+test("parseScanTarget detects ehllo card URLs", () => {
   const target = parseScanTarget("https://aftermeet.app/c/alex-morgan");
   assert.equal(target.type, "aftermeet_card");
   if (target.type === "aftermeet_card") {
@@ -36,7 +36,7 @@ test("parseEhlloCardSlugFromScan extracts slug from offline vCard QRs", async ()
     "VERSION:3.0",
     "FN:Alex Morgan",
     "item1.URL:https://aftermeet.app/c/alex-morgan",
-    "item1.X-ABLabel:Ehllo card",
+    "item1.X-ABLabel:ehllo card",
     "END:VCARD",
   ].join("\r\n");
 

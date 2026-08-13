@@ -1,4 +1,4 @@
-# AfterMeet release safeguards
+# ehllo release safeguards
 
 ## Environment policy
 

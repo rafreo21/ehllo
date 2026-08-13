@@ -49,7 +49,7 @@ type ContactRow = {
   role?: string;
 };
 
-function subtitle(role?: string, company?: string, fallback = "Connected through Ehllo") {
+function subtitle(role?: string, company?: string, fallback = "Connected through ehllo") {
   const parts = [role?.trim(), company?.trim()].filter(Boolean);
   return parts.length ? parts.join(" · ") : fallback;
 }

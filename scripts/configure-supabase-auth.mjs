@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Configure Supabase Auth for AfterMeet (web + mobile OTP sign-in).
+ * Configure Supabase Auth for ehllo (web + mobile OTP sign-in).
  *
  * Uses Supabase Send Email Hook + Resend (no Vercel integration required).
  *
@@ -9,7 +9,7 @@
  * 3. Add to .env.local:
  *      SUPABASE_ACCESS_TOKEN=sbp_...
  *      RESEND_API_KEY=re_...
- *      RESEND_FROM_EMAIL=AfterMeet <onboarding@resend.dev>
+ *      RESEND_FROM_EMAIL=ehllo <onboarding@resend.dev>
  *    (Use a verified domain sender for production, e.g. auth@yourdomain.com)
  * 4. Run: npm run configure:supabase-auth
  */
@@ -85,9 +85,9 @@ async function setSecrets(token, secrets) {
   });
 }
 
-const OTP_MAGIC_LINK_SUBJECT = "Your AfterMeet sign-in code";
-const OTP_MAGIC_LINK_CONTENT = `<h2>Your AfterMeet sign-in code</h2>
-<p>Enter this 6-digit code in AfterMeet to sign in:</p>
+const OTP_MAGIC_LINK_SUBJECT = "Your ehllo sign-in code";
+const OTP_MAGIC_LINK_CONTENT = `<h2>Your ehllo sign-in code</h2>
+<p>Enter this 6-digit code in ehllo to sign in:</p>
 <p style="font-size:32px;font-weight:700;letter-spacing:8px;margin:20px 0">{{ .Token }}</p>
 <p>This code expires shortly and can only be used once.</p>
 <p>If you didn't request this, you can ignore this email.</p>`;
@@ -104,7 +104,7 @@ async function main() {
   const useResendSmtp = process.argv.includes("--resend-smtp");
   const accessToken = readEnv("SUPABASE_ACCESS_TOKEN");
   const resendApiKey = readEnv("RESEND_API_KEY");
-  const resendFrom = readEnv("RESEND_FROM_EMAIL") || "AfterMeet <onboarding@resend.dev>";
+  const resendFrom = readEnv("RESEND_FROM_EMAIL") || "ehllo <onboarding@resend.dev>";
   const hookSecret = generateHookSecret();
   const hookUri = `https://${PROJECT_REF}.supabase.co/functions/v1/${HOOK_FUNCTION}`;
 
@@ -123,7 +123,7 @@ async function main() {
     console.error("  3. Add to .env.local: RESEND_API_KEY=re_...");
     console.error("  4. Rerun: npm run configure:supabase-auth");
     console.error("");
-    console.error("For testing, RESEND_FROM_EMAIL=AfterMeet <onboarding@resend.dev> only delivers");
+    console.error("For testing, RESEND_FROM_EMAIL=ehllo <onboarding@resend.dev> only delivers");
     console.error("to the email you used on Resend. Add your domain in Resend for production.");
     console.error("");
     console.error("Temporary beta fallback (Supabase default email):");
@@ -187,7 +187,7 @@ async function main() {
       smtp_user: "resend",
       smtp_pass: resendApiKey,
       smtp_admin_email: smtpAdminEmail,
-      smtp_sender_name: "AfterMeet",
+      smtp_sender_name: "ehllo",
     });
   } else {
     Object.assign(authPatch, {

@@ -291,7 +291,7 @@ export default function NewFollowUpPage() {
           </div>
         </form>
 
-        <p className="quick-follow-up-note"><PaperPlaneTiltIcon size={16} weight="bold" />Nothing is sent automatically. Ehllo reminds you until you complete it.</p>
+        <p className="quick-follow-up-note"><PaperPlaneTiltIcon size={16} weight="bold" />Nothing is sent automatically. ehllo reminds you until you complete it.</p>
       </div>
 
       {addPersonOpen ? (

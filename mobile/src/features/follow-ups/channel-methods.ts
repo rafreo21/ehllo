@@ -91,10 +91,10 @@ export function buildTailoredRequestEmail(input: {
   const opener = eventTitle ? `It was great meeting you at ${eventTitle}.` : 'It was great meeting you.';
 
   if (input.methodType === 'preferred_contact') {
-    return `${greeting}\n\n${opener}${followUp}\n\nCould you share the best way to reach you on your Ehllo card?\n\nThanks!`;
+    return `${greeting}\n\n${opener}${followUp}\n\nCould you share the best way to reach you on your ehllo card?\n\nThanks!`;
   }
 
-  return `${greeting}\n\n${opener}${followUp}\n\nCould you add your ${methodLabel} to your Ehllo card so I can connect with you more easily?\n\nThanks!`;
+  return `${greeting}\n\n${opener}${followUp}\n\nCould you add your ${methodLabel} to your ehllo card so I can connect with you more easily?\n\nThanks!`;
 }
 
 export function requestEmailSubject(methodType: MissingMethodType) {

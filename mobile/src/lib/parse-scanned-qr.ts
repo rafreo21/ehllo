@@ -31,7 +31,7 @@ function extractSlugFromVcard(vcard: string) {
     const labeledUrl = line.match(/^item\d+\.URL:(.+)$/i);
     if (labeledUrl) {
       const label = lines[index + 1] || '';
-      if (/Ehllo card/i.test(label)) {
+      if (/ehllo card/i.test(label)) {
         const slug = parseEhlloCardSlugFromUrl(cleanUrl(labeledUrl[1]));
         if (slug) return slug;
       }
@@ -56,7 +56,7 @@ function extractSlugFromVcard(vcard: string) {
   return null;
 }
 
-/** Resolve an Ehllo card slug from a scanned QR payload (URL or embedded vCard). */
+/** Resolve an ehllo card slug from a scanned QR payload (URL or embedded vCard). */
 export function parseEhlloCardSlugFromScan(raw: string) {
   const value = raw.replace(/^\uFEFF/, '').trim();
   if (!value) return null;

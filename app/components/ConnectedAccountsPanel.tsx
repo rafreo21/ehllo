@@ -34,7 +34,7 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
       if (integration === "google-error" || integration === "microsoft-error") setError("We couldn’t connect that account. Reconnect and approve the requested permissions.");
       if (integration === "preview") setError("Connected accounts need a signed-in Supabase user; local preview mode cannot complete Google OAuth.");
       if (integration === "google-unconfigured" || integration === "microsoft-unconfigured") {
-        setError("This connection has not been enabled by the Ehllo workspace administrator yet.");
+        setError("This connection has not been enabled by the ehllo workspace administrator yet.");
       }
     });
   }, []);

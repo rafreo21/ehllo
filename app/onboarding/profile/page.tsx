@@ -22,7 +22,7 @@ export default async function OnboardingProfilePage({
     <main className="onboarding-shell">
       <section className="onboarding-panel onboarding-profile">
         <header className="onboarding-header">
-          <a className="onboarding-brand" href="/"><BrandMark size={40} />Ehllo</a>
+          <a className="onboarding-brand" href="/"><BrandMark size={40} />ehllo</a>
         </header>
         <div className="onboarding-intro">
           <h1>{mode === "team" ? "Set up your team workspace." : "Almost there."}</h1>

@@ -56,7 +56,7 @@ export function buildPlainSignature(profile: SignatureProfile) {
   lines.push("");
   lines.push(`View my card: ${profile.cardUrl.trim()}`);
   lines.push("");
-  lines.push("Shared with Ehllo");
+  lines.push("Shared with ehllo");
   return lines.join("\n");
 }
 
@@ -75,7 +75,7 @@ export function buildHtmlSignature(profile: SignatureProfile) {
   const qrBlock = profile.qrDataUri?.trim()
     ? [
         `<div style="padding-top:12px;">`,
-        `<img src="${escapeHtml(profile.qrDataUri.trim())}" alt="Scan to open my Ehllo card" width="96" height="96" style="display:block;width:96px;height:96px;border-radius:12px;" />`,
+        `<img src="${escapeHtml(profile.qrDataUri.trim())}" alt="Scan to open my ehllo card" width="96" height="96" style="display:block;width:96px;height:96px;border-radius:12px;" />`,
         `<div style="padding-top:8px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;">`,
         `<a href="${cardUrl}" target="_blank" rel="noopener noreferrer" style="color:#2F5711;text-decoration:none;font-weight:700;">View my card</a>`,
         `</div>`,
@@ -88,7 +88,7 @@ export function buildHtmlSignature(profile: SignatureProfile) {
       ].join("");
 
   return [
-    `<!-- Ehllo email signature -->`,
+    `<!-- ehllo email signature -->`,
     `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;max-width:420px;">`,
     `<tr>`,
     `<td valign="top" style="padding:0 16px 0 0;">${avatarCell}</td>`,
@@ -108,7 +108,7 @@ export function buildHtmlSignature(profile: SignatureProfile) {
     `</tr>`,
     `<tr>`,
     `<td colspan="2" style="padding-top:12px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;color:#71806B;">`,
-    `Shared with <span style="color:#2F5711;font-weight:700;">Ehllo</span>`,
+    `Shared with <span style="color:#2F5711;font-weight:700;">ehllo</span>`,
     `</td>`,
     `</tr>`,
     `</table>`,

@@ -50,9 +50,9 @@ export default function Home() {
   return (
     <main>
       <nav className="nav">
-        <a className="brand" href="#top" aria-label="Ehllo home">
+        <a className="brand" href="#top" aria-label="ehllo home">
           <BrandMark className="brand-mark" size={38} />
-          <span>Ehllo</span>
+          <span>ehllo</span>
         </a>
         <div className="nav-links">
           <LinkButton size="small" variant="ghost" href="/auth">Login</LinkButton>
@@ -64,7 +64,7 @@ export default function Home() {
         <div className="eyebrow"><span /> Relationship workspace · July 2026</div>
         <h1>Remember every person.<br /><em>Make the next move.</em></h1>
         <div className="hero-bottom">
-          <p>Ehllo connects four loops: <strong>share identity, capture people, remember context, activate data</strong>, without turning every meeting into CRM admin.</p>
+          <p>ehllo connects four loops: <strong>share identity, capture people, remember context, activate data</strong>, without turning every meeting into CRM admin.</p>
           <IconLinkButton className="circle-link" size="normal" variant="secondary" href="#product" aria-label="See the four loops"><ArrowDownIcon size={21} weight="bold" /></IconLinkButton>
         </div>
       </section>
@@ -124,7 +124,7 @@ export default function Home() {
         <div className="section-label">03 / The core loop</div>
         <div className="concept-intro">
           <div>
-            <span className="concept-name">Ehllo</span>
+            <span className="concept-name">ehllo</span>
             <h2>Share. Capture.<br /><em>Remember. Act.</em></h2>
           </div>
           <p>For consultants and small teams who win work through conversations, but need something lighter than a CRM and sharper than a static business card.</p>
@@ -197,7 +197,7 @@ export default function Home() {
       </section>
 
       <footer>
-        <div><BrandMark className="brand-mark" size={38} /><strong>Ehllo</strong></div>
+        <div><BrandMark className="brand-mark" size={38} /><strong>ehllo</strong></div>
         <p>Share identity. Capture people. Remember context. Activate later.</p>
         <LinkButton variant="ghost" href="/auth?next=/onboarding">Open the app <ArrowUpIcon size={15} weight="bold" /></LinkButton>
       </footer>

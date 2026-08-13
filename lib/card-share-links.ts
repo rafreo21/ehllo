@@ -1,11 +1,11 @@
 export function buildEmailShareUrl(cardUrl: string, cardName: string) {
-  const subject = encodeURIComponent(`${cardName}'s Ehllo card`);
+  const subject = encodeURIComponent(`${cardName}'s ehllo card`);
   const body = encodeURIComponent(`Here is my card: ${cardUrl}`);
   return `mailto:?subject=${subject}&body=${body}`;
 }
 
 export function buildSmsShareUrl(cardUrl: string, cardName: string) {
-  const body = encodeURIComponent(`Here is ${cardName}'s Ehllo card: ${cardUrl}`);
+  const body = encodeURIComponent(`Here is ${cardName}'s ehllo card: ${cardUrl}`);
   return `sms:?&body=${body}`;
 }
 
@@ -22,5 +22,5 @@ export function buildWhenWeMetNote(cardUrl: string, scannedAt = new Date(), even
   });
   const trimmedEvent = eventTitle?.trim();
   const whereLine = trimmedEvent ? `Where we met: ${trimmedEvent}\n` : "";
-  return `${whereLine}When we met: ${date}\nSaved from Ehllo\n${cardUrl}`;
+  return `${whereLine}When we met: ${date}\nSaved from ehllo\n${cardUrl}`;
 }

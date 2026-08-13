@@ -13,10 +13,10 @@ export default async function OnboardingPage() {
     <main className="onboarding-shell">
       <section className="onboarding-panel onboarding-start">
         <header className="onboarding-header">
-          <a className="onboarding-brand" href="/"><BrandMark size={40} />Ehllo</a>
+          <a className="onboarding-brand" href="/"><BrandMark size={40} />ehllo</a>
         </header>
         <div className="onboarding-intro">
-          <h1>How will you use Ehllo?</h1>
+          <h1>How will you use ehllo?</h1>
           <p>This helps us tailor the right first step: a personal card for solo networking, or a shared workspace for your team.</p>
         </div>
         <OnboardingUseCase />

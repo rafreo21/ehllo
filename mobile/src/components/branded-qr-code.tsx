@@ -127,8 +127,8 @@ export function BrandedQrCode({
             source={QR_LOGO}
             style={{ width: logoSize, height: logoSize, borderRadius: Math.round(logoSize * 0.22) }}
             contentFit="contain"
-            accessibilityLabel="Ehllo"
-            alt="Ehllo"
+            accessibilityLabel="ehllo"
+            alt="ehllo"
           />
         </View>
       ) : null}

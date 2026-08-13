@@ -33,7 +33,7 @@ function signJwt(payload: Record<string, unknown>, config: GoogleWalletConfig) {
   return `${encoded}.${signer.sign(config.privateKey, "base64url")}`;
 }
 
-/** Pass list icon and header logo — profile first, then company mark, then hosted AfterMeet mark. */
+/** Pass list icon and header logo — profile first, then company mark, then hosted ehllo mark. */
 export function resolveGoogleWalletLogoUrl(card: WalletCardPayload) {
   const profile = card.profileImageUrl?.trim();
   if (profile) return profile;
@@ -81,7 +81,7 @@ export function buildGoogleWalletSaveUrl(card: WalletCardPayload, config: Google
       defaultValue: { language: "en-US", value: card.fullName },
     },
     header: {
-      defaultValue: { language: "en-US", value: "AfterMeet Card" },
+      defaultValue: { language: "en-US", value: "ehllo Card" },
     },
     subheader: {
       defaultValue: { language: "en-US", value: card.role || companyLabel.trim() || "Digital card" },
@@ -95,13 +95,13 @@ export function buildGoogleWalletSaveUrl(card: WalletCardPayload, config: Google
       { id: "name", header: "NAME", body: card.fullName },
       { id: "role", header: "JOB TITLE", body: card.role || " " },
       { id: "company", header: "COMPANY", body: companyLabel },
-      { id: "bio", header: "About", body: card.bio || "Tap to open my AfterMeet card." },
+      { id: "bio", header: "About", body: card.bio || "Tap to open my ehllo card." },
     ],
     linksModuleData: {
       uris: [
         {
           uri: card.cardUrl,
-          description: "Open AfterMeet card",
+          description: "Open ehllo card",
           id: "card_link",
         },
       ],
@@ -127,7 +127,7 @@ export function buildGoogleWalletSaveUrl(card: WalletCardPayload, config: Google
         mainImage: {
           sourceUri: { uri: brandedQrUrl },
           contentDescription: {
-            defaultValue: { language: "en-US", value: "AfterMeet branded QR code" },
+            defaultValue: { language: "en-US", value: "ehllo branded QR code" },
           },
         },
       },

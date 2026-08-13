@@ -1,4 +1,4 @@
-# AfterMeet Event Dictionary
+# ehllo Event Dictionary
 
 Status: Canonical product vocabulary  
 Last updated: 2026-07-24

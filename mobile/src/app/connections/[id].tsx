@@ -314,7 +314,7 @@ export default function ConnectionDetailScreen() {
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : 'Could not save this connection.';
       if (message.toLowerCase().includes('session has expired')) {
-        showError('Your app session could not reach Ehllo. Sign out from Settings, sign in again, then retry.');
+        showError('Your app session could not reach ehllo. Sign out from Settings, sign in again, then retry.');
       } else {
         showError(message);
       }

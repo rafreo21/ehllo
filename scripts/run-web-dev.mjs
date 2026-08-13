@@ -66,7 +66,7 @@ Object.assign(childEnv, selected, {
   WRANGLER_LOG_PATH: '.wrangler/wrangler.log',
 });
 
-console.log(`Starting AfterMeet consumer web against ${environment}.`);
+console.log(`Starting ehllo consumer web against ${environment}.`);
 const executable = resolve(process.cwd(), 'node_modules/.bin/vinext');
 const child = spawn(executable, ['dev'], { env: childEnv, stdio: 'inherit' });
 child.on('exit', (code, signal) => {

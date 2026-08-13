@@ -186,7 +186,7 @@ export async function fetchEncounters(accessToken: string) {
   const response = await mobileFetch('/api/encounters', accessToken);
   const payload = await readMobileApiJson<{ encounters?: Array<Record<string, unknown>>; error?: string; preview?: boolean }>(
     response,
-    'Could not read your captures from Ehllo.',
+    'Could not read your captures from ehllo.',
   );
   if (!response.ok) {
     throw new Error(payload.error || 'Could not load your captures.');
@@ -220,7 +220,7 @@ export async function fetchCaptureSessions(accessToken: string) {
   const response = await mobileFetch('/api/capture-sessions', accessToken);
   const payload = await readMobileApiJson<{ sessions?: RemoteCaptureSession[]; error?: string }>(
     response,
-    'Could not read active captures from Ehllo.',
+    'Could not read active captures from ehllo.',
   );
   if (!response.ok) throw new Error(payload.error || 'Could not load active captures.');
   return payload.sessions ?? [];
@@ -234,7 +234,7 @@ export async function syncCaptureSession(accessToken: string, snapshot: RemoteCa
   });
   const payload = await readMobileApiJson<{ ok?: boolean; error?: string; currentStatus?: string }>(
     response,
-    'Could not sync this capture with Ehllo.',
+    'Could not sync this capture with ehllo.',
   );
   if (response.status === 409) {
     throw new CaptureSessionConflictError(
@@ -282,7 +282,7 @@ export async function fetchInboundExchanges(accessToken: string) {
   const response = await mobileFetch('/api/cards/exchanges', accessToken);
   const payload = await readMobileApiJson<{ exchanges?: InboundExchange[]; error?: string }>(
     response,
-    'Could not read inbound captures from Ehllo.',
+    'Could not read inbound captures from ehllo.',
   );
   if (!response.ok) {
     throw new Error(payload.error || 'Could not load inbound captures.');
@@ -734,7 +734,7 @@ export async function getEncounter(accessToken: string, id: string) {
   const response = await mobileFetch(`/api/encounters/${id}`, accessToken);
   const payload = await readMobileApiJson<{ encounter?: EncounterPayload; error?: string }>(
     response,
-    'Could not read this meeting from Ehllo.',
+    'Could not read this meeting from ehllo.',
   );
   if (!response.ok || !payload.encounter) {
     throw new Error(payload.error || 'Encounter not found.');

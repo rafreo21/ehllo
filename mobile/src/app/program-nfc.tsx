@@ -53,16 +53,16 @@ function stateTitle(state: ScreenState) {
 
 function stateDescription(state: ScreenState) {
   switch (state) {
-    case 'checking-device': return 'Ehllo is checking NFC support and whether it is enabled.';
+    case 'checking-device': return 'ehllo is checking NFC support and whether it is enabled.';
     case 'waiting-for-tag': return Platform.OS === 'ios'
       ? 'Place one writable NFC tag near the top of your iPhone and keep it there.'
       : 'Place one writable NFC tag against the back of your phone and keep it there.';
-    case 'reading-tag': return 'Keep the tag still while Ehllo checks that it can be written.';
-    case 'writing-tag': return 'Do not move the tag. Ehllo is saving your live card link.';
-    case 'verifying-tag': return 'Keep the tag in place while Ehllo confirms the card link.';
+    case 'reading-tag': return 'Keep the tag still while ehllo checks that it can be written.';
+    case 'writing-tag': return 'Do not move the tag. ehllo is saving your live card link.';
+    case 'verifying-tag': return 'Keep the tag in place while ehllo confirms the card link.';
     case 'success': return 'Tap the tag with another phone to open your live card.';
     case 'error': return 'Nothing was changed unless the write completed. Review the reason below and try again.';
-    default: return 'Use one blank or rewritable NDEF tag. Ehllo will save your live card link and verify it before finishing.';
+    default: return 'Use one blank or rewritable NDEF tag. ehllo will save your live card link and verify it before finishing.';
   }
 }
 
@@ -85,7 +85,7 @@ export default function ProgramNfcScreen() {
       setState('success');
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Ehllo could not program this NFC tag.');
+      setError(caught instanceof Error ? caught.message : 'ehllo could not program this NFC tag.');
       setState('error');
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }

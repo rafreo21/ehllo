@@ -33,11 +33,11 @@ export default async function OnboardingCardPage() {
     <main className="onboarding-shell">
       <section className="onboarding-panel onboarding-card">
         <header className="onboarding-header">
-          <a className="onboarding-brand" href="/"><BrandMark size={40} />Ehllo</a>
+          <a className="onboarding-brand" href="/"><BrandMark size={40} />ehllo</a>
         </header>
         <div className="onboarding-intro">
           <h1>Create your first card.</h1>
-          <p>Share who you are in one tap. Ehllo uses this when you meet someone new, then helps you remember the conversation.</p>
+          <p>Share who you are in one tap. ehllo uses this when you meet someone new, then helps you remember the conversation.</p>
         </div>
         <FirstCardForm initialName={name} initialEmail={email} />
       </section>

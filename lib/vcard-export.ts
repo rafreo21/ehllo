@@ -380,7 +380,7 @@ export function buildCardVcard(input: CardVcardInput) {
   const lines = [
     "BEGIN:VCARD",
     "VERSION:3.0",
-    "PRODID:-//Ehllo//Contact Card//EN",
+    "PRODID:-//ehllo//Contact Card//EN",
     `N:${buildStructuredName(input.fullName)}`,
     `FN:${escapeVcard(input.fullName.trim())}`,
   ];
@@ -399,7 +399,7 @@ export function buildCardVcard(input: CardVcardInput) {
   if (cardPage) {
     const cardAlreadyLinked = lines.some((line) => line.includes(cardPage));
     if (!cardAlreadyLinked) {
-      appendLabeledUrl(lines, nextItemIndex, "Ehllo card", cardPage);
+      appendLabeledUrl(lines, nextItemIndex, "ehllo card", cardPage);
       nextItemIndex += 1;
     }
   }

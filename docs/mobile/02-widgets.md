@@ -2,7 +2,7 @@
 
 ## Product behaviour
 
-AfterMeet ships three home-screen widgets:
+ehllo ships three home-screen widgets:
 
 1. **QR Scan** — large scannable QR code (2×2 on Android, small on iOS)
 2. **Business Card** — QR plus name, role, and company (4×2 wide)

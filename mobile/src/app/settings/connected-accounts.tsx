@@ -114,7 +114,7 @@ export default function ConnectedAccountsScreen() {
 
     const env = readEnv();
     if (!env) {
-      setError('Ehllo API URL is not configured.');
+      setError('ehllo API URL is not configured.');
       return;
     }
 
@@ -181,7 +181,7 @@ export default function ConnectedAccountsScreen() {
     <>
       <PageHeader eyebrow="Settings" title="Connected accounts" />
       <Body>
-        Connect the accounts Ehllo can use for approved outbound drafts, calendar scheduling, and future integrations.
+        Connect the accounts ehllo can use for approved outbound drafts, calendar scheduling, and future integrations.
       </Body>
     </>
   );
@@ -280,7 +280,7 @@ export default function ConnectedAccountsScreen() {
         visible={Boolean(error)}
         title="Account connection failed"
         message={error}
-        hint="Your existing Ehllo data has not been changed."
+        hint="Your existing ehllo data has not been changed."
         onClose={() => setError('')}
       />
       <DisconnectAccountSheet

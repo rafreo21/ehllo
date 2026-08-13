@@ -1,4 +1,4 @@
-# AfterMeet MVP Exclusions
+# ehllo MVP Exclusions
 
 Last updated: 2026-07-24
 

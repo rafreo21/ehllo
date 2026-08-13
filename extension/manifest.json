@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "AfterMeet Capture",
+  "name": "ehllo Capture",
   "version": "0.3.6",
-  "description": "Capture people from LinkedIn and the web into AfterMeet.",
+  "description": "Capture people from LinkedIn and the web into ehllo.",
   "permissions": ["activeTab", "storage", "scripting", "tabs"],
   "background": {
     "service_worker": "background.js"
@@ -19,7 +19,7 @@
     "128": "icons/icon-128.png"
   },
   "action": {
-    "default_title": "Capture to AfterMeet",
+    "default_title": "Capture to ehllo",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",

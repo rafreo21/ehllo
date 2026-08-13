@@ -1,9 +1,9 @@
 ---
 name: run-ios-simulator
-description: Build, run, and screenshot the AfterMeet mobile app (Expo/React Native) on the iOS Simulator. Use when asked to run the mobile app, start it on the simulator, build the iOS app, take a screenshot of the mobile UI, or verify a mobile change actually works.
+description: Build, run, and screenshot the ehllo mobile app (Expo/React Native) on the iOS Simulator. Use when asked to run the mobile app, start it on the simulator, build the iOS app, take a screenshot of the mobile UI, or verify a mobile change actually works.
 ---
 
-AfterMeet's mobile app lives in `mobile/` (Expo SDK 57, React Native 0.86, bundle id `com.aftermeet.app`). Drive it via `.claude/skills/run-ios-simulator/driver.sh`, which wraps `xcrun simctl` + `expo run:ios` for boot/build/launch/screenshot. All paths below are relative to `mobile/`.
+ehllo's mobile app lives in `mobile/` (Expo SDK 57, React Native 0.86, bundle id `com.aftermeet.app`). Drive it via `.claude/skills/run-ios-simulator/driver.sh`, which wraps `xcrun simctl` + `expo run:ios` for boot/build/launch/screenshot. All paths below are relative to `mobile/`.
 
 ## Prerequisites (macOS only — this app has no meaningful Linux/headless path)
 

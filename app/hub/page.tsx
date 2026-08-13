@@ -48,7 +48,7 @@ const phases: Phase[] = [
       { id: "promise", title: "Confirm the product promise", detail: "After every important meeting, know who you met, what mattered, and what to do next.", priority: "Critical" },
       { id: "metric", title: "Lock the primary success metric", detail: "Completed follow-up within 72 hours of capturing a contact.", priority: "Critical" },
       { id: "principles", title: "Agree product principles", detail: "Fast capture, user-reviewed AI, no recipient account, private by default.", priority: "Important" },
-      { id: "brand", title: "Decide whether Ehllo remains the working name", detail: "Check domains and trademarks only after the concept survives validation.", priority: "Later" },
+      { id: "brand", title: "Decide whether ehllo remains the working name", detail: "Check domains and trademarks only after the concept survives validation.", priority: "Later" },
     ],
   },
   {
@@ -310,7 +310,7 @@ export default function HubPage() {
       <header className="hub-nav">
         <a className="hub-brand" href="/">
           <span className="hub-brand-mark">A</span>
-          <span>Ehllo <small>MVP hub</small></span>
+          <span>ehllo <small>MVP hub</small></span>
         </a>
         <div className="hub-nav-actions">
           <a href="/"><ArrowLeftIcon size={15} weight="bold" /> Strategy</a>
@@ -390,7 +390,7 @@ export default function HubPage() {
                     <section className="foundation-summary" aria-labelledby="foundation-summary-title">
                       <div className="foundation-summary-head">
                         <span>Working foundation</span>
-                        <h4 id="foundation-summary-title">Who Ehllo is for—and the outcome it owns.</h4>
+                        <h4 id="foundation-summary-title">Who ehllo is for—and the outcome it owns.</h4>
                       </div>
                       <dl>
                         <div><dt>Initial segment</dt><dd>Independent consultants and fractional professionals with frequent external meetings and relationship-driven revenue.</dd></div>
@@ -457,7 +457,7 @@ export default function HubPage() {
       </section>
 
       <footer className="hub-footer">
-        <div><span className="hub-brand-mark">A</span><strong>Ehllo MVP hub</strong></div>
+        <div><span className="hub-brand-mark">A</span><strong>ehllo MVP hub</strong></div>
         <p>Keep the scope narrow. Measure real behavior. Earn every expansion.</p>
         <a href="#checklist">Review checklist <ArrowUpIcon size={15} weight="bold" /></a>
       </footer>

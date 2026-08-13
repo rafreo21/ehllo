@@ -21,7 +21,7 @@ function readEnv(name) {
 
 async function main() {
   const resendApiKey = readEnv("RESEND_API_KEY");
-  const from = readEnv("RESEND_FROM_EMAIL") || "AfterMeet <onboarding@resend.dev>";
+  const from = readEnv("RESEND_FROM_EMAIL") || "ehllo <onboarding@resend.dev>";
   const probeTo = process.argv[2] || "visitor@example.com";
 
   if (!resendApiKey) {
@@ -43,7 +43,7 @@ async function main() {
     body: JSON.stringify({
       from,
       to: [probeTo],
-      subject: "AfterMeet delivery probe",
+      subject: "ehllo delivery probe",
       html: "<p>probe</p>",
     }),
   });
@@ -60,7 +60,7 @@ async function main() {
   console.error("");
   console.error("Fix:");
   console.error("  1. Verify aftermeet.app (or your production domain) at https://resend.com/domains");
-  console.error("  2. Set RESEND_FROM_EMAIL=AfterMeet <auth@aftermeet.app> in .env.local");
+  console.error("  2. Set RESEND_FROM_EMAIL=ehllo <auth@aftermeet.app> in .env.local");
   console.error("  3. Run npm run configure:supabase-auth");
   console.error("");
   console.error("Temporary beta workaround:");

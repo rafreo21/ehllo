@@ -1,6 +1,6 @@
 # Android dev client (live reload)
 
-AfterMeet uses **expo-dev-client**, not Expo Go. You need the **debug dev client APK** for live JS updates. The **release APK** embeds JavaScript at build time and will **never** show live fixes.
+ehllo uses **expo-dev-client**, not Expo Go. You need the **debug dev client APK** for live JS updates. The **release APK** embeds JavaScript at build time and will **never** show live fixes.
 
 ## Quick fix (phone plugged in via USB)
 
@@ -83,7 +83,7 @@ Metro is not running, or the phone cannot reach port 8081.
 
 1. Run `npm run android:dev` on your Mac  
 2. Run `npm run android:dev:connect` with USB plugged in  
-3. Force-quit AfterMeet and reopen  
+3. Force-quit ehllo and reopen
 
 ### Same Wi‑Fi (no USB forward)
 

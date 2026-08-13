@@ -28,7 +28,7 @@ export async function mobileFetch(
 ) {
   const env = readEnv();
   const base = env?.publicCardBaseUrl;
-  if (!base) throw new Error('Ehllo API URL is not configured.');
+  if (!base) throw new Error('ehllo API URL is not configured.');
 
   const { timeoutMs = DEFAULT_TIMEOUT_MS, ...requestInit } = init ?? {};
 
@@ -80,7 +80,7 @@ export async function readMobileApiJson<T>(
     const contentType = response.headers.get('content-type') ?? '';
     const receivedHtml = contentType.includes('text/html') || raw.trimStart().startsWith('<');
     throw new Error(receivedHtml
-      ? 'Ehllo could not reach its API. The server may be temporarily unavailable or protected. Your work on this device is still safe.'
+      ? 'ehllo could not reach its API. The server may be temporarily unavailable or protected. Your work on this device is still safe.'
       : fallbackMessage);
   }
 }

@@ -1,4 +1,4 @@
-# AfterMeet End-to-End Product Flow
+# ehllo End-to-End Product Flow
 
 Status: Working experience specification  
 Last updated: 2026-07-24
@@ -67,7 +67,7 @@ The user arrives from the product site, an invitation, or a direct authenticatio
 
 1. User chooses email or an available identity provider.
 2. Authentication succeeds.
-3. AfterMeet determines this is a new account.
+3. ehllo determines this is a new account.
 4. User enters:
    - Name
    - Role
@@ -76,7 +76,7 @@ The user arrives from the product site, an invitation, or a direct authenticatio
    - Primary contact method
 5. A live card preview updates while the user types.
 6. User selects “Publish my card.”
-7. AfterMeet validates required public fields.
+7. ehllo validates required public fields.
 8. A public slug and QR code are created.
 9. Confirmation appears: “Your card is ready.”
 10. User lands on Home.
@@ -105,7 +105,7 @@ The user remains on the relevant field with a specific inline error. Completed f
 
 #### Public slug conflict
 
-AfterMeet proposes an available slug without losing entered information.
+ehllo proposes an available slug without losing entered information.
 
 #### Publish failure
 
@@ -126,7 +126,7 @@ The card remains a local or server-side draft. The user sees a retry action and 
 6. Recipient selects “Share your details.”
 7. Recipient enters the minimum necessary information.
 8. Recipient confirms consent and submits.
-9. AfterMeet attempts to match an existing Person.
+9. ehllo attempts to match an existing Person.
 10. A new Person is created or an existing Person is linked.
 11. The Person timeline projection displays the Exchange.
 12. Owner receives an Inbox item or subtle Home notification.
@@ -278,7 +278,7 @@ The edited version becomes trusted data; the original AI proposal may be retaine
    - Editable draft
    - Intended recipient and channel
 5. User edits or approves.
-6. AfterMeet opens an external email handoff or uses a future authorised delivery service.
+6. ehllo opens an external email handoff or uses a future authorised delivery service.
 7. User confirms the message was sent.
 8. Action becomes Completed.
 9. The completed Action becomes a source event shown by the Person timeline projection.
@@ -299,13 +299,13 @@ The item explains what is missing and links to the Person details.
 
 #### Send handoff is abandoned
 
-AfterMeet does not infer completion. The Action remains open until the user confirms.
+ehllo does not infer completion. The Action remains open until the user confirms.
 
 ## Flow 6: Second-day return
 
 ### Entry
 
-The user opens AfterMeet the next morning or follows a reminder.
+The user opens ehllo the next morning or follows a reminder.
 
 ### Home priority
 
@@ -389,7 +389,7 @@ No background system may mark an Action completed solely because an external app
 - Saved Encounter appears immediately without waiting for AI.
 - AI review clearly separates source, proposal, and trusted result.
 - Inbox always explains why an item requires attention.
-- Public-card recipients never need an AfterMeet account.
+- Public-card recipients never need an ehllo account.
 
 ## Implementation order implied by the flow
 

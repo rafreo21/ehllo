@@ -56,7 +56,7 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         header={
           <View style={styles.header}>
-            <Eyebrow>Ehllo mobile</Eyebrow>
+            <Eyebrow>ehllo mobile</Eyebrow>
             <Title style={styles.title}>My Profile</Title>
             <Body>Manage your account, synchronization and mobile capabilities.</Body>
           </View>
@@ -169,7 +169,7 @@ export default function SettingsScreen() {
               <Bell size={18} color={colors.ink} weight="bold" />
               <Text style={styles.label}>Notification preferences</Text>
             </View>
-            <Text style={styles.linkHint}>How Ehllo reminds you about follow-ups</Text>
+            <Text style={styles.linkHint}>How ehllo reminds you about follow-ups</Text>
           </View>
           <CaretRight size={18} color={colors.muted} weight="bold" />
         </Pressable>

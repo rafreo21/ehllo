@@ -563,7 +563,7 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
         }}>
         <View style={styles.blockedSheet}>
           <Body>
-            Ehllo keeps one live recording at a time so its audio, people, and transcript never get mixed together.
+            ehllo keeps one live recording at a time so its audio, people, and transcript never get mixed together.
           </Body>
           <Button onPress={() => {
             setCaptureBlockedOpen(false);

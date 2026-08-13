@@ -1,6 +1,6 @@
 # OAuth provider setup (Google, LinkedIn, X)
 
-AfterMeet already supports social sign-in in the app. Providers stay disabled until you create OAuth apps and register credentials in Supabase.
+ehllo already supports social sign-in in the app. Providers stay disabled until you create OAuth apps and register credentials in Supabase.
 
 **Supabase project:** `tgpzxgrvdmmwnodxrooh`  
 **Provider callback URL (register this in every OAuth app):**

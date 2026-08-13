@@ -28,7 +28,7 @@ export function DisconnectAccountSheet({
         </>
       }>
       <Body>
-        Ehllo will lose access to {providerName} until you reconnect. Approved drafts already sent and existing Ehllo data are not affected.
+        ehllo will lose access to {providerName} until you reconnect. Approved drafts already sent and existing ehllo data are not affected.
       </Body>
     </BottomSheet>
   );

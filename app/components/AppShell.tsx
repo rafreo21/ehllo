@@ -68,7 +68,7 @@ export function AppShell({ children }: AppShellProps) {
     void hydrateEncountersFromServer();
     void hydrateCardLibraryFromServer();
   }, [user.email]);
-  const label = user.displayName || user.email.split("@")[0] || "Ehllo user";
+  const label = user.displayName || user.email.split("@")[0] || "ehllo user";
   const initials = label.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
 
   const renderNavItem = ([key, href, Icon, itemLabel]: (typeof consumerNav)[number]) => (
@@ -81,7 +81,7 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <main className="product-shell">
       <aside className={`product-sidebar consumer-sidebar ${mobileNav ? "open" : ""}`}>
-        <a className="product-logo" href="/app"><BrandMark size={38} /><strong>Ehllo</strong></a>
+        <a className="product-logo" href="/app"><BrandMark size={38} /><strong>ehllo</strong></a>
         <nav aria-label="Consumer navigation">
           {consumerNav.map(renderNavItem)}
         </nav>
@@ -103,7 +103,7 @@ export function AppShell({ children }: AppShellProps) {
           <IconButton className="menu-button" aria-label="Toggle navigation" onClick={() => setMobileNav(!mobileNav)}>
             <ListIcon size={25} weight="bold" />
           </IconButton>
-          <span className="mobile-logo">Ehllo</span>
+          <span className="mobile-logo">ehllo</span>
         </header>
         <div className="product-content">
           {backHref || actions ? (

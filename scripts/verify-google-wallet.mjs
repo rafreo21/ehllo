@@ -38,7 +38,7 @@ process.env.NEXT_PUBLIC_APP_URL = env.NEXT_PUBLIC_APP_URL;
 const { isGoogleWalletConfigured, readGoogleWalletConfig } = await import("../lib/wallet-config.ts");
 const { buildGoogleWalletSaveUrl, walletJwtOrigins } = await import("../lib/google-wallet-pass.ts");
 
-console.log("AfterMeet Google Wallet verification\n");
+console.log("ehllo Google Wallet verification\n");
 
 if (!env.GOOGLE_WALLET_ISSUER_ID?.trim()) {
   console.log("Missing GOOGLE_WALLET_ISSUER_ID in .env.local or the environment.");
@@ -66,9 +66,9 @@ const cardUrl = `${(env.NEXT_PUBLIC_APP_URL || "https://aftermeet-beta.vercel.ap
 const saveUrl = buildGoogleWalletSaveUrl(
   {
     slug: "verify-wallet",
-    fullName: "AfterMeet Test",
+    fullName: "ehllo Test",
     role: "Founder",
-    company: "AfterMeet",
+    company: "ehllo",
     bio: "Verification pass from verify-google-wallet.mjs",
     themeColor: "#9fe870",
     cardUrl,

@@ -1,4 +1,4 @@
-# AfterMeet Customer Discovery Plan
+# ehllo Customer Discovery Plan
 
 Last updated: 2026-07-24
 
@@ -29,7 +29,7 @@ Participants should:
 - Personally manage potential-client, partner, and referral follow-ups
 - Have regular external professional conversations
 - Include both CRM users and non-users
-- Be recruited without presenting AfterMeet as the answer
+- Be recruited without presenting ehllo as the answer
 
 Avoid collecting unnecessary personal or commercially sensitive information. Use reference IDs and pseudonyms where practical.
 

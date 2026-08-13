@@ -41,7 +41,7 @@ export function BusinessShell({ active, title, subtitle, actions, children }: Bu
     void hydrateEncountersFromServer();
     void hydrateCardLibraryFromServer();
   }, []);
-  const label = user.displayName || user.email.split("@")[0] || "Ehllo user";
+  const label = user.displayName || user.email.split("@")[0] || "ehllo user";
   const initials = label.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
 
   return (
@@ -49,7 +49,7 @@ export function BusinessShell({ active, title, subtitle, actions, children }: Bu
       <aside className={`product-sidebar ${mobileNav ? "open" : ""}`}>
         <a className="product-logo" href="/business">
           <BrandMark size={38} />
-          <strong>Ehllo Business</strong>
+          <strong>ehllo Business</strong>
         </a>
         <nav aria-label="Business navigation">
           <p className="nav-group-label">Business</p>
@@ -77,7 +77,7 @@ export function BusinessShell({ active, title, subtitle, actions, children }: Bu
             <ListIcon size={25} weight="bold" />
           </IconButton>
           <div>
-            <span className="mobile-logo">Ehllo Business</span>
+            <span className="mobile-logo">ehllo Business</span>
             <strong className="header-title">{title}</strong>
             {subtitle && <p>{subtitle}</p>}
           </div>

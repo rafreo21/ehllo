@@ -2,7 +2,7 @@ import "server-only";
 
 export async function sendEmail(input: { to: string; subject: string; html: string }) {
   const apiKey = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.RESEND_FROM_EMAIL?.trim() || "Ehllo <onboarding@resend.dev>";
+  const from = process.env.RESEND_FROM_EMAIL?.trim() || "ehllo <onboarding@resend.dev>";
   if (!apiKey) return { ok: false as const, error: "Resend is not configured." };
 
   const response = await fetch("https://api.resend.com/emails", {

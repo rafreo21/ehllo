@@ -26,7 +26,7 @@ async function graphFetch(url: string, accessToken: string, init?: RequestInit) 
 
 function safeFileName(title: string, originalName: string) {
   const extension = originalName.split(".").pop()?.replace(/[^a-z0-9]/gi, "") || "webm";
-  const base = (title || "Ehllo recording")
+  const base = (title || "ehllo recording")
     .replace(/[\x00-\x1f<>:"/\\|?*#%]/g, "-")
     .replace(/\s+/g, " ")
     .trim()
@@ -52,7 +52,7 @@ export async function uploadRecordingToOneDrive(input: {
         item: {
           "@microsoft.graph.conflictBehavior": "rename",
           name: fileName,
-          description: `Ehllo encounter ${input.encounterId}`,
+          description: `ehllo encounter ${input.encounterId}`,
         },
       }),
     },

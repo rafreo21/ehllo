@@ -416,7 +416,7 @@ export default function CaptureDetailScreen() {
   async function shareGuestLink() {
     if (!guestUrl || !encounter || !isShared) return;
     await Share.share({
-      title: `${encounter.personName || encounter.title} · Ehllo`,
+      title: `${encounter.personName || encounter.title} · ehllo`,
       message: guestUrl,
       url: guestUrl,
     });

@@ -270,7 +270,7 @@ export async function updateQuickShareWidget(
 
 export function widgetSetupInstructions(platform: 'ios' | 'android') {
   if (platform === 'android') {
-    return 'Long-press your home screen → Widgets → Ehllo. Add QR Scan (2×2), Business Card, or Recent Connections. Swipe cards with ‹ › on the business card widget.';
+    return 'Long-press your home screen → Widgets → ehllo. Add QR Scan (2×2), Business Card, or Recent Connections. Swipe cards with ‹ › on the business card widget.';
   }
-  return 'Long-press your home screen → Edit → Add Widget → Ehllo. Add QR Scan, Business Card, or Recent Connections. Use ‹ › on the business card widget to switch cards.';
+  return 'Long-press your home screen → Edit → Add Widget → ehllo. Add QR Scan, Business Card, or Recent Connections. Use ‹ › on the business card widget to switch cards.';
 }

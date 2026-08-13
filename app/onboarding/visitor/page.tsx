@@ -31,7 +31,7 @@ export default async function VisitorOnboardingPage({
         </header>
         <div className="onboarding-intro">
           <h1>Remember who you meet.</h1>
-          <p>Confirm your name and Ehllo will keep your card exchanges and shared meeting records in one directory.</p>
+          <p>Confirm your name and ehllo will keep your card exchanges and shared meeting records in one directory.</p>
         </div>
         <VisitorOnboardingForm
           initialName={user.displayName ?? ""}

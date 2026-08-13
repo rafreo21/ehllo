@@ -61,7 +61,7 @@ test("buildHubSpotNoteBody includes encounter context", () => {
     contact: sampleContact,
     encounters: [sampleEncounter],
   });
-  assert.match(body, /Ehllo relationship sync/);
+  assert.match(body, /ehllo relationship sync/);
   assert.match(body, /Interested in a pilot/);
   assert.match(body, /Send pilot deck/);
 });

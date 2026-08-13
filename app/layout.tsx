@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ehllo",
+  title: "ehllo",
   description: "Remember what mattered and know what to do next.",
   icons: {
     icon: [{ url: "/aftermeet-logo.svg?v=2", type: "image/svg+xml" }],

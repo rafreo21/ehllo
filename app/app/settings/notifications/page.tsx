@@ -8,7 +8,7 @@ export default function NotificationSettingsPage() {
   return (
     <div className="flow-page settings-page">
       <div className="flow-heading">
-        <div><h1>Notification preferences</h1><p>Choose how Ehllo reminds you about follow-ups.</p></div>
+        <div><h1>Notification preferences</h1><p>Choose how ehllo reminds you about follow-ups.</p></div>
       </div>
       <NotificationPreferences />
     </div>

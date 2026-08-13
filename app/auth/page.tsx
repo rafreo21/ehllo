@@ -54,7 +54,7 @@ export default async function AuthPage({
   return (
     <main className="auth-page">
       <div className="auth-header">
-        <a className="auth-logo" href="/"><BrandMark size={40} /><strong>Ehllo</strong></a>
+        <a className="auth-logo" href="/"><BrandMark size={40} /><strong>ehllo</strong></a>
         <LinkButton size="small" variant="ghost" href="/"><ArrowLeftIcon size={16} weight="bold" />Back to home</LinkButton>
       </div>
       <section className="auth-panel">
@@ -62,7 +62,7 @@ export default async function AuthPage({
           <span><b className="auth-emoji" aria-hidden="true">👋</b> Welcome</span>
           <h1>{visitorIntent ? "Remember who you meet." : <>Sign in or sign up<br />in seconds.</>}</h1>
           <p>{visitorIntent
-            ? "Create a light Ehllo account to keep cards and shared meeting records in one place."
+            ? "Create a light ehllo account to keep cards and shared meeting records in one place."
             : "Enter your email and we’ll send a 6-digit sign-in code."}</p>
         </div>
         {!environment.config ? (

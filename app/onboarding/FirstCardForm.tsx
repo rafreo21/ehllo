@@ -79,7 +79,7 @@ export function FirstCardForm({ initialName, initialEmail }: { initialName: stri
       queueCardSync(card);
       window.location.assign("/app/cards");
     } catch {
-      setError("We couldn’t reach Ehllo. Check your connection and try again.");
+      setError("We couldn’t reach ehllo. Check your connection and try again.");
     } finally {
       setLoading(false);
     }

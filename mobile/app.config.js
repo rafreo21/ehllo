@@ -36,7 +36,7 @@ const BACKEND = IS_STAGING
 
 module.exports = {
   expo: {
-    name: IS_STAGING ? "Ehllo Staging" : "Ehllo",
+    name: IS_STAGING ? "ehllo Staging" : "ehllo",
     owner: "rafreo",
     slug: EAS_PROJECT.slug,
     version: "1.0.1",
@@ -123,33 +123,33 @@ module.exports = {
       [
         "expo-camera",
         {
-          cameraPermission: "Allow Ehllo to scan contact card QR codes.",
+          cameraPermission: "Allow ehllo to scan contact card QR codes.",
         },
       ],
       [
         "expo-contacts",
         {
-          contactsPermission: "Allow Ehllo to save people you meet to your contacts.",
+          contactsPermission: "Allow ehllo to save people you meet to your contacts.",
         },
       ],
       [
         "expo-image-picker",
         {
-          photosPermission: "Allow Ehllo to use photos on your contact card.",
+          photosPermission: "Allow ehllo to use photos on your contact card.",
         },
       ],
       [
         "expo-audio",
         {
-          microphonePermission: "Allow Ehllo to record meetings you choose to capture.",
+          microphonePermission: "Allow ehllo to record meetings you choose to capture.",
           enableBackgroundRecording: true,
         },
       ],
       [
         "expo-speech-recognition",
         {
-          microphonePermission: "Allow Ehllo to record meetings you choose to capture.",
-          speechRecognitionPermission: "Allow Ehllo to transcribe your meetings while you record.",
+          microphonePermission: "Allow ehllo to record meetings you choose to capture.",
+          speechRecognitionPermission: "Allow ehllo to transcribe your meetings while you record.",
           androidSpeechServicePackages: [
             "com.google.android.googlequicksearchbox",
             "com.google.android.tts",
@@ -165,19 +165,19 @@ module.exports = {
           widgets: [
             {
               name: "QrScanWidget",
-              displayName: "Ehllo QR Scan",
+              displayName: "ehllo QR Scan",
               description: "Large scannable QR code for your card.",
               supportedFamilies: ["systemSmall"],
             },
             {
               name: "BusinessCardWidget",
-              displayName: "Ehllo Business Card",
+              displayName: "ehllo Business Card",
               description: "QR code plus your name, role, and company.",
               supportedFamilies: ["systemMedium"],
             },
             {
               name: "RecentConnectionsWidget",
-              displayName: "Ehllo Recent Connections",
+              displayName: "ehllo Recent Connections",
               description: "Recent people who shared their details with you.",
               supportedFamilies: ["systemMedium"],
             },
@@ -189,7 +189,7 @@ module.exports = {
       [
         "react-native-nfc-manager",
         {
-          nfcPermission: "Allow Ehllo to program NFC tags and share your card when someone taps your phone.",
+          nfcPermission: "Allow ehllo to program NFC tags and share your card when someone taps your phone.",
         },
       ],
       "./plugins/withAndroidNfcHce",

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Install the debug dev client (if needed), forward Metro, and open AfterMeet on a USB phone.
+# Install the debug dev client (if needed), forward Metro, and open ehllo on a USB phone.
 # Use this when live updates are not showing — usually means the release APK is installed.
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -32,7 +32,7 @@ if [[ ! -f "$APK" ]]; then
 fi
 
 echo ""
-echo "AfterMeet — connect phone for live updates"
+echo "ehllo — connect phone for live updates"
 echo "=========================================="
 echo ""
 echo "On your phone:"
@@ -79,7 +79,7 @@ fi
 encoded_url="$(python3 -c "import urllib.parse; print(urllib.parse.quote('$dev_url', safe=''))")"
 deep_link="${SCHEME}://expo-development-client/?url=${encoded_url}"
 
-echo "Opening AfterMeet dev client…"
+echo "Opening ehllo dev client…"
 adb shell am start -a android.intent.action.VIEW -d "$deep_link" >/dev/null 2>&1 \
   || adb shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1 >/dev/null
 

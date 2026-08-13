@@ -20,7 +20,7 @@ export function OnboardingForm({
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (displayName.trim().length < 2) return setError("Enter the name you want Ehllo to use.");
+    if (displayName.trim().length < 2) return setError("Enter the name you want ehllo to use.");
     setLoading(true);
     setError("");
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/London";
@@ -43,7 +43,7 @@ export function OnboardingForm({
 
       window.location.assign(`${redirectTo}?name=${encodeURIComponent(displayName.trim())}`);
     } catch {
-      setError("We couldn’t reach Ehllo. Check your connection and try again.");
+      setError("We couldn’t reach ehllo. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -57,7 +57,7 @@ export function OnboardingForm({
         autoComplete="name"
         value={displayName}
         onChange={(event) => setDisplayName(event.target.value)}
-        hint="How your name appears in Ehllo."
+        hint="How your name appears in ehllo."
         error={error}
         autoFocus
       />

@@ -114,7 +114,7 @@ async function writeNdefMessage(
   const writtenTag = await NfcManager.ndefHandler.getNdefMessage();
   const writtenUrl = verifiedUriFromTag(writtenTag, Ndef);
   if (!sameCardUrl(writtenUrl, expectedUrl)) {
-    throw new Error('The tag was formatted, but Ehllo could not verify the card link. Try programming it again.');
+    throw new Error('The tag was formatted, but ehllo could not verify the card link. Try programming it again.');
   }
 }
 
@@ -135,9 +135,9 @@ function explainNfcFailure(error: unknown) {
   if (/ndef|format/i.test(message)) {
     return Platform.OS === 'ios'
       ? 'This tag is not NDEF-formatted or writable. Try a blank NTAG213, NTAG215, or NTAG216 tag.'
-      : 'This tag could not be prepared for an Ehllo link. Try a blank NTAG213, NTAG215, or NTAG216 tag.';
+      : 'This tag could not be prepared for an ehllo link. Try a blank NTAG213, NTAG215, or NTAG216 tag.';
   }
-  return message || 'Ehllo could not program this tag. Hold one writable NFC tag near the phone and try again.';
+  return message || 'ehllo could not program this tag. Hold one writable NFC tag near the phone and try again.';
 }
 
 export async function programNfcTag(
@@ -146,7 +146,7 @@ export async function programNfcTag(
   onProgress?: NfcProgrammingProgress,
 ) {
   if (!isNativeNfcSupported()) {
-    throw new Error('NFC programming is only available in the Ehllo iOS and Android apps.');
+    throw new Error('NFC programming is only available in the ehllo iOS and Android apps.');
   }
 
   const normalized = assertCardUrl(cardUrl);

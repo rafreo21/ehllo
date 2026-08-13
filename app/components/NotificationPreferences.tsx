@@ -115,7 +115,7 @@ export function NotificationPreferences() {
       });
       const payload = await response.json() as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Could not update email reminders.");
-      setMessage({ tone: "success", text: next ? "Email reminders are on across Ehllo." : "Email reminders are off across Ehllo." });
+      setMessage({ tone: "success", text: next ? "Email reminders are on across ehllo." : "Email reminders are off across ehllo." });
     } catch (error) {
       setEmailEnabled(previous);
       setMessage({ tone: "error", text: error instanceof Error ? error.message : "Could not update email reminders." });
@@ -153,7 +153,7 @@ export function NotificationPreferences() {
 
   return (
     <section className="settings-panel notification-preferences" aria-labelledby="notification-preferences-heading">
-      <header><div><h2 id="notification-preferences-heading">Notification preferences</h2><p>Choose how Ehllo reminds you about follow-ups.</p></div></header>
+      <header><div><h2 id="notification-preferences-heading">Notification preferences</h2><p>Choose how ehllo reminds you about follow-ups.</p></div></header>
       {message ? <StatusMessage tone={message.tone}>{message.text}</StatusMessage> : null}
       <div className="preference-row">
         <span className="preference-icon"><EnvelopeSimpleIcon size={22} weight="bold" /></span>
@@ -162,7 +162,7 @@ export function NotificationPreferences() {
       </div>
       <div className="preference-row">
         <span className="preference-icon"><BellIcon size={22} weight="bold" /></span>
-        <div><h3>Browser notifications</h3><p>Show due follow-up alerts in this browser while Ehllo is open.</p>{browserPermission === "denied" ? <small>Blocked in browser settings</small> : browserPermission === "unsupported" ? <small>Not supported by this browser</small> : null}</div>
+        <div><h3>Browser notifications</h3><p>Show due follow-up alerts in this browser while ehllo is open.</p>{browserPermission === "denied" ? <small>Blocked in browser settings</small> : browserPermission === "unsupported" ? <small>Not supported by this browser</small> : null}</div>
         <PreferenceSwitch checked={browserEnabled} disabled={browserPermission === "unsupported"} label="Browser notifications" onChange={(next) => void toggleBrowser(next)} />
       </div>
       <p className="preference-group-label">Notify me about</p>

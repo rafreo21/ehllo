@@ -338,7 +338,7 @@ export default function DiscoveryPage() {
         <div className="guide-layout">
           <ol>{interviewQuestions.map((question) => <li key={question}>{question}</li>)}</ol>
           <aside><h3>Interviewer warnings</h3><ul>
-            <li>Do not pitch Ehllo at the beginning.</li><li>Do not ask “Would you use this?”</li><li>Do not ask leading questions.</li><li>Ask for recent, specific examples.</li><li>Separate stated preference from demonstrated behaviour.</li><li>Ask permission before recording.</li><li>Never paste highly sensitive or unnecessary personal information.</li>
+            <li>Do not pitch ehllo at the beginning.</li><li>Do not ask “Would you use this?”</li><li>Do not ask leading questions.</li><li>Ask for recent, specific examples.</li><li>Separate stated preference from demonstrated behaviour.</li><li>Ask permission before recording.</li><li>Never paste highly sensitive or unnecessary personal information.</li>
           </ul></aside>
         </div>
       </section>

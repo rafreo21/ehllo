@@ -214,7 +214,7 @@ export default function CardToolsScreen() {
   async function shareCardLink() {
     if (!card) return;
     await Share.share({
-      title: `${card.name} · Ehllo`,
+      title: `${card.name} · ehllo`,
       message: `${card.name}\n${subtitle}\n${publicUrl}`.trim(),
       url: publicUrl,
     });

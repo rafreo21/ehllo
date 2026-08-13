@@ -1,6 +1,6 @@
-# AfterMeet
+# ehllo
 
-AfterMeet turns a contact-card exchange into a relationship workflow: share,
+ehllo turns a contact-card exchange into a relationship workflow: share,
 capture context, organise the person, and surface the right next action.
 
 ## Products in this repository

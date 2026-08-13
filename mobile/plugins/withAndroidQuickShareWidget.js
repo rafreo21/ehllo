@@ -20,7 +20,7 @@ const PREFS = {
 const WIDGETS = [
   {
     receiver: 'QrScanWidgetReceiver',
-    label: 'Ehllo',
+    label: 'ehllo',
     description: 'QR Scan',
     layout: 'aftermeet_widget_qr_scan',
     previewLayout: 'aftermeet_widget_qr_scan_preview',
@@ -36,7 +36,7 @@ const WIDGETS = [
   },
   {
     receiver: 'BusinessCardWidgetReceiver',
-    label: 'Ehllo',
+    label: 'ehllo',
     description: 'Business Card',
     layout: 'aftermeet_widget_business_card',
     previewLayout: 'aftermeet_widget_business_card_preview',
@@ -53,7 +53,7 @@ const WIDGETS = [
   },
   {
     receiver: 'RecentConnectionsWidgetReceiver',
-    label: 'Ehllo',
+    label: 'ehllo',
     description: 'Recent Connections',
     layout: 'aftermeet_widget_connections',
     previewLayout: 'aftermeet_widget_connections_preview',
@@ -302,7 +302,7 @@ object WidgetRenderer {
       JSONObject()
         .put("name", "Alex Morgan")
         .put("role", "Product Designer")
-        .put("company", "Ehllo")
+        .put("company", "ehllo")
         .put("cardUrl", DEMO_URL)
         .put("shareDeepLink", DEMO_DEEP_LINK)
         .put("initials", "AM"),
@@ -491,7 +491,7 @@ object WidgetRenderer {
     val card = cards.optJSONObject(index) ?: JSONObject()
     val name = card.optString("name", "Alex Morgan")
     val role = card.optString("role", "Product Designer")
-    val company = card.optString("company", "Ehllo")
+    val company = card.optString("company", "ehllo")
     val deepLink = card.optString("shareDeepLink", DEMO_DEEP_LINK)
     val initials = card.optString("initials", "AM")
     val views = RemoteViews(context.packageName, R.layout.aftermeet_widget_business_card)
@@ -658,7 +658,7 @@ function layoutQrScan() {
       android:layout_height="20dp"
       android:layout_gravity="center"
       android:background="@drawable/aftermeet_widget_logo_backing"
-      android:contentDescription="Ehllo logo"
+      android:contentDescription="ehllo logo"
       android:padding="2dp"
       android:scaleType="fitCenter"
       android:visibility="gone" />
@@ -705,7 +705,7 @@ function layoutBusinessCard() {
         android:layout_height="16dp"
         android:layout_gravity="center"
         android:background="@drawable/aftermeet_widget_logo_backing"
-        android:contentDescription="Ehllo logo"
+        android:contentDescription="ehllo logo"
         android:padding="1dp"
         android:scaleType="fitCenter"
         android:visibility="gone" />
@@ -759,7 +759,7 @@ function layoutBusinessCard() {
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:maxLines="1"
-        android:text="Ehllo"
+        android:text="ehllo"
         android:textColor="#8FA088"
         android:textSize="9sp" />
       <LinearLayout

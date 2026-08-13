@@ -1,4 +1,4 @@
-# AfterMeet product roadmap
+# ehllo product roadmap
 
 Status: Living delivery backlog
 Last updated: 2026-08-02
@@ -9,7 +9,7 @@ Delivery source of truth for **implementation order and status**. The canonical 
 
 ## Two products, one platform
 
-AfterMeet is split into two product lines. **Most of what ships today is the consumer product.** Some features already exist in code but belong on the **business product** roadmap — we keep them visible here and will refine scope in a later pass.
+ehllo is split into two product lines. **Most of what ships today is the consumer product.** Some features already exist in code but belong on the **business product** roadmap — we keep them visible here and will refine scope in a later pass.
 
 | | **Consumer product** | **Business product** |
 |---|----------------------|----------------------|

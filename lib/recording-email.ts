@@ -13,13 +13,13 @@ export type RecordingShareEmailInput = {
 
 export function buildRecordingShareEmail(input: RecordingShareEmailInput) {
   const greetingName = input.personName.trim().split(/\s+/)[0] || "there";
-  const subject = `Meeting recording: ${input.title.trim() || "Ehllo capture"}`;
+  const subject = `Meeting recording: ${input.title.trim() || "ehllo capture"}`;
   const lines = [
     `Hi ${greetingName},`,
     "",
     input.cloudExpired
       ? "The shared online recording is no longer available, so I'm sending the audio from my device."
-      : `Here is our meeting record from Ehllo. The online recording is available for ${CLOUD_RECORDING_RETENTION_DAYS} days at the guest link below.`,
+      : `Here is our meeting record from ehllo. The online recording is available for ${CLOUD_RECORDING_RETENTION_DAYS} days at the guest link below.`,
     "",
     `Meeting: ${input.title.trim() || "Untitled meeting"}`,
     input.personName.trim() ? `With: ${input.personName.trim()}` : "",
@@ -31,7 +31,7 @@ export function buildRecordingShareEmail(input: RecordingShareEmailInput) {
     "",
     "Please attach the meeting recording file before sending if your email app did not attach it automatically.",
     "",
-    "— Sent via Ehllo",
+    "— Sent via ehllo",
   ].filter((line) => line !== "");
 
   return {

@@ -3,8 +3,8 @@ import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
 import { BrandMark } from "../components/BrandMark";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy · Ehllo",
-  description: "How Ehllo collects, uses, and protects your data, including data accessed through Google and Microsoft integrations.",
+  title: "Privacy Policy · ehllo",
+  description: "How ehllo collects, uses, and protects your data, including data accessed through Google and Microsoft integrations.",
 };
 
 const LAST_UPDATED = "August 10, 2026";
@@ -14,7 +14,7 @@ export default function PrivacyPage() {
     <main className="mx-auto w-full max-w-[760px] px-6 py-16 text-[#163300]">
       <a href="/" className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-[#163300] hover:text-[#0e0f0c]">
         <ArrowLeftIcon size={15} weight="bold" />
-        Ehllo
+        ehllo
       </a>
       <div className="mb-10 flex items-center gap-3">
         <BrandMark size={36} />
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
       <div className="space-y-10 text-[15px] leading-relaxed text-[#163300]">
         <section>
           <p>
-            Ehllo (&ldquo;we&rdquo;, &ldquo;us&rdquo;) is a relationship workspace: you capture the people
+            ehllo (&ldquo;we&rdquo;, &ldquo;us&rdquo;) is a relationship workspace: you capture the people
             you meet, record what mattered, and get help turning that into a follow-up. This policy explains
             what data we collect, why, and how you stay in control of it &mdash; including data we access
             through optional Google and Microsoft account connections.
@@ -49,24 +49,24 @@ export default function PrivacyPage() {
           <h2 className="mb-3 text-xl font-bold tracking-tight">Data from Google and Microsoft (optional)</h2>
           <p className="mb-3">
             Connecting a Google or Microsoft account is entirely optional and is separate from signing in to
-            Ehllo. If you choose to connect one from Settings, we request only the following, and only for
+            ehllo. If you choose to connect one from Settings, we request only the following, and only for
             the purposes below:
           </p>
           <ul className="list-disc space-y-2 pl-5">
             <li>
               <strong>Send email on your behalf</strong> (Gmail send / Outlook Mail.Send) &mdash; used only when
-              you explicitly approve and send a follow-up email drafted in Ehllo. We never read your inbox
+              you explicitly approve and send a follow-up email drafted in ehllo. We never read your inbox
               and never send anything without your review.
             </li>
             <li>
               <strong>View your calendar events</strong> (Google Calendar events / Microsoft Calendars.ReadWrite)
-              &mdash; used to suggest events you may want to add to Ehllo (for example, an upcoming meeting
+              &mdash; used to suggest events you may want to add to ehllo (for example, an upcoming meeting
               with external attendees) and, once you confirm an encounter happened during a calendar event, to
               automatically link the two together. We do not modify or delete your calendar events.
             </li>
             <li>
               <strong>App-created files</strong> (Google Drive drive.file / Microsoft OneDrive app folder) &mdash;
-              scoped only to files Ehllo itself creates; we cannot see or access any other file in your
+              scoped only to files ehllo itself creates; we cannot see or access any other file in your
               Drive or OneDrive.
             </li>
           </ul>
@@ -92,9 +92,9 @@ export default function PrivacyPage() {
         <section>
           <h2 className="mb-3 text-xl font-bold tracking-tight">Data sharing</h2>
           <p>
-            We share data only with the service providers needed to run Ehllo (hosting, database, AI
+            We share data only with the service providers needed to run ehllo (hosting, database, AI
             processing, transactional email) under agreements that restrict them to providing that service, and
-            with other Ehllo users only to the extent you choose to share it &mdash; for example, publishing
+            with other ehllo users only to the extent you choose to share it &mdash; for example, publishing
             your card or sending someone a shared meeting summary. We do not share your connected Google or
             Microsoft data with any third party outside of what&apos;s described above.
           </p>

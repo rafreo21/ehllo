@@ -141,7 +141,7 @@ captureButton.addEventListener("click", async () => {
 
   try {
     void startCapture(tab.id, baseUrl);
-    status.textContent = "Capture running… AfterMeet will open in a background tab when done.";
+    status.textContent = "Capture running… ehllo will open in a background tab when done.";
     captureButton.disabled = true;
   } catch {
     status.textContent = "Could not start capture on this tab. Remove and re-add the extension, then try again.";

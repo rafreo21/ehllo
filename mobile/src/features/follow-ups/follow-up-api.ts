@@ -67,7 +67,7 @@ export async function fetchFollowUps(
   const response = await mobileFetch(`/api/follow-ups${query ? `?${query}` : ''}`, accessToken);
   const payload = await readMobileApiJson<{ followUps?: Array<Record<string, unknown>>; error?: string }>(
     response,
-    'Could not read follow-ups from Ehllo.',
+    'Could not read follow-ups from ehllo.',
   );
   if (!response.ok) {
     throw new Error(payload.error || 'Could not load follow-ups.');
@@ -150,7 +150,7 @@ export async function fetchEncounterRecords(accessToken: string) {
   const response = await mobileFetch('/api/encounters', accessToken);
   const payload = await readMobileApiJson<{ encounters?: Array<Record<string, unknown>>; error?: string }>(
     response,
-    'Could not read meetings from Ehllo.',
+    'Could not read meetings from ehllo.',
   );
   if (!response.ok) {
     throw new Error(payload.error || 'Could not load encounters.');

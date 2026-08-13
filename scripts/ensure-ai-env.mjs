@@ -18,7 +18,7 @@ if (!existsSync(projectLink)) {
 
 // Local development must not depend on downloading a CLI package. An expired
 // OIDC token only disables AI-backed conveniences; it should never block the
-// rest of AfterMeet from starting offline.
+// rest of ehllo from starting offline.
 if (!existsSync(localVercelCli)) {
   console.warn("[aftermeet] Skipping AI env refresh: Vercel CLI is not installed locally. Add OPENAI_API_KEY to .env.local for set-and-forget local AI.");
   process.exit(0);

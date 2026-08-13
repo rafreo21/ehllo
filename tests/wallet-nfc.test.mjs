@@ -40,7 +40,7 @@ test("google wallet jwt origins use hostnames", async () => {
       slug: "demo",
       fullName: "Alex Morgan",
       role: "Designer",
-      company: "AfterMeet",
+      company: "ehllo",
       bio: "",
       themeColor: "#9fe870",
       cardUrl: "https://aftermeet-beta.vercel.app/c/demo",
@@ -58,7 +58,7 @@ test("html email signature includes structured layout and card link", async () =
   const html = buildHtmlSignature({
     name: "Alex Morgan",
     role: "Product designer",
-    company: "AfterMeet",
+    company: "ehllo",
     cardUrl: "https://aftermeet.app/c/alex-morgan",
     email: "alex@aftermeet.app",
     phone: "+1 555 0100",
@@ -68,7 +68,7 @@ test("html email signature includes structured layout and card link", async () =
   assert.match(html, /View my card/);
   assert.match(html, /alex@aftermeet.app/);
   assert.match(html, /Product designer/);
-  assert.match(html, /Ehllo email signature/);
+  assert.match(html, /ehllo email signature/);
   assert.match(html, /data:image\/png;base64,abc/);
 });
 
