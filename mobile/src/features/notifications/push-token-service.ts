@@ -7,20 +7,13 @@ import { getCaptureDeviceIdentity } from '@/features/encounters/capture-draft';
 import { mobileFetch, readMobileApiJson } from '@/lib/mobile-api';
 import { notificationPermissionGranted } from '@/features/notifications/notification-service';
 
-/**
- * Remote push requires an EAS project id, obtained by running `eas init`
- * against an authenticated Expo account — a one-time, account-owning step
- * this repo cannot perform on its own. `app.json`'s extra.eas.projectId is
- * what `eas init` writes automatically; EXPO_PUBLIC_EAS_PROJECT_ID is a
- * manual fallback so the id can be supplied without an app.json edit once
- * that step happens. Until either exists, registration silently no-ops —
- * local scheduled notifications and the Supabase-backed centre work
- * regardless. See docs/product/00-product-source-of-truth.md (Notifications)
- * and DEC-029/DEC-030 in docs/product/02-decision-log.md.
- */
+/** EAS project identity comes from the environment-specific Expo config. */
 function easProjectId(): string | undefined {
   const extra = Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined;
-  return extra?.eas?.projectId || process.env.EXPO_PUBLIC_EAS_PROJECT_ID || undefined;
+  return extra?.eas?.projectId
+    || Constants.easConfig?.projectId
+    || process.env.EXPO_PUBLIC_EAS_PROJECT_ID
+    || undefined;
 }
 
 export function pushDeliveryConfigured(): boolean {

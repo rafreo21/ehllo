@@ -83,16 +83,25 @@ export default function NotificationPreferencesScreen() {
   }
 
   useEffect(() => {
+    let active = true;
     void Promise.all([
       deviceNotificationsEnabled(),
       notificationPermissionGranted(),
       followUpReminderTime(),
-    ]).then(([enabled, granted, storedReminderTime]) => {
+    ]).then(async ([enabled, granted, storedReminderTime]) => {
+      if (!active) return;
       setDeviceEnabled(enabled && granted);
       setDevicePermission(granted);
       setReminderTime(storedReminderTime);
-    });
-  }, []);
+      if (enabled && granted && session?.access_token) {
+        const registered = await registerPushToken(session.access_token);
+        if (active) setPushActive(registered);
+      } else {
+        setPushActive(false);
+      }
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [session?.access_token]);
 
   async function chooseReminderTime(value: ReminderTime) {
     setReminderTime(value);
@@ -138,12 +147,14 @@ export default function NotificationPreferencesScreen() {
 
       await setDeviceNotificationsEnabled(true);
       setDeviceEnabled(true);
+      let registered = false;
       if (session?.access_token) {
         const followUps = await fetchFollowUps(session.access_token);
         await syncFollowUpNotifications(followUps);
-        setPushActive(await registerPushToken(session.access_token));
+        registered = await registerPushToken(session.access_token);
+        setPushActive(registered);
       }
-      setNotificationMessage('Device reminders are on.');
+      setNotificationMessage(registered ? 'Device reminders and background alerts are on.' : 'Device reminders are on.');
     } catch {
       setDeviceEnabled(false);
       setNotificationMessage('Could not enable device reminders. Please try again.');
