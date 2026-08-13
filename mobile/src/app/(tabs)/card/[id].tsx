@@ -1,6 +1,6 @@
 import { router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { PencilSimple, ShareNetwork, Star, Trash, Wrench } from 'phosphor-react-native';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { CardDeleteSheet } from '@/components/card-delete-sheet';
@@ -44,11 +44,13 @@ export default function CardDetailScreen() {
   const [errorSheetOpen, setErrorSheetOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [deleteSuccessOpen, setDeleteSuccessOpen] = useState(false);
+  const navigatingToEdit = useRef(false);
 
   useFocusEffect(
     useCallback(() => {
       const tabNav = navigation.getParent();
       tabNav?.setOptions({ tabBarStyle: { display: 'none' } });
+      navigatingToEdit.current = false;
       return () => {
         tabNav?.setOptions({
           tabBarStyle: {
@@ -62,6 +64,12 @@ export default function CardDetailScreen() {
       };
     }, [navigation, tabBarHeight]),
   );
+
+  function openEditor() {
+    if (navigatingToEdit.current) return;
+    navigatingToEdit.current = true;
+    router.push(`/edit-card?id=${selected.id}`);
+  }
 
   async function confirmDelete() {
     if (!selected.id) return;
@@ -118,7 +126,7 @@ export default function CardDetailScreen() {
             <View style={styles.headerActions}>
               <HeaderActionButton
                 accessibilityLabel="Edit card"
-                onPress={() => router.push(`/edit-card?id=${selected.id}`)}>
+                onPress={openEditor}>
                 <PencilSimple size={20} color={colors.ink} weight="bold" />
               </HeaderActionButton>
               <HeaderActionButton

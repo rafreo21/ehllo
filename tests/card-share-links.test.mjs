@@ -11,7 +11,7 @@ import {
 test("buildEmailShareUrl encodes subject and body", () => {
   const url = buildEmailShareUrl("https://aftermeet.app/c/alex", "Alex Morgan");
   assert.match(url, /^mailto:\?subject=/);
-  assert.match(decodeURIComponent(url), /Alex Morgan's AfterMeet card/);
+  assert.match(decodeURIComponent(url), /Alex Morgan's ehllo card/);
 });
 
 test("buildSmsShareUrl includes card url in body", () => {
@@ -29,5 +29,17 @@ test("buildLinkedInShareUrl wraps the public card url", () => {
 test("buildWhenWeMetNote includes date and card url", () => {
   const note = buildWhenWeMetNote("https://aftermeet.app/c/alex", new Date("2026-07-26T12:00:00.000Z"));
   assert.match(note, /When we met: 26 July 2026/);
-  assert.match(note, /Saved from AfterMeet/);
+  assert.match(note, /Saved from ehllo/);
+});
+
+test("buildWhenWeMetNote omits the where-we-met line when there's no event", () => {
+  const note = buildWhenWeMetNote("https://aftermeet.app/c/alex", new Date("2026-07-26T12:00:00.000Z"));
+  assert.doesNotMatch(note, /Where we met/);
+});
+
+test("buildWhenWeMetNote adds a where-we-met line ahead of the date when an event is active", () => {
+  const note = buildWhenWeMetNote("https://aftermeet.app/c/alex", new Date("2026-07-26T12:00:00.000Z"), "ProductCon London");
+  const lines = note.split("\n");
+  assert.equal(lines[0], "Where we met: ProductCon London");
+  assert.match(lines[1], /When we met: 26 July 2026/);
 });

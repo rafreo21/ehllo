@@ -30,6 +30,6 @@ export function readPublicSupabaseConfig(
 
 export function requirePublicSupabaseConfig(source = process.env): PublicSupabaseConfig {
   const result = readPublicSupabaseConfig(source);
-  if (!result.config) throw new Error(`AfterMeet Supabase configuration is missing: ${result.missing.join(", ")}`);
+  if (!result.config) throw new Error(`ehllo Supabase configuration is missing: ${result.missing.join(", ")}`);
   return result.config;
 }

@@ -9,7 +9,7 @@ const card = {
   label: "Work",
   name: "Raf Okojie",
   role: "Designer",
-  company: "AfterMeet",
+  company: "ehllo",
   bio: "A short bio",
   theme: "#9FE870",
   photo: "",

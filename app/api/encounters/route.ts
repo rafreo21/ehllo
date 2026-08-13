@@ -13,6 +13,8 @@ import { dispatchPushForUser } from "../../../lib/push-dispatch-server";
 import { provisionGuestAccountFromContact } from "../../../lib/guest-contact-provision-server";
 import { buildGuestAddedEmail } from "../../../lib/guest-added-email";
 import { sendEmail } from "../../../lib/send-email";
+import { applyFollowUpTransition } from "../../../lib/follow-up-lifecycle";
+import { resolveCurrentEventIdForUser } from "../../../lib/events-server";
 
 const allowedStatuses = new Set(["draft", "reviewed", "shared", "archived"]);
 
@@ -220,7 +222,7 @@ export async function POST(request: Request) {
   const supabase = await createApiSupabaseClient(request);
   const { data: existingRow } = await supabase
     .from("encounters")
-    .select("recording_metadata, updated_at")
+    .select("recording_metadata, updated_at, status, event_id")
     .eq("id", body.id)
     .eq("workspace_id", user.workspaceId)
     .maybeSingle();
@@ -255,10 +257,39 @@ export async function POST(request: Request) {
         personName: typeof body.personName === "string" ? body.personName.trim() : "",
         personEmail: typeof body.personEmail === "string" ? body.personEmail.trim() : "",
       };
-  const actions = normalizeEncounterActions(body.actions, participants, {
+  const nextStatus = typeof body.status === "string" && allowedStatuses.has(body.status) ? body.status : "draft";
+  let actions = normalizeEncounterActions(body.actions, participants, {
     name: projection.personName,
     email: projection.personEmail,
   });
+
+  // A follow-up suggested while a meeting is still a draft is only a proposal.
+  // It becomes actionable exactly once the meeting has been reviewed or shared.
+  if (nextStatus === "draft") {
+    actions = actions.map((action) => action.status === "open"
+      ? { ...action, status: "proposed" as const }
+      : action);
+  } else if (nextStatus === "reviewed" || nextStatus === "shared") {
+    actions = actions.map((action) => action.status === "proposed"
+      ? applyFollowUpTransition(action, "open")
+      : action);
+  }
+
+  // The client only sends eventId when it has an opinion (an explicit pick,
+  // or "" to clear it via the correction flow) — see encounterToApiBody.
+  // Otherwise: a brand-new encounter gets the passive-presence guess
+  // (Capture and Quick Follow-up both funnel through this one route, so
+  // neither needs its own copy of this decision); an existing encounter
+  // being re-saved for an unrelated edit keeps whatever event it already had.
+  const isNewEncounter = !existingRow;
+  let nextEventId: string | null;
+  if ("eventId" in body) {
+    nextEventId = typeof body.eventId === "string" && body.eventId.trim() ? body.eventId.trim() : null;
+  } else if (isNewEncounter) {
+    nextEventId = await resolveCurrentEventIdForUser(supabase, user.id).catch(() => null);
+  } else {
+    nextEventId = (existingRow?.event_id as string | null | undefined) ?? null;
+  }
 
   const nextUpdatedAt = new Date().toISOString();
   const { error } = await supabase.from("encounters").upsert({
@@ -271,6 +302,7 @@ export async function POST(request: Request) {
     contact_id: typeof body.contactId === "string" && body.contactId.trim() ? body.contactId.trim().slice(0, 120) : null,
     exchange_id: typeof body.exchangeId === "string" && body.exchangeId.trim() ? body.exchangeId.trim() : null,
     campaign_id: typeof body.campaignId === "string" && body.campaignId.trim() ? body.campaignId.trim().slice(0, 120) : null,
+    event_id: nextEventId,
     started_at: body.startedAt,
     ended_at: body.endedAt,
     duration_seconds: typeof body.durationSeconds === "number" ? Math.max(0, Math.round(body.durationSeconds)) : 0,
@@ -280,7 +312,7 @@ export async function POST(request: Request) {
     shared_summary: typeof body.sharedSummary === "string" ? body.sharedSummary : "",
     actions,
     recording_metadata: recordingMetadata,
-    status: typeof body.status === "string" && allowedStatuses.has(body.status) ? body.status : "draft",
+    status: nextStatus,
     share_token: typeof body.shareToken === "string" ? body.shareToken : crypto.randomUUID().replaceAll("-", ""),
     updated_at: nextUpdatedAt,
   }, { onConflict: "id" });
@@ -297,7 +329,6 @@ export async function POST(request: Request) {
   // consumer web funnel through, so it is the one spot to raise
   // "review ready": one row per encounter, regardless of which client saved
   // it or how many times the save is retried (dedupe_key + unique index).
-  const isNewEncounter = !existingRow;
   const transcript = typeof body.transcript === "string" ? body.transcript.trim() : "";
   if (isNewEncounter && (body.status ?? "draft") === "draft" && transcript.length >= 20) {
     try {
@@ -336,7 +367,7 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json(
-    { ok: true, updatedAt: nextUpdatedAt, newGuestNames },
+    { ok: true, updatedAt: nextUpdatedAt, newGuestNames, eventId: nextEventId },
     { headers: { "Cache-Control": "private, no-store" } },
   );
 }

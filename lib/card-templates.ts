@@ -63,7 +63,7 @@ export function defaultTeamTemplateSeed(companyName: string): Omit<CardTemplate,
     theme: "#9FE870",
     companyLogo: "",
     coverPhoto: "",
-    bioTemplate: `Connect with ${companyName} through AfterMeet.`,
+    bioTemplate: `Connect with ${companyName} through ehllo.`,
     defaultMethods: [
       { type: "website", value: "https://example.com", label: "Company website" },
     ],

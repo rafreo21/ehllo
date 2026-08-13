@@ -66,7 +66,7 @@ type ContactRow = {
   tiktokUrl?: string;
 };
 
-function subtitle(role?: string, company?: string, fallback = 'Connected through AfterMeet') {
+function subtitle(role?: string, company?: string, fallback = 'Connected through ehllo') {
   const parts = [role?.trim(), company?.trim()].filter(Boolean);
   return parts.length ? parts.join(' · ') : fallback;
 }
@@ -146,7 +146,7 @@ export async function enrichConnectionPhotos(accessToken: string, connections: C
 
 export async function registerScannedCard(accessToken: string, slug: string): Promise<ConnectionItem | null> {
   const normalized = slug.trim().toLowerCase();
-  if (!normalized) throw new Error('This QR code is not a valid AfterMeet card.');
+  if (!normalized) throw new Error('This QR code is not a valid ehllo card.');
 
   const response = await mobileFetch('/api/people/connections', accessToken, {
     method: 'POST',

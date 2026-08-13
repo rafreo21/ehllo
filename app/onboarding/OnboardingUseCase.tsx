@@ -13,7 +13,7 @@ export function OnboardingUseCase() {
   return (
     <div className="onboarding-use-case">
       <fieldset className="onboarding-choices">
-        <legend className="sr-only">How will you use AfterMeet?</legend>
+        <legend className="sr-only">How will you use ehllo?</legend>
         <label className="onboarding-choice selected">
           <input type="radio" name="use-case" value="personal" checked readOnly />
           <span className="onboarding-choice-icon" aria-hidden="true"><UserIcon size={22} weight="bold" /></span>

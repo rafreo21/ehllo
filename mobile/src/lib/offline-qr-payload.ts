@@ -43,12 +43,12 @@ function resolveEcl(payload: string): QrErrorCorrection {
  * Pick the richest offline vCard that still fits in a scannable QR.
  * Never drop social/contact methods until the absolute last resort (minimal).
  */
-export function buildOfflineQrPayload(card: MobileCard, cardUrl: string): OfflineQrPayload {
+export function buildOfflineQrPayload(card: MobileCard, cardUrl: string, eventTitle?: string): OfflineQrPayload {
   const tiers: Array<{ tier: OfflineQrTier; build: () => string }> = [
-    { tier: 'full', build: () => buildMobileContactQrPayload(card, cardUrl) },
+    { tier: 'full', build: () => buildMobileContactQrPayload(card, cardUrl, { eventTitle }) },
     {
       tier: 'lean',
-      build: () => buildMobileContactQrPayload(card, cardUrl, { omitBioCover: true }),
+      build: () => buildMobileContactQrPayload(card, cardUrl, { omitBioCover: true, eventTitle }),
     },
     {
       tier: 'methods',
@@ -56,6 +56,7 @@ export function buildOfflineQrPayload(card: MobileCard, cardUrl: string): Offlin
         omitBioCover: true,
         omitImages: true,
         lean: true,
+        eventTitle,
       }),
     },
     {
@@ -84,6 +85,7 @@ export function buildOfflineQrPayload(card: MobileCard, cardUrl: string): Offlin
 export async function tryBuildOfflineQrPayloadWithPhoto(
   card: MobileCard,
   cardUrl: string,
+  eventTitle?: string,
 ): Promise<OfflineQrPayload | null> {
   const photoUrl = publicCardImageUrl(card.photo);
   if (!photoUrl) {
@@ -95,7 +97,7 @@ export async function tryBuildOfflineQrPayloadWithPhoto(
   // payload that only fits at 'L' would force the logo below its safe ECC budget.
   // buildVcardPhotoThumbnail shrinks the thumbnail across attempts until this passes.
   const embeddedPhoto = await buildVcardPhotoThumbnail(photoUrl, (candidate) => {
-    const candidatePayload = buildMobileContactQrPayload(card, cardUrl, { embeddedPhoto: candidate });
+    const candidatePayload = buildMobileContactQrPayload(card, cardUrl, { embeddedPhoto: candidate, eventTitle });
     return ECC_LEVELS.some((level) => fitsInQr(candidatePayload, level));
   });
   if (!embeddedPhoto) {
@@ -103,7 +105,7 @@ export async function tryBuildOfflineQrPayloadWithPhoto(
     return null;
   }
 
-  const payload = buildMobileContactQrPayload(card, cardUrl, { embeddedPhoto });
+  const payload = buildMobileContactQrPayload(card, cardUrl, { embeddedPhoto, eventTitle });
   const ecl = ECC_LEVELS.find((level) => fitsInQr(payload, level));
   if (!ecl) return null; // unreachable given the accepts() check above, kept as a safety net
   return { payload, tier: 'photo', ecl };

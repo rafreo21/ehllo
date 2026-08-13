@@ -178,17 +178,24 @@ export function CardProvider({ children }: PropsWithChildren) {
       return responsePayload?.card ? libraryPayloadToMobileCard(responsePayload.card) : payload;
     }
 
+    // Captured from the original argument, before any server round-trip —
+    // the server can't read a device-local file://content:// URI and blanks
+    // any image field it doesn't recognize (see resolveCardImageForPublish
+    // in lib/card-assets.ts), so persistPayload's response below is not a
+    // safe source for what to upload.
+    const originalImages = {
+      photo: card.photo || '',
+      coverPhoto: card.coverPhoto || '',
+      companyLogo: card.showCompanyDetails !== false ? (card.companyLogo || '') : '',
+    };
+
     let payload = card;
     payload = await persistPayload(payload);
 
     if (!payload.id) return payload;
 
     try {
-      const uploaded = await uploadCardImagesForPublish(token, payload.id, {
-        photo: payload.photo || '',
-        coverPhoto: payload.coverPhoto || '',
-        companyLogo: payload.showCompanyDetails !== false ? (payload.companyLogo || '') : '',
-      });
+      const uploaded = await uploadCardImagesForPublish(token, payload.id, originalImages);
       const imagesChanged = uploaded.photo !== payload.photo
         || uploaded.coverPhoto !== payload.coverPhoto
         || uploaded.companyLogo !== payload.companyLogo;

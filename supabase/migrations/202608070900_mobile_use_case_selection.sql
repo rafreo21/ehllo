@@ -1,6 +1,6 @@
 begin;
 
--- Mobile's "How will you use AfterMeet?" step only offers a personal workspace
+-- Mobile's "How will you use ehllo?" step only offers a personal workspace
 -- today (team leads to the business web app, not built yet), so it has no
 -- display name to collect. complete_user_onboarding() requires one; this is
 -- a minimal counterpart for that flow.

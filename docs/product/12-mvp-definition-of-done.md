@@ -1,4 +1,4 @@
-# AfterMeet MVP Definition of Done
+# ehllo MVP Definition of Done
 
 Status: Required quality bar  
 Last updated: 2026-07-24

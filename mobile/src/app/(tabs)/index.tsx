@@ -13,8 +13,10 @@ import {
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { EventCard } from '@/components/event-card';
 import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OfflineBanner } from '@/components/offline-banner';
+import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { ProgressRing } from '@/components/progress-ring';
 import { QuickActionsFab } from '@/components/quick-actions-fab';
 import { Skeleton, SkeletonCircle, SkeletonLine } from '@/components/skeleton';
@@ -35,6 +37,8 @@ import {
   sortConnections,
   type ConnectionItem,
 } from '@/features/connections/connections-api';
+import { resolveHomeEventCardState, type HomeEventCardState } from '@/features/events/event-home-state';
+import { fetchEventCandidates, fetchMyEvents, markEventLeft, setEventAttendance, type EventItem } from '@/features/events/events-api';
 import { fetchFollowUps, type FollowUpItem } from '@/features/follow-ups/follow-up-api';
 import { summarizeFollowUpNudges } from '@/features/follow-ups/follow-up-nudges';
 import { resolveFollowUpUserName } from '@/features/follow-ups/follow-up-participants';
@@ -61,13 +65,17 @@ type ActiveWorkItem = {
 export default function HomeScreen() {
   const insets = useAppInsets();
   const tabBarHeight = useTabBarHeight();
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const { card, cards, loading: cardLoading } = useCard();
   const [followUps, setFollowUps] = useState<FollowUpItem[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [encounters, setEncounters] = useState<EncounterSummary[]>([]);
   const [drafts, setDrafts] = useState<CaptureDraftSummary[]>([]);
   const [connections, setConnections] = useState<ConnectionItem[]>([]);
+  const [goingEvents, setGoingEvents] = useState<EventItem[]>([]);
+  const [eventCandidates, setEventCandidates] = useState<EventItem[]>([]);
+  const [eventCardBusy, setEventCardBusy] = useState(false);
+  const [eventActionError, setEventActionError] = useState('');
   const [loading, setLoading] = useState(true);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -98,6 +106,8 @@ export default function HomeScreen() {
       setUnreadNotifications(0);
       setEncounters([]);
       setConnections([]);
+      setGoingEvents([]);
+      setEventCandidates([]);
       return;
     }
 
@@ -117,17 +127,29 @@ export default function HomeScreen() {
     if ([followUpsResult, notificationsResult, encountersResult, connectionsResult].every((result) => result.status === 'rejected')) {
       setLoadError('Could not load your Home data. Check your connection and try again.');
     }
+
+    // Events are independent of the "did Home data load" error banner above
+    // — a user with no calendar connected (the common case) has candidates
+    // fail by design, and that must stay silent, not read as an outage.
+    void fetchMyEvents(token).then(setGoingEvents).catch(() => undefined);
+    void fetchEventCandidates(token).then((result) => setEventCandidates(result.candidates)).catch(() => setEventCandidates([]));
   }, [session]);
 
   useFocusEffect(
     useCallback(() => {
+      // Wait for the auth session to finish restoring from storage before the
+      // first load — otherwise this can fire once with session still null,
+      // render the signed-out/empty state, and latch hasLoadedOnce true
+      // before the real session (and real data) ever arrives, permanently
+      // skipping the skeleton on the load that actually matters.
+      if (authLoading) return;
       void load().finally(() => {
         setLoading(false);
         setHasLoadedOnce(true);
       });
       const interval = setInterval(() => void load(), 30_000);
       return () => clearInterval(interval);
-    }, [load]),
+    }, [load, authLoading]),
   );
 
   const attention = useMemo(() => {
@@ -143,6 +165,43 @@ export default function HomeScreen() {
     }
     return { headline: 'No follow-ups yet', completed: 0, total: 0, rate: 0, urgent: false, hasData: false };
   }, [followUps]);
+
+  const homeEventCard = useMemo(
+    () => resolveHomeEventCardState(goingEvents, eventCandidates, new Date()),
+    [goingEvents, eventCandidates],
+  );
+
+  async function decideEventCandidate(event: EventItem, status: 'going' | 'not_going') {
+    if (!session?.access_token) return;
+    setEventCardBusy(true);
+    try {
+      await setEventAttendance(session.access_token, event.id, status);
+      setEventCandidates((current) => current.filter((item) => item.id !== event.id));
+      if (status === 'going') setGoingEvents((current) => [...current, event]);
+    } catch {
+      // The event stays in the candidate list, but the user needs to know the
+      // tap didn't actually do anything — this used to fail silently.
+      setEventActionError('Could not update this event. Check your connection and try again.');
+    } finally {
+      setEventCardBusy(false);
+    }
+  }
+
+  async function leaveEvent(event: EventItem) {
+    if (!session?.access_token) return;
+    setEventCardBusy(true);
+    try {
+      const leftAt = new Date().toISOString();
+      await markEventLeft(session.access_token, event.id);
+      setGoingEvents((current) => current.map((item) => (item.id === event.id ? { ...item, leftAt } : item)));
+    } catch {
+      // The card stays showing "You're here", but the user needs to know the
+      // tap didn't actually do anything — this used to fail silently.
+      setEventActionError('Could not update this event. Check your connection and try again.');
+    } finally {
+      setEventCardBusy(false);
+    }
+  }
 
   const pendingReviewCount = useMemo(
     () => encounters.filter((item) => item.status === 'draft').length,
@@ -233,7 +292,7 @@ export default function HomeScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: fabClearance }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
-        {loading && !hasLoadedOnce ? (
+        {authLoading || (loading && !hasLoadedOnce) ? (
           <HomeSkeleton />
         ) : (
           <>
@@ -297,6 +356,16 @@ export default function HomeScreen() {
                 <CaretRight size={14} color={colors.muted} weight="bold" />
               </Pressable>
             )}
+
+            {session && homeEventCard.type !== 'none' ? (
+              <HomeEventCard
+                state={homeEventCard}
+                busy={eventCardBusy}
+                onGoing={(event) => void decideEventCandidate(event, 'going')}
+                onNotGoing={(event) => void decideEventCandidate(event, 'not_going')}
+                onLeave={(event) => void leaveEvent(event)}
+              />
+            ) : null}
 
             {activeWorkItems.length ? (
               <View style={styles.activeWork}>
@@ -385,7 +454,46 @@ export default function HomeScreen() {
       </ScrollView>
 
       <QuickActionsFab />
+      <OutcomeErrorSheet
+        visible={Boolean(eventActionError)}
+        message={eventActionError}
+        onClose={() => setEventActionError('')}
+      />
     </View>
+  );
+}
+
+/**
+ * The one Home event card, in the state resolveHomeEventCardState picked.
+ * Deliberately renders at most one thing — no separate "Events" section —
+ * so Home stays quiet except when something's actually relevant right now.
+ */
+function HomeEventCard({
+  state,
+  busy,
+  onGoing,
+  onNotGoing,
+  onLeave,
+}: {
+  state: HomeEventCardState;
+  busy: boolean;
+  onGoing: (event: EventItem) => void;
+  onNotGoing: (event: EventItem) => void;
+  onLeave: (event: EventItem) => void;
+}) {
+  if (state.type === 'none') return null;
+  const variant = state.type === 'upcoming' ? 'going' : state.type;
+
+  return (
+    <EventCard
+      event={state.event}
+      variant={variant}
+      busy={busy}
+      onPress={() => router.push('/events')}
+      onGoing={onGoing}
+      onNotGoing={onNotGoing}
+      onLeave={onLeave}
+    />
   );
 }
 

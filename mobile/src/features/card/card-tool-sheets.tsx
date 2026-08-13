@@ -95,7 +95,7 @@ export function WalletToolSheetContent({
         While your Google issuer is in demo mode, passes may show a [TEST ONLY] prefix. That clears once publishing access is approved.
       </Body>
       <WalletPreviewBackground theme={card.theme} style={styles.walletPreview}>
-        <Text style={[styles.walletHeader, { color: theme.softColor }]}>AfterMeet Card</Text>
+        <Text style={[styles.walletHeader, { color: theme.softColor }]}>ehllo Card</Text>
         <View style={styles.walletFields}>
           <View style={styles.walletField}>
             <Text style={[styles.walletLabel, { color: theme.mutedColor }]}>NAME</Text>
@@ -210,7 +210,7 @@ export function NfcToolSheetContent({
           </Button>
         </>
       ) : (
-        <Text style={styles.note}>Open AfterMeet on a supported iPhone or Android phone to program a writable NFC tag.</Text>
+        <Text style={styles.note}>Open ehllo on a supported iPhone or Android phone to program a writable NFC tag.</Text>
       )}
       <Button
         variant="secondary"
@@ -282,7 +282,7 @@ export function WidgetToolSheetContent({
             return (
               <View key={option.id} style={styles.widgetOptionCard}>
                 <View style={styles.widgetOptionHeader}>
-                  <Text style={styles.widgetOptionBrand}>AfterMeet</Text>
+                  <Text style={styles.widgetOptionBrand}>ehllo</Text>
                   <Text style={styles.widgetOptionSize}>{option.size}</Text>
                 </View>
                 <View style={styles.widgetQrOnlyPreview}>
@@ -304,7 +304,7 @@ export function WidgetToolSheetContent({
             return (
               <View key={option.id} style={styles.widgetOptionCard}>
                 <View style={styles.widgetOptionHeader}>
-                  <Text style={styles.widgetOptionBrand}>AfterMeet</Text>
+                  <Text style={styles.widgetOptionBrand}>ehllo</Text>
                   <Text style={styles.widgetOptionSize}>{option.size}</Text>
                 </View>
                 <View style={styles.widgetBusinessPreview}>
@@ -337,7 +337,7 @@ export function WidgetToolSheetContent({
           return (
             <View key={option.id} style={styles.widgetOptionCard}>
               <View style={styles.widgetOptionHeader}>
-                <Text style={styles.widgetOptionBrand}>AfterMeet</Text>
+                <Text style={styles.widgetOptionBrand}>ehllo</Text>
                 <Text style={styles.widgetOptionSize}>{option.size}</Text>
               </View>
               <View style={styles.widgetConnectionsPreview}>
@@ -374,7 +374,7 @@ export function WidgetToolSheetContent({
           await updateQuickShareWidget(card, publicUrl, accessToken, allCards, resolveCardUrl);
           const next = await buildWidgetSnapshot(allCards, resolveCardUrl, accessToken, card);
           setSnapshot(next);
-        }, { successMessage: 'Widget data refreshed. Add or update AfterMeet from your widget picker.' })}>
+        }, { successMessage: 'Widget data refreshed. Add or update ehllo from your widget picker.' })}>
         <SquaresFour size={18} color={colors.ink} weight="bold" />
         Refresh home-screen widgets
       </Button>

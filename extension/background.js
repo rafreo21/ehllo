@@ -91,8 +91,8 @@
     if (enriched.profile.workEmail || enriched.profile.personalEmail || enriched.profile.email) parts.push("email");
     if (enriched.profile.phone) parts.push("phone");
     const message = parts.length
-      ? `Captured ${parts.join(" and ")}. AfterMeet opened in a background tab.`
-      : "Profile saved. AfterMeet opened in a background tab.";
+      ? `Captured ${parts.join(" and ")}. ehllo opened in a background tab.`
+      : "Profile saved. ehllo opened in a background tab.";
 
     await setCaptureStatus({
       state: "done",

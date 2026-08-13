@@ -140,6 +140,7 @@ export function useCaptureRecorder({
   // synchronously inside stopRecording/continueRecording, never rendered.
   const priorTranscriptRef = useRef('');
   const priorDurationRef = useRef(0);
+  const [priorDurationSeconds, setPriorDurationSeconds] = useState(0);
   const finishPromiseRef = useRef<Promise<void> | null>(null);
   const lastTranscribeMetaRef = useRef<ImportRecordingMeta | undefined>(undefined);
   const onErrorRef = useRef(onError);
@@ -171,8 +172,8 @@ export function useCaptureRecorder({
       ? speechSeconds
       // Cumulative across segments — durationMillis alone only reflects the
       // current take, which would otherwise visibly reset after a resume.
-      : priorDurationRef.current + Math.max(0, Math.round(recorderState.durationMillis / 1000))),
-    [recorderState.durationMillis, speechSeconds, usingSpeechCapture],
+      : priorDurationSeconds + Math.max(0, Math.round(recorderState.durationMillis / 1000))),
+    [priorDurationSeconds, recorderState.durationMillis, speechSeconds, usingSpeechCapture],
   );
 
   const audioLevel = useMemo(() => {
@@ -435,6 +436,7 @@ export function useCaptureRecorder({
     // shared recorder instance.
     priorTranscriptRef.current = '';
     priorDurationRef.current = 0;
+    setPriorDurationSeconds(0);
     setRecordingSegments([]);
 
     const permission = await requestRecordingPermissionsAsync();
@@ -485,6 +487,7 @@ export function useCaptureRecorder({
     // so this is the new total, not an increment — using += here would
     // double-count everything accumulated before this take.
     priorDurationRef.current = seconds;
+    setPriorDurationSeconds(seconds);
 
     setPlaybackReady(false);
     setPlaybackSource(null);
@@ -673,6 +676,7 @@ export function useCaptureRecorder({
         // the on-screen timer. Without seeding priorDurationRef too, a
         // reopened draft displays 00:00 until a new segment starts.
         priorDurationRef.current = draft.durationSeconds;
+        setPriorDurationSeconds(draft.durationSeconds);
         publishDuration(draft.durationSeconds);
       }
     }
@@ -730,6 +734,7 @@ export function useCaptureRecorder({
     // A real do-over, unlike continueRecording — nothing prior carries forward.
     priorTranscriptRef.current = '';
     priorDurationRef.current = 0;
+    setPriorDurationSeconds(0);
     setRecordingSegments([]);
     setPlaybackSource(null);
     setPlaybackReady(false);

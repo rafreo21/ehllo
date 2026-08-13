@@ -21,12 +21,14 @@ type BrandedQrCodeProps = {
   style?: ViewStyle;
   color?: string;
   backgroundColor?: string;
+  /** The sharer's currently-happening event, if any — offline mode only, an activator. */
+  activeEventTitle?: string;
 };
 
-function resolvePayload({ value, card, cardUrl, mode = 'online' }: BrandedQrCodeProps) {
+function resolvePayload({ value, card, cardUrl, mode = 'online', activeEventTitle }: BrandedQrCodeProps) {
   if (mode === 'offline') {
     if (card && cardUrl?.trim()) {
-      return buildOfflineQrPayload(card, cardUrl.trim());
+      return buildOfflineQrPayload(card, cardUrl.trim(), activeEventTitle);
     }
     const fallback = value?.trim() ?? '';
     return fallback ? { payload: fallback, tier: 'minimal' as const, ecl: 'M' as const } : null;
@@ -45,14 +47,15 @@ export function BrandedQrCode({
   style,
   color = colors.ink,
   backgroundColor = colors.white,
+  activeEventTitle,
 }: BrandedQrCodeProps) {
   const resolved = useMemo(
-    () => resolvePayload({ value, card, cardUrl, mode }),
-    [value, card, cardUrl, mode],
+    () => resolvePayload({ value, card, cardUrl, mode, activeEventTitle }),
+    [value, card, cardUrl, mode, activeEventTitle],
   );
   const [renderError, setRenderError] = useState('');
   const [enhanced, setEnhanced] = useState<{ key: string; result: OfflineQrPayload } | null>(null);
-  const enhanceKey = `${mode}:${card?.id ?? ''}:${cardUrl ?? ''}`;
+  const enhanceKey = `${mode}:${card?.id ?? ''}:${cardUrl ?? ''}:${activeEventTitle ?? ''}`;
 
   useEffect(() => {
     void Promise.resolve().then(() => setRenderError(''));
@@ -62,13 +65,13 @@ export function BrandedQrCode({
     if (mode !== 'offline' || !card || !cardUrl?.trim()) return;
 
     let cancelled = false;
-    void tryBuildOfflineQrPayloadWithPhoto(card, cardUrl.trim()).then((result) => {
+    void tryBuildOfflineQrPayloadWithPhoto(card, cardUrl.trim(), activeEventTitle).then((result) => {
       if (!cancelled && result) setEnhanced({ key: enhanceKey, result });
     });
     return () => {
       cancelled = true;
     };
-  }, [mode, card, cardUrl, enhanceKey]);
+  }, [mode, card, cardUrl, enhanceKey, activeEventTitle]);
 
   const active = (enhanced?.key === enhanceKey ? enhanced.result : null) ?? resolved;
 
@@ -124,8 +127,8 @@ export function BrandedQrCode({
             source={QR_LOGO}
             style={{ width: logoSize, height: logoSize, borderRadius: Math.round(logoSize * 0.22) }}
             contentFit="contain"
-            accessibilityLabel="AfterMeet"
-            alt="AfterMeet"
+            accessibilityLabel="ehllo"
+            alt="ehllo"
           />
         </View>
       ) : null}

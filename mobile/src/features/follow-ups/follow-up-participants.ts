@@ -124,7 +124,7 @@ export function buildMeetingDetails(
   encounterTitle: string,
   participants: FollowUpParticipant[],
 ) {
-  let details = `Scheduled from AfterMeet${encounterTitle.trim() ? `: ${encounterTitle.trim()}` : ''}.`;
+  let details = `Scheduled from ehllo${encounterTitle.trim() ? `: ${encounterTitle.trim()}` : ''}.`;
   const emails = participants
     .map((person) => person.email.trim())
     .filter((email) => email.includes('@'));

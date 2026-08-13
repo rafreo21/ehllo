@@ -1,5 +1,5 @@
 #!/bin/bash
-# Driver for building, launching, and screenshotting the AfterMeet
+# Driver for building, launching, and screenshotting the ehllo
 # mobile app (Expo/React Native) on the iOS Simulator.
 #
 # Usage:

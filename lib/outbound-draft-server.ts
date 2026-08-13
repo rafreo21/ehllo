@@ -35,7 +35,7 @@ export async function generateOutboundDraft(input: {
       model: draftModel(),
       output: Output.object({ schema: draftSchema }),
       system: [
-        "You write short, warm follow-up drafts for AfterMeet.",
+        "You write short, warm follow-up drafts for ehllo.",
         "Never send automatically — the owner must review and approve.",
         "Do not invent facts not supported by the meeting context.",
         "Keep the tone professional and human.",

@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
   const displayName = typeof body?.displayName === "string" ? body.displayName.trim() : "";
   if (displayName.length < 2 || displayName.length > 100) {
-    return NextResponse.json({ error: "Enter the name you want AfterMeet to use." }, { status: 400 });
+    return NextResponse.json({ error: "Enter the name you want ehllo to use." }, { status: 400 });
   }
 
   const intent = parseVisitorIntent(new URLSearchParams(

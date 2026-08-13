@@ -14,12 +14,12 @@ import { connectionFromScannedSlug } from '@/features/connections/connections-ap
 import { enqueueOfflineScan } from '@/features/connections/offline-scan-queue';
 import { setAuthReturnPath } from '@/features/encounters/capture-draft';
 import { isOnline } from '@/lib/connectivity';
-import { parseAfterMeetCardSlugFromScan } from '@/lib/parse-scanned-qr';
+import { parseEhlloCardSlugFromScan } from '@/lib/parse-scanned-qr';
 import { useAppInsets } from '@/lib/safe-area';
 import { colors, spacing } from '@/theme/tokens';
 
 function parseCardSlug(url: string) {
-  return parseAfterMeetCardSlugFromScan(url);
+  return parseEhlloCardSlugFromScan(url);
 }
 
 export default function ScannerScreen() {
@@ -81,7 +81,7 @@ export default function ScannerScreen() {
       return;
     }
     if (/^BEGIN:VCARD/i.test(result.data.trim())) {
-      setError('This offline QR has no AfterMeet link. Save it in Contacts, or ask them to turn on Online contact QR for share-back.');
+      setError('This offline QR has no ehllo link. Save it in Contacts, or ask them to turn on Online contact QR for share-back.');
       setLocked(false);
       return;
     }
@@ -103,7 +103,7 @@ export default function ScannerScreen() {
             <View style={styles.headerCopy}>
               <Eyebrow>Scan</Eyebrow>
               <Text style={styles.previewTitle}>Add cards to your network</Text>
-              <Body>Scan someone’s AfterMeet QR code to save their card and open their connection.</Body>
+              <Body>Scan someone’s ehllo QR code to save their card and open their connection.</Body>
             </View>
           </View>
           <GreenHeroCard
@@ -160,7 +160,7 @@ export default function ScannerScreen() {
         </View>
         {linking ? <ActivityIndicator color={colors.white} style={styles.spinner} /> : null}
         {!linking && !error && !queuedMessage ? (
-          <Text style={styles.helper}>Adds AfterMeet cards to your network. Visitors should use their phone camera instead.</Text>
+          <Text style={styles.helper}>Adds ehllo cards to your network. Visitors should use their phone camera instead.</Text>
         ) : null}
         {error ? (
           <View style={styles.errorWrap}>

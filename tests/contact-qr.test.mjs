@@ -7,7 +7,7 @@ test("buildContactQrPayload encodes offline contact data with labeled card URL",
   const payload = buildContactQrPayload({
     fullName: "Alex Morgan",
     jobTitle: "Designer",
-    company: "AfterMeet",
+    company: "ehllo",
     cardUrl: "https://aftermeet.app/c/alex",
     methods: [
       { method_type: "email", value: "alex@example.com" },
@@ -19,7 +19,7 @@ test("buildContactQrPayload encodes offline contact data with labeled card URL",
   assert.match(payload, /EMAIL;TYPE=INTERNET:alex@example.com/);
   assert.match(payload, /TEL;TYPE=CELL,VOICE:\+15550100/);
   assert.match(payload, /item1\.URL:https:\/\/aftermeet\.app\/c\/alex/);
-  assert.match(payload, /item1\.X-ABLabel:AfterMeet card/);
+  assert.match(payload, /item1\.X-ABLabel:ehllo card/);
   assert.match(payload, /END:VCARD$/);
 });
 
@@ -37,7 +37,7 @@ test("resolveShareQrPayload defaults to card URL for online visitor flow", () =>
   const profile = {
     name: "Alex Morgan",
     role: "Designer",
-    company: "AfterMeet",
+    company: "ehllo",
     cardUrl: "https://aftermeet.app/c/alex",
     showCompany: true,
     methods: [],

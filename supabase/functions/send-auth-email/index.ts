@@ -4,15 +4,15 @@ import { Resend } from "npm:resend@4.0.1";
 const resendApiKey = Deno.env.get("RESEND_API_KEY");
 const hookSecretRaw = Deno.env.get("SEND_EMAIL_HOOK_SECRET") ?? "";
 const hookSecret = hookSecretRaw.replace(/^v1,whsec_/, "");
-const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") ?? "AfterMeet <onboarding@resend.dev>";
+const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") ?? "ehllo <onboarding@resend.dev>";
 
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 function subjectFor(action: string) {
-  if (action === "recovery") return "Reset your AfterMeet password";
-  if (action === "signup") return "Confirm your AfterMeet email";
-  if (action === "email_change") return "Confirm your new AfterMeet email";
-  return "Your AfterMeet sign-in code";
+  if (action === "recovery") return "Reset your ehllo password";
+  if (action === "signup") return "Confirm your ehllo email";
+  if (action === "email_change") return "Confirm your new ehllo email";
+  return "Your ehllo sign-in code";
 }
 
 function htmlFor(action: string, token: string) {
@@ -21,7 +21,7 @@ function htmlFor(action: string, token: string) {
       ? "Enter this code to reset your password:"
       : action === "signup"
         ? "Enter this code to confirm your email:"
-        : "Enter this 6-digit code in AfterMeet to sign in:";
+        : "Enter this 6-digit code in ehllo to sign in:";
 
   return `<h2>${subjectFor(action)}</h2>
 <p>${intro}</p>

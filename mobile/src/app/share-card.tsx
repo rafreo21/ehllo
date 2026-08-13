@@ -10,6 +10,8 @@ import { BackButton, Body, Button, Eyebrow, ScreenFrame } from '@/components/ui'
 import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
 import { showsCompanyDetails } from '@/features/card/company-display';
+import { isEventCurrentlyHappening } from '@/features/events/event-home-state';
+import { fetchMyEvents } from '@/features/events/events-api';
 import {
   isTapToShareActive,
   isTapToShareNativeReady,
@@ -46,6 +48,20 @@ export default function ShareCardScreen() {
   const [walletNote, setWalletNote] = useState('');
   const [qrMode, setQrMode] = useState<QrShareMode>('online');
   const onlineQrEnabled = qrMode === 'online';
+  const [activeEventTitle, setActiveEventTitle] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!session?.access_token) return;
+    let cancelled = false;
+    void fetchMyEvents(session.access_token).then((events) => {
+      if (cancelled) return;
+      const current = events.find((event) => isEventCurrentlyHappening(event));
+      setActiveEventTitle(current?.title);
+    }).catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.access_token]);
 
   const setOnlineQrEnabled = useCallback((enabled: boolean) => {
     const mode: QrShareMode = enabled ? 'online' : 'offline';
@@ -122,7 +138,7 @@ export default function ShareCardScreen() {
 
   async function shareCard() {
     await Share.share({
-      title: `${card.name} · AfterMeet`,
+      title: `${card.name} · ehllo`,
       message: `${card.name}\n${card.role}${showCompany && card.company ? ` at ${card.company}` : ''}\n${publicUrl}`,
       url: publicUrl,
     });
@@ -185,6 +201,7 @@ export default function ShareCardScreen() {
                 cardUrl={publicUrl}
                 mode={qrMode}
                 size={280}
+                activeEventTitle={activeEventTitle}
               />
             </View>
             <View style={styles.modeToggle}>

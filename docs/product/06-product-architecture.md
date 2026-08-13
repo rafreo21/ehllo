@@ -1,11 +1,11 @@
-# AfterMeet Product Architecture
+# ehllo Product Architecture
 
 Status: Working product specification  
 Last updated: 2026-07-24
 
 ## Product model
 
-AfterMeet is a relationship operating system for independent professionals.
+ehllo is a relationship operating system for independent professionals.
 
 The product is organised around two complementary objects:
 

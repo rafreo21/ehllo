@@ -7,7 +7,7 @@ test("mailtoComposeLink encodes spaces as percent twenty, not plus signs", () =>
   const href = mailtoComposeLink(
     "sarah@example.com",
     "Could you add your LinkedIn?",
-    "Hey Sarah,\n\nIt was great meeting you.\n\nCould you add your LinkedIn to your AfterMeet card?",
+    "Hey Sarah,\n\nIt was great meeting you.\n\nCould you add your LinkedIn to your ehllo card?",
   );
 
   assert.match(href, /^mailto:sarah%40example\.com\?/);

@@ -1,10 +1,10 @@
 # Wallet setup (Apple + Google)
 
-Wallet passes are generated on the AfterMeet server. The mobile app calls the API; if the server is missing issuer credentials, you'll see **"not configured for this environment."**
+Wallet passes are generated on the ehllo server. The mobile app calls the API; if the server is missing issuer credentials, you'll see **"not configured for this environment."**
 
 ## Required environment variables (Vercel)
 
-Add these in the AfterMeet project on Vercel → Settings → Environment Variables → Production + Preview.
+Add these in the ehllo project on Vercel → Settings → Environment Variables → Production + Preview.
 
 ### Google Wallet
 
@@ -23,7 +23,7 @@ Add these in the AfterMeet project on Vercel → Settings → Environment Variab
 4. In Wallet Console → Users, grant the service account **Developer** or **Admin** access.
 5. Paste the JSON into `GOOGLE_WALLET_SERVICE_ACCOUNT_JSON` (single line is fine).
 
-**Demo mode:** Until Google approves publishing access for your issuer, passes show a `[TEST ONLY]` prefix on the title. That is added by Google, not AfterMeet. Complete the [Wallet launch checklist](https://developers.google.com/wallet/generic/test-and-go-live/launch-checklist) to remove it.
+**Demo mode:** Until Google approves publishing access for your issuer, passes show a `[TEST ONLY]` prefix on the title. That is added by Google, not ehllo. Complete the [Wallet launch checklist](https://developers.google.com/wallet/generic/test-and-go-live/launch-checklist) to remove it.
 
 **Pass images:** The wallet list icon uses your published profile photo. If none is set, Google falls back to the first letter of your name. Re-save the pass after updating your card photo or publishing `aftermeet-mark.png` on the server.
 

@@ -2,16 +2,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { FollowUpItem } from '@/features/follow-ups/follow-up-api';
 
-export const FOLLOW_UPS_CACHE_KEY = 'aftermeet.mobile.follow-ups-cache.v1';
+// v2: FollowUpItem gained eventId/eventTitle — bump so caches written before
+// that schema change don't silently serve stale rows missing the fields.
+export const FOLLOW_UPS_CACHE_KEY = 'aftermeet.mobile.follow-ups-cache.v2';
 export const FOLLOW_UPS_QUEUE_KEY = 'aftermeet.mobile.follow-ups-queue.v1';
 
-export type FollowUpQueueAction = 'complete' | 'reopen';
+export type FollowUpQueueAction = 'complete' | 'reopen' | 'snooze' | 'dismiss';
 
 export type FollowUpQueueEntry = {
   encounterId: string;
   actionId: string;
   action: FollowUpQueueAction;
   queuedAt: string;
+  snoozedUntil?: string;
 };
 
 function queueKey(encounterId: string, actionId: string) {
@@ -67,12 +70,14 @@ export async function setCachedFollowUpStatus(
   encounterId: string,
   actionId: string,
   status: FollowUpItem['status'],
-  completedAt?: string,
+  lifecycle: Partial<Pick<FollowUpItem,
+    'completedAt' | 'snoozedUntil' | 'dismissedAt' | 'cancelledAt' | 'statusUpdatedAt'
+  >> = {},
 ) {
   const cached = await readCachedFollowUps();
   const next = cached.map((item) => (
     item.encounterId === encounterId && item.actionId === actionId
-      ? { ...item, status, completedAt }
+      ? { ...item, status, ...lifecycle }
       : item
   ));
   await writeCachedFollowUps(next);
@@ -89,8 +94,40 @@ export function applyFollowUpQueueToItems(items: FollowUpItem[], queue: FollowUp
   return items.map((item) => {
     const entry = byKey.get(queueKey(item.encounterId, item.actionId));
     if (!entry) return item;
-    return entry.action === 'complete'
-      ? { ...item, status: 'completed' as const, completedAt: item.completedAt || entry.queuedAt }
-      : { ...item, status: 'open' as const, completedAt: undefined };
+    if (entry.action === 'complete') {
+      return {
+        ...item,
+        status: 'completed' as const,
+        completedAt: item.completedAt || entry.queuedAt,
+        snoozedUntil: undefined,
+        statusUpdatedAt: entry.queuedAt,
+      };
+    }
+    if (entry.action === 'snooze') {
+      return {
+        ...item,
+        status: 'snoozed' as const,
+        snoozedUntil: entry.snoozedUntil,
+        statusUpdatedAt: entry.queuedAt,
+      };
+    }
+    if (entry.action === 'dismiss') {
+      return {
+        ...item,
+        status: 'dismissed' as const,
+        dismissedAt: entry.queuedAt,
+        snoozedUntil: undefined,
+        statusUpdatedAt: entry.queuedAt,
+      };
+    }
+    return {
+      ...item,
+      status: 'open' as const,
+      completedAt: undefined,
+      dismissedAt: undefined,
+      cancelledAt: undefined,
+      snoozedUntil: undefined,
+      statusUpdatedAt: entry.queuedAt,
+    };
   });
 }

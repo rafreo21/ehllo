@@ -329,7 +329,7 @@ export default function CardsPage() {
             <div className="cards-empty-visual"><div><QrCodeIcon size={42} weight="bold" /></div><span><PlusIcon size={22} weight="bold" /></span></div>
             <span className="step-pill">Your first card</span>
             <h1>Create a card people can remember.</h1>
-            <p>Add your identity and the ways people can reach you. AfterMeet creates the QR code when you save the card.</p>
+            <p>Add your identity and the ways people can reach you. ehllo creates the QR code when you save the card.</p>
             <Button onClick={() => createCard()}><PlusIcon size={18} weight="bold" /> Create your first card</Button>
             {isTeamWorkspace && templates.length ? (
               <div className="team-template-picker">
@@ -491,7 +491,7 @@ export default function CardsPage() {
               <div className="phone-widget-head"><span><DeviceMobileIcon size={22} weight="bold" /></span><div><h3>Home-screen widgets</h3><p>Choose QR Scan, Business Card, or Recent Connections when adding a widget.</p></div></div>
               <div className="widget-gallery">
                 <article className="widget-gallery-card">
-                  <header><span>AfterMeet</span><strong>2 × 2</strong></header>
+                  <header><span>ehllo</span><strong>2 × 2</strong></header>
                   <div className="widget-gallery-preview widget-gallery-qr">
                     <div className="widget-gallery-qr-frame">
                       {qr ? <img src={qr} alt={`QR code for ${profile.name}'s card`} /> : <QrCodeIcon size={24} weight="bold" aria-hidden="true" />}
@@ -501,7 +501,7 @@ export default function CardsPage() {
                   <p>Large scannable QR for quick sharing.</p>
                 </article>
                 <article className="widget-gallery-card">
-                  <header><span>AfterMeet</span><strong>4 × 2</strong></header>
+                  <header><span>ehllo</span><strong>4 × 2</strong></header>
                   <div className="widget-gallery-preview widget-gallery-card-layout">
                     <div className="widget-gallery-card-qr">
                       {qr ? <img src={qr} alt="" /> : <QrCodeIcon size={22} weight="bold" aria-hidden="true" />}
@@ -517,7 +517,7 @@ export default function CardsPage() {
                   <p>QR plus your name, role, and company.</p>
                 </article>
                 <article className="widget-gallery-card">
-                  <header><span>AfterMeet</span><strong>4 × 2</strong></header>
+                  <header><span>ehllo</span><strong>4 × 2</strong></header>
                   <div className="widget-gallery-preview widget-gallery-connections">
                     <small>RECENT CONNECTIONS</small>
                     <div className="widget-gallery-connection-row">
@@ -536,8 +536,8 @@ export default function CardsPage() {
                 <Button variant="secondary" aria-expanded={showWidgetHelp} onClick={() => setShowWidgetHelp((current) => !current)}>Add a widget {showWidgetHelp ? <CaretUpIcon /> : <CaretDownIcon />}</Button>
               </div>
               {showWidgetHelp && <div className="widget-instructions">
-                <article><strong>iPhone or iPad</strong><p>Install and open AfterMeet once. Touch and hold the Home Screen, tap <b>Edit</b>, then <b>Add Widget</b>. Search for AfterMeet and pick QR Scan, Business Card, or Recent Connections.</p></article>
-                <article><strong>Android</strong><p>Install and open AfterMeet once. Touch and hold an empty part of the Home Screen, tap <b>Widgets</b>, then choose one of the three AfterMeet widgets.</p></article>
+                <article><strong>iPhone or iPad</strong><p>Install and open ehllo once. Touch and hold the Home Screen, tap <b>Edit</b>, then <b>Add Widget</b>. Search for ehllo and pick QR Scan, Business Card, or Recent Connections.</p></article>
+                <article><strong>Android</strong><p>Install and open ehllo once. Touch and hold an empty part of the Home Screen, tap <b>Widgets</b>, then choose one of the three ehllo widgets.</p></article>
                 <small>Refresh widgets from Card Tools in the app after publishing changes or receiving new connections.</small>
               </div>}
             </section>

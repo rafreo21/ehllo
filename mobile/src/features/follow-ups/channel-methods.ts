@@ -71,6 +71,8 @@ export function buildTailoredRequestEmail(input: {
   methodType: MissingMethodType;
   followUpTitle?: string;
   followUpChannel?: string;
+  /** The linked event's title, if any — event is an activator: omit it and the opener is unchanged. */
+  eventTitle?: string;
 }) {
   const greeting = input.personName.trim()
     ? `Hey ${input.personName.split(' ')[0]},`
@@ -85,12 +87,14 @@ export function buildTailoredRequestEmail(input: {
     ? `\n\nI wanted to follow up on ${cleanedFollowUp}.`
     : '';
   const methodLabel = methodRequestLabel(input.methodType);
+  const eventTitle = input.eventTitle?.trim();
+  const opener = eventTitle ? `It was great meeting you at ${eventTitle}.` : 'It was great meeting you.';
 
   if (input.methodType === 'preferred_contact') {
-    return `${greeting}\n\nIt was great meeting you.${followUp}\n\nCould you share the best way to reach you on your AfterMeet card?\n\nThanks!`;
+    return `${greeting}\n\n${opener}${followUp}\n\nCould you share the best way to reach you on your ehllo card?\n\nThanks!`;
   }
 
-  return `${greeting}\n\nIt was great meeting you.${followUp}\n\nCould you add your ${methodLabel} to your AfterMeet card so I can connect with you more easily?\n\nThanks!`;
+  return `${greeting}\n\n${opener}${followUp}\n\nCould you add your ${methodLabel} to your ehllo card so I can connect with you more easily?\n\nThanks!`;
 }
 
 export function requestEmailSubject(methodType: MissingMethodType) {

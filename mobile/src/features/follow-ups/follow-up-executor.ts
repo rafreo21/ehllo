@@ -49,6 +49,7 @@ export function contactContextFromFollowUp(item: FollowUpItem): ActionContactCon
       || '',
     methods,
     encounterTitle: item.encounterTitle,
+    eventTitle: item.eventTitle,
   };
 }
 
@@ -101,7 +102,7 @@ export function planFollowUpExecution(
 ): FollowUpExecution {
   const action = resolveFollowUpAction(
     { channel: item.channel, title: item.title, dueAt: item.dueAt },
-    { ...context, encounterTitle: item.encounterTitle },
+    { ...context, encounterTitle: item.encounterTitle, eventTitle: item.eventTitle },
   );
 
   if (action.href && !action.missingMethod) {
@@ -125,12 +126,14 @@ export function planFollowUpExecution(
     methodType,
     followUpTitle: item.title,
     followUpChannel: item.channel,
+    eventTitle: item.eventTitle,
   });
   const preferredContactEmailBody = buildTailoredRequestEmail({
     personName: context.personName,
     methodType: 'preferred_contact',
     followUpTitle: item.title,
     followUpChannel: item.channel,
+    eventTitle: item.eventTitle,
   });
 
   if (recipientEmail.includes('@')) {

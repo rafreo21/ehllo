@@ -1,4 +1,4 @@
-# AfterMeet
+# ehllo
 
 Research and product planning for a meeting-to-follow-up assistant inspired by the problem Blinq solves—not a copy of its brand or implementation.
 
@@ -34,7 +34,7 @@ The best starting segment is probably **independent consultants and small agenci
 
 ## Working product concept
 
-Temporary name: **AfterMeet**
+Temporary name: **ehllo**
 
 Positioning:
 

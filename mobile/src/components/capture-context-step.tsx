@@ -58,7 +58,7 @@ export function CaptureContextStep({
         <View style={styles.block}>
           <Body>
             {draft.captureMode === 'quick_context'
-              ? 'Write or paste what mattered. AfterMeet turns it into a reviewed summary and concrete follow-up.'
+              ? 'Write or paste what mattered. ehllo turns it into a reviewed summary and concrete follow-up.'
               : 'We draft a meeting title and share summary from your transcript. Edit either field before you continue.'}
           </Body>
 

@@ -18,7 +18,7 @@ function describeOtpDeliveryError(error) {
     || lower.includes("verify a domain")
     || lower.includes("validation_error")
   ) {
-    return "Sign-in codes can only be emailed after AfterMeet verifies its sender domain. Try again shortly, or use Continue with Google if available.";
+    return "Sign-in codes can only be emailed after ehllo verifies its sender domain. Try again shortly, or use Continue with Google if available.";
   }
 
   if (message && message.length < 180 && !lower.includes("internal")) {

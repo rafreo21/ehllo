@@ -3,15 +3,27 @@ import { NextResponse } from "next/server";
 import { createApiSupabaseClient, resolveApiUser } from "../../../../../../lib/auth/api-request";
 import { encounterFromApi, normalizeEncounterActions, type EncounterAction } from "../../../../../../lib/encounters";
 import { fetchParticipantsByEncounter } from "../../../../../../lib/encounter-participants-server";
+import {
+  FOLLOW_UP_STATUSES,
+  applyFollowUpTransition,
+  canTransitionFollowUp,
+  isFollowUpReviewGated,
+  isFutureSnoozeTarget,
+  type FollowUpStatus,
+} from "../../../../../../lib/follow-up-lifecycle";
 
-const allowedStatuses = new Set(["open", "completed", "snoozed"]);
+const allowedStatuses = new Set<string>(FOLLOW_UP_STATUSES);
 
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string; actionId: string }> },
 ) {
   const { id, actionId } = await context.params;
-  const body = await request.json().catch(() => null) as { status?: string; action?: EncounterAction } | null;
+  const body = await request.json().catch(() => null) as {
+    status?: string;
+    snoozedUntil?: string;
+    action?: EncounterAction;
+  } | null;
   const status = body?.status?.trim();
 
   if (!body) {
@@ -48,24 +60,45 @@ export async function PATCH(
     return NextResponse.json({ error: "Follow-up not found." }, { status: 404 });
   }
 
+  const currentAction = actions[index];
+  if (isFollowUpReviewGated(data.status, currentAction.status)) {
+    return NextResponse.json(
+      { error: "Confirm the encounter review before updating this follow-up." },
+      { status: 409 },
+    );
+  }
+
+  const nextStatus = (body.action?.status || status || currentAction.status) as FollowUpStatus;
+  if (!canTransitionFollowUp(currentAction.status, nextStatus)) {
+    return NextResponse.json(
+      { error: `This follow-up cannot move from ${currentAction.status} to ${nextStatus}.` },
+      { status: 409 },
+    );
+  }
+
+  const snoozedUntil = body.snoozedUntil || body.action?.snoozedUntil;
+  if (nextStatus === "snoozed" && !isFutureSnoozeTarget(snoozedUntil)) {
+    return NextResponse.json(
+      { error: "Choose a future time to snooze this follow-up." },
+      { status: 400 },
+    );
+  }
+
   const mergedActions = actions.map((action, actionIndex) => (
     actionIndex === index
-      ? body.action
-        ? {
+      ? applyFollowUpTransition(
+          {
             ...action,
-            ...body.action,
+            ...(body.action || {}),
             id: action.id,
-            completedAt: body.action.status === "completed"
-              ? body.action.completedAt || action.completedAt || new Date().toISOString()
-              : undefined,
-          }
-        : {
-            ...action,
-            status,
-            completedAt: status === "completed"
-              ? action.completedAt || new Date().toISOString()
-              : undefined,
-          }
+            // The requested status is the transition target. Keep the stored
+            // status here so the lifecycle guard can validate the real change.
+            status: action.status,
+          },
+          nextStatus,
+          undefined,
+          snoozedUntil,
+        )
       : action
   ));
   const participants = (await fetchParticipantsByEncounter(supabase, [id])).get(id) ?? [];

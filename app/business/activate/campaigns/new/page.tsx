@@ -36,7 +36,7 @@ export default function NewCampaignPage() {
     <BusinessShell
       active="activate"
       title="New campaign"
-      subtitle="Use campaigns to attribute event and outreach work without turning AfterMeet into a marketing automation tool."
+      subtitle="Use campaigns to attribute event and outreach work without turning ehllo into a marketing automation tool."
       actions={<LinkButton size="small" variant="ghost" href="/business/activate/campaigns"><ArrowLeftIcon size={16} />Campaigns</LinkButton>}
     >
       <form className="contact-form-card" onSubmit={save}>

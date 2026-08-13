@@ -6,6 +6,8 @@ type PublicEnv = {
   supabaseUrl: string;
   supabaseAnonKey: string;
   publicCardBaseUrl: string;
+  /** Empty when not configured — callers must fall back to a plain text input rather than assume autocomplete is available. */
+  googlePlacesApiKey: string;
 };
 
 export function readEnv(): PublicEnv | null {
@@ -16,8 +18,14 @@ export function readEnv(): PublicEnv | null {
   const supabaseUrl = extra?.supabaseUrl || process.env.EXPO_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = extra?.supabaseAnonKey || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
   const publicCardBaseUrl = extra?.publicCardBaseUrl || process.env.EXPO_PUBLIC_CARD_BASE_URL || 'http://localhost:3000';
+  const googlePlacesApiKey = extra?.googlePlacesApiKey || process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || '';
   if (!supabaseUrl || !supabaseAnonKey) return null;
-  return { supabaseUrl, supabaseAnonKey, publicCardBaseUrl: publicCardBaseUrl.replace(/\/+$/, '') };
+  return {
+    supabaseUrl,
+    supabaseAnonKey,
+    publicCardBaseUrl: publicCardBaseUrl.replace(/\/+$/, ''),
+    googlePlacesApiKey,
+  };
 }
 
 export function readMobileAuthRedirectUris() {

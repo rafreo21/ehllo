@@ -1,4 +1,4 @@
-# AfterMeet Canonical State Machines
+# ehllo Canonical State Machines
 
 Status: Canonical business-logic specification  
 Last updated: 2026-07-24

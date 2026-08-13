@@ -3,7 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
 import type { FollowUpItem } from '@/features/follow-ups/follow-up-api';
-import { completeFollowUp, reopenFollowUp } from '@/features/follow-ups/follow-up-api';
+import {
+  completeFollowUp,
+  dismissFollowUp,
+  reopenFollowUp,
+  snoozeFollowUp,
+} from '@/features/follow-ups/follow-up-api';
 import { dequeueFollowUpAction, enqueueFollowUpAction, setCachedFollowUpStatus } from '@/features/follow-ups/follow-up-cache';
 import {
   applyAudienceToContext,
@@ -146,7 +151,13 @@ export function useFollowUpActions(
     setCompletingId(key);
     try {
       const completedAt = new Date().toISOString();
-      await setCachedFollowUpStatus(item.encounterId, item.actionId, 'completed', completedAt);
+      await setCachedFollowUpStatus(item.encounterId, item.actionId, 'completed', {
+        completedAt,
+        snoozedUntil: undefined,
+        dismissedAt: undefined,
+        cancelledAt: undefined,
+        statusUpdatedAt: completedAt,
+      });
       await enqueueFollowUpAction({ encounterId: item.encounterId, actionId: item.actionId, action: 'complete', queuedAt: completedAt });
       if (isOnline()) {
         try {
@@ -171,7 +182,13 @@ export function useFollowUpActions(
     setCompletingId(key);
     try {
       const queuedAt = new Date().toISOString();
-      await setCachedFollowUpStatus(item.encounterId, item.actionId, 'open', undefined);
+      await setCachedFollowUpStatus(item.encounterId, item.actionId, 'open', {
+        completedAt: undefined,
+        snoozedUntil: undefined,
+        dismissedAt: undefined,
+        cancelledAt: undefined,
+        statusUpdatedAt: queuedAt,
+      });
       await enqueueFollowUpAction({ encounterId: item.encounterId, actionId: item.actionId, action: 'reopen', queuedAt });
       if (isOnline()) {
         try {
@@ -179,6 +196,80 @@ export function useFollowUpActions(
           await dequeueFollowUpAction(item.encounterId, item.actionId);
         } catch {
           // Keep queued; retry on the next foreground/reconnect sync — same as card sync failures.
+        }
+      }
+      onUpdated?.();
+    } finally {
+      setCompletingId(null);
+    }
+  }, [accessToken]);
+
+  const markSnoozed = useCallback(async (
+    item: FollowUpItem,
+    snoozedUntil: string,
+    onUpdated?: () => void,
+  ) => {
+    if (!accessToken) return;
+    const key = `${item.encounterId}-${item.actionId}`;
+    setCompletingId(key);
+    try {
+      const queuedAt = new Date().toISOString();
+      await setCachedFollowUpStatus(item.encounterId, item.actionId, 'snoozed', {
+        snoozedUntil,
+        completedAt: undefined,
+        dismissedAt: undefined,
+        cancelledAt: undefined,
+        statusUpdatedAt: queuedAt,
+      });
+      await enqueueFollowUpAction({
+        encounterId: item.encounterId,
+        actionId: item.actionId,
+        action: 'snooze',
+        snoozedUntil,
+        queuedAt,
+      });
+      if (isOnline()) {
+        try {
+          await snoozeFollowUp(accessToken, item.encounterId, item.actionId, snoozedUntil);
+          await dequeueFollowUpAction(item.encounterId, item.actionId);
+        } catch {
+          // Keep queued for foreground/reconnect sync.
+        }
+      }
+      onUpdated?.();
+    } finally {
+      setCompletingId(null);
+    }
+  }, [accessToken]);
+
+  const markDismissed = useCallback(async (
+    item: FollowUpItem,
+    onUpdated?: () => void,
+  ) => {
+    if (!accessToken) return;
+    const key = `${item.encounterId}-${item.actionId}`;
+    setCompletingId(key);
+    try {
+      const dismissedAt = new Date().toISOString();
+      await setCachedFollowUpStatus(item.encounterId, item.actionId, 'dismissed', {
+        dismissedAt,
+        completedAt: undefined,
+        snoozedUntil: undefined,
+        cancelledAt: undefined,
+        statusUpdatedAt: dismissedAt,
+      });
+      await enqueueFollowUpAction({
+        encounterId: item.encounterId,
+        actionId: item.actionId,
+        action: 'dismiss',
+        queuedAt: dismissedAt,
+      });
+      if (isOnline()) {
+        try {
+          await dismissFollowUp(accessToken, item.encounterId, item.actionId);
+          await dequeueFollowUpAction(item.encounterId, item.actionId);
+        } catch {
+          // Keep queued for foreground/reconnect sync.
         }
       }
       onUpdated?.();
@@ -222,6 +313,8 @@ export function useFollowUpActions(
     runFollowUp,
     markComplete,
     markOpen,
+    markSnoozed,
+    markDismissed,
     completingId,
     missingOpen,
     missingExecution,

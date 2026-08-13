@@ -25,7 +25,7 @@ async function driveFetch(url: string, accessToken: string, init?: RequestInit) 
 }
 
 async function ensureAfterMeetFolder(accessToken: string) {
-  const query = "name = 'AfterMeet' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+  const query = "name = 'ehllo' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
   const search = await driveFetch(`${DRIVE_API}/files?q=${encodeURIComponent(query)}&spaces=drive&fields=files(id,name)&pageSize=1`, accessToken);
   const result = await search.json() as { files?: Array<{ id: string }> };
   if (result.files?.[0]?.id) return result.files[0].id;
@@ -33,7 +33,7 @@ async function ensureAfterMeetFolder(accessToken: string) {
   const create = await driveFetch(`${DRIVE_API}/files?fields=id`, accessToken, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: "AfterMeet", mimeType: "application/vnd.google-apps.folder" }),
+    body: JSON.stringify({ name: "ehllo", mimeType: "application/vnd.google-apps.folder" }),
   });
   const folder = await create.json() as { id: string };
   return folder.id;
@@ -48,7 +48,7 @@ export async function uploadRecordingToGoogleDrive(input: {
   const folderId = await ensureAfterMeetFolder(input.accessToken);
   const boundary = `aftermeet-${crypto.randomUUID()}`;
   const metadata = JSON.stringify({
-    name: `${input.title || "AfterMeet recording"} - ${new Date().toISOString().slice(0, 10)}.${input.audio.name.split(".").pop() || "webm"}`,
+    name: `${input.title || "ehllo recording"} - ${new Date().toISOString().slice(0, 10)}.${input.audio.name.split(".").pop() || "webm"}`,
     parents: [folderId],
     appProperties: { aftermeetEncounterId: input.encounterId },
   });

@@ -6,9 +6,9 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "predev": "node scripts/ensure-ai-env.mjs",
-    "dev": "npm run predev && WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev",
-    "dev:staging": "npm run predev && NEXT_PUBLIC_SUPABASE_URL=https://vgrxsdjfrkmpmpqvuqty.supabase.co NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_eSjPw8e5uHqCDUtAf_vdDQ_SXAS-hsW NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZncnhzZGpmcmttcG1wcXZ1cXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NjA3NjcsImV4cCI6MjEwMTUzNjc2N30.aPjvhNlIcl3XRku2h4PtF8e5xRfU0bkaCcSxK3KTePM SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZncnhzZGpmcmttcG1wcXZ1cXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTk2MDc2NywiZXhwIjoyMTAxNTM2NzY3fQ.P6Mu3w1LQLcWzqVmsLVGZrPxtVDvOC-Bx7kixzrjABc WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev",
+    "dev": "npm run dev:staging",
+    "dev:staging": "node scripts/run-web-dev.mjs staging",
+    "dev:production": "node scripts/run-web-dev.mjs production",
     "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
     "build:vercel": "NITRO_PRESET=vercel vinext build",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
@@ -18,7 +18,9 @@
     "configure:supabase-auth": "node scripts/configure-supabase-auth.mjs",
     "deploy:send-auth-email": "node scripts/deploy-send-auth-email.mjs",
     "verify:resend-delivery": "node scripts/verify-resend-delivery.mjs",
-    "verify:google-wallet": "node scripts/verify-google-wallet.mjs"
+    "verify:google-wallet": "node scripts/verify-google-wallet.mjs",
+    "security:secrets": "node scripts/check-committed-secrets.mjs",
+    "release:check": "npm run security:secrets && node scripts/check-release-readiness.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.24",

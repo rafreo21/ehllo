@@ -1,11 +1,11 @@
-# AfterMeet Domain Model
+# ehllo Domain Model
 
 Status: Working domain specification  
 Last updated: 2026-07-24
 
 ## Domain philosophy
 
-AfterMeet follows one information lifecycle:
+ehllo follows one information lifecycle:
 
 > **Raw → AI → Human → Permanent**
 
@@ -43,7 +43,7 @@ Workspace owns People, Relationships, Exchanges, Encounters, AI Reviews, Actions
 
 ### Purpose
 
-An authenticated person who operates AfterMeet.
+An authenticated person who operates ehllo.
 
 ### Owns
 

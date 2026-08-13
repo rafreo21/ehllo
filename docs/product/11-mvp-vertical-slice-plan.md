@@ -1,4 +1,4 @@
-# AfterMeet MVP Vertical Slice Plan
+# ehllo MVP Vertical Slice Plan
 
 Status: Locked delivery sequence  
 Last updated: 2026-07-24

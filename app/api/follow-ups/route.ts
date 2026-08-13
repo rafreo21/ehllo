@@ -88,6 +88,21 @@ export async function GET(request: Request) {
     }
   }
 
+  // "Where we met" / follow-up email opener context — event is an activator,
+  // so this map only ever adds a title for encounters that actually have one.
+  const eventIds = [...new Set(encounters.map((encounter) => encounter.eventId).filter((id): id is string => Boolean(id)))];
+  const eventTitlesById = new Map<string, string>();
+  if (eventIds.length) {
+    const { data: eventRows } = await supabase
+      .from("events")
+      .select("id, title")
+      .eq("workspace_id", user.workspaceId)
+      .in("id", eventIds);
+    for (const row of eventRows ?? []) {
+      eventTitlesById.set(row.id as string, row.title as string);
+    }
+  }
+
   const flattened = flattenOpenFollowUps(encounters);
   const scoped = hasConnectionFilter
     ? followUpsForConnection(flattened, connectionInput)
@@ -107,6 +122,7 @@ export async function GET(request: Request) {
           : item.personEmail.trim()
             ? [{ id: `${item.actionId}-email`, type: "email" as const, value: item.personEmail.trim(), label: "Email" }]
             : [],
+      eventTitle: item.eventId ? eventTitlesById.get(item.eventId) : undefined,
     };
   });
 

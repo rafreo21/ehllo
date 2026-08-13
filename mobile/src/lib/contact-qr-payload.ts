@@ -19,20 +19,25 @@ function splitFullName(fullName: string) {
   return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
 }
 
-/** Mirrors lib/card-share-links.ts's buildWhenWeMetNote (web) so both vCard exports match. */
-function buildWhenWeMetNote(cardUrl: string, scannedAt = new Date()) {
+/**
+ * Mirrors lib/card-share-links.ts's buildWhenWeMetNote (web) so both vCard exports match.
+ * eventTitle is an activator: omit it and this note reads exactly as before.
+ */
+function buildWhenWeMetNote(cardUrl: string, scannedAt = new Date(), eventTitle?: string) {
   const date = scannedAt.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
-  return `When we met: ${date}\nSaved from AfterMeet\n${cardUrl}`;
+  const trimmedEvent = eventTitle?.trim();
+  const whereLine = trimmedEvent ? `Where we met: ${trimmedEvent}\n` : '';
+  return `${whereLine}When we met: ${date}\nSaved from ehllo\n${cardUrl}`;
 }
 
 export type MobileContactQrOptions = {
   /** Keep every contact method; drop bio / cover / photos to shrink QR. */
   lean?: boolean;
-  /** Name, primary email/phone, and AfterMeet card URL only (last resort). */
+  /** Name, primary email/phone, and ehllo card URL only (last resort). */
   minimal?: boolean;
   /** Omit photo/logo URI lines (methods stay complete). */
   omitImages?: boolean;
@@ -40,6 +45,8 @@ export type MobileContactQrOptions = {
   omitBioCover?: boolean;
   /** Embed a pre-built tiny thumbnail instead of a profile photo URL, when it fits. */
   embeddedPhoto?: VcardEmbeddedImage | null;
+  /** The sharer's currently-happening event, if any — an activator: omit it and the note is unchanged. */
+  eventTitle?: string;
 };
 
 function vcardImageFields(card: MobileCard, options: MobileContactQrOptions): VcardImageFields {
@@ -72,7 +79,7 @@ export function buildMobileContactQrPayload(
   const lines = [
     'BEGIN:VCARD',
     'VERSION:3.0',
-    'PRODID:-//AfterMeet//Contact Card//EN',
+    'PRODID:-//ehllo//Contact Card//EN',
     `N:${escapeVcard(lastName)};${escapeVcard(firstName)};;;`,
     `FN:${escapeVcard(visible.name.trim())}`,
   ];
@@ -94,7 +101,7 @@ export function buildMobileContactQrPayload(
     const cardAlreadyLinked = lines.some((line) => line.includes(cardPage));
     if (!cardAlreadyLinked) {
       lines.push(`item${nextItemIndex}.URL:${escapeVcard(cardPage)}`);
-      lines.push(`item${nextItemIndex}.X-ABLabel:${escapeVcard('AfterMeet card')}`);
+      lines.push(`item${nextItemIndex}.X-ABLabel:${escapeVcard('ehllo card')}`);
       nextItemIndex += 1;
     }
   }
@@ -113,7 +120,7 @@ export function buildMobileContactQrPayload(
     noteParts.push(...noteExtras);
   }
   if (!options.minimal && cardPage) {
-    noteParts.push(buildWhenWeMetNote(cardPage));
+    noteParts.push(buildWhenWeMetNote(cardPage, new Date(), options.eventTitle));
   }
   if (noteParts.length) {
     lines.push(`NOTE:${escapeVcard(noteParts.join('\n\n'))}`);

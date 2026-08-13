@@ -1,4 +1,5 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { AppUser } from "../auth/context";
 import { createClient } from "../supabase/server";
@@ -20,8 +21,8 @@ function isExpired(expiresAt: string | null) {
   return new Date(expiresAt).getTime() <= Date.now() + 60_000;
 }
 
-export async function listConnectedAccounts(user: AppUser) {
-  const supabase = await createClient();
+export async function listConnectedAccounts(user: AppUser, client?: SupabaseClient) {
+  const supabase = client ?? await createClient();
   const { data, error } = await supabase
     .from("connected_accounts")
     .select("*")
@@ -32,12 +33,12 @@ export async function listConnectedAccounts(user: AppUser) {
   return (data ?? []) as ConnectedAccountRow[];
 }
 
-export async function connectedAccountStatus(user: AppUser): Promise<ConnectedAccountStatus> {
+export async function connectedAccountStatus(user: AppUser, client?: SupabaseClient): Promise<ConnectedAccountStatus> {
   const status = emptyConnectedAccountStatus();
   status.configured.google = Boolean(process.env.GOOGLE_INTEGRATION_CLIENT_ID && process.env.GOOGLE_INTEGRATION_CLIENT_SECRET);
   status.configured.microsoft = Boolean(process.env.MICROSOFT_INTEGRATION_CLIENT_ID && process.env.MICROSOFT_INTEGRATION_CLIENT_SECRET);
 
-  for (const row of await listConnectedAccounts(user)) {
+  for (const row of await listConnectedAccounts(user, client)) {
     if (row.provider === "google") {
       status.google = {
         connected: true,
@@ -77,8 +78,9 @@ export async function saveConnectedAccount(
     expiresAt?: string | null;
     scopes: string[];
   },
+  client?: SupabaseClient,
 ) {
-  const supabase = await createClient();
+  const supabase = client ?? await createClient();
   const { error } = await supabase.from("connected_accounts").upsert({
     workspace_id: user.workspaceId,
     user_id: user.id,
@@ -94,8 +96,8 @@ export async function saveConnectedAccount(
   if (error) throw new Error("We couldn’t save this connected account.");
 }
 
-export async function deleteConnectedAccount(user: AppUser, provider: IntegrationProvider) {
-  const supabase = await createClient();
+export async function deleteConnectedAccount(user: AppUser, provider: IntegrationProvider, client?: SupabaseClient) {
+  const supabase = client ?? await createClient();
   await supabase
     .from("connected_accounts")
     .delete()
@@ -135,8 +137,26 @@ export async function connectProviderFromCode(
   return email;
 }
 
-export async function getConnectedAccountAccessToken(user: AppUser, provider: IntegrationProvider) {
-  const supabase = await createClient();
+export type AccessTokenResult =
+  | { status: "ok"; token: string }
+  | { status: "not_connected" }
+  /** A connection exists but can't produce a working token right now (revoked grant, no refresh token, provider rejected the refresh) — distinct from never having connected, so the UI can say "reconnect" instead of "connect". */
+  | { status: "needs_reconnect" };
+
+/**
+ * `client` lets a bearer-token (mobile) request pass its own
+ * request-scoped Supabase client instead of the cookie-based default, which
+ * has no session outside a web request and would silently see zero rows
+ * under RLS. Every internal call (including the refresh-then-persist path)
+ * threads the same client through, so a refreshed token actually persists
+ * against the identity that requested it.
+ */
+export async function getConnectedAccountAccessTokenStatus(
+  user: AppUser,
+  provider: IntegrationProvider,
+  client?: SupabaseClient,
+): Promise<AccessTokenResult> {
+  const supabase = client ?? await createClient();
   const { data, error } = await supabase
     .from("connected_accounts")
     .select("*")
@@ -145,31 +165,48 @@ export async function getConnectedAccountAccessToken(user: AppUser, provider: In
     .eq("provider", provider)
     .maybeSingle();
 
-  if (error || !data) return null;
+  if (error || !data) return { status: "not_connected" };
   const row = data as ConnectedAccountRow;
-  if (!isExpired(row.expires_at)) return row.access_token;
+  if (!isExpired(row.expires_at)) return { status: "ok", token: row.access_token };
 
-  if (!row.refresh_token) return null;
+  if (!row.refresh_token) return { status: "needs_reconnect" };
 
-  if (provider === "google") {
-    const refreshed = await refreshGoogleAccessToken(row.refresh_token);
-    await saveConnectedAccount(user, "google", {
+  try {
+    if (provider === "google") {
+      const refreshed = await refreshGoogleAccessToken(row.refresh_token);
+      await saveConnectedAccount(user, "google", {
+        accountEmail: row.account_email,
+        accessToken: refreshed.access_token,
+        refreshToken: row.refresh_token,
+        expiresAt: expiresAtFromNow(refreshed.expires_in),
+        scopes: row.scopes,
+      }, supabase);
+      return { status: "ok", token: refreshed.access_token };
+    }
+
+    const refreshed = await refreshMicrosoftAccessToken(row.refresh_token);
+    await saveConnectedAccount(user, "microsoft", {
       accountEmail: row.account_email,
       accessToken: refreshed.access_token,
-      refreshToken: row.refresh_token,
+      refreshToken: refreshed.refresh_token ?? row.refresh_token,
       expiresAt: expiresAtFromNow(refreshed.expires_in),
       scopes: row.scopes,
-    });
-    return refreshed.access_token;
+    }, supabase);
+    return { status: "ok", token: refreshed.access_token };
+  } catch {
+    // Refresh token was rejected (revoked in Google/Microsoft's own security
+    // settings, expired past its own lifetime, etc.) — the stored connection
+    // is dead weight until the user reconnects.
+    return { status: "needs_reconnect" };
   }
+}
 
-  const refreshed = await refreshMicrosoftAccessToken(row.refresh_token);
-  await saveConnectedAccount(user, "microsoft", {
-    accountEmail: row.account_email,
-    accessToken: refreshed.access_token,
-    refreshToken: refreshed.refresh_token ?? row.refresh_token,
-    expiresAt: expiresAtFromNow(refreshed.expires_in),
-    scopes: row.scopes,
-  });
-  return refreshed.access_token;
+/** Thin wrapper over getConnectedAccountAccessTokenStatus for callers that only need the token, not why it's missing. */
+export async function getConnectedAccountAccessToken(
+  user: AppUser,
+  provider: IntegrationProvider,
+  client?: SupabaseClient,
+) {
+  const result = await getConnectedAccountAccessTokenStatus(user, provider, client);
+  return result.status === "ok" ? result.token : null;
 }

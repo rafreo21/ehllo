@@ -54,7 +54,14 @@ export function OutboundDraftPanel({
       .catch(() => undefined);
   }, []);
 
-  if (action.owner !== "me" || action.status === "completed" || !supportsOutboundDraft(action.channel)) {
+  // A proposed action is still awaiting review confirmation and must not be
+  // externally sendable — outbound drafting stays locked until then.
+  if (
+    action.owner !== "me"
+    || action.status === "completed"
+    || action.status === "proposed"
+    || !supportsOutboundDraft(action.channel)
+  ) {
     return null;
   }
 
@@ -186,7 +193,7 @@ export function OutboundDraftPanel({
       <header className="outbound-draft-header">
         <div>
           <strong>Review-first outbound</strong>
-          <small>Draft, edit, approve, then send yourself. AfterMeet never auto-sends.</small>
+          <small>Draft, edit, approve, then send yourself. ehllo never auto-sends.</small>
         </div>
         {!draft || draft.status === "dismissed" ? (
           <Button size="small" loading={loading} onClick={() => void generateDraft()}>

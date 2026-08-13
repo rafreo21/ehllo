@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { resolveApiUser } from "../../../../lib/auth/api-request";
+import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
 import { deleteConnectedAccount } from "../../../../lib/integrations/connected-accounts";
 import type { IntegrationProvider } from "../../../../lib/integrations/types";
 
@@ -18,6 +18,7 @@ export async function DELETE(request: Request, context: { params: Promise<{ prov
     return NextResponse.json({ ok: true, preview: true }, { headers: { "Cache-Control": "private, no-store" } });
   }
 
-  await deleteConnectedAccount(user, provider as IntegrationProvider);
+  const client = await createApiSupabaseClient(request);
+  await deleteConnectedAccount(user, provider as IntegrationProvider, client);
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "private, no-store" } });
 }

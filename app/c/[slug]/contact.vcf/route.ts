@@ -7,6 +7,36 @@ import {
   publicCompanyField,
   publicCompanyLogoUrl,
 } from "@/lib/card-company-display";
+import { createServiceSupabaseClient } from "@/lib/supabase/service";
+import { resolveCurrentEventIdForUser } from "@/lib/events-server";
+
+// Anonymous scanners never have their own session, so the only "who's at an
+// event right now" we can know here is the card owner's — if they're
+// currently checked in somewhere, that's where this scan is happening.
+// Best-effort: any failure just means no event line, never a broken vCard.
+async function currentEventTitleForCardOwner(workspaceId: string): Promise<string | undefined> {
+  try {
+    const service = createServiceSupabaseClient();
+    if (!service) return undefined;
+    const { data: workspace } = await service
+      .from("workspaces")
+      .select("owner_user_id")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    const ownerUserId = workspace?.owner_user_id as string | undefined;
+    if (!ownerUserId) return undefined;
+    const eventId = await resolveCurrentEventIdForUser(service, ownerUserId);
+    if (!eventId) return undefined;
+    const { data: event } = await service
+      .from("events")
+      .select("title")
+      .eq("id", eventId)
+      .maybeSingle();
+    return (event?.title as string | undefined)?.trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 type Params = Promise<{ slug: string }>;
 
@@ -40,9 +70,10 @@ export async function GET(request: Request, { params }: { params: Params }) {
   const profilePhotoUrl = publicCardImageUrl(card.profile_image_url);
   const companyLogoUrl = publicCardImageUrl(publicCompanyLogoUrl(card.company_logo_url, showCompanyDetails));
   const coverPhotoUrl = publicCardImageUrl(card.cover_image_url);
-  const [profilePhoto, companyLogoPhoto] = await Promise.all([
+  const [profilePhoto, companyLogoPhoto, eventTitle] = await Promise.all([
     profilePhotoUrl ? fetchVcardImage(profilePhotoUrl) : null,
     showCompanyDetails && companyLogoUrl ? fetchVcardImage(companyLogoUrl) : null,
+    currentEventTitleForCardOwner(card.workspace_id),
   ]);
   const { body, filename } = buildCardVcard({
     fullName: card.full_name,
@@ -56,6 +87,7 @@ export async function GET(request: Request, { params }: { params: Params }) {
     profilePhotoUrl,
     companyLogoUrl,
     coverPhotoUrl,
+    eventTitle,
     methods: methods.map((method) => ({
       method_type: method.method_type,
       value: method.value,

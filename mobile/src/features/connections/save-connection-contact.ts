@@ -123,7 +123,7 @@ function buildDeviceContactFields(connection: ConnectionItem, card?: MobileCard 
   };
 }
 
-export async function saveConnectionToAfterMeet(accessToken: string, connection: ConnectionItem, card?: MobileCard | null) {
+export async function saveConnectionToEhllo(accessToken: string, connection: ConnectionItem, card?: MobileCard | null) {
   const response = await mobileFetch('/api/contacts', accessToken, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -170,6 +170,6 @@ export async function updateConnectionDirectory(
   connection: ConnectionItem,
   card?: MobileCard | null,
 ) {
-  await saveConnectionToAfterMeet(accessToken, connection, card);
+  await saveConnectionToEhllo(accessToken, connection, card);
   await saveConnectionToDeviceContacts(connection, card);
 }

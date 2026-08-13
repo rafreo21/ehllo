@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Build and install the AfterMeet dev client (expo-dev-client + Metro live reload).
+# Build and install the ehllo dev client (expo-dev-client + Metro live reload).
 # Use this instead of the release APK while developing UI/JS changes.
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

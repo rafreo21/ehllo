@@ -270,7 +270,7 @@ export default function ConnectionDetailPage() {
                 <IdentificationCardIcon size={20} weight="bold" />
                 <div>
                   <strong>View card</strong>
-                  <span>Open their public AfterMeet card</span>
+                  <span>Open their public ehllo card</span>
                 </div>
                 <CaretRightIcon size={16} weight="bold" />
               </a>

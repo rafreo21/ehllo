@@ -81,7 +81,7 @@ export async function addAppleWalletPass(slug: string, accessToken: string) {
   const { readEnv } = await import('@/lib/env');
   const env = readEnv();
   const base = env?.publicCardBaseUrl;
-  if (!base) throw new Error('AfterMeet API URL is not configured.');
+  if (!base) throw new Error('ehllo API URL is not configured.');
 
   const downloadUrl = `${base}/api/mobile/wallet/apple/${encodeURIComponent(slug)}`;
   const path = `${FileSystem.cacheDirectory}${slug}.pkpass`;

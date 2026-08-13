@@ -152,6 +152,7 @@ export function PageHeader({
   eyebrow,
   title,
   titleStyle,
+  description,
   onBack,
   rightAction,
   showBack = true,
@@ -159,6 +160,7 @@ export function PageHeader({
   eyebrow?: string;
   title: string;
   titleStyle?: StyleProp<TextStyle>;
+  description?: ReactNode;
   onBack?: () => void;
   rightAction?: ReactNode;
   showBack?: boolean;
@@ -172,6 +174,7 @@ export function PageHeader({
       <View style={styles.pageHeaderCopy}>
         {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
         <Text style={[styles.title, styles.pageHeaderTitle, titleStyle]}>{title}</Text>
+        {description ? <Body>{description}</Body> : null}
       </View>
     </View>
   );

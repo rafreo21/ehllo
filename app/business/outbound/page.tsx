@@ -44,6 +44,7 @@ export default function OutboundPage() {
   const queue = useMemo<QueueItem[]>(() => encounters.flatMap((encounter) => encounter.actions
     .filter((action) => action.owner === "me"
       && action.status !== "completed"
+      && action.status !== "proposed"
       && supportsOutboundDraft(action.channel))
     .map((action) => ({ encounter, action }))), [encounters]);
 

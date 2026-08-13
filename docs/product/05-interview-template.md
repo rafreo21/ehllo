@@ -1,4 +1,4 @@
-# AfterMeet Interview Notes Template
+# ehllo Interview Notes Template
 
 ## Session details
 

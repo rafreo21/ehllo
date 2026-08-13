@@ -1,6 +1,6 @@
 # Mobile auth setup
 
-AfterMeet uses **6-digit email codes** for passwordless sign-in (no magic links).
+ehllo uses **6-digit email codes** for passwordless sign-in (no magic links).
 
 ## Standard stack
 
@@ -19,7 +19,7 @@ Add to `site/.env.local`:
 ```dotenv
 SUPABASE_ACCESS_TOKEN=sbp_...
 RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL=AfterMeet <onboarding@resend.dev>
+RESEND_FROM_EMAIL=ehllo <onboarding@resend.dev>
 SEND_EMAIL_HOOK_SECRET=v1,whsec_...
 ```
 
@@ -31,7 +31,7 @@ npm run deploy:send-auth-email   # edge function
 npm run configure:supabase-auth  # hook + secrets + redirect URLs
 ```
 
-**Testing sender:** `onboarding@resend.dev` only delivers to the email on your Resend account. For any recipient, add a domain in [Resend Domains](https://resend.com/domains) and set `RESEND_FROM_EMAIL=AfterMeet <auth@yourdomain.com>`.
+**Testing sender:** `onboarding@resend.dev` only delivers to the email on your Resend account. For any recipient, add a domain in [Resend Domains](https://resend.com/domains) and set `RESEND_FROM_EMAIL=ehllo <auth@yourdomain.com>`.
 
 ## Mobile `.env`
 

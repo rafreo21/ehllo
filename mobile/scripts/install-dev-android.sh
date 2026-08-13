@@ -32,7 +32,7 @@ if [[ ! -f "$VARIANT_MARKER" || "$(cat "$VARIANT_MARKER" 2>/dev/null)" != "$APP_
 fi
 
 if [[ "$REBUILD" == "1" || ! -f "$APK" ]]; then
-  echo "Building AfterMeet standalone release APK ($APP_VARIANT, JS bundle embedded — no Metro required)…"
+  echo "Building ehllo standalone release APK ($APP_VARIANT, JS bundle embedded — no Metro required)…"
   echo "This can take several minutes on a clean rebuild."
   if [[ "$REBUILD" == "1" ]]; then
     npx expo prebuild --platform android --clean

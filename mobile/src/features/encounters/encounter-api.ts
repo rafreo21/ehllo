@@ -47,8 +47,12 @@ export type EncounterAction = {
   channel: FollowUpChannelId;
   owner: 'me' | 'guest';
   dueAt: string;
-  status: 'open' | 'completed' | 'snoozed';
+  status: 'proposed' | 'open' | 'snoozed' | 'completed' | 'dismissed' | 'cancelled';
   completedAt?: string;
+  snoozedUntil?: string;
+  dismissedAt?: string;
+  cancelledAt?: string;
+  statusUpdatedAt?: string;
   assigneeName?: string;
   assigneeEmail?: string;
   participantId?: string;
@@ -94,6 +98,8 @@ export type EncounterPayload = {
   contactId?: string;
   exchangeId?: string;
   campaignId?: string;
+  /** The event this meeting happened at, if any — see events-api.ts. Optional context, never required. */
+  eventId?: string;
   startedAt: string;
   endedAt: string;
   durationSeconds: number;
@@ -180,7 +186,7 @@ export async function fetchEncounters(accessToken: string) {
   const response = await mobileFetch('/api/encounters', accessToken);
   const payload = await readMobileApiJson<{ encounters?: Array<Record<string, unknown>>; error?: string; preview?: boolean }>(
     response,
-    'Could not read your captures from AfterMeet.',
+    'Could not read your captures from ehllo.',
   );
   if (!response.ok) {
     throw new Error(payload.error || 'Could not load your captures.');
@@ -214,7 +220,7 @@ export async function fetchCaptureSessions(accessToken: string) {
   const response = await mobileFetch('/api/capture-sessions', accessToken);
   const payload = await readMobileApiJson<{ sessions?: RemoteCaptureSession[]; error?: string }>(
     response,
-    'Could not read active captures from AfterMeet.',
+    'Could not read active captures from ehllo.',
   );
   if (!response.ok) throw new Error(payload.error || 'Could not load active captures.');
   return payload.sessions ?? [];
@@ -228,7 +234,7 @@ export async function syncCaptureSession(accessToken: string, snapshot: RemoteCa
   });
   const payload = await readMobileApiJson<{ ok?: boolean; error?: string; currentStatus?: string }>(
     response,
-    'Could not sync this capture with AfterMeet.',
+    'Could not sync this capture with ehllo.',
   );
   if (response.status === 409) {
     throw new CaptureSessionConflictError(
@@ -276,7 +282,7 @@ export async function fetchInboundExchanges(accessToken: string) {
   const response = await mobileFetch('/api/cards/exchanges', accessToken);
   const payload = await readMobileApiJson<{ exchanges?: InboundExchange[]; error?: string }>(
     response,
-    'Could not read inbound captures from AfterMeet.',
+    'Could not read inbound captures from ehllo.',
   );
   if (!response.ok) {
     throw new Error(payload.error || 'Could not load inbound captures.');
@@ -313,6 +319,8 @@ export function buildEncounterPayload(input: {
   recording?: LocalRecordingMetadata;
 }): EncounterPayload {
   const now = new Date().toISOString();
+  const encounterStatus = input.status || 'draft';
+  const actionStatus: EncounterAction['status'] = encounterStatus === 'draft' ? 'proposed' : 'open';
   const durationSeconds = Math.max(0, Math.round(input.durationSeconds ?? 0));
   const startedAt = input.startedAt || new Date(Date.now() - durationSeconds * 1000).toISOString();
   const meetingPeople: EncounterParticipant[] = (input.people ?? [])
@@ -361,7 +369,7 @@ export function buildEncounterPayload(input: {
       channel: commitment.channel,
       owner: commitment.owner,
       dueAt: commitment.dueAt.trim(),
-      status: 'open',
+      status: actionStatus,
       assigneeName: assignee.name,
       assigneeEmail: assignee.email,
       participantId: assignee.id,
@@ -386,7 +394,7 @@ export function buildEncounterPayload(input: {
       channel: item.channel,
       owner,
       dueAt: item.dueAt?.trim() || '',
-      status: 'open',
+      status: actionStatus,
       assigneeName: assignee.name,
       assigneeEmail: assignee.email,
       participantId: assignee.id,
@@ -417,7 +425,7 @@ export function buildEncounterPayload(input: {
     recording: input.recording,
     actions,
     participants: assignees.filter((assignee) => assignee.name.trim().length >= 2),
-    status: input.status || 'draft',
+    status: encounterStatus,
     shareToken: input.shareToken || createId().replace(/-/g, ''),
   };
 }
@@ -647,7 +655,7 @@ export async function saveEncounter(
   accessToken: string,
   encounter: EncounterPayload,
   options?: { expectedUpdatedAt?: string },
-): Promise<{ updatedAt?: string; newGuestNames: string[] }> {
+): Promise<{ updatedAt?: string; newGuestNames: string[]; eventId: string | null }> {
   const response = await mobileFetch('/api/encounters', accessToken, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -659,6 +667,11 @@ export async function saveEncounter(
       contactId: encounter.contactId ?? null,
       exchangeId: encounter.exchangeId ?? null,
       campaignId: encounter.campaignId ?? null,
+      // Omitted (not `?? null`) when unset — see lib/encounters.ts on the
+      // server for why: this must NOT clear a passively-attached event on a
+      // routine re-save that has no opinion about it. `eventId: ''` (the
+      // correction flow's "No event") is a real value and is still sent.
+      ...(encounter.eventId !== undefined ? { eventId: encounter.eventId } : {}),
       startedAt: encounter.startedAt,
       endedAt: encounter.endedAt,
       durationSeconds: encounter.durationSeconds,
@@ -699,6 +712,7 @@ export async function saveEncounter(
     serverUpdatedAt?: string;
     updatedAt?: string;
     newGuestNames?: string[];
+    eventId?: string | null;
   }>(
     response,
     'Could not read the meeting save response.',
@@ -713,14 +727,14 @@ export async function saveEncounter(
     throw new Error(payload.error || 'Could not save this meeting.');
   }
   requestFollowUpNotificationSync();
-  return { updatedAt: payload.updatedAt, newGuestNames: payload.newGuestNames ?? [] };
+  return { updatedAt: payload.updatedAt, newGuestNames: payload.newGuestNames ?? [], eventId: payload.eventId ?? null };
 }
 
 export async function getEncounter(accessToken: string, id: string) {
   const response = await mobileFetch(`/api/encounters/${id}`, accessToken);
   const payload = await readMobileApiJson<{ encounter?: EncounterPayload; error?: string }>(
     response,
-    'Could not read this meeting from AfterMeet.',
+    'Could not read this meeting from ehllo.',
   );
   if (!response.ok || !payload.encounter) {
     throw new Error(payload.error || 'Encounter not found.');

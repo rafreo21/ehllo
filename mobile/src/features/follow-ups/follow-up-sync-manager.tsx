@@ -1,5 +1,10 @@
 import { useAuth } from '@/features/auth/auth-context';
-import { completeFollowUp, reopenFollowUp } from '@/features/follow-ups/follow-up-api';
+import {
+  completeFollowUp,
+  dismissFollowUp,
+  reopenFollowUp,
+  snoozeFollowUp,
+} from '@/features/follow-ups/follow-up-api';
 import { dequeueFollowUpAction, readFollowUpQueue } from '@/features/follow-ups/follow-up-cache';
 import { useForegroundSync } from '@/lib/background-sync';
 import { isOnline } from '@/lib/connectivity';
@@ -17,7 +22,11 @@ export function FollowUpSyncManager() {
     for (const entry of queue) {
       try {
         if (entry.action === 'complete') await completeFollowUp(accessToken, entry.encounterId, entry.actionId);
-        else await reopenFollowUp(accessToken, entry.encounterId, entry.actionId);
+        else if (entry.action === 'snooze' && entry.snoozedUntil) {
+          await snoozeFollowUp(accessToken, entry.encounterId, entry.actionId, entry.snoozedUntil);
+        } else if (entry.action === 'dismiss') {
+          await dismissFollowUp(accessToken, entry.encounterId, entry.actionId);
+        } else await reopenFollowUp(accessToken, entry.encounterId, entry.actionId);
         await dequeueFollowUpAction(entry.encounterId, entry.actionId);
       } catch {
         // Leave queued; retry next cycle.

@@ -217,7 +217,7 @@ export function AuthForm({
         </Button>
       </div>
       {providerError && <p className="auth-provider-error" role="alert">{providerError}</p>}
-      <p className="auth-terms">By continuing, you agree to the Terms of Use and acknowledge the Privacy Policy.</p>
+      <p className="auth-terms">By continuing, you agree to the <a href="/terms">Terms of Use</a> and acknowledge the <a href="/privacy">Privacy Policy</a>.</p>
     </div>
   );
 }

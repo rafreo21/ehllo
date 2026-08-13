@@ -11,7 +11,7 @@ function normalizeScanInput(raw: string) {
   return raw.replace(/^\uFEFF/, "").trim();
 }
 
-export function parseAfterMeetCardSlug(value: string) {
+export function parseEhlloCardSlug(value: string) {
   try {
     const url = new URL(value, "https://aftermeet.local");
     const match = url.pathname.match(/^\/c\/([^/]+)\/?$/i);
@@ -26,7 +26,7 @@ export function parseScanTarget(raw: string): ScanTarget {
   const value = normalizeScanInput(raw);
   if (!value) return { type: "text", text: "" };
 
-  const slug = parseAfterMeetCardSlug(value);
+  const slug = parseEhlloCardSlug(value);
   if (slug) return { type: "aftermeet_card", slug, url: value };
 
   const linkedInMatch = value.match(/(?:https?:\/\/)?(?:[a-z]+\.)?linkedin\.com\/in\/([a-zA-Z0-9\-_%]+)/i);

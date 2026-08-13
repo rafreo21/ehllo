@@ -52,7 +52,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
   const DEMO_CARD: WidgetCardRecord = {
     name: 'Alex Morgan',
     role: 'Product Designer',
-    company: 'AfterMeet',
+    company: 'ehllo',
     cardUrl: 'https://aftermeet.app/c/demo',
     shareDeepLink: 'aftermeet://share-card',
     initials: 'AM',

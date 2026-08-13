@@ -107,7 +107,7 @@ export default function GuestEncounterPage() {
       </main>
     );
   }
-  if (!encounter) return <main className="guest-page"><section className="guest-panel guest-panel-empty"><span className="guest-empty-icon"><LockKeyIcon size={28} weight="bold" /></span><span className="guest-eyebrow">Private meeting record</span><h1>This link is no longer available.</h1><p>Ask the person who shared it to approve the record or send you a new secure link.</p><LinkButton href="/">Go to AfterMeet</LinkButton></section></main>;
+  if (!encounter) return <main className="guest-page"><section className="guest-panel guest-panel-empty"><span className="guest-empty-icon"><LockKeyIcon size={28} weight="bold" /></span><span className="guest-eyebrow">Private meeting record</span><h1>This link is no longer available.</h1><p>Ask the person who shared it to approve the record or send you a new secure link.</p><LinkButton href="/">Go to ehllo</LinkButton></section></main>;
 
   async function downloadRecording(url: string, filename: string) {
     if (recordingDownloading) return;
@@ -182,7 +182,7 @@ export default function GuestEncounterPage() {
     <main className="guest-page">
       <section className="guest-panel">
         <header className="guest-topbar">
-          <a className="guest-brand" href="/"><BrandMark size={36} />AfterMeet</a>
+          <a className="guest-brand" href="/"><BrandMark size={36} />ehllo</a>
           <span className="guest-secure"><LockKeyIcon size={14} weight="bold" />Private link</span>
         </header>
         <div className="guest-hero">
@@ -238,7 +238,7 @@ export default function GuestEncounterPage() {
             <article><CheckCircleIcon size={24} weight="fill" /><div><strong>Your next step was shared with the meeting host.</strong>{encounter.guestFollowUp.note ? <small>{encounter.guestFollowUp.note}</small> : null}<small>{encounter.guestFollowUp.channel ? GUEST_FOLLOW_UP_CHANNELS.find((item) => item.value === encounter.guestFollowUp?.channel)?.label : "Follow-up"}{encounter.guestFollowUp.dueAt ? ` · Due ${encounter.guestFollowUp.dueAt}` : ""}</small></div></article>
           ) : (
             <>
-              <p>Add the action you intend to take. It will appear in the host&apos;s AfterMeet follow-up view alongside this meeting.</p>
+              <p>Add the action you intend to take. It will appear in the host&apos;s ehllo follow-up view alongside this meeting.</p>
               <label className="guest-follow-up-label" htmlFor="guest-follow-up-note">
                 What will you do?
               </label>
@@ -277,7 +277,7 @@ export default function GuestEncounterPage() {
           )}
         </section>
         <div className="guest-claim">
-          <div><span>Continue in AfterMeet</span><strong>Keep this relationship moving.</strong><p>Create your private workspace to claim actions, receive reminders, and add your own notes.</p></div>
+          <div><span>Continue in ehllo</span><strong>Keep this relationship moving.</strong><p>Create your private workspace to claim actions, receive reminders, and add your own notes.</p></div>
           <LinkButton className="guest-create-account" href={buildAuthHref({ intent: "visitor", shareToken: encounter.shareToken })}>Create account <ArrowRightIcon size={16} weight="bold" /></LinkButton>
         </div>
         <small className="guest-privacy"><LockKeyIcon size={14} weight="bold" />Private notes and the full transcript stay with the host. This page shows the shared summary{sharedRecordingUrl ? " and meeting recording" : ""} only.</small>

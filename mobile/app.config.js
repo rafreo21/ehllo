@@ -1,18 +1,32 @@
 // Dynamic config so a "staging" build can be installed side-by-side with
 // production on the same device (own bundle ID/package, own app name, own
 // backend) instead of overwriting it. Selected via APP_VARIANT — set by the
-// mobile/scripts/*.sh helpers, defaults to production for a plain build.
-const APP_VARIANT = process.env.APP_VARIANT === "staging" ? "staging" : "production";
+// mobile/scripts/*.sh helpers. Plain local commands default to staging so a
+// developer cannot accidentally write to production.
+const requestedVariant = process.env.APP_VARIANT ?? "staging";
+if (!['staging', 'production'].includes(requestedVariant)) {
+  throw new Error(`Invalid APP_VARIANT: ${requestedVariant}. Use staging or production.`);
+}
+const APP_VARIANT = requestedVariant;
 const IS_STAGING = APP_VARIANT === "staging";
 
 const BASE_BUNDLE_ID = "com.aftermeet.app";
 const bundleId = IS_STAGING ? `${BASE_BUNDLE_ID}.staging` : BASE_BUNDLE_ID;
+const EAS_PROJECT = IS_STAGING
+  ? {
+      slug: "aftermeet-staging",
+      projectId: "7f8c9f69-0c82-4b58-87db-a0e7cdc89c0a",
+    }
+  : {
+      slug: "aftermeet",
+      projectId: "97c0cff3-8e13-4e80-b62f-733ad1cbf663",
+    };
 
 const BACKEND = IS_STAGING
   ? {
       supabaseUrl: "https://vgrxsdjfrkmpmpqvuqty.supabase.co",
       supabaseAnonKey: "sb_publishable_eSjPw8e5uHqCDUtAf_vdDQ_SXAS-hsW",
-      publicCardBaseUrl: "https://aftermeet-git-staging-rafreo21-8924s-projects.vercel.app",
+      publicCardBaseUrl: "https://aftermeet-staging.vercel.app",
     }
   : {
       supabaseUrl: "https://tgpzxgrvdmmwnodxrooh.supabase.co",
@@ -22,8 +36,9 @@ const BACKEND = IS_STAGING
 
 module.exports = {
   expo: {
-    name: IS_STAGING ? "AfterMeet Staging" : "AfterMeet",
-    slug: "aftermeet",
+    name: IS_STAGING ? "ehllo Staging" : "ehllo",
+    owner: "rafreo",
+    slug: EAS_PROJECT.slug,
     version: "1.0.1",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
@@ -108,33 +123,33 @@ module.exports = {
       [
         "expo-camera",
         {
-          cameraPermission: "Allow AfterMeet to scan contact card QR codes.",
+          cameraPermission: "Allow ehllo to scan contact card QR codes.",
         },
       ],
       [
         "expo-contacts",
         {
-          contactsPermission: "Allow AfterMeet to save people you meet to your contacts.",
+          contactsPermission: "Allow ehllo to save people you meet to your contacts.",
         },
       ],
       [
         "expo-image-picker",
         {
-          photosPermission: "Allow AfterMeet to use photos on your contact card.",
+          photosPermission: "Allow ehllo to use photos on your contact card.",
         },
       ],
       [
         "expo-audio",
         {
-          microphonePermission: "Allow AfterMeet to record meetings you choose to capture.",
+          microphonePermission: "Allow ehllo to record meetings you choose to capture.",
           enableBackgroundRecording: true,
         },
       ],
       [
         "expo-speech-recognition",
         {
-          microphonePermission: "Allow AfterMeet to record meetings you choose to capture.",
-          speechRecognitionPermission: "Allow AfterMeet to transcribe your meetings while you record.",
+          microphonePermission: "Allow ehllo to record meetings you choose to capture.",
+          speechRecognitionPermission: "Allow ehllo to transcribe your meetings while you record.",
           androidSpeechServicePackages: [
             "com.google.android.googlequicksearchbox",
             "com.google.android.tts",
@@ -150,19 +165,19 @@ module.exports = {
           widgets: [
             {
               name: "QrScanWidget",
-              displayName: "AfterMeet QR Scan",
+              displayName: "ehllo QR Scan",
               description: "Large scannable QR code for your card.",
               supportedFamilies: ["systemSmall"],
             },
             {
               name: "BusinessCardWidget",
-              displayName: "AfterMeet Business Card",
+              displayName: "ehllo Business Card",
               description: "QR code plus your name, role, and company.",
               supportedFamilies: ["systemMedium"],
             },
             {
               name: "RecentConnectionsWidget",
-              displayName: "AfterMeet Recent Connections",
+              displayName: "ehllo Recent Connections",
               description: "Recent people who shared their details with you.",
               supportedFamilies: ["systemMedium"],
             },
@@ -174,7 +189,7 @@ module.exports = {
       [
         "react-native-nfc-manager",
         {
-          nfcPermission: "Allow AfterMeet to program NFC tags and share your card when someone taps your phone.",
+          nfcPermission: "Allow ehllo to program NFC tags and share your card when someone taps your phone.",
         },
       ],
       "./plugins/withAndroidNfcHce",
@@ -184,9 +199,16 @@ module.exports = {
       typedRoutes: true,
     },
     extra: {
+      eas: {
+        projectId: EAS_PROJECT.projectId,
+      },
       publicCardBaseUrl: BACKEND.publicCardBaseUrl,
       supabaseUrl: BACKEND.supabaseUrl,
       supabaseAnonKey: BACKEND.supabaseAnonKey,
+      // Not yet provisioned — the address-autocomplete field falls back to a
+      // plain text input until this is set. Same key for both variants
+      // (Places is billing-account-scoped, not staging/production-split).
+      googlePlacesApiKey: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || "",
       buildNumber: 4,
       buildStamp: IS_STAGING ? "2026-07-28-standalone-staging" : "2026-07-28-standalone",
       appVariant: APP_VARIANT,

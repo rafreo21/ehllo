@@ -308,7 +308,7 @@ export class NativeSpeechCapture {
         'meeting notes',
         'agreed',
         'deadline',
-        'AfterMeet',
+        'ehllo',
       ],
       androidIntentOptions: {
         EXTRA_LANGUAGE_MODEL: 'free_form',

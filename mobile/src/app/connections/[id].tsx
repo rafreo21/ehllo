@@ -1,6 +1,6 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { CaretRight, CheckCircle, IdentificationCard, Microphone, Plus, Trash } from 'phosphor-react-native';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ConnectionCardSheet } from '@/components/connection-card-sheet';
@@ -32,13 +32,14 @@ import {
   type ConnectionItem,
 } from '@/features/connections/connections-api';
 import {
-  saveConnectionToAfterMeet,
+  saveConnectionToEhllo,
   saveConnectionToDeviceContacts,
   updateConnectionDirectory,
 } from '@/features/connections/save-connection-contact';
 import type { MobileCard } from '@/features/card/types';
 import type { EncounterPayload } from '@/features/encounters/encounter-api';
 import { resolveEncounterRecordingUri } from '@/features/encounters/local-recordings';
+import { fetchMyEvents, type EventItem } from '@/features/events/events-api';
 import {
   fetchEncountersForConnection,
   fetchFollowUps,
@@ -76,6 +77,7 @@ export default function ConnectionDetailScreen() {
   const [followUpsSheetOpen, setFollowUpsSheetOpen] = useState(false);
   const [activeMeeting, setActiveMeeting] = useState<EncounterPayload | null>(null);
   const [meetingRecordingUri, setMeetingRecordingUri] = useState<string | null>(null);
+  const [myEvents, setMyEvents] = useState<EventItem[]>([]);
   const {
     runFollowUp,
     markComplete,
@@ -95,6 +97,18 @@ export default function ConnectionDetailScreen() {
   } = useFollowUpActions(accessToken, {
     allFollowUps,
   });
+
+  // For the "Where we met" line in the meeting detail sheet — event is an
+  // activator: with no linked event this stays empty and the sheet is
+  // unchanged.
+  useEffect(() => {
+    if (!accessToken) return;
+    void fetchMyEvents(accessToken).then(setMyEvents).catch(() => undefined);
+  }, [accessToken]);
+
+  const activeMeetingEventTitle = activeMeeting?.eventId
+    ? myEvents.find((event) => event.id === activeMeeting.eventId)?.title
+    : undefined;
 
   const showError = useCallback((message: string) => {
     setErrorMessage(message);
@@ -292,7 +306,7 @@ export default function ConnectionDetailScreen() {
         await updateConnectionDirectory(accessToken, connection, card);
         showSuccess('Directory updated with the latest card details.');
       } else {
-        await saveConnectionToAfterMeet(accessToken, connection, card);
+        await saveConnectionToEhllo(accessToken, connection, card);
         await saveConnectionToDeviceContacts(connection, card);
         showSuccess('Saved to your directory.');
       }
@@ -300,7 +314,7 @@ export default function ConnectionDetailScreen() {
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : 'Could not save this connection.';
       if (message.toLowerCase().includes('session has expired')) {
-        showError('Your app session could not reach AfterMeet. Sign out from Settings, sign in again, then retry.');
+        showError('Your app session could not reach ehllo. Sign out from Settings, sign in again, then retry.');
       } else {
         showError(message);
       }
@@ -531,6 +545,7 @@ export default function ConnectionDetailScreen() {
         visible={Boolean(activeMeeting)}
         encounter={activeMeeting}
         recordingUri={meetingRecordingUri}
+        eventTitle={activeMeetingEventTitle}
         followUps={activeMeeting ? followUps.filter((item) => item.encounterId === activeMeeting.id) : []}
         onClose={() => {
           setActiveMeeting(null);

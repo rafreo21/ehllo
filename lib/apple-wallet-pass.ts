@@ -29,10 +29,10 @@ export function buildApplePassJson(card: {
     formatVersion: 1,
     passTypeIdentifier: certs.passTypeId,
     teamIdentifier: certs.teamId,
-    organizationName: "AfterMeet",
-    description: `${card.fullName} · AfterMeet card`,
+    organizationName: "ehllo",
+    description: `${card.fullName} · ehllo card`,
     serialNumber: `${card.slug}-${Date.now()}`,
-    logoText: companyVisible ? card.company : "AfterMeet",
+    logoText: companyVisible ? card.company : "ehllo",
     foregroundColor: "rgb(255, 255, 255)",
     backgroundColor: hexToRgb(card.themeColor || "#9fe870"),
     labelColor: "rgb(22, 51, 0)",
@@ -41,7 +41,7 @@ export function buildApplePassJson(card: {
         {
           key: "card_type",
           label: "CARD",
-          value: "AfterMeet",
+          value: "ehllo",
         },
       ],
       primaryFields: [{ key: "name", label: "NAME", value: card.fullName }],
@@ -52,7 +52,7 @@ export function buildApplePassJson(card: {
         ? [{ key: "company", label: "COMPANY", value: card.company }]
         : [],
       backFields: [
-        { key: "bio", label: "About", value: card.bio || "Scan the QR code to open my AfterMeet card." },
+        { key: "bio", label: "About", value: card.bio || "Scan the QR code to open my ehllo card." },
         { key: "link", label: "Card link", value: card.cardUrl },
       ],
     },

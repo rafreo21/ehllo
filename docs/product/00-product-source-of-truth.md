@@ -1,4 +1,4 @@
-# AfterMeet Product Source of Truth
+# ehllo Product Source of Truth
 
 **Status:** Canonical  
 **Version:** 1.0  
@@ -6,7 +6,7 @@
 **Scope:** Consumer mobile (iOS and Android), consumer web, and shared public experiences  
 **Excludes:** Business web, except for shared platform contracts
 
-This document defines the product AfterMeet is building. It is the canonical reference for product jobs, information architecture, navigation, screen ownership, cross-device behaviour, and experience principles.
+This document defines the product ehllo is building. It is the canonical reference for product jobs, information architecture, navigation, screen ownership, cross-device behaviour, and experience principles.
 
 It describes the **target product**, not a claim that every capability is implemented. Delivery status and sequencing live in the [roadmap](../planning/ROADMAP.md).
 
@@ -23,7 +23,7 @@ When documents conflict, use this order:
 
 ## Product thesis
 
-AfterMeet is built around three user jobs:
+ehllo is built around three user jobs:
 
 1. **Share who I am.**
 2. **Remember what happened.**
@@ -43,7 +43,7 @@ The core relationship object is **Person**. An **Encounter** records what happen
 
 ## Product surfaces
 
-AfterMeet has three consumer clients on one shared Supabase backend:
+ehllo has three consumer clients on one shared Supabase backend:
 
 - iOS mobile app
 - Android mobile app
@@ -252,11 +252,11 @@ Notifications are alerts about work, not a second follow-up system.
 
 Settings owns profile, authentication, notification preferences, storage preferences, privacy, and connected accounts. Connected Accounts reports provider status and actionable recovery states.
 
-External providers may supply storage or execution, but AfterMeet remains responsible for clear errors, durable metadata, and safe fallbacks.
+External providers may supply storage or execution, but ehllo remains responsible for clear errors, durable metadata, and safe fallbacks.
 
 ### 20. Public shared experiences
 
-The public card is useful without an AfterMeet account. A shared meeting page contains only the approved shared summary, assigned actions, and an explicitly shared recording.
+The public card is useful without an ehllo account. A shared meeting page contains only the approved shared summary, assigned actions, and an explicitly shared recording.
 
 Recordings shared online are viewable and downloadable for three days, after which the cloud copy expires. Private notes and the full transcript remain private unless deliberately shared.
 

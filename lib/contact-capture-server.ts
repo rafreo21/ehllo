@@ -70,7 +70,7 @@ export async function enrichCapturedProfile(profile: CapturedProfile, pageText: 
     model: captureModel(),
     output: Output.object({ schema: captureSchema }),
     system: [
-      "You normalize LinkedIn profile captures for AfterMeet.",
+      "You normalize LinkedIn profile captures for ehllo.",
       "Use the Experience section for the current role and employer only. Never use profile headline, badges, or about text.",
       "Use the Contact info section for email and phone when present.",
       "Never invent email addresses or phone numbers.",

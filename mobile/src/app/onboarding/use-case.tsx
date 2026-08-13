@@ -27,7 +27,7 @@ export default function OnboardingUseCaseScreen() {
       <View style={styles.backdrop} />
       <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, spacing.x4) }]}>
         <View style={styles.handle} />
-        <Title style={styles.title}>How will you use AfterMeet?</Title>
+        <Title style={styles.title}>How will you use ehllo?</Title>
         <View style={styles.choices}>
           <View style={[styles.choice, styles.choiceSelected]}>
             <View style={[styles.choiceIcon, styles.choiceIconSelected]}>

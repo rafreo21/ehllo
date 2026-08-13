@@ -3,7 +3,7 @@ import { readEnv } from '@/lib/env';
 export async function fetchBrandedQrDataUri(slug: string, accessToken: string, size = 512) {
   const env = readEnv();
   if (!env?.publicCardBaseUrl) {
-    throw new Error('AfterMeet API URL is not configured.');
+    throw new Error('ehllo API URL is not configured.');
   }
 
   const response = await fetch(

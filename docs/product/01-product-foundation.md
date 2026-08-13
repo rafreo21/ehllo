@@ -1,4 +1,4 @@
-# AfterMeet Product Foundation
+# ehllo Product Foundation
 
 Last updated: 2026-07-24
 
@@ -23,7 +23,7 @@ An independent consultant or fractional professional who:
 
 ## Buyer
 
-The primary user is also the initial buyer. They purchase AfterMeet for their individual professional workflow rather than through a central procurement or sales-operations team.
+The primary user is also the initial buyer. They purchase ehllo for their individual professional workflow rather than through a central procurement or sales-operations team.
 
 ## Trigger
 
@@ -45,7 +45,7 @@ The user forgets important context, delays a promised action, sends a generic fo
 
 ## Reason to pay
 
-AfterMeet helps protect relationship-driven revenue by reducing missed commitments, making follow-up easier, and preserving the context needed for a timely and personal response without requiring the user to maintain a full CRM.
+ehllo helps protect relationship-driven revenue by reducing missed commitments, making follow-up easier, and preserving the context needed for a timely and personal response without requiring the user to maintain a full CRM.
 
 ## Problem statement
 
@@ -53,7 +53,7 @@ AfterMeet helps protect relationship-driven revenue by reducing missed commitmen
 
 ## Product promise
 
-> AfterMeet helps independent consultants remember what mattered in every professional meeting and complete the right follow-up on time.
+> ehllo helps independent consultants remember what mattered in every professional meeting and complete the right follow-up on time.
 
 ## Job to be done
 
@@ -82,9 +82,9 @@ The core domain object is an **Encounter**, not merely a Contact. One Contact ca
 
 1. Encounter-first, not card-first
 2. Capture should take less than two minutes
-3. Recipients do not need an AfterMeet account
+3. Recipients do not need an ehllo account
 4. AI output must always be reviewed by the user
-5. AfterMeet must never send a message autonomously in the MVP
+5. ehllo must never send a message autonomously in the MVP
 6. Meeting notes and relationship context are private by default
 7. The responsive web product comes before native applications
 8. The MVP supports one individual workspace, not teams

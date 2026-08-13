@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Start Metro for the AfterMeet Android dev client.
+# Start Metro for the ehllo Android dev client.
 # USB: run connect-android-dev.sh (or npm run android:dev:connect) with the phone plugged in.
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

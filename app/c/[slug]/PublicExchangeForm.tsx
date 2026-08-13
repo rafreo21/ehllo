@@ -32,7 +32,7 @@ function buildNote(
   ownerName: string,
   social: Record<"x" | "instagram" | "tiktok" | "linkedin", string>,
 ) {
-  const lines = [`Shared back from ${ownerName}'s AfterMeet card.`];
+  const lines = [`Shared back from ${ownerName}'s ehllo card.`];
   if (social.x.trim()) lines.push(`X: ${social.x.trim()}`);
   if (social.instagram.trim()) lines.push(`Instagram: ${social.instagram.trim()}`);
   if (social.tiktok.trim()) lines.push(`TikTok: ${social.tiktok.trim()}`);
@@ -135,7 +135,7 @@ export function PublicExchangeForm({
       }
       onSent?.(visitorEmail.trim());
     } catch {
-      setError("We couldn’t reach AfterMeet. Check your connection and try again.");
+      setError("We couldn’t reach ehllo. Check your connection and try again.");
     } finally {
       setLoading(false);
     }

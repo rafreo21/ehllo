@@ -23,6 +23,8 @@ export type CardVcardInput = {
   methods: CardVcardMethod[];
   showCompanyDetails?: boolean;
   scannedAt?: Date;
+  /** The card owner's currently-happening event, if any — an activator: omit it and the note is unchanged. */
+  eventTitle?: string | null;
   profilePhoto?: VcardEmbeddedImage | null;
   companyLogoPhoto?: VcardEmbeddedImage | null;
   profilePhotoUrl?: string | null;
@@ -78,7 +80,7 @@ function buildStructuredName(fullName: string) {
 }
 
 function vcardFilename(fullName: string) {
-  return fullName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "aftermeet-contact";
+  return fullName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "ehllo-contact";
 }
 
 function methodLabel(method: CardVcardMethod) {
@@ -373,12 +375,12 @@ export async function fetchVcardImage(url: string): Promise<VcardEmbeddedImage |
 }
 
 export function buildCardVcard(input: CardVcardInput) {
-  const whenWeMetNote = buildWhenWeMetNote(input.cardUrl, input.scannedAt);
+  const whenWeMetNote = buildWhenWeMetNote(input.cardUrl, input.scannedAt, input.eventTitle ?? undefined);
   const showCompany = input.showCompanyDetails ?? true;
   const lines = [
     "BEGIN:VCARD",
     "VERSION:3.0",
-    "PRODID:-//AfterMeet//Contact Card//EN",
+    "PRODID:-//ehllo//Contact Card//EN",
     `N:${buildStructuredName(input.fullName)}`,
     `FN:${escapeVcard(input.fullName.trim())}`,
   ];
@@ -397,7 +399,7 @@ export function buildCardVcard(input: CardVcardInput) {
   if (cardPage) {
     const cardAlreadyLinked = lines.some((line) => line.includes(cardPage));
     if (!cardAlreadyLinked) {
-      appendLabeledUrl(lines, nextItemIndex, "AfterMeet card", cardPage);
+      appendLabeledUrl(lines, nextItemIndex, "ehllo card", cardPage);
       nextItemIndex += 1;
     }
   }

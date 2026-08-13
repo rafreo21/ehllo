@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { parseAfterMeetCardSlug, parseScanTarget } from "../lib/scan-targets.ts";
+import { parseEhlloCardSlug, parseScanTarget } from "../lib/scan-targets.ts";
 
-test("parseScanTarget detects AfterMeet card URLs", () => {
+test("parseScanTarget detects ehllo card URLs", () => {
   const target = parseScanTarget("https://aftermeet.app/c/alex-morgan");
   assert.equal(target.type, "aftermeet_card");
   if (target.type === "aftermeet_card") {
@@ -25,21 +25,21 @@ test("parseScanTarget detects vCard payloads", () => {
   assert.equal(target.type, "vcard");
 });
 
-test("parseAfterMeetCardSlug ignores non-card paths", () => {
-  assert.equal(parseAfterMeetCardSlug("https://aftermeet.app/app/contacts"), null);
+test("parseEhlloCardSlug ignores non-card paths", () => {
+  assert.equal(parseEhlloCardSlug("https://aftermeet.app/app/contacts"), null);
 });
 
-test("parseAfterMeetCardSlugFromScan extracts slug from offline vCard QRs", async () => {
-  const { parseAfterMeetCardSlugFromScan } = await import("../mobile/src/lib/parse-scanned-qr.ts");
+test("parseEhlloCardSlugFromScan extracts slug from offline vCard QRs", async () => {
+  const { parseEhlloCardSlugFromScan } = await import("../mobile/src/lib/parse-scanned-qr.ts");
   const vcard = [
     "BEGIN:VCARD",
     "VERSION:3.0",
     "FN:Alex Morgan",
     "item1.URL:https://aftermeet.app/c/alex-morgan",
-    "item1.X-ABLabel:AfterMeet card",
+    "item1.X-ABLabel:ehllo card",
     "END:VCARD",
   ].join("\r\n");
 
-  assert.equal(parseAfterMeetCardSlugFromScan(vcard), "alex-morgan");
-  assert.equal(parseAfterMeetCardSlugFromScan("https://aftermeet.app/c/alex-morgan"), "alex-morgan");
+  assert.equal(parseEhlloCardSlugFromScan(vcard), "alex-morgan");
+  assert.equal(parseEhlloCardSlugFromScan("https://aftermeet.app/c/alex-morgan"), "alex-morgan");
 });
