@@ -48,8 +48,24 @@ export default function PendingSyncScreen() {
     { key: 'events', icon: CalendarCheck, label: 'Event attendance', count: status.eventActions.length, detail: 'Going, Not going, or I’ve left changes' },
   ];
 
+  const retryFooter = (
+    <View style={styles.retryFooter}>
+      <Button
+        disabled={!online || !session?.access_token || status.total === 0}
+        loading={retrying}
+        onPress={() => void retryNow()}>
+        <ArrowsClockwise size={18} color={colors.white} weight="bold" />
+        Retry now
+      </Button>
+      {!session ? <Text style={styles.note}>Sign in before queued work can sync.</Text> : null}
+      {!online ? <Text style={styles.note}>Reconnect to the internet, then AfterMeet will retry automatically.</Text> : null}
+    </View>
+  );
+
   return (
-    <Screen header={<PageHeader eyebrow="Synchronization" title="Pending sync" description="Work saved on this device that has not reached AfterMeet yet." />}>
+    <Screen
+      footer={retryFooter}
+      header={<PageHeader eyebrow="Synchronization" title="Pending sync" description="Work saved on this device that has not reached AfterMeet yet." />}>
       <Panel style={styles.summary}>
         <View style={styles.summaryIcon}>
           {loading ? <ActivityIndicator color={colors.ink} /> : <CloudArrowUp size={22} color={colors.ink} weight="bold" />}
@@ -96,15 +112,6 @@ export default function PendingSyncScreen() {
         </View>
       ) : null}
 
-      <Button
-        disabled={!online || !session?.access_token || status.total === 0}
-        loading={retrying}
-        onPress={() => void retryNow()}>
-        <ArrowsClockwise size={18} color={colors.white} weight="bold" />
-        Retry now
-      </Button>
-      {!session ? <Text style={styles.note}>Sign in before queued work can sync.</Text> : null}
-      {!online ? <Text style={styles.note}>Reconnect to the internet, then AfterMeet will retry automatically.</Text> : null}
     </Screen>
   );
 }
@@ -123,6 +130,7 @@ const styles = StyleSheet.create({
   rowDetail: { color: colors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   count: { minWidth: 28, height: 28, borderRadius: 14, textAlign: 'center', lineHeight: 28, overflow: 'hidden', backgroundColor: colors.accent, color: colors.ink, fontWeight: '800' },
   countZero: { backgroundColor: colors.surfaceMuted, color: colors.muted },
+  retryFooter: { gap: spacing.x2 },
   note: { color: colors.muted, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   detailSection: { gap: spacing.x2 },
   detailHeading: { color: colors.ink, fontSize: 17, fontWeight: '800', marginBottom: spacing.x1 },
