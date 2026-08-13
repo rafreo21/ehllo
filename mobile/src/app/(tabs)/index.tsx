@@ -39,6 +39,7 @@ import {
 } from '@/features/connections/connections-api';
 import { resolveHomeEventCardState, type HomeEventCardState } from '@/features/events/event-home-state';
 import { fetchEventCandidates, fetchMyEvents, markEventLeft, setEventAttendance, type EventItem } from '@/features/events/events-api';
+import { cacheEventAttendance, cacheEventLeftAt } from '@/features/events/event-cache';
 import { fetchFollowUps, type FollowUpItem } from '@/features/follow-ups/follow-up-api';
 import { summarizeFollowUpNudges } from '@/features/follow-ups/follow-up-nudges';
 import { resolveFollowUpUserName } from '@/features/follow-ups/follow-up-participants';
@@ -176,6 +177,7 @@ export default function HomeScreen() {
     setEventCardBusy(true);
     try {
       await setEventAttendance(session.access_token, event.id, status);
+      await cacheEventAttendance(event, status);
       setEventCandidates((current) => current.filter((item) => item.id !== event.id));
       if (status === 'going') setGoingEvents((current) => current.some((item) => item.id === event.id) ? current : [...current, event]);
       else setGoingEvents((current) => current.filter((item) => item.id !== event.id));
@@ -194,6 +196,7 @@ export default function HomeScreen() {
     try {
       const leftAt = new Date().toISOString();
       await markEventLeft(session.access_token, event.id);
+      await cacheEventLeftAt(event.id, leftAt);
       setGoingEvents((current) => current.map((item) => (item.id === event.id ? { ...item, leftAt } : item)));
     } catch {
       // The card stays showing "You're here", but the user needs to know the

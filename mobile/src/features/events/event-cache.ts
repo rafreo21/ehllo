@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { EventItem } from '@/features/events/events-api';
 import { isEventCurrentlyHappening } from '@/features/events/event-home-state';
+import { applyCachedAttendance, applyCachedLeftAt } from '@/features/events/event-cache-state';
 
 const EVENTS_CACHE_KEY = 'aftermeet.mobile.events-cache.v1';
 
@@ -24,6 +25,14 @@ export async function readCachedEvents(): Promise<EventItem[]> {
 
 export async function writeCachedEvents(events: EventItem[]) {
   await AsyncStorage.setItem(EVENTS_CACHE_KEY, JSON.stringify(events));
+}
+
+export async function cacheEventAttendance(event: EventItem, status: 'going' | 'not_going') {
+  await writeCachedEvents(applyCachedAttendance(await readCachedEvents(), event, status));
+}
+
+export async function cacheEventLeftAt(eventId: string, leftAt: string | null) {
+  await writeCachedEvents(applyCachedLeftAt(await readCachedEvents(), eventId, leftAt));
 }
 
 export function resolveEventSnapshot(events: EventItem[], occurredAt = new Date()): EventSnapshot | undefined {

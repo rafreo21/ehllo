@@ -46,11 +46,11 @@ export async function POST(request: Request) {
   if (!body || !title || !startsAt || Number.isNaN(Date.parse(startsAt))) {
     return NextResponse.json({ error: "An event needs at least a name and a start time." }, { status: 400 });
   }
-  const parsedEnd = body.endsAt?.trim() && !Number.isNaN(Date.parse(body.endsAt.trim())) ? body.endsAt.trim() : null;
-  // Bad third-party event metadata must not make a future event look past.
-  // Treat an end before its start as absent; clients use the normal default
-  // event window until the user supplies a valid end.
-  const endsAt = parsedEnd && Date.parse(parsedEnd) >= Date.parse(startsAt) ? parsedEnd : null;
+  const suppliedEnd = body.endsAt?.trim() ?? "";
+  if (suppliedEnd && (Number.isNaN(Date.parse(suppliedEnd)) || Date.parse(suppliedEnd) <= Date.parse(startsAt))) {
+    return NextResponse.json({ error: "The event end time must be after its start time." }, { status: 400 });
+  }
+  const endsAt = suppliedEnd || null;
   const sourceUrl = body.sourceUrl?.trim().slice(0, 2000) ?? "";
 
   const user = await resolveApiUser(request);

@@ -40,6 +40,33 @@ describe("extractEventInfoFromHtml", () => {
     assert.equal(result.startsAt, "2026-08-10T18:00:00Z");
   });
 
+  it("finds an Event inside a schema.org @graph object", () => {
+    const html = `<script type="application/ld+json">
+      {"@context":"https://schema.org","@graph":[{"@type":"WebPage","name":"Page"},{"@type":"Event","name":"Graph Event","startDate":"2026-08-29T11:00:00+01:00"}]}
+    </script>`;
+    assert.equal(
+      extractEventInfoFromHtml(html, new Date("2026-08-13T09:00:00Z")).startsAt,
+      "2026-08-29T11:00:00+01:00",
+    );
+  });
+
+  it("prefers the nearest future Event when stale and current records share a page", () => {
+    const html = `<script type="application/ld+json">[
+      {"@type":"Event","name":"Old event","startDate":"2025-07-12T11:00:00+01:00"},
+      {"@type":"Event","name":"Current event","startDate":"2026-08-29T11:00:00+01:00","endDate":"2026-08-29T23:00:00+01:00"}
+    ]</script>`;
+    const result = extractEventInfoFromHtml(html, new Date("2026-08-13T09:00:00Z"));
+    assert.equal(result.title, "Current event");
+    assert.equal(result.startsAt, "2026-08-29T11:00:00+01:00");
+  });
+
+  it("drops an end date that is not after its start", () => {
+    const html = `<script type="application/ld+json">
+      {"@type":"Event","name":"Broken end","startDate":"2026-08-29T11:00:00+01:00","endDate":"2025-07-12T23:00:00+01:00"}
+    </script>`;
+    assert.equal(extractEventInfoFromHtml(html).endsAt, null);
+  });
+
   it("falls back to og:title when there is no JSON-LD Event", () => {
     const html = `<meta property="og:title" content="ProductCon &amp; Friends" />`;
     const result = extractEventInfoFromHtml(html);

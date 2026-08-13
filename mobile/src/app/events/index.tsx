@@ -30,6 +30,8 @@ import {
   type CalendarProviderStatus,
   type EventItem,
 } from '@/features/events/events-api';
+import { applyEventDateChange, resolveExtractedEventDates } from '@/features/events/event-form-state';
+import { cacheEventAttendance, cacheEventLeftAt } from '@/features/events/event-cache';
 import { fetchConnectedAccounts } from '@/features/integrations/integrations-api';
 import { readEnv } from '@/lib/env';
 import { isOnline } from '@/lib/connectivity';
@@ -179,6 +181,7 @@ export default function EventsScreen() {
     setError('');
     try {
       await setEventAttendance(accessToken, event.id, status);
+      await cacheEventAttendance(event, status);
       setCandidates((current) => current.filter((item) => item.id !== event.id));
       if (status === 'going') setEvents((current) => current.some((item) => item.id === event.id) ? current : [...current, event]);
       else setEvents((current) => current.filter((item) => item.id !== event.id));
@@ -196,6 +199,7 @@ export default function EventsScreen() {
     setError('');
     try {
       await markEventLeft(accessToken, event.id);
+      await cacheEventLeftAt(event.id, new Date().toISOString());
       await refresh();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not update this event.');
@@ -371,6 +375,8 @@ function AddEventSheet({
   const [linkUrl, setLinkUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [dateNotice, setDateNotice] = useState('');
+  const [dateNeedsReview, setDateNeedsReview] = useState(false);
   const [iosPicker, setIosPicker] = useState<'start' | 'end' | null>(null);
 
   useEffect(() => {
@@ -381,6 +387,8 @@ function AddEventSheet({
         setForm(defaultForm());
         setLinkUrl('');
         setError('');
+        setDateNotice('');
+        setDateNeedsReview(false);
       });
     }
   }, [visible]);
@@ -397,7 +405,8 @@ function AddEventSheet({
   }, [step, linkUrl]);
 
   function openAndroidPicker(field: 'start' | 'end') {
-    const current = (field === 'start' ? form.start : form.end) ?? new Date();
+    const current = (field === 'start' ? form.start : form.end)
+      ?? new Date(form.start.getTime() + 60 * 60 * 1000);
     DateTimePickerAndroid.open({
       value: current,
       mode: 'date',
@@ -410,7 +419,11 @@ function AddEventSheet({
             if (timeEvent.type !== 'set' || !time) return;
             const merged = new Date(date);
             merged.setHours(time.getHours(), time.getMinutes(), 0, 0);
-            setForm((prev) => ({ ...prev, [field]: merged }));
+            setForm((prev) => ({ ...prev, ...applyEventDateChange(prev, field, merged) }));
+            if (field === 'start') {
+              setDateNeedsReview(false);
+              setDateNotice('');
+            }
           },
         });
       },
@@ -432,15 +445,16 @@ function AddEventSheet({
     setError('');
     try {
       const extracted = await extractEventFromLink(accessToken, url);
-      const extractedStart = extracted.startsAt ? new Date(extracted.startsAt) : defaultForm().start;
-      const extractedEnd = extracted.endsAt ? new Date(extracted.endsAt) : null;
+      const dates = resolveExtractedEventDates(extracted, defaultForm().start);
       setForm({
         title: extracted.title || '',
         location: extracted.location || '',
-        start: extractedStart,
-        end: extractedEnd && extractedEnd.getTime() >= extractedStart.getTime() ? extractedEnd : null,
+        start: dates.start,
+        end: dates.end,
         sourceUrl: url,
       });
+      setDateNeedsReview(dates.needsReview);
+      setDateNotice(dates.notice);
       setCameFromLink(true);
       setStep('form');
     } catch (caught) {
@@ -454,7 +468,11 @@ function AddEventSheet({
       setError('Give this event a name.');
       return;
     }
-    if (form.end && form.end.getTime() < form.start.getTime()) {
+    if (dateNeedsReview) {
+      setError('Choose and confirm the event’s correct start date and time.');
+      return;
+    }
+    if (form.end && form.end.getTime() <= form.start.getTime()) {
       setError('The event end time must be after its start time.');
       return;
     }
@@ -503,7 +521,14 @@ function AddEventSheet({
 
       {step === 'choose' ? (
         <View style={styles.chooseList}>
-          <Pressable accessibilityRole="button" onPress={() => setStep('form')} style={styles.chooseOption}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              setDateNeedsReview(true);
+              setDateNotice('Choose the event’s start date and time before adding it.');
+              setStep('form');
+            }}
+            style={styles.chooseOption}>
             <View style={styles.chooseIcon}><NotePencil size={20} color={colors.ink} weight="bold" /></View>
             <View style={styles.chooseCopy}>
               <Text style={styles.chooseTitle}>Enter details</Text>
@@ -574,6 +599,7 @@ function AddEventSheet({
               <CalendarBlank size={16} color={colors.ink} weight="bold" />
               <Text style={styles.dateButtonText}>{formatEventWhen({ startsAt: form.start.toISOString() })}</Text>
             </Pressable>
+            {dateNotice ? <Text style={styles.dateNotice}>{dateNotice}</Text> : null}
           </View>
 
           <View style={styles.fieldGroup}>
@@ -595,14 +621,20 @@ function AddEventSheet({
           visible={iosPicker !== null}
           title={iosPicker === 'start' ? 'Starts' : 'Ends'}
           onClose={() => setIosPicker(null)}
-          footer={<Button onPress={() => setIosPicker(null)}>Use this time</Button>}>
+          footer={<Button onPress={() => {
+            if (iosPicker === 'start') {
+              setDateNeedsReview(false);
+              setDateNotice('');
+            }
+            setIosPicker(null);
+          }}>Use this time</Button>}>
           <DateTimePicker
             value={(iosPicker === 'start' ? form.start : form.end) ?? new Date()}
             mode="datetime"
             display="spinner"
             onChange={(_, date) => {
               if (!date || !iosPicker) return;
-              setForm((prev) => ({ ...prev, [iosPicker]: date }));
+              setForm((prev) => ({ ...prev, ...applyEventDateChange(prev, iosPicker, date) }));
             }}
           />
         </BottomSheet>
@@ -774,4 +806,5 @@ const styles = StyleSheet.create({
   },
   dateButtonText: { color: colors.ink, fontSize: 14, fontWeight: '700' },
   errorText: { color: colors.danger, fontSize: 13 },
+  dateNotice: { color: colors.warning, fontSize: 12, lineHeight: 17 },
 });
