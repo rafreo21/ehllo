@@ -183,14 +183,9 @@ export default function EventsScreen() {
       : null;
 
   const { upcoming, past } = bucketEvents(events);
-  const combinedUpcoming = [
-    ...upcoming.map((event) => ({ event, candidate: false })),
-    ...candidates.filter((event) => isUpcomingEvent(event)).map((event) => ({ event, candidate: true })),
-  ].sort((a, b) => compareEventsByStart(a.event, b.event));
-  const combinedPast = [
-    ...past.map((event) => ({ event, candidate: false })),
-    ...candidates.filter((event) => !isUpcomingEvent(event)).map((event) => ({ event, candidate: true })),
-  ].sort((a, b) => compareEventsByStart(b.event, a.event));
+  const upcomingCandidates = candidates
+    .filter((event) => isUpcomingEvent(event))
+    .sort(compareEventsByStart);
 
   async function decide(event: EventItem, status: 'going' | 'not_going') {
     if (!accessToken) return;
@@ -352,8 +347,8 @@ export default function EventsScreen() {
     <View style={styles.fixedHeader}>
       <PageHeader
         eyebrow="My events"
-        title="Events you're going to"
-        description="Follow-ups you capture while you're at an event are automatically linked to it."
+        title="Events"
+        description="Confirm where you're going. Captures and follow-ups made there will keep the event context."
         caption={syncedAt ? formatSyncedAgo(syncedAt, now) : undefined}
         rightAction={accessToken ? (
           <View style={styles.headerActions}>
@@ -412,19 +407,45 @@ export default function EventsScreen() {
           ) : null}
 
           {activeTab === 'upcoming' ? (
-            combinedUpcoming.length ? combinedUpcoming.map(({ event, candidate }) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                variant={candidate ? 'candidate' : isEventCurrentlyHappening(event) ? 'current' : 'going'}
-                busy={busyId === event.id}
-                onGoing={candidate ? (item) => void decide(item, 'going') : undefined}
-                onNotGoing={(item) => void decide(item, 'not_going')}
-                onLeave={!candidate && isEventCurrentlyHappening(event) ? (item) => void leaveEvent(item) : undefined}
-                onInvite={!candidate ? (item) => void openInvitations(item) : undefined}
-                onManage={!candidate && event.source !== 'calendar' ? (item) => { setManageError(''); setManageEvent(item); } : undefined}
-              />
-            )) : (
+            upcomingCandidates.length || upcoming.length ? (
+              <>
+                {upcomingCandidates.length ? (
+                  <View style={styles.eventGroup}>
+                    <View style={styles.eventGroupHeading}>
+                      <Text style={styles.eventGroupTitle}>Needs your response</Text>
+                      <Text style={styles.eventGroupCopy}>These are suggestions, not events you have confirmed.</Text>
+                    </View>
+                    {upcomingCandidates.map((event) => (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        variant="candidate"
+                        busy={busyId === event.id}
+                        onGoing={(item) => void decide(item, 'going')}
+                        onNotGoing={(item) => void decide(item, 'not_going')}
+                      />
+                    ))}
+                  </View>
+                ) : null}
+                {upcoming.length ? (
+                  <View style={styles.eventGroup}>
+                    <Text style={styles.eventGroupTitle}>You’re going</Text>
+                    {upcoming.map((event) => (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        variant={isEventCurrentlyHappening(event) ? 'current' : 'going'}
+                        busy={busyId === event.id}
+                        onNotGoing={(item) => void decide(item, 'not_going')}
+                        onLeave={isEventCurrentlyHappening(event) ? (item) => void leaveEvent(item) : undefined}
+                        onInvite={(item) => void openInvitations(item)}
+                        onManage={event.source !== 'calendar' ? (item) => { setManageError(''); setManageEvent(item); } : undefined}
+                      />
+                    ))}
+                  </View>
+                ) : null}
+              </>
+            ) : (
               <Panel>
                 <Text style={styles.panelCopy}>
                   {calendarConnected
@@ -434,14 +455,12 @@ export default function EventsScreen() {
               </Panel>
             )
           ) : (
-            combinedPast.length ? combinedPast.map(({ event, candidate }) => (
+            past.length ? past.map((event) => (
               <EventCard
                 key={event.id}
                 event={event}
-                variant={candidate ? 'candidate' : 'past'}
+                variant="past"
                 busy={busyId === event.id}
-                onGoing={candidate ? (item) => void decide(item, 'going') : undefined}
-                onNotGoing={candidate ? (item) => void decide(item, 'not_going') : undefined}
               />
             )) : (
               <Panel>
@@ -875,6 +894,10 @@ const styles = StyleSheet.create({
   panelTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
   panelCopy: { color: colors.muted, fontSize: 13, lineHeight: 19 },
   section: { gap: spacing.x2 },
+  eventGroup: { gap: spacing.x2 },
+  eventGroupHeading: { gap: spacing.x1 },
+  eventGroupTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
+  eventGroupCopy: { color: colors.muted, fontSize: 12, lineHeight: 17 },
   tabRow: {
     flexDirection: 'row',
     gap: spacing.x1,
