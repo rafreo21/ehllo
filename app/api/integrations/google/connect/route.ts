@@ -28,7 +28,7 @@ export async function GET(request: Request) {
   }
 
   const state = createIntegrationState("google");
-  const response = NextResponse.redirect(googleAuthorizeUrl(request.url, state));
+  const response = NextResponse.redirect(googleAuthorizeUrl(request.url, state, user.email || undefined));
   setIntegrationStateCookie(response, state);
   if (returnTo) {
     setIntegrationFlowCookie(response, { state, user, returnTo });
