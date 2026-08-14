@@ -29,7 +29,7 @@ const BACKEND = IS_STAGING
   ? {
       supabaseUrl: "https://vgrxsdjfrkmpmpqvuqty.supabase.co",
       supabaseAnonKey: "sb_publishable_eSjPw8e5uHqCDUtAf_vdDQ_SXAS-hsW",
-      publicCardBaseUrl: "https://aftermeet-staging.vercel.app",
+      publicCardBaseUrl: "https://staging.ehllo.io",
     }
   : {
       supabaseUrl: "https://tgpzxgrvdmmwnodxrooh.supabase.co",
