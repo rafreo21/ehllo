@@ -302,13 +302,17 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
           {!historyOnly ? <View style={styles.startActions}>
             <PillButton
               tone="solid"
-              icon={<Microphone size={16} color={colors.white} weight="fill" />}
+              style={styles.startActionPill}
+              textStyle={styles.startActionPillText}
+              icon={<Microphone size={18} color={colors.white} weight="fill" />}
               onPress={() => void beginFreshCapture('recording')}>
               Start recording
             </PillButton>
             <PillButton
               tone="outline"
-              icon={<Notebook size={16} color={colors.muted} weight="bold" />}
+              style={styles.startActionPill}
+              textStyle={styles.startActionPillText}
+              icon={<Notebook size={18} color={colors.muted} weight="bold" />}
               onPress={() => void beginFreshCapture('quick_context')}>
               Add notes
             </PillButton>
@@ -600,6 +604,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.x2,
   },
+  startActionPill: { paddingHorizontal: spacing.x5, paddingVertical: spacing.x3 },
+  startActionPillText: { fontSize: 14 },
   offlineBanner: { marginTop: spacing.x2, alignSelf: 'stretch' },
   activeCard: {
     minHeight: 72,
