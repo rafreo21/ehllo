@@ -40,7 +40,9 @@ export function clearIntegrationStateCookie(response: NextResponse) {
 
 export function sanitizeMobileReturnTo(value: string | null | undefined) {
   const trimmed = value?.trim() ?? "";
-  if (/^aftermeet(-[a-z0-9]+)?:\/\//i.test(trimmed) || trimmed.startsWith("/app")) return trimmed;
+  // Accepts both the current ehllo scheme and the legacy aftermeet one
+  // (still registered as an inbound alias — see mobile/app.config.js).
+  if (/^(ehllo|aftermeet)(-[a-z0-9]+)?:\/\//i.test(trimmed) || trimmed.startsWith("/app")) return trimmed;
   return "";
 }
 
