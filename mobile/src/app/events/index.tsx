@@ -893,7 +893,7 @@ const styles = StyleSheet.create({
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
   panelTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
   panelCopy: { color: colors.muted, fontSize: 13, lineHeight: 19 },
-  section: { gap: spacing.x2 },
+  section: { gap: spacing.x4 },
   eventGroup: { gap: spacing.x2 },
   eventGroupHeading: { gap: spacing.x1 },
   eventGroupTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
