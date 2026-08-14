@@ -227,7 +227,7 @@ export default function RecentScansScreen() {
                 ) : (
                   <View style={styles.cardActions}>
                     <Button onPress={() => void addGroupToDirectory(group)}>
-                      <CheckCircle size={16} color={colors.ink} weight="bold" />
+                      <CheckCircle size={16} color={colors.white} weight="bold" />
                       Add
                     </Button>
                     <Button variant="ghost" onPress={() => void dismissGroup(group)}>
@@ -270,7 +270,7 @@ export default function RecentScansScreen() {
               <View style={styles.cardActions}>
                 {alreadyInDirectory(historyGroup.latest, savedContacts) ? null : (
                   <Button onPress={() => void addGroupToDirectory(historyGroup)}>
-                    <CheckCircle size={16} color={colors.ink} weight="bold" />
+                    <CheckCircle size={16} color={colors.white} weight="bold" />
                     Add
                   </Button>
                 )}

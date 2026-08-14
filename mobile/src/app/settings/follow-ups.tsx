@@ -191,8 +191,9 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
           {!historyOnly && session ? (
             <PillButton
               tone="solid"
-              icon={<Plus size={16} color={colors.white} weight="bold" />}
-              style={styles.addButton}
+              icon={<Plus size={18} color={colors.white} weight="bold" />}
+              style={[styles.addButton, styles.addButtonPill]}
+              textStyle={styles.addButtonPillText}
               onPress={() => router.push('/quick-follow-up')}>
               Add follow-up
             </PillButton>
@@ -339,6 +340,8 @@ const styles = StyleSheet.create({
   header: { gap: spacing.x3, paddingHorizontal: spacing.x5 },
   headerCopy: { gap: spacing.x2, marginTop: -spacing.x1, marginBottom: spacing.x1 },
   addButton: { alignSelf: 'flex-start' },
+  addButtonPill: { paddingHorizontal: spacing.x5, paddingVertical: spacing.x3 },
+  addButtonPillText: { fontSize: 14 },
   title: {
     color: colors.ink,
     fontSize: 28,

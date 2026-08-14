@@ -249,14 +249,14 @@ export function Button({ children, onPress, variant = 'primary', disabled, loadi
       ]}>
       <View style={styles.buttonContent}>
         {loading ? (
-          <ActivityIndicator color={variant === 'primary' ? colors.ink : colors.muted} />
+          <ActivityIndicator color={variant === 'primary' ? colors.white : colors.muted} />
         ) : null}
         {items.map((child, index) =>
           typeof child === 'string' || typeof child === 'number'
             ? (
               <Text
                 key={`label-${index}`}
-                style={[styles.buttonText, variant !== 'primary' && styles.buttonTextSecondary]}>
+                style={[styles.buttonText, variant === 'primary' ? styles.buttonTextPrimary : styles.buttonTextSecondary]}>
                 {child}
               </Text>
             )
@@ -349,12 +349,13 @@ const styles = StyleSheet.create({
   body: { color: colors.muted, fontSize: 15, lineHeight: 22 },
   pageHeaderCaption: { color: colors.muted, fontSize: 11, lineHeight: 15 },
   panel: { padding: spacing.x5, borderRadius: radius.medium, backgroundColor: colors.surface },
-  button: { minHeight: 48, paddingHorizontal: spacing.x5, alignItems: 'center', justifyContent: 'center', borderRadius: radius.small, backgroundColor: colors.accent },
+  button: { minHeight: 48, paddingHorizontal: spacing.x5, alignItems: 'center', justifyContent: 'center', borderRadius: radius.round, backgroundColor: colors.ink },
   buttonSecondary: { backgroundColor: colors.surfaceMuted },
   buttonGhost: { backgroundColor: 'transparent' },
   buttonPressed: { opacity: 0.78, transform: [{ scale: 0.99 }] },
   buttonDisabled: { opacity: 0.45 },
-  buttonText: { color: colors.ink, fontSize: 15, fontWeight: '800' },
+  buttonText: { fontSize: 15, fontWeight: '800' },
+  buttonTextPrimary: { color: colors.white },
   buttonTextSecondary: { color: colors.ink },
   pill: {
     alignSelf: 'flex-start',

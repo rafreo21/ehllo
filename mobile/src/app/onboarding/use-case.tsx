@@ -57,7 +57,7 @@ export default function OnboardingUseCaseScreen() {
           </View>
         </View>
         <Button onPress={continueFlow} loading={saving} style={styles.continueButton}>
-          Continue <ArrowRight size={20} color={colors.ink} weight="bold" />
+          Continue <ArrowRight size={20} color={colors.white} weight="bold" />
         </Button>
       </View>
     </View>

@@ -829,7 +829,7 @@ export default function CaptureDetailScreen() {
           onClose={() => setActionComposerOpen(false)}
           footer={
             <Button onPress={addAction}>
-              <Plus size={18} color={colors.ink} weight="bold" />
+              <Plus size={18} color={colors.white} weight="bold" />
               Add follow-up
             </Button>
           }>

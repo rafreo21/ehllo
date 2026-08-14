@@ -319,7 +319,7 @@ export default function CardToolsScreen() {
               <Text style={styles.sectionLabel}>Quick share</Text>
               <View style={styles.heroActions}>
                 <Button onPress={() => router.push(`/share-card?id=${card.id}`)}>
-                  <QrCode size={18} color={colors.ink} weight="bold" />
+                  <QrCode size={18} color={colors.white} weight="bold" />
                   Show QR
                 </Button>
                 <Button variant="secondary" onPress={() => void shareCardLink()}>

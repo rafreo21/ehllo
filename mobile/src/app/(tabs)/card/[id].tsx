@@ -183,7 +183,7 @@ export default function CardDetailScreen() {
           </Pressable>
 
           <Button onPress={() => router.push(`/share-card?id=${selected.id}`)}>
-            <ShareNetwork size={18} color={colors.ink} weight="bold" />
+            <ShareNetwork size={18} color={colors.white} weight="bold" />
             Share this card
           </Button>
           <Button variant="secondary" onPress={() => router.push(`/card-tools?id=${selected.id}`)}>

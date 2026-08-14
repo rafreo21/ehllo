@@ -1306,7 +1306,7 @@ export default function CaptureWizardScreen() {
                 onClose={() => setManualFollowUpSheetOpen(false)}
                 footer={
                   <Button onPress={addManualFollowUp}>
-                    <Plus size={18} color={colors.ink} weight="bold" />
+                    <Plus size={18} color={colors.white} weight="bold" />
                     Add follow-up
                   </Button>
                 }>

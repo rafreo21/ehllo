@@ -127,7 +127,7 @@ export function WalletToolSheetContent({
               if (!accessToken) throw new Error('Sign in required.');
               await addAppleWalletPass(card.slug, accessToken);
             }, { successMessage: 'Choose Add to Wallet from the share sheet.' })}>
-            <Wallet size={18} color={colors.ink} weight="bold" />
+            <Wallet size={18} color={colors.white} weight="bold" />
             Add to Apple Wallet
           </Button>
           {walletAvailable === false && walletNote ? (
@@ -191,7 +191,7 @@ export function NfcToolSheetContent({
               ? 'Tap to share turned off.'
               : 'Ready. Ask them to tap your phone.',
           })}>
-          <ContactlessPayment size={18} color={colors.ink} weight="bold" />
+          <ContactlessPayment size={18} color={tapActive ? colors.ink : colors.white} weight="bold" />
           {tapActive ? 'Stop tap to share' : 'Tap to share'}
         </Button>
       ) : null}
@@ -200,7 +200,7 @@ export function NfcToolSheetContent({
           <Button
             disabled={!publicUrl}
             onPress={() => router.push(`/program-nfc?id=${card.id}`)}>
-            <ContactlessPayment size={18} color={colors.ink} weight="bold" />
+            <ContactlessPayment size={18} color={colors.white} weight="bold" />
             Program NFC tag
           </Button>
           <Button variant="secondary" onPress={() => void openNfcSettings()}>

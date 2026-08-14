@@ -384,7 +384,7 @@ export default function QuickFollowUpScreen() {
           onClose={() => setComposerOpen(false)}
           footer={
             <Button onPress={addFollowUp}>
-              <Plus size={18} color={colors.ink} weight="bold" />
+              <Plus size={18} color={colors.white} weight="bold" />
               Add follow-up
             </Button>
           }>
@@ -467,7 +467,7 @@ export default function QuickFollowUpScreen() {
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.x2 }]}>
         <Button loading={saving} disabled={saving} onPress={() => void submit()}>
-          <CheckCircle size={19} color={colors.ink} weight="bold" />
+          <CheckCircle size={19} color={colors.white} weight="bold" />
           Save follow-ups
         </Button>
       </View>

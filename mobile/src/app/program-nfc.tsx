@@ -156,7 +156,7 @@ export default function ProgramNfcScreen() {
           <>
             <Button onPress={() => router.back()}>
               Done
-              <ArrowRight size={18} color={colors.ink} weight="bold" />
+              <ArrowRight size={18} color={colors.white} weight="bold" />
             </Button>
             <Button variant="secondary" onPress={() => setState('ready')}>Program another tag</Button>
           </>
@@ -168,7 +168,7 @@ export default function ProgramNfcScreen() {
         ) : (
           <Button loading={running} disabled={running} onPress={() => void startProgramming()}>
             Start programming
-            <ArrowRight size={18} color={colors.ink} weight="bold" />
+            <ArrowRight size={18} color={colors.white} weight="bold" />
           </Button>
         )}
       </ScrollView>

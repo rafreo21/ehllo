@@ -109,7 +109,7 @@ export default function AuthScreen() {
           </View>
           {message ? <Text style={[styles.message, message.startsWith('Check') && styles.success]}>{message}</Text> : null}
           <Button loading={loading} disabled={!configured} onPress={submitEmail}>
-            Continue <ArrowRight size={18} color={colors.ink} />
+            Continue <ArrowRight size={18} color={colors.white} />
           </Button>
           <Button variant="secondary" onPress={() => router.back()}>
             Continue in preview mode
