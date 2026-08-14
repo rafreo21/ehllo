@@ -101,7 +101,7 @@ export async function saveConnectedAccount(
     updated_at: new Date().toISOString(),
   }, { onConflict: "workspace_id,user_id,provider" });
 
-  if (error) throw new Error("We couldn’t save this connected account.");
+  if (error) throw new Error(`We couldn’t save this connected account: ${error.message}`);
 }
 
 export async function deleteConnectedAccount(user: AppUser, provider: IntegrationProvider, client?: SupabaseClient) {

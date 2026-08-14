@@ -63,7 +63,7 @@ export async function exchangeGoogleCode(requestUrl: string, code: string) {
       grant_type: "authorization_code",
     }),
   });
-  if (!response.ok) throw new Error("Google token exchange failed.");
+  if (!response.ok) throw new Error(`Google token exchange failed: ${response.status} ${await response.text()}`);
   return response.json() as Promise<{
     access_token: string;
     refresh_token?: string;

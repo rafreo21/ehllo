@@ -22,6 +22,12 @@ export async function GET(request: NextRequest) {
     : new URL("/app/settings?integration=google-error", request.url).toString();
 
   if (!user || oauthError || !code || !readIntegrationState(request, "google")) {
+    console.error("[google-callback] rejected before token exchange", {
+      hasUser: Boolean(user),
+      oauthError,
+      hasCode: Boolean(code),
+      stateValid: readIntegrationState(request, "google"),
+    });
     const response = NextResponse.redirect(errorTarget);
     clearIntegrationStateCookie(response);
     return response;
@@ -29,7 +35,8 @@ export async function GET(request: NextRequest) {
 
   try {
     await connectProviderFromCode(user, "google", request.url, code);
-  } catch {
+  } catch (caught) {
+    console.error("[google-callback] connectProviderFromCode failed", caught);
     const response = NextResponse.redirect(errorTarget);
     clearIntegrationStateCookie(response);
     return response;
