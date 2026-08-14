@@ -92,20 +92,6 @@ export default function SettingsScreen() {
 
       <Pressable
         accessibilityRole="button"
-        onPress={() => router.push('/capture')}
-        style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
-        <View style={styles.linkCopy}>
-          <View style={styles.linkTitleRow}>
-            <Microphone size={18} color={colors.ink} weight="bold" />
-            <Text style={styles.label}>Capture context</Text>
-          </View>
-          <Text style={styles.linkHint}>Recordings, drafts, and captures needing review</Text>
-        </View>
-        <CaretRight size={18} color={colors.muted} weight="bold" />
-      </Pressable>
-
-      <Pressable
-        accessibilityRole="button"
         onPress={() => router.push('/events')}
         style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
         <View style={styles.linkCopy}>
@@ -114,6 +100,20 @@ export default function SettingsScreen() {
             <Text style={styles.label}>My events</Text>
           </View>
           <Text style={styles.linkHint}>Events you&apos;re going to, and ones from your calendar</Text>
+        </View>
+        <CaretRight size={18} color={colors.muted} weight="bold" />
+      </Pressable>
+
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push('/connections')}
+        style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
+        <View style={styles.linkCopy}>
+          <View style={styles.linkTitleRow}>
+            <UsersThree size={18} color={colors.ink} weight="bold" />
+            <Text style={styles.label}>My connections</Text>
+          </View>
+          <Text style={styles.linkHint}>People you&apos;ve met and cards you&apos;ve saved</Text>
         </View>
         <CaretRight size={18} color={colors.muted} weight="bold" />
       </Pressable>
@@ -134,14 +134,14 @@ export default function SettingsScreen() {
 
       <Pressable
         accessibilityRole="button"
-        onPress={() => router.push('/connections')}
+        onPress={() => router.push('/capture')}
         style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
         <View style={styles.linkCopy}>
           <View style={styles.linkTitleRow}>
-            <UsersThree size={18} color={colors.ink} weight="bold" />
-            <Text style={styles.label}>My connections</Text>
+            <Microphone size={18} color={colors.ink} weight="bold" />
+            <Text style={styles.label}>Capture context</Text>
           </View>
-          <Text style={styles.linkHint}>People you&apos;ve met and cards you&apos;ve saved</Text>
+          <Text style={styles.linkHint}>Recordings, drafts, and captures needing review</Text>
         </View>
         <CaretRight size={18} color={colors.muted} weight="bold" />
       </Pressable>
