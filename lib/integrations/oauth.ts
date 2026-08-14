@@ -29,7 +29,7 @@ export function googleAuthorizeUrl(requestUrl: string, state: string) {
     scope: GOOGLE_INTEGRATION_SCOPES.join(" "),
     access_type: "offline",
     include_granted_scopes: "true",
-    prompt: "consent",
+    prompt: "select_account consent",
     state,
   });
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
