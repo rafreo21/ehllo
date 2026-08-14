@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { getAppUser } from "../../../../../lib/auth/context";
 import { connectProviderFromCode } from "../../../../../lib/integrations/connected-accounts";
+import { createServiceSupabaseClient } from "../../../../../lib/supabase/service";
 import {
   appendIntegrationParam,
   clearIntegrationStateCookie,
@@ -34,7 +35,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await connectProviderFromCode(user, "google", request.url, code);
+    // This request arrives from Google's redirect, not the user's own
+    // authenticated app session, so there's no session-scoped Supabase
+    // client available here — identity was already verified via the
+    // signed, httpOnly flow cookie + matching state param above. Use the
+    // service-role client so the write isn't blocked by RLS policies that
+    // expect a live auth.uid().
+    const serviceClient = createServiceSupabaseClient();
+    await connectProviderFromCode(user, "google", request.url, code, serviceClient ?? undefined);
   } catch (caught) {
     console.error("[google-callback] connectProviderFromCode failed", caught);
     const response = NextResponse.redirect(errorTarget);

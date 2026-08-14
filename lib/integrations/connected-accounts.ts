@@ -119,6 +119,7 @@ export async function connectProviderFromCode(
   provider: IntegrationProvider,
   requestUrl: string,
   code: string,
+  client?: SupabaseClient,
 ) {
   if (provider === "google") {
     const token = await exchangeGoogleCode(requestUrl, code);
@@ -129,7 +130,7 @@ export async function connectProviderFromCode(
       refreshToken: token.refresh_token ?? null,
       expiresAt: expiresAtFromNow(token.expires_in),
       scopes: parseScopes(token.scope),
-    });
+    }, client);
     return email;
   }
 
@@ -141,7 +142,7 @@ export async function connectProviderFromCode(
     refreshToken: token.refresh_token ?? null,
     expiresAt: expiresAtFromNow(token.expires_in),
     scopes: parseScopes(token.scope),
-  });
+  }, client);
   return email;
 }
 
