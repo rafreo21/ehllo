@@ -8,6 +8,7 @@ import { AppState, Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AppUpdateManager } from '@/features/app-updates/app-update-manager';
 import { AuthProvider } from '@/features/auth/auth-context';
 import { CardProvider } from '@/features/card/card-context';
 import { FollowUpSyncManager } from '@/features/follow-ups/follow-up-sync-manager';
@@ -93,6 +94,7 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.canvas }}>
         <SafeAreaProvider>
           <AuthProvider>
+            <AppUpdateManager />
             <NotificationManager />
             <FollowUpSyncManager />
             <QuickFollowUpSyncManager />
