@@ -1,36 +1,42 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeftIcon, ArrowRightIcon } from "@phosphor-icons/react";
+import { useRef, useState } from "react";
+import { ArrowLeftIcon, ArrowRightIcon, CheckCircleIcon } from "@phosphor-icons/react";
 
 const steps = [
-  { label: "Encounter", title: "You met Eve", body: "ProductCon London", meta: "6 people met · 3 follow-ups" },
-  { label: "Context", title: "Remember what mattered", body: "Discussed her September launch and positioning.", meta: "Connected to Eve Chen" },
-  { label: "Next move", title: "Send the research deck", body: "Monday · 9:00 AM", meta: "Ready to review" },
+  { label: "Encounter", title: "You met Eve", context: "Eve Chen · ProductCon London", body: "6 people met · 3 follow-ups", status: "Connection captured", action: "View connection" },
+  { label: "Context", title: "Remember what mattered", context: "Conversation with Eve Chen", body: "September launch · Positioning", status: "Context saved", action: "Review notes" },
+  { label: "Next move", title: "Send the research deck", context: "Follow up with Eve Chen", body: "Monday · 9:00 AM", status: "Ready to review", action: "Review draft" },
 ];
 
 export function LifecycleDemo() {
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
+  const pointerStart = useRef<number | null>(null);
   const step = steps[active];
 
   const move = (next: number, nextDirection: "forward" | "back") => {
     setDirection(nextDirection);
     setActive(next);
   };
+  const previous = () => move((active + steps.length - 1) % steps.length, "back");
+  const next = () => move((active + 1) % steps.length, "forward");
 
   return (
-    <div className="draft-demo" aria-live="polite">
-      <div className="draft-demo-top"><span>Relationship in motion</span><b>{active + 1} / {steps.length}</b></div>
+    <div className="draft-demo" aria-live="polite" tabIndex={0}
+      onKeyDown={(event) => { if (event.key === "ArrowLeft") previous(); if (event.key === "ArrowRight") next(); }}
+      onPointerDown={(event) => { pointerStart.current = event.clientX; }}
+      onPointerUp={(event) => { if (pointerStart.current === null) return; const delta = event.clientX - pointerStart.current; pointerStart.current = null; if (Math.abs(delta) > 45) delta > 0 ? previous() : next(); }}>
+      <div className="draft-demo-top"><span>Relationship in motion</span><b>{step.label} {active + 1} of {steps.length}</b></div>
       <div className={`draft-demo-stage is-${direction}`} key={active}>
         <span className="draft-demo-label">{step.label}</span>
-        <div><h3>{step.title}</h3><p>{step.body}</p></div>
-        <small>{step.meta}</small>
+        <div className="draft-demo-copy"><h3>{step.title}</h3><p className="draft-demo-context">{step.context}</p><p>{step.body}</p></div>
+        <div className="draft-demo-action"><small><CheckCircleIcon size={16} weight="fill"/>{step.status}</small><a href="/app/followups">{step.action}<ArrowRightIcon size={16} weight="bold"/></a></div>
       </div>
       <div className="draft-demo-controls">
-        <button aria-label="Previous step" onClick={() => move((active + steps.length - 1) % steps.length, "back")}><ArrowLeftIcon size={17} weight="bold" /></button>
-        <div aria-label={`Step ${active + 1} of ${steps.length}`}>{steps.map((_, index) => <span className={index === active ? "active" : ""} key={index} />)}</div>
-        <button aria-label="Next step" onClick={() => move((active + 1) % steps.length, "forward")}><ArrowRightIcon size={17} weight="bold" /></button>
+        <button aria-label="Previous step" onClick={previous}><ArrowLeftIcon size={19} weight="bold" /></button>
+        <div aria-label={`Step ${active + 1} of ${steps.length}`}>{steps.map((_, index) => <button aria-label={`Go to step ${index + 1}`} className={index === active ? "active" : ""} onClick={() => move(index, index < active ? "back" : "forward")} key={index}/>)}</div>
+        <button aria-label="Next step" onClick={next}><ArrowRightIcon size={19} weight="bold" /></button>
       </div>
     </div>
   );
