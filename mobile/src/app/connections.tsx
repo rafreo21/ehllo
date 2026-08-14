@@ -55,6 +55,11 @@ function ConnectionRow({ connection, onPress }: { connection: ConnectionItem; on
           <Text style={styles.source}>{connectionSourceLabel(connection.source)}</Text>
           {connection.connectedAt ? <Text style={styles.when}>{formatWhen(connection.connectedAt)}</Text> : null}
         </View>
+        {connection.eventTitle ? (
+          <Text style={styles.eventMeta} numberOfLines={1}>
+            At {connection.eventTitle}{connection.eventLocation ? ` · ${connection.eventLocation}` : ''}
+          </Text>
+        ) : null}
       </View>
       <CaretRight size={16} color={colors.muted} weight="bold" />
     </Pressable>
@@ -367,5 +372,6 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2, marginTop: 4 },
   source: { color: colors.inkSoft, fontSize: 10, fontWeight: '700' },
   when: { color: colors.muted, fontSize: 10 },
+  eventMeta: { marginTop: 2, color: colors.inkSoft, fontSize: 11, fontWeight: '700' },
   emptySearch: { textAlign: 'center', color: colors.muted },
 });

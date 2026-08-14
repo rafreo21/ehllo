@@ -3,6 +3,7 @@ import { CaretDown, CaretUp, CloudArrowUp, DeviceMobile, PaperPlaneTilt, PencilS
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   BackHandler,
   Pressable,
   ScrollView,
@@ -536,7 +537,15 @@ export default function CaptureWizardScreen() {
   const activeRecording = recorder.recordingState === 'recording'
     || recorder.recordingState === 'paused';
 
-  const requestLeave = useCallback(() => {
+  const leaveNow = useCallback(async (stopFirst: boolean) => {
+    if (stopFirst) {
+      try {
+        await recorder.stopRecording();
+      } catch {
+        // Best-effort: still safe to leave — the native service keeps the
+        // audio file either way, and the draft is saved locally below.
+      }
+    }
     if (captureHasProgress) {
       const current = draftRef.current;
       const next = {
@@ -552,6 +561,21 @@ export default function CaptureWizardScreen() {
     if (router.canGoBack()) router.back();
     else router.replace('/capture');
   }, [captureHasProgress, recorder]);
+
+  const requestLeave = useCallback(() => {
+    if (activeRecording) {
+      Alert.alert(
+        'Recording in progress',
+        'Leaving now stops the recording. You can resume reviewing it from Capture afterwards.',
+        [
+          { text: 'Keep recording', style: 'cancel' },
+          { text: 'Stop and leave', style: 'destructive', onPress: () => void leaveNow(true) },
+        ],
+      );
+      return;
+    }
+    void leaveNow(false);
+  }, [activeRecording, leaveNow]);
 
   useFocusEffect(
     useCallback(() => {
@@ -948,6 +972,22 @@ export default function CaptureWizardScreen() {
   async function saveAndReview() {
     const token = await ensureAuth();
     if (!token) return;
+
+    const recordingUriForGuard = draft.recordingUri || recorder.recordingUri;
+    if (recordingUriForGuard && draft.transcript.trim().length < 20 && isOnline()) {
+      setSaving(true);
+      let retried = '';
+      try {
+        retried = (await recorder.retryTranscription())?.trim() || '';
+      } finally {
+        setSaving(false);
+      }
+      if (retried.length < 20) {
+        showCaptureError('This recording has no transcript yet — try transcribing again before saving, or continue without one.');
+        return;
+      }
+      updateDraft({ transcript: retried });
+    }
 
     if (!isOnline()) {
       // The draft is already saved continuously as it's edited — the only

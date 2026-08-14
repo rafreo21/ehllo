@@ -59,7 +59,12 @@ export function BottomSheet({ visible, title, onClose, footer, onBack, children 
     windowHeight * 0.82,
     Math.max(280, windowHeight - lift - Math.max(insets.top, spacing.x4) - spacing.x4),
   );
-  const sheetPaddingBottom = Math.max(insets.bottom, spacing.x4);
+  // react-native-safe-area-context often reports insets.bottom as 0 for
+  // content inside a core RN <Modal> on Android — it's a separate native
+  // window from the rest of the app, so the gesture/nav-bar inset measured
+  // at the app root doesn't reach in here. A larger fixed floor keeps the
+  // footer clear of the nav bar even when that happens.
+  const sheetPaddingBottom = Math.max(insets.bottom, Platform.OS === 'android' ? spacing.x6 : spacing.x4);
 
   // Keep the focused field reachable after the sheet resizes for the keyboard.
   // Avoid measureLayout — Fabric requires a native host ref and ScrollView is not one.

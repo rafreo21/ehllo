@@ -7,10 +7,11 @@ import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BackButton, Body, Button, Eyebrow } from '@/components/ui';
+import { ConnectionSuccessSheet } from '@/components/connection-success-sheet';
 import { GreenHeroCard } from '@/components/green-hero-card';
 import { ScanShareSkeleton } from '@/components/skeleton';
 import { useAuth } from '@/features/auth/auth-context';
-import { connectionFromScannedSlug } from '@/features/connections/connections-api';
+import { connectionFromScannedSlug, type ScannedCardResult } from '@/features/connections/connections-api';
 import { enqueueOfflineScan } from '@/features/connections/offline-scan-queue';
 import { resolveCachedEventSnapshot } from '@/features/events/event-cache';
 import { setAuthReturnPath } from '@/features/encounters/capture-draft';
@@ -30,6 +31,7 @@ export default function ScannerScreen() {
   const [linking, setLinking] = useState(false);
   const [error, setError] = useState('');
   const [queuedMessage, setQueuedMessage] = useState('');
+  const [scanResult, setScanResult] = useState<ScannedCardResult | null>(null);
   const insets = useAppInsets();
 
   async function openScannedCard(slug: string) {
@@ -53,9 +55,10 @@ export default function ScannerScreen() {
     setLinking(true);
     setError('');
     try {
-      const connection = await connectionFromScannedSlug(session.access_token, normalized, eventSnapshot);
-      if (connection) {
-        router.replace(`/connections/${encodeURIComponent(connection.id)}`);
+      const result = await connectionFromScannedSlug(session.access_token, normalized, eventSnapshot);
+      if (result) {
+        setScanResult(result);
+        setLinking(false);
         return;
       }
       setError('This card could not be added. Ask them to publish their card, then try again.');
@@ -181,6 +184,35 @@ export default function ScannerScreen() {
           </View>
         ) : null}
       </View>
+
+      <ConnectionSuccessSheet
+        visible={Boolean(scanResult)}
+        personName={scanResult?.connection.name || ''}
+        mutual={scanResult?.mutual ?? false}
+        onClose={() => {
+          setScanResult(null);
+          if (router.canGoBack()) router.back();
+          else router.replace('/connections');
+        }}
+        onViewCard={() => {
+          const id = scanResult?.connection.id;
+          setScanResult(null);
+          if (id) router.replace(`/connections/${encodeURIComponent(id)}`);
+        }}
+        onAddFollowUp={() => {
+          const connection = scanResult?.connection;
+          setScanResult(null);
+          if (!connection) return;
+          router.replace({
+            pathname: '/quick-follow-up',
+            params: {
+              personName: connection.name,
+              personEmail: connection.email || '',
+              sourceId: connection.sourceId,
+            },
+          });
+        }}
+      />
     </View>
   );
 }

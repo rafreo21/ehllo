@@ -56,6 +56,8 @@ type InboundExchange = {
   visitor_role?: string;
   note?: string;
   created_at?: string;
+  event_id?: string;
+  events?: { title?: string } | { title?: string }[] | null;
 };
 
 type ContactRow = {
@@ -155,11 +157,13 @@ export async function enrichConnectionPhotos(accessToken: string, connections: C
   });
 }
 
+export type ScannedCardResult = { connection: ConnectionItem; mutual: boolean };
+
 export async function registerScannedCard(
   accessToken: string,
   slug: string,
   eventSnapshot?: EventSnapshot,
-): Promise<ConnectionItem | null> {
+): Promise<ScannedCardResult | null> {
   const normalized = slug.trim().toLowerCase();
   if (!normalized) throw new Error('This QR code is not a valid ehllo card.');
 
@@ -168,35 +172,52 @@ export async function registerScannedCard(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ slug: normalized, eventSnapshot }),
   });
-  const payload = await response.json() as { error?: string; connectionId?: string };
+  const payload = await response.json() as {
+    error?: string;
+    connectionId?: string;
+    mutual?: boolean;
+    personName?: string;
+    personRole?: string;
+    personCompany?: string;
+  };
   if (!response.ok) {
     throw new Error(payload.error || 'Could not save this card to your connections.');
   }
 
   if (payload.connectionId) {
+    const name = payload.personName?.trim() || '';
     return {
-      id: `met-${payload.connectionId}`,
-      sourceId: payload.connectionId,
-      name: '',
-      subtitle: '',
-      source: 'met',
-      cardSlug: normalized,
+      connection: {
+        id: `met-${payload.connectionId}`,
+        sourceId: payload.connectionId,
+        name,
+        subtitle: subtitle(payload.personRole, payload.personCompany),
+        source: 'met',
+        cardSlug: normalized,
+        photoUrl: name ? connectionAvatarUrl({ name } as ConnectionItem) : undefined,
+      },
+      mutual: payload.mutual ?? false,
     };
   }
 
   const connections = await fetchAllConnectionsMerged(accessToken);
-  return connections.find((item) => (
+  const connection = connections.find((item) => (
     item.source === 'met' && item.cardSlug?.trim().toLowerCase() === normalized
-  )) ?? null;
+  ));
+  return connection ? { connection, mutual: payload.mutual ?? false } : null;
 }
 
-export async function connectionFromScannedSlug(accessToken: string, slug: string, eventSnapshot?: EventSnapshot) {
+export async function connectionFromScannedSlug(
+  accessToken: string,
+  slug: string,
+  eventSnapshot?: EventSnapshot,
+): Promise<ScannedCardResult | null> {
   const normalized = slug.trim().toLowerCase();
   const connections = await fetchAllConnectionsMerged(accessToken);
   const existing = connections.find((item) => (
     item.cardSlug?.trim().toLowerCase() === normalized
   ));
-  if (existing) return existing;
+  if (existing) return { connection: existing, mutual: false };
 
   return registerScannedCard(accessToken, normalized, eventSnapshot);
 }
@@ -232,6 +253,7 @@ export async function fetchAllConnectionsMerged(accessToken: string): Promise<Co
 
   for (const exchange of exchanges) {
     const name = exchange.visitor_name?.trim() || 'New connection';
+    const eventRow = Array.isArray(exchange.events) ? exchange.events[0] : exchange.events;
     const item: ConnectionItem = {
       id: `inbound-${exchange.id}`,
       sourceId: exchange.id,
@@ -243,6 +265,8 @@ export async function fetchAllConnectionsMerged(accessToken: string): Promise<Co
       phone: exchange.visitor_phone?.trim() || undefined,
       source: 'inbound',
       connectedAt: exchange.created_at,
+      eventId: exchange.event_id || undefined,
+      eventTitle: eventRow?.title?.trim() || undefined,
       photoUrl: connectionAvatarUrl({ name, email: exchange.visitor_email?.trim() || undefined } as ConnectionItem),
     };
     const key = mergeKey(name, item.email);

@@ -276,3 +276,29 @@ export async function resolveCurrentEventIdForUser(
   const windows = await fetchGoingEventWindows(supabase, userId);
   return resolveCurrentEvent(windows, now);
 }
+
+/**
+ * Anonymous visitors (a card scan, a guest exchange submission) never have
+ * their own session, so the only "who's at an event right now" we can know
+ * is the card owner's — if they're currently checked in somewhere, that's
+ * where this visit is happening. Best-effort: any failure just means no
+ * event, never a broken save.
+ */
+export async function resolveCurrentEventIdForWorkspace(
+  supabase: SupabaseClient,
+  workspaceId: string,
+  now = new Date(),
+): Promise<string | null> {
+  try {
+    const { data: workspace } = await supabase
+      .from("workspaces")
+      .select("owner_user_id")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    const ownerUserId = workspace?.owner_user_id as string | undefined;
+    if (!ownerUserId) return null;
+    return await resolveCurrentEventIdForUser(supabase, ownerUserId, now);
+  } catch {
+    return null;
+  }
+}

@@ -135,7 +135,7 @@ export default function ShareCardScreen() {
       setTapToShareReadListener(() => {
         setTapMessage('Card link shared by tap.');
       });
-      await startTapToShare(publicUrl);
+      await startTapToShare(onlineCardUrl || publicUrl);
       setTapActive(true);
       setTapMessage('Ready. Ask them to hold their phone against yours.');
     } catch (error) {

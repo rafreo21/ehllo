@@ -47,5 +47,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "We couldn’t link that card to your people list." }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, connectionId: data }, { headers: { "Cache-Control": "private, no-store" } });
+  const result = data as {
+    connectionId?: string;
+    mutual?: boolean;
+    personName?: string;
+    personRole?: string;
+    personCompany?: string;
+  } | null;
+  return NextResponse.json({
+    ok: true,
+    connectionId: result?.connectionId,
+    mutual: result?.mutual ?? false,
+    personName: result?.personName,
+    personRole: result?.personRole,
+    personCompany: result?.personCompany,
+  }, { headers: { "Cache-Control": "private, no-store" } });
 }

@@ -25,10 +25,10 @@ export default function ScanCompleteScreen() {
     let cancelled = false;
     void (async () => {
       try {
-        const connection = await connectionFromScannedSlug(session.access_token, normalized);
+        const result = await connectionFromScannedSlug(session.access_token, normalized);
         if (cancelled) return;
-        if (connection) {
-          router.replace(`/connections/${encodeURIComponent(connection.id)}`);
+        if (result) {
+          router.replace(`/connections/${encodeURIComponent(result.connection.id)}`);
           return;
         }
         router.replace('/connections');

@@ -7,10 +7,12 @@ import { CheckIcon } from "@phosphor-icons/react/dist/csr/Check";
 import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { ClockCounterClockwiseIcon } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
 import { ShareNetworkIcon } from "@phosphor-icons/react/dist/csr/ShareNetwork";
+import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
+import { HandWavingIcon } from "@phosphor-icons/react/dist/csr/HandWaving";
 import { LinkButton } from "./Button";
 import { BROWSER_NOTIFICATION_CHANGE_EVENT, BROWSER_NOTIFICATION_KEY } from "./NotificationPreferences";
 
-type NotificationType = "review_ready" | "follow_up_due" | "follow_up_overdue" | "shared_meeting_update";
+type NotificationType = "review_ready" | "follow_up_due" | "follow_up_overdue" | "shared_meeting_update" | "connection_added" | "keep_in_touch";
 
 type NotificationAlert = {
   id: string;
@@ -47,6 +49,8 @@ function iconForType(type: NotificationType) {
     case "follow_up_due": return CalendarCheckIcon;
     case "follow_up_overdue": return ClockCounterClockwiseIcon;
     case "shared_meeting_update": return ShareNetworkIcon;
+    case "connection_added": return UsersThreeIcon;
+    case "keep_in_touch": return HandWavingIcon;
     default: return BellIcon;
   }
 }

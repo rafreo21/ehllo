@@ -703,11 +703,11 @@ export function useCaptureRecorder({
 
   const retryTranscription = useCallback(async () => {
     const uri = recordingUri.trim();
-    if (!uri) return;
+    if (!uri) return '';
     transcribedUriRef.current = '';
     setServerTranscribeError('');
     setServerTranscribePhase('idle');
-    await maybeTranscribeFromServer(uri, '', lastTranscribeMetaRef.current, { force: true });
+    return maybeTranscribeFromServer(uri, '', lastTranscribeMetaRef.current, { force: true });
   }, [maybeTranscribeFromServer, recordingUri]);
 
   const resetRecording = useCallback(async () => {

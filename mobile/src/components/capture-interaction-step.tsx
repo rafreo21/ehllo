@@ -30,7 +30,9 @@ import { BottomSheet } from '@/components/bottom-sheet';
 import { PhoneInput } from '@/components/phone-input';
 import { RecordingPlayOrb } from '@/components/recording-playback';
 import { Body, Button } from '@/components/ui';
+import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
+import { useActiveEventTitle } from '@/features/events/use-active-event-title';
 import type { CaptureWizardDraft } from '@/features/encounters/capture-draft';
 import type { InboundExchange } from '@/features/encounters/encounter-api';
 import {
@@ -199,6 +201,11 @@ export function CaptureInteractionStep({
   openConsentOnMount = false,
 }: CaptureInteractionStepProps) {
   const { card, publicUrl } = useCard();
+  const { session } = useAuth();
+  const activeEventTitle = useActiveEventTitle(session?.access_token);
+  const qrCardUrl = publicUrl && activeEventTitle
+    ? `${publicUrl}?event=${encodeURIComponent(activeEventTitle)}`
+    : publicUrl;
   const [consentIntent, setConsentIntent] = useState<'confirm' | 'record' | 'continue' | null>(() => (
     openConsentOnMount && recorder.recordingState === 'idle' ? 'record' : null
   ));
@@ -730,7 +737,7 @@ export function CaptureInteractionStep({
         }>
         <Body style={styles.centerCopy}>They scan this code and their details link here automatically.</Body>
         <View style={styles.qrWrap}>
-          <BrandedQrCode card={card} cardUrl={publicUrl} size={220} />
+          <BrandedQrCode card={card} cardUrl={qrCardUrl} size={220} />
           <Text style={styles.qrHint}>{card.name}</Text>
         </View>
       </BottomSheet>

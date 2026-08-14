@@ -87,6 +87,20 @@ module.exports = {
       },
       predictiveBackGestureEnabled: false,
       softwareKeyboardLayoutMode: "resize",
+      intentFilters: [
+        {
+          action: "VIEW",
+          autoVerify: true,
+          data: [
+            {
+              scheme: "https",
+              host: IS_STAGING ? "staging.ehllo.io" : "ehllo.io",
+              pathPrefix: "/c/",
+            },
+          ],
+          category: ["BROWSABLE", "DEFAULT"],
+        },
+      ],
     },
     androidStatusBar: {
       backgroundColor: "#F5F7F3",

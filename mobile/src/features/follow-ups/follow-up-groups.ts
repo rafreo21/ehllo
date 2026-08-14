@@ -7,6 +7,7 @@ export type FollowUpGroup = {
   owner: FollowUpItem['owner'];
   encounterTitle: string;
   encounterId: string;
+  eventTitle?: string;
   dueAt: string;
   startedAt: string;
   mostRecentAt: string;
@@ -46,6 +47,7 @@ export function groupFollowUpItems(items: FollowUpItem[]): FollowUpGroup[] {
       owner: item.owner,
       encounterTitle: item.encounterTitle,
       encounterId: item.encounterId,
+      eventTitle: item.eventTitle,
       dueAt: item.dueAt,
       startedAt: item.startedAt,
       mostRecentAt: item.statusUpdatedAt || item.startedAt,

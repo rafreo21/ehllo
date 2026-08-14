@@ -6,7 +6,9 @@ import { BrandedQrCode } from '@/components/branded-qr-code';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { PhoneInput } from '@/components/phone-input';
 import { Body, Button } from '@/components/ui';
+import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
+import { useActiveEventTitle } from '@/features/events/use-active-event-title';
 import type { CaptureWizardDraft } from '@/features/encounters/capture-draft';
 import type { InboundExchange } from '@/features/encounters/encounter-api';
 import {
@@ -125,6 +127,11 @@ export function CaptureGatherStep({
   hasRecording = false,
 }: CaptureGatherStepProps) {
   const { card, publicUrl } = useCard();
+  const { session } = useAuth();
+  const activeEventTitle = useActiveEventTitle(session?.access_token);
+  const qrCardUrl = publicUrl && activeEventTitle
+    ? `${publicUrl}?event=${encodeURIComponent(activeEventTitle)}`
+    : publicUrl;
   const [manualOpen, setManualOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [personError, setPersonError] = useState('');
@@ -324,7 +331,7 @@ export function CaptureGatherStep({
           Ask them to scan this code. Their details link here automatically. You can add up to {MAX_GATHER_PEOPLE} people.
         </Body>
         <View style={styles.qrWrap}>
-          <BrandedQrCode card={card} cardUrl={publicUrl} size={220} />
+          <BrandedQrCode card={card} cardUrl={qrCardUrl} size={220} />
           <Text style={styles.qrHint}>{card.name}</Text>
           {card.role ? (
             <Text style={styles.qrSubhint}>

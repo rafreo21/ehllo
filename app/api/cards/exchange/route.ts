@@ -2,6 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 import { provisionVisitorFromExchange } from "@/lib/visitor-provision-server";
+import { createServiceSupabaseClient } from "@/lib/supabase/service";
+import { resolveCurrentEventIdForWorkspace } from "@/lib/events-server";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
@@ -34,6 +36,30 @@ export async function POST(request: Request) {
   }
 
   const supabase = createClient(url, key, { auth: { persistSession: false } });
+
+  // Best-effort: the card owner's currently-happening event, if any — an
+  // anonymous visitor has no session of their own, so this is the only
+  // "where did this exchange happen" signal available. Never blocks the
+  // submission.
+  let eventId: string | null = null;
+  try {
+    const service = createServiceSupabaseClient();
+    if (service) {
+      const { data: card } = await service
+        .from("cards")
+        .select("workspace_id")
+        .eq("slug", slug.toLowerCase())
+        .eq("status", "published")
+        .maybeSingle();
+      const workspaceId = card?.workspace_id as string | undefined;
+      if (workspaceId) {
+        eventId = await resolveCurrentEventIdForWorkspace(service, workspaceId);
+      }
+    }
+  } catch {
+    eventId = null;
+  }
+
   const { data, error } = await supabase.rpc("submit_card_exchange", {
     p_slug: slug,
     p_visitor_name: visitorName,
@@ -43,6 +69,7 @@ export async function POST(request: Request) {
     p_visitor_phone: visitorPhone,
     p_note: note,
     p_consent_given: consentGiven,
+    p_event_id: eventId,
   });
 
   if (error) {

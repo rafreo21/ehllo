@@ -58,6 +58,7 @@ function MethodRow({
   onDragEnd: (from: number, to: number) => void;
 }) {
   function targetIndexFor(from: number, translationY: number) {
+    'worklet';
     const raw = from + Math.round(translationY / ROW_HEIGHT);
     return Math.max(0, Math.min(total - 1, raw));
   }

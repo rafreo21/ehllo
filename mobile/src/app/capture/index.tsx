@@ -81,7 +81,9 @@ function draftStateLabel(draft: CaptureDraftSummary) {
   if (draft.sessionStatus === 'paused') return 'Paused draft';
   if (draft.sessionStatus === 'recording') return 'Unfinished draft';
   if (draft.sessionStatus === 'processing') return 'Preparing review';
-  if (draft.sessionStatus === 'review_ready') return 'Ready to review';
+  if (draft.sessionStatus === 'review_ready') {
+    return draft.transcriptPending ? 'Needs transcript — tap to retry' : 'Ready to review';
+  }
   return stepLabel(draft.step);
 }
 
@@ -395,7 +397,10 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
                     </View>
                     <Text style={styles.when}>{formatRelativeTime(draft.updatedAt)}</Text>
                   </View>
-                  <Text style={[styles.draftMeta, draft.sessionStatus === 'failed' && styles.draftMetaInterrupted]}>
+                  <Text style={[
+                    styles.draftMeta,
+                    (draft.sessionStatus === 'failed' || draft.transcriptPending) && styles.draftMetaInterrupted,
+                  ]}>
                     {draftStateLabel(draft)}
                   </Text>
                   <View style={styles.cardFooter}>

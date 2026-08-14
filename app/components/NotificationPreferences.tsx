@@ -7,6 +7,8 @@ import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { ClockCounterClockwiseIcon } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
 import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
 import { ShareNetworkIcon } from "@phosphor-icons/react/dist/csr/ShareNetwork";
+import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
+import { HandWavingIcon } from "@phosphor-icons/react/dist/csr/HandWaving";
 import { StatusMessage } from "./AsyncState";
 
 export const BROWSER_NOTIFICATION_KEY = "aftermeet-browser-notifications-v1";
@@ -14,7 +16,7 @@ export const BROWSER_NOTIFICATION_CHANGE_EVENT = "aftermeet-browser-notification
 
 type BrowserPermission = NotificationPermission | "unsupported";
 
-type NotificationType = "review_ready" | "follow_up_due" | "follow_up_overdue" | "shared_meeting_update";
+type NotificationType = "review_ready" | "follow_up_due" | "follow_up_overdue" | "shared_meeting_update" | "connection_added" | "keep_in_touch";
 type NotificationPreferenceMap = Record<NotificationType, boolean>;
 
 const DEFAULT_TYPE_PREFERENCES: NotificationPreferenceMap = {
@@ -22,6 +24,8 @@ const DEFAULT_TYPE_PREFERENCES: NotificationPreferenceMap = {
   follow_up_due: true,
   follow_up_overdue: true,
   shared_meeting_update: true,
+  connection_added: true,
+  keep_in_touch: true,
 };
 
 const NOTIFICATION_TYPE_ROWS: Array<{ type: NotificationType; icon: typeof BellIcon; label: string; hint: string }> = [
@@ -29,6 +33,8 @@ const NOTIFICATION_TYPE_ROWS: Array<{ type: NotificationType; icon: typeof BellI
   { type: "follow_up_due", icon: CalendarCheckIcon, label: "Follow-up due", hint: "A reviewed follow-up is due today." },
   { type: "follow_up_overdue", icon: ClockCounterClockwiseIcon, label: "Follow-up overdue", hint: "A reviewed follow-up is overdue." },
   { type: "shared_meeting_update", icon: ShareNetworkIcon, label: "Shared meeting updates", hint: "A guest commits to their own follow-up." },
+  { type: "connection_added", icon: UsersThreeIcon, label: "New connections", hint: "Someone connects with you by scanning your card." },
+  { type: "keep_in_touch", icon: HandWavingIcon, label: "Keep in touch nudges", hint: "A gentle reminder to reach out after you connect." },
 ];
 
 function readBrowserEnabled() {

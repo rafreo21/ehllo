@@ -4,7 +4,9 @@ export type NotificationType =
   | 'review_ready'
   | 'follow_up_due'
   | 'follow_up_overdue'
-  | 'shared_meeting_update';
+  | 'shared_meeting_update'
+  | 'connection_added'
+  | 'keep_in_touch';
 
 export type NotificationRecord = {
   id: string;
@@ -61,6 +63,8 @@ export async function fetchNotificationPreferences(accessToken: string): Promise
     follow_up_due: true,
     follow_up_overdue: true,
     shared_meeting_update: true,
+    connection_added: true,
+    keep_in_touch: true,
   };
 }
 
@@ -78,6 +82,14 @@ export async function updateNotificationPreferences(
 }
 
 export function notificationDeepLink(notification: NotificationRecord): string | null {
+  if (notification.type === 'connection_added') return '/connections';
+  if (notification.type === 'keep_in_touch') {
+    const [source, sourceId] = notification.actionId.split(':');
+    if ((source === 'met' || source === 'inbound') && sourceId) {
+      return `/connections/${encodeURIComponent(`${source}-${sourceId}`)}`;
+    }
+    return '/connections';
+  }
   if (!notification.encounterId) return null;
   switch (notification.type) {
     case 'review_ready':

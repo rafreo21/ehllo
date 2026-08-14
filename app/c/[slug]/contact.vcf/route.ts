@@ -8,7 +8,7 @@ import {
   publicCompanyLogoUrl,
 } from "@/lib/card-company-display";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
-import { resolveCurrentEventIdForUser } from "@/lib/events-server";
+import { resolveCurrentEventIdForWorkspace } from "@/lib/events-server";
 
 // Anonymous scanners never have their own session, so the only "who's at an
 // event right now" we can know here is the card owner's — if they're
@@ -18,14 +18,7 @@ async function currentEventTitleForCardOwner(workspaceId: string): Promise<strin
   try {
     const service = createServiceSupabaseClient();
     if (!service) return undefined;
-    const { data: workspace } = await service
-      .from("workspaces")
-      .select("owner_user_id")
-      .eq("id", workspaceId)
-      .maybeSingle();
-    const ownerUserId = workspace?.owner_user_id as string | undefined;
-    if (!ownerUserId) return undefined;
-    const eventId = await resolveCurrentEventIdForUser(service, ownerUserId);
+    const eventId = await resolveCurrentEventIdForWorkspace(service, workspaceId);
     if (!eventId) return undefined;
     const { data: event } = await service
       .from("events")

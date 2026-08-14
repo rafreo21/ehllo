@@ -1,4 +1,4 @@
-import { Bell, CalendarCheck, CaretRight, CheckCircle, ClockCounterClockwise, EnvelopeSimple, ShareNetwork } from 'phosphor-react-native';
+import { Bell, CalendarCheck, CaretRight, CheckCircle, ClockCounterClockwise, EnvelopeSimple, HandWaving, ShareNetwork, UsersThree } from 'phosphor-react-native';
 import { useEffect, useState } from 'react';
 import { Linking, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
@@ -35,6 +35,8 @@ const NOTIFICATION_TYPE_ROWS: { type: NotificationType; icon: typeof Bell; label
   { type: 'follow_up_due', icon: CalendarCheck, label: 'Follow-up due', hint: 'A reviewed follow-up is due today' },
   { type: 'follow_up_overdue', icon: ClockCounterClockwise, label: 'Follow-up overdue', hint: 'A reviewed follow-up is overdue' },
   { type: 'shared_meeting_update', icon: ShareNetwork, label: 'Shared meeting updates', hint: 'A guest commits to their own follow-up' },
+  { type: 'connection_added', icon: UsersThree, label: 'New connections', hint: 'Someone connects with you by scanning your card' },
+  { type: 'keep_in_touch', icon: HandWaving, label: 'Keep in touch nudges', hint: 'A gentle reminder to reach out after you connect' },
 ];
 
 export default function NotificationPreferencesScreen() {

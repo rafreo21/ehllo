@@ -5,7 +5,9 @@ import {
   CalendarCheck,
   CheckCircle,
   ClockCounterClockwise,
+  HandWaving,
   ShareNetwork,
+  UsersThree,
 } from 'phosphor-react-native';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -53,6 +55,8 @@ function iconForType(type: NotificationType) {
     case 'follow_up_due': return CalendarCheck;
     case 'follow_up_overdue': return ClockCounterClockwise;
     case 'shared_meeting_update': return ShareNetwork;
+    case 'connection_added': return UsersThree;
+    case 'keep_in_touch': return HandWaving;
     default: return Bell;
   }
 }

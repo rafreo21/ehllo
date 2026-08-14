@@ -1,8 +1,8 @@
 import { CheckCircle } from 'phosphor-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
-import { Body } from '@/components/ui';
+import { Body, Button } from '@/components/ui';
 import { colors, radius } from '@/theme/tokens';
 
 type OutcomeSuccessSheetProps = {
@@ -25,14 +25,7 @@ export function OutcomeSuccessSheet({
       visible={visible && Boolean(trimmed)}
       title={title}
       onClose={onClose}
-      footer={
-        <Pressable
-          accessibilityRole="button"
-          onPress={onClose}
-          style={({ pressed }) => [styles.okButton, pressed && styles.okButtonPressed]}>
-          <Text style={styles.okLabel}>OK</Text>
-        </Pressable>
-      }>
+      footer={<Button onPress={onClose}>OK</Button>}>
       <View style={styles.iconWrap}>
         <CheckCircle size={34} color={colors.ink} weight="fill" />
       </View>
@@ -52,13 +45,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
   },
   message: { textAlign: 'center' },
-  okButton: {
-    minHeight: 48,
-    borderRadius: radius.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.accent,
-  },
-  okButtonPressed: { opacity: 0.86 },
-  okLabel: { color: colors.ink, fontSize: 15, fontWeight: '800' },
 });

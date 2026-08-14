@@ -29,6 +29,7 @@ import { displayFollowUpTitle, SELECTABLE_FOLLOW_UP_CHANNELS, type FollowUpChann
 import { clearQuickFollowUpDraft, readQuickFollowUpDraft, writeQuickFollowUpDraft } from '@/features/follow-ups/quick-follow-up-draft';
 import { enqueueQuickFollowUp } from '@/features/follow-ups/quick-follow-up-queue';
 import { resolveCachedEventSnapshot, type EventSnapshot } from '@/features/events/event-cache';
+import { useActiveEventTitle } from '@/features/events/use-active-event-title';
 import type { QuickFollowUpItem } from '@/features/follow-ups/quick-follow-up-types';
 import { formatDueLabel } from '@/lib/due-date';
 import { isOnline } from '@/lib/connectivity';
@@ -48,6 +49,10 @@ export default function QuickFollowUpScreen() {
   const { session } = useAuth();
   const { card, publicUrl } = useCard();
   const insets = useAppInsets();
+  const activeEventTitle = useActiveEventTitle(session?.access_token);
+  const qrCardUrl = publicUrl && activeEventTitle
+    ? `${publicUrl}?event=${encodeURIComponent(activeEventTitle)}`
+    : publicUrl;
 
   const [personName, setPersonName] = useState(params.personName?.trim() || '');
   const [personEmail, setPersonEmail] = useState(params.personEmail?.trim() || '');
@@ -666,7 +671,7 @@ export default function QuickFollowUpScreen() {
         }>
         <Body style={styles.centerCopy}>They scan this code and their details link here automatically.</Body>
         <View style={styles.qrWrap}>
-          <BrandedQrCode card={card} cardUrl={publicUrl} size={220} />
+          <BrandedQrCode card={card} cardUrl={qrCardUrl} size={220} />
           <Text style={styles.qrHint}>{card.name}</Text>
         </View>
       </BottomSheet>

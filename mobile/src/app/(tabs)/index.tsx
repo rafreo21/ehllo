@@ -4,11 +4,13 @@ import {
   Bell,
   CaretRight,
   Clock,
+  HandWaving,
   IdentificationCard,
   ListChecks,
   Microphone,
   Notebook,
   UsersThree,
+  X,
 } from 'phosphor-react-native';
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -33,6 +35,7 @@ import {
   connectionAvatarUrl,
 } from '@/features/connections/connection-public-card';
 import {
+  enrichConnectionPhotos,
   fetchAllConnectionsMerged,
   sortConnections,
   type ConnectionItem,
@@ -43,7 +46,12 @@ import { cacheEventAttendance, cacheEventLeftAt } from '@/features/events/event-
 import { fetchFollowUps, type FollowUpItem } from '@/features/follow-ups/follow-up-api';
 import { summarizeFollowUpNudges } from '@/features/follow-ups/follow-up-nudges';
 import { resolveFollowUpUserName } from '@/features/follow-ups/follow-up-participants';
-import { fetchNotifications } from '@/features/notifications/notification-center-api';
+import {
+  fetchNotifications,
+  markNotificationRead,
+  notificationDeepLink,
+  type NotificationRecord,
+} from '@/features/notifications/notification-center-api';
 import { formatRelativeTime } from '@/lib/relative-time';
 import { useAppInsets, useTabBarHeight } from '@/lib/safe-area';
 import { colors, radius, spacing } from '@/theme/tokens';
@@ -70,6 +78,7 @@ export default function HomeScreen() {
   const { card, cards, loading: cardLoading } = useCard();
   const [followUps, setFollowUps] = useState<FollowUpItem[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [nudges, setNudges] = useState<NotificationRecord[]>([]);
   const [encounters, setEncounters] = useState<EncounterSummary[]>([]);
   const [drafts, setDrafts] = useState<CaptureDraftSummary[]>([]);
   const [connections, setConnections] = useState<ConnectionItem[]>([]);
@@ -105,6 +114,7 @@ export default function HomeScreen() {
     if (!session?.access_token) {
       setFollowUps([]);
       setUnreadNotifications(0);
+      setNudges([]);
       setEncounters([]);
       setConnections([]);
       setGoingEvents([]);
@@ -121,9 +131,17 @@ export default function HomeScreen() {
     ]);
 
     if (followUpsResult.status === 'fulfilled') setFollowUps(followUpsResult.value);
-    if (notificationsResult.status === 'fulfilled') setUnreadNotifications(notificationsResult.value.unreadCount);
+    if (notificationsResult.status === 'fulfilled') {
+      setUnreadNotifications(notificationsResult.value.unreadCount);
+      setNudges(notificationsResult.value.notifications.filter((item) => item.type === 'keep_in_touch' && !item.readAt));
+    }
     if (encountersResult.status === 'fulfilled') setEncounters(encountersResult.value);
-    if (connectionsResult.status === 'fulfilled') setConnections(connectionsResult.value);
+    if (connectionsResult.status === 'fulfilled') {
+      setConnections(connectionsResult.value);
+      // Real profile photos load in the background so the first paint isn't
+      // blocked on a per-card fetch — same pattern as the connections list.
+      void enrichConnectionPhotos(token, connectionsResult.value).then(setConnections);
+    }
 
     if ([followUpsResult, notificationsResult, encountersResult, connectionsResult].every((result) => result.status === 'rejected')) {
       setLoadError('Could not load your Home data. Check your connection and try again.');
@@ -171,6 +189,23 @@ export default function HomeScreen() {
     () => resolveHomeEventCardState(goingEvents, eventCandidates, new Date()),
     [goingEvents, eventCandidates],
   );
+
+  async function dismissNudge(id: string) {
+    setNudges((current) => current.filter((item) => item.id !== id));
+    if (!session?.access_token) return;
+    try {
+      await markNotificationRead(session.access_token, id);
+    } catch {
+      // Best-effort — the card is already gone locally; it'll just come
+      // back on next refresh if this failed, which is an acceptable retry.
+    }
+  }
+
+  function openNudge(item: NotificationRecord) {
+    void dismissNudge(item.id);
+    const destination = notificationDeepLink(item);
+    if (destination) router.push(destination as never);
+  }
 
   async function decideEventCandidate(event: EventItem, status: 'going' | 'not_going') {
     if (!session?.access_token) return;
@@ -258,7 +293,7 @@ export default function HomeScreen() {
     () => sortConnections(connections, 'date'),
     [connections],
   );
-  const recentPeople = useMemo(() => sortedConnections.slice(0, 3), [sortedConnections]);
+  const recentPeople = useMemo(() => sortedConnections.slice(0, 2), [sortedConnections]);
 
   const hasCard = cards.length > 0;
   // AppTabBar floats as an absolute overlay now, so this screen's root View
@@ -361,6 +396,30 @@ export default function HomeScreen() {
               </Pressable>
             )}
 
+            {nudges.map((item) => (
+              <Pressable
+                key={item.id}
+                accessibilityRole="button"
+                onPress={() => openNudge(item)}
+                style={({ pressed }) => [styles.nudgeCard, pressed && styles.attentionCardPressed]}>
+                <View style={styles.attentionIcon}>
+                  <HandWaving size={20} color={colors.ink} weight="bold" />
+                </View>
+                <View style={styles.attentionCopy}>
+                  <Text style={styles.attentionHeadline}>{item.title}</Text>
+                  {item.body ? <Text style={styles.attentionSubline}>{item.body}</Text> : null}
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Dismiss"
+                  hitSlop={8}
+                  onPress={() => void dismissNudge(item.id)}
+                  style={styles.nudgeDismiss}>
+                  <X size={14} color={colors.muted} weight="bold" />
+                </Pressable>
+              </Pressable>
+            ))}
+
             {session && homeEventCard.type !== 'none' ? (
               <HomeEventCard
                 state={homeEventCard}
@@ -392,7 +451,7 @@ export default function HomeScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHead}>
                 <Text style={styles.sectionTitle}>Recent connections</Text>
-                {session && sortedConnections.length > 3 ? (
+                {session && sortedConnections.length > 2 ? (
                   <Pressable accessibilityRole="button" onPress={() => router.push('/connections')}>
                     <Text style={styles.viewAll}>View all</Text>
                   </Pressable>
@@ -621,6 +680,32 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   attentionCardPressed: { opacity: 0.92 },
+  nudgeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.x4,
+    paddingVertical: spacing.x5,
+    paddingLeft: spacing.x5,
+    paddingRight: spacing.x8,
+    borderRadius: radius.large,
+    backgroundColor: colors.surface,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 14,
+    elevation: 2,
+  },
+  nudgeDismiss: {
+    position: 'absolute',
+    top: spacing.x2,
+    right: spacing.x2,
+    width: 26,
+    height: 26,
+    borderRadius: radius.round,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceMuted,
+  },
   attentionRingWrap: { width: 54, height: 54 },
   attentionUrgentDot: {
     position: 'absolute',
