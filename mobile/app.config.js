@@ -246,10 +246,14 @@ module.exports = {
       publicCardBaseUrl: BACKEND.publicCardBaseUrl,
       supabaseUrl: BACKEND.supabaseUrl,
       supabaseAnonKey: BACKEND.supabaseAnonKey,
-      // Not yet provisioned — the address-autocomplete field falls back to a
-      // plain text input until this is set. Same key for both variants
-      // (Places is billing-account-scoped, not staging/production-split).
-      googlePlacesApiKey: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || "",
+      // Hardcoded rather than env-driven for the same reason as sentryDsn
+      // above — EAS builds never see local .env, so this silently fell back
+      // to "" (plain text input, no autocomplete) on every real build.
+      // Google's own model for mobile client keys is app-restriction in
+      // Cloud Console, not secrecy — same key for both variants (Places is
+      // billing-account-scoped, not staging/production-split). Confirm this
+      // key is restricted to this app's package name/SHA-1 + bundle ID.
+      googlePlacesApiKey: "AIzaSyDnAdi0gDvSzo9Y45aSZ83UBtVSCQ7CMwA",
       // DSNs are not secret (Sentry's own docs: safe to expose client-side,
       // same trust tier as the Supabase anon key above) — hardcoded here
       // rather than via env var since this project never wires EAS env vars

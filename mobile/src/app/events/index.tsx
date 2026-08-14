@@ -509,13 +509,19 @@ export default function EventsScreen() {
   );
 }
 
-type AddEventForm = { title: string; location: string; start: Date; end: Date | null; sourceUrl: string };
+type AddEventForm = { title: string; location: string; start: Date | null; end: Date | null; sourceUrl: string };
 
 function defaultForm(): AddEventForm {
-  const start = new Date();
-  start.setMinutes(0, 0, 0);
-  start.setHours(start.getHours() + 1);
-  return { title: '', location: '', start, end: null, sourceUrl: '' };
+  return { title: '', location: '', start: null, end: null, sourceUrl: '' };
+}
+
+// Seed value for opening a picker on a field that has no date yet — the
+// next round hour, matching what "Starts" used to default the whole form to.
+function nextHourDefault(): Date {
+  const date = new Date();
+  date.setMinutes(0, 0, 0);
+  date.setHours(date.getHours() + 1);
+  return date;
 }
 
 // choose: the two big entry options. link: paste + Continue. link-loading:
@@ -571,7 +577,7 @@ function AddEventSheet({
 
   function openAndroidPicker(field: 'start' | 'end') {
     const current = (field === 'start' ? form.start : form.end)
-      ?? new Date(form.start.getTime() + 60 * 60 * 1000);
+      ?? (field === 'end' && form.start ? new Date(form.start.getTime() + 60 * 60 * 1000) : nextHourDefault());
     DateTimePickerAndroid.open({
       value: current,
       mode: 'date',
@@ -610,7 +616,7 @@ function AddEventSheet({
     setError('');
     try {
       const extracted = await extractEventFromLink(accessToken, url);
-      const dates = resolveExtractedEventDates(extracted, defaultForm().start);
+      const dates = resolveExtractedEventDates(extracted);
       setForm({
         title: extracted.title || '',
         location: extracted.location || '',
@@ -635,6 +641,10 @@ function AddEventSheet({
     }
     if (dateNeedsReview) {
       setError('Choose and confirm the event’s correct start date and time.');
+      return;
+    }
+    if (!form.start) {
+      setError('Choose the event’s start date and time.');
       return;
     }
     if (form.end && form.end.getTime() <= form.start.getTime()) {
@@ -762,7 +772,9 @@ function AddEventSheet({
             <Text style={styles.label}>Starts</Text>
             <Pressable accessibilityRole="button" onPress={() => openPicker('start')} style={styles.dateButton}>
               <CalendarBlank size={16} color={colors.ink} weight="bold" />
-              <Text style={styles.dateButtonText}>{formatEventWhen({ startsAt: form.start.toISOString() })}</Text>
+              <Text style={styles.dateButtonText}>
+                {form.start ? formatEventWhen({ startsAt: form.start.toISOString() }) : 'Not set'}
+              </Text>
             </Pressable>
             {dateNotice ? <Text style={styles.dateNotice}>{dateNotice}</Text> : null}
           </View>
@@ -794,7 +806,8 @@ function AddEventSheet({
             setIosPicker(null);
           }}>Use this time</Button>}>
           <DateTimePicker
-            value={(iosPicker === 'start' ? form.start : form.end) ?? new Date()}
+            value={(iosPicker === 'start' ? form.start : form.end)
+              ?? (iosPicker === 'end' && form.start ? new Date(form.start.getTime() + 60 * 60 * 1000) : nextHourDefault())}
             mode="datetime"
             display="spinner"
             onChange={(_, date) => {
