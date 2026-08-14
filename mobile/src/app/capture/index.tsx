@@ -26,6 +26,7 @@ import { HistoryToolbar } from '@/components/history-toolbar';
 import { CaptureDeleteSheet } from '@/components/capture-delete-sheet';
 import { OfflineBanner } from '@/components/offline-banner';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
+import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { CaptureListSkeleton } from '@/components/skeleton';
 import { useAuth } from '@/features/auth/auth-context';
 import {
@@ -99,6 +100,7 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
   const [errorMessage, setErrorMessage] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<EncounterSummary | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteSuccessOpen, setDeleteSuccessOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<CaptureSort>('recent');
   const [sortOpen, setSortOpen] = useState(false);
@@ -272,6 +274,7 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
       await deleteLocalRecording(deleteTarget.id);
       setEncounters((current) => current.filter((item) => item.id !== deleteTarget.id));
       setDeleteTarget(null);
+      setDeleteSuccessOpen(true);
     } catch (caught) {
       setErrorMessage(caught instanceof Error ? caught.message : 'Could not delete this capture.');
       setErrorSheetOpen(true);
@@ -550,6 +553,13 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
         loading={deleting}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={() => void confirmDeleteEncounter()}
+      />
+
+      <OutcomeSuccessSheet
+        visible={deleteSuccessOpen}
+        title="Deleted"
+        message="This capture has been deleted."
+        onClose={() => setDeleteSuccessOpen(false)}
       />
 
       <OutcomeErrorSheet
