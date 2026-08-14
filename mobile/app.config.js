@@ -42,7 +42,7 @@ module.exports = {
     name: IS_STAGING ? "ehllo Staging" : "ehllo",
     owner: "rafreo",
     slug: EAS_PROJECT.slug,
-    version: "1.0.2",
+    version: "1.1.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     // Keep the AfterMeet schemes as inbound aliases for links already shared
@@ -77,7 +77,6 @@ module.exports = {
       },
     },
     android: {
-      versionCode: 3,
       package: bundleId,
       adaptiveIcon: {
         backgroundColor: "#87EA5C",
