@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState } from 'react-native';
 
 import { useAuth } from '@/features/auth/auth-context';
 import {
@@ -22,6 +21,7 @@ import { syncCardToolsForCard } from '@/features/card/card-tools-sync';
 import { uploadCardImagesForPublish } from '@/features/card/card-image-upload';
 import { describePublishError, formatPublishError, type PublishCardResult, validateCardForPublish } from '@/features/card/publish-card';
 import { readEnv } from '@/lib/env';
+import { useForegroundSync } from '@/lib/background-sync';
 import { mobileFetch } from '@/lib/mobile-api';
 import { clearPublishedBaseline, ensurePublishedBaseline, writePublishedBaseline } from '@/lib/published-baseline';
 import { getSupabase } from '@/lib/supabase';
@@ -282,25 +282,7 @@ export function CardProvider({ children }: PropsWithChildren) {
     }
   }, [persistCards, saveRemoteCard, session, setCardDirty]);
 
-  useEffect(() => {
-    if (!session) return;
-    const task = setTimeout(() => { void sync(); }, 0);
-    return () => clearTimeout(task);
-  }, [session, sync]);
-
-  useEffect(() => {
-    if (!session) return;
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') void sync();
-    });
-    const interval = setInterval(() => {
-      if (AppState.currentState === 'active') void sync();
-    }, 30_000);
-    return () => {
-      subscription.remove();
-      clearInterval(interval);
-    };
-  }, [session, sync]);
+  useForegroundSync(Boolean(session), sync);
 
   const setPrimaryCard = useCallback(async (id: string) => {
     const currentCards = cardsRef.current;
