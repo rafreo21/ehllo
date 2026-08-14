@@ -1115,8 +1115,6 @@ const styles = StyleSheet.create({
     gap: spacing.x5,
     padding: spacing.x6,
     borderRadius: radius.large,
-    borderWidth: 1,
-    borderColor: colors.line,
     backgroundColor: colors.surface,
   },
   recordingLoading: {

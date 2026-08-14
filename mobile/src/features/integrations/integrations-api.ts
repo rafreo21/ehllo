@@ -3,12 +3,14 @@ import { mobileFetch } from '@/lib/mobile-api';
 export type ConnectedAccountStatus = {
   google: {
     connected: boolean;
+    needsReconnect: boolean;
     email: string;
     scopes: string[];
     capabilities: { gmail: boolean; calendar: boolean; drive: boolean };
   };
   microsoft: {
     connected: boolean;
+    needsReconnect: boolean;
     email: string;
     scopes: string[];
     capabilities: { outlook: boolean; calendar: boolean; onedrive: boolean };
@@ -25,12 +27,14 @@ export async function fetchConnectedAccounts(accessToken: string): Promise<Conne
   return payload.status ?? {
     google: {
       connected: false,
+      needsReconnect: false,
       email: '',
       scopes: [],
       capabilities: { gmail: false, calendar: false, drive: false },
     },
     microsoft: {
       connected: false,
+      needsReconnect: false,
       email: '',
       scopes: [],
       capabilities: { outlook: false, calendar: false, onedrive: false },

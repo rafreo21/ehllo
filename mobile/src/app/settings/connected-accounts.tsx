@@ -203,6 +203,7 @@ export default function ConnectedAccountsScreen() {
         {PROVIDERS.map((provider) => {
           const account = providerStatus(provider.id);
           const connected = Boolean(account?.connected);
+          const needsReconnect = Boolean(account?.needsReconnect);
           const loading = busyProvider === provider.id;
 
           return (
@@ -212,7 +213,9 @@ export default function ConnectedAccountsScreen() {
                 <View style={styles.cardCopy}>
                   <Text style={styles.cardTitle}>{provider.name}</Text>
                   <Text style={styles.cardDescription}>
-                    {connected && account?.email ? account.email : provider.description}
+                    {needsReconnect
+                      ? 'Connection stopped working — reconnect to keep syncing.'
+                      : connected && account?.email ? account.email : provider.description}
                   </Text>
                   {provider.id === 'google' && connected ? (
                     <Text style={styles.capabilityLine}>
@@ -251,6 +254,10 @@ export default function ConnectedAccountsScreen() {
                   <Text style={styles.soon}>Coming soon</Text>
                 ) : loading ? (
                   <ActivityIndicator color={colors.ink} />
+                ) : needsReconnect ? (
+                  <PillButton tone="solid" onPress={() => void connectProvider(provider.id as 'google' | 'microsoft')}>
+                    Reconnect
+                  </PillButton>
                 ) : connected ? (
                   provider.id === 'google' && !status?.google.capabilities.drive ? (
                     <PillButton tone="solid" onPress={() => void connectProvider('google')}>Reconnect for Drive</PillButton>

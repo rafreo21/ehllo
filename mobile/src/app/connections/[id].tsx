@@ -699,8 +699,6 @@ const styles = StyleSheet.create({
     gap: spacing.x3,
     padding: spacing.x4,
     borderRadius: radius.medium,
-    borderWidth: 1,
-    borderColor: colors.line,
     backgroundColor: colors.surface,
   },
   timelineMarker: {

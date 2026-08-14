@@ -52,8 +52,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.x3,
     borderRadius: radius.medium,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
   },
   pressed: { opacity: 0.88 },
   iconWrap: {
