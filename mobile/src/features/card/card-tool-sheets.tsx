@@ -534,8 +534,6 @@ const styles = StyleSheet.create({
     padding: spacing.x4,
     borderRadius: radius.medium,
     backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.line,
   },
   signaturePreview: {
     flexDirection: 'row',
@@ -543,8 +541,6 @@ const styles = StyleSheet.create({
     padding: spacing.x4,
     gap: spacing.x4,
     backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.line,
   },
   signaturePhoto: {
     width: 64,

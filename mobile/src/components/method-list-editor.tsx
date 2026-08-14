@@ -3,7 +3,17 @@ import { DotsSixVertical, Plus, Trash } from 'phosphor-react-native';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  runOnJS,
+  type SharedValue,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
+
+// Matches the row's minHeight + the list's inter-row gap, so a dragged row's
+// translation lines up with exactly one neighbor's slot per step.
+const ROW_HEIGHT = 58 + spacing.x2;
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { PhoneInput } from '@/components/phone-input';
@@ -34,32 +44,65 @@ function MethodRow({
   total,
   onOpen,
   onRemove,
-  onMove,
+  activeIndex,
+  dragY,
+  onDragEnd,
 }: {
   method: ContactMethod;
   index: number;
   total: number;
   onOpen: () => void;
   onRemove: () => void;
-  onMove: (from: number, direction: -1 | 1) => void;
+  activeIndex: SharedValue<number>;
+  dragY: SharedValue<number>;
+  onDragEnd: (from: number, to: number) => void;
 }) {
-  const offsetY = useSharedValue(0);
+  function targetIndexFor(from: number, translationY: number) {
+    const raw = from + Math.round(translationY / ROW_HEIGHT);
+    return Math.max(0, Math.min(total - 1, raw));
+  }
 
   const pan = Gesture.Pan()
     .activeOffsetY([-8, 8])
+    .onStart(() => {
+      activeIndex.value = index;
+    })
     .onUpdate((event) => {
       // Reanimated shared values are intentionally mutable on the UI thread.
-      offsetY.value = event.translationY;
+      dragY.value = event.translationY;
     })
     .onEnd((event) => {
-      if (event.translationY < -36 && index > 0) runOnJS(onMove)(index, -1);
-      else if (event.translationY > 36 && index < total - 1) runOnJS(onMove)(index, 1);
-      offsetY.value = withSpring(0);
+      const from = index;
+      const to = targetIndexFor(from, event.translationY);
+      dragY.value = withSpring(0);
+      activeIndex.value = -1;
+      if (to !== from) runOnJS(onDragEnd)(from, to);
     });
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: offsetY.value * 0.15 }],
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    const isActive = activeIndex.value === index;
+    if (isActive) {
+      return {
+        transform: [{ translateY: dragY.value }, { scale: 1.02 }],
+        zIndex: 10,
+        elevation: 6,
+      };
+    }
+    if (activeIndex.value === -1) {
+      return { transform: [{ translateY: withSpring(0) }, { scale: 1 }], zIndex: 0, elevation: 0 };
+    }
+    // Another row is being dragged — shift out of the way if this row sits
+    // between its start and where it would currently land.
+    const target = targetIndexFor(activeIndex.value, dragY.value);
+    let shift = 0;
+    if (activeIndex.value < target && index > activeIndex.value && index <= target) shift = -ROW_HEIGHT;
+    else if (activeIndex.value > target && index < activeIndex.value && index >= target) shift = ROW_HEIGHT;
+    return {
+      transform: [{ translateY: withSpring(shift) }, { scale: 1 }],
+      zIndex: 0,
+      elevation: 0,
+    };
+  });
 
   return (
     <Animated.View style={[styles.row, animatedStyle]}>
@@ -88,6 +131,8 @@ export function MethodListEditor({ methods, onChange }: MethodListEditorProps) {
   const [editing, setEditing] = useState<ContactMethod | null>(null);
   const [error, setError] = useState('');
   const addedTypes = new Set(methods.map((method) => method.type));
+  const activeIndex = useSharedValue(-1);
+  const dragY = useSharedValue(0);
 
   function openNew(type: ContactMethodType) {
     if (addedTypes.has(type)) return;
@@ -121,11 +166,11 @@ export function MethodListEditor({ methods, onChange }: MethodListEditorProps) {
     closeSheet();
   }
 
-  function moveMethod(index: number, direction: -1 | 1) {
-    const nextIndex = index + direction;
-    if (nextIndex < 0 || nextIndex >= methods.length) return;
+  function moveMethod(from: number, to: number) {
+    if (from === to || from < 0 || to < 0 || from >= methods.length || to >= methods.length) return;
     const next = [...methods];
-    [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
     onChange(next);
     void Haptics.selectionAsync();
   }
@@ -143,7 +188,9 @@ export function MethodListEditor({ methods, onChange }: MethodListEditorProps) {
               total={methods.length}
               onOpen={() => openExisting(method)}
               onRemove={() => onChange(methods.filter((item) => item.id !== method.id))}
-              onMove={moveMethod}
+              activeIndex={activeIndex}
+              dragY={dragY}
+              onDragEnd={moveMethod}
             />
           ))}
         </View>

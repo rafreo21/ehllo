@@ -570,8 +570,6 @@ const styles = StyleSheet.create({
     padding: spacing.x5,
     borderRadius: radius.large,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
   },
   sectionHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
   sectionIcon: {
@@ -690,8 +688,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.x2,
     borderRadius: radius.medium,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
   },
   statValue: { color: colors.ink, fontSize: 16, fontWeight: '900' },
   statSwatch: {
@@ -710,8 +706,6 @@ const styles = StyleSheet.create({
     padding: spacing.x4,
     borderRadius: radius.medium,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
   },
   reviewOptionCopy: { flex: 1, gap: 4 },
   reviewOptionTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
