@@ -164,10 +164,8 @@ export function EventCard({
 const styles = StyleSheet.create({
   card: {
     padding: spacing.x4,
-    borderRadius: radius.large,
+    borderRadius: radius.medium,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
   },
   cardPressed: { opacity: 0.92 },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },

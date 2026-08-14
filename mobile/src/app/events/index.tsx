@@ -409,6 +409,23 @@ export default function EventsScreen() {
           {activeTab === 'upcoming' ? (
             upcomingCandidates.length || upcoming.length ? (
               <>
+                {upcoming.length ? (
+                  <View style={styles.eventGroup}>
+                    <Text style={styles.eventGroupTitle}>You’re going</Text>
+                    {upcoming.map((event) => (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        variant={isEventCurrentlyHappening(event) ? 'current' : 'going'}
+                        busy={busyId === event.id}
+                        onNotGoing={(item) => void decide(item, 'not_going')}
+                        onLeave={isEventCurrentlyHappening(event) ? (item) => void leaveEvent(item) : undefined}
+                        onInvite={(item) => void openInvitations(item)}
+                        onManage={event.source !== 'calendar' ? (item) => { setManageError(''); setManageEvent(item); } : undefined}
+                      />
+                    ))}
+                  </View>
+                ) : null}
                 {upcomingCandidates.length ? (
                   <View style={styles.eventGroup}>
                     <View style={styles.eventGroupHeading}>
@@ -423,23 +440,6 @@ export default function EventsScreen() {
                         busy={busyId === event.id}
                         onGoing={(item) => void decide(item, 'going')}
                         onNotGoing={(item) => void decide(item, 'not_going')}
-                      />
-                    ))}
-                  </View>
-                ) : null}
-                {upcoming.length ? (
-                  <View style={styles.eventGroup}>
-                    <Text style={styles.eventGroupTitle}>You’re going</Text>
-                    {upcoming.map((event) => (
-                      <EventCard
-                        key={event.id}
-                        event={event}
-                        variant={isEventCurrentlyHappening(event) ? 'current' : 'going'}
-                        busy={busyId === event.id}
-                        onNotGoing={(item) => void decide(item, 'not_going')}
-                        onLeave={isEventCurrentlyHappening(event) ? (item) => void leaveEvent(item) : undefined}
-                        onInvite={(item) => void openInvitations(item)}
-                        onManage={event.source !== 'calendar' ? (item) => { setManageError(''); setManageEvent(item); } : undefined}
                       />
                     ))}
                   </View>

@@ -3,6 +3,8 @@ export type IntegrationProvider = "google" | "microsoft";
 export type ConnectedAccountStatus = {
   google: {
     connected: boolean;
+    /** A row exists but its refresh token no longer works — the UI should offer "Reconnect", not "Disconnect". */
+    needsReconnect: boolean;
     email: string;
     scopes: string[];
     capabilities: {
@@ -13,6 +15,7 @@ export type ConnectedAccountStatus = {
   };
   microsoft: {
     connected: boolean;
+    needsReconnect: boolean;
     email: string;
     scopes: string[];
     capabilities: {
@@ -60,12 +63,14 @@ export function emptyConnectedAccountStatus(): ConnectedAccountStatus {
   return {
     google: {
       connected: false,
+      needsReconnect: false,
       email: "",
       scopes: [],
       capabilities: { gmail: false, calendar: false, drive: false },
     },
     microsoft: {
       connected: false,
+      needsReconnect: false,
       email: "",
       scopes: [],
       capabilities: { outlook: false, calendar: false, onedrive: false },

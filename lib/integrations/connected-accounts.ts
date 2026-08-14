@@ -39,9 +39,16 @@ export async function connectedAccountStatus(user: AppUser, client?: SupabaseCli
   status.configured.microsoft = Boolean(process.env.MICROSOFT_INTEGRATION_CLIENT_ID && process.env.MICROSOFT_INTEGRATION_CLIENT_SECRET);
 
   for (const row of await listConnectedAccounts(user, client)) {
+    // A row existing only means we once connected — it says nothing about
+    // whether the refresh token still works. Check it for real so a dead
+    // connection shows "Reconnect" instead of a falsely healthy "Disconnect".
+    const tokenResult = await getConnectedAccountAccessTokenStatus(user, row.provider, client);
+    const needsReconnect = tokenResult.status === "needs_reconnect";
+
     if (row.provider === "google") {
       status.google = {
         connected: true,
+        needsReconnect,
         email: row.account_email,
         scopes: row.scopes,
         capabilities: {
@@ -54,6 +61,7 @@ export async function connectedAccountStatus(user: AppUser, client?: SupabaseCli
     if (row.provider === "microsoft") {
       status.microsoft = {
         connected: true,
+        needsReconnect,
         email: row.account_email,
         scopes: row.scopes,
         capabilities: {
