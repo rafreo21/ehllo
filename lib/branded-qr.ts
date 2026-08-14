@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import QRCode from "qrcode";
 
-import { AFTERMEET_LOGO_PNG_BASE64 } from "./aftermeet-logo-base64.ts";
+import { EHLLO_LOGO_PNG_BASE64 } from "./ehllo-logo-base64.ts";
 import { loadSharp, sharpAvailable } from "./sharp-runtime.ts";
 
 import type { CardVcardInput } from "./vcard-export.ts";
@@ -15,7 +15,7 @@ const QR_OPTIONS = {
   color: { dark: "#163300", light: "#FFFFFF" },
 };
 
-const EMBEDDED_LOGO_BUFFER = Buffer.from(AFTERMEET_LOGO_PNG_BASE64, "base64");
+const EMBEDDED_LOGO_BUFFER = Buffer.from(EHLLO_LOGO_PNG_BASE64, "base64");
 
 let logoBufferPromise: Promise<Buffer> | null = null;
 
