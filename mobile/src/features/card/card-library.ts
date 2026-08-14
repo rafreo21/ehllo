@@ -56,6 +56,7 @@ export function remoteRowToMobileCard(remote: {
   show_company_details?: boolean | null;
   status: 'draft' | 'published' | 'archived';
   updated_at?: string | null;
+  is_primary?: boolean | null;
   card_methods?: {
     id: string;
     method_type: MobileCard['methods'][number]['type'];
@@ -79,6 +80,7 @@ export function remoteRowToMobileCard(remote: {
     showCompanyDetails: remote.show_company_details ?? true,
     status: remote.status === 'published' ? 'published' : 'draft',
     serverUpdatedAt: remote.updated_at || undefined,
+    isPrimary: remote.is_primary ?? false,
     methods: (remote.card_methods || [])
       .sort((left, right) => left.sort_order - right.sort_order)
       .map((method) => ({

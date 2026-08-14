@@ -27,4 +27,5 @@ export type MobileCard = {
   status: 'draft' | 'published';
   methods: ContactMethod[];
   serverUpdatedAt?: string;
+  isPrimary?: boolean;
 };
