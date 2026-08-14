@@ -257,8 +257,18 @@ export function CardProvider({ children }: PropsWithChildren) {
             .filter((item) => item.status === 'published')
             .map((item) => ensurePublishedBaseline(item)),
         );
-        const nextActiveId = getActiveCardId(remoteCards, activeCardIdRef.current);
+        const remotePrimary = remoteCards.find((item) => item.isPrimary);
+        const nextActiveId = remotePrimary?.id || getActiveCardId(remoteCards, activeCardIdRef.current);
         await persistCards(remoteCards, nextActiveId);
+        if (!remotePrimary && nextActiveId) {
+          // Pre-migration workspace with no server-side primary yet — adopt this
+          // device's current pick as the canonical one so other devices see it.
+          try {
+            await supabase.rpc('set_primary_card', { p_card_id: nextActiveId });
+          } catch {
+            // Will retry on the next sync.
+          }
+        }
         return;
       }
 
@@ -286,9 +296,19 @@ export function CardProvider({ children }: PropsWithChildren) {
 
   const setPrimaryCard = useCallback(async (id: string) => {
     const currentCards = cardsRef.current;
-    if (!currentCards.some((item) => item.id === id)) return;
+    const target = currentCards.find((item) => item.id === id);
+    if (!target) return;
     if (id === activeCardIdRef.current) return;
     await persistCards(currentCards, id);
+    if (target.id) {
+      const supabase = getSupabase();
+      try {
+        await supabase?.rpc('set_primary_card', { p_card_id: target.id });
+      } catch {
+        // Local pick still applies; the next successful sync reconciles this device
+        // against whichever card the server has marked primary.
+      }
+    }
   }, [persistCards]);
 
   const createCard = useCallback(async (seed: Partial<MobileCard> = {}) => {
