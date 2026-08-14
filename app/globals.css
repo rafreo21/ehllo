@@ -253,7 +253,7 @@ footer a { font-size: 12px; text-decoration: underline; text-underline-offset: 5
 .draft-horizontal-title { margin: clamp(30px,5vh,60px) 0 32px; display: grid; grid-template-columns: 1.2fr .6fr; gap: 8vw; align-items: end; }
 .draft-horizontal-title h2 { font-size: clamp(48px,6.3vw,92px); }
 .draft-horizontal-title p { max-width: 470px; margin: 0; color: var(--muted); font-size: 18px; line-height: 1.55; }
-.draft-horizontal-viewport { flex: 1; min-height: 320px; overflow: visible; }
+.draft-horizontal-viewport { flex: 1; min-height: 320px; overflow: hidden; }
 .draft-horizontal-track { height: 100%; display: flex; gap: 18px; transform: translateX(calc(-1 * var(--loop-shift,0px))); will-change: transform; transition: transform .08s linear; }
 .draft-horizontal-track article { width:clamp(360px,38vw,580px); height:100%; min-height:0; flex:0 0 auto; padding:26px; border-radius:13px; background:white; display:grid; grid-template-rows:42px minmax(0,1fr) auto; gap:20px; position:relative; box-shadow:0 8px 28px rgba(22,51,0,.04); }
 .draft-horizontal-track article:last-child { background: var(--navy); color: white; }
@@ -410,29 +410,38 @@ footer a { font-size: 12px; text-decoration: underline; text-underline-offset: 5
   .draft-app-tabs button strong { font-size:16px; }
 }
 @media (max-width: 850px) {
-  .draft-horizontal { height: auto; padding: 90px 0; overflow: hidden; }
-  .draft-horizontal-sticky { height: auto; min-height: 0; padding: 0 20px; position: static; overflow: visible; }
+  .draft-horizontal { height: 300svh; padding: 0; overflow: clip; }
+  .draft-horizontal-sticky { height: calc(100svh - 70px); min-height: 0; padding: 26px 20px 18px; position: sticky; top: 70px; overflow: hidden; }
   .draft-horizontal-title { grid-template-columns: 1fr; }
   .draft-horizontal-progress { width: 42vw; }
   .draft-horizontal-progress span { width: 42vw; }
-  .draft-horizontal-viewport { margin: 0 -20px; padding: 0 20px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
-  .draft-horizontal-viewport::-webkit-scrollbar { display:none; }
-  .draft-horizontal-track { width: max-content; height: clamp(430px,68vh,540px); transform: none; }
-  .draft-horizontal-track article { width: min(86vw,440px); padding:22px; gap:16px; grid-template-rows:42px minmax(0,1fr) auto; scroll-snap-align: center; }
+  .draft-horizontal-viewport { min-height:0; margin:0 -20px; padding:0 20px; overflow:hidden; }
+  .draft-horizontal-track { width:max-content; height:100%; }
+  .draft-horizontal-track article { width:min(86vw,440px); padding:22px; gap:16px; grid-template-rows:42px minmax(0,1fr) auto; }
   .draft-loop-card-copy { min-height:0; }
-  .draft-horizontal-hint span { font-size: 0; }
-  .draft-horizontal-hint span::after { content:"Swipe"; font-size:10px; }
+  .draft-horizontal-hint { padding-top:10px; }
 }
 @media (max-width: 520px) {
-  .draft-horizontal { padding:72px 0; }
-  .draft-horizontal-title { margin:28px 0 26px; gap:18px; }
+  .draft-horizontal { height:320svh; }
+  .draft-horizontal-sticky { padding:20px 16px 14px; }
+  .draft-horizontal-title { margin:20px 0 18px; gap:12px; }
   .draft-horizontal-title h2 { font-size:clamp(42px,13vw,58px); }
-  .draft-horizontal-title p { font-size:16px; }
-  .draft-horizontal-track { height:440px; gap:12px; }
+  .draft-horizontal-title p { font-size:15px; line-height:1.4; }
+  .draft-horizontal-viewport { margin:0 -16px; padding:0 16px; }
+  .draft-horizontal-track { gap:12px; }
   .draft-horizontal-track article { width:min(88vw,390px); padding:18px; gap:14px; }
   .draft-loop-visual .draft-loop-example { left:10px; right:10px; bottom:10px; padding:11px 13px; }
   .draft-loop-example strong { font-size:18px; }
   .draft-loop-card-copy h3 { font-size:26px; }
   .draft-loop-card-copy p { font-size:14px; }
+}
+
+@media (min-width: 851px) and (max-height: 760px) {
+  .draft-horizontal-sticky { height:calc(100vh - 78px); min-height:0; top:78px; padding-top:24px; padding-bottom:20px; }
+  .draft-horizontal-title { margin:20px 0 20px; }
+  .draft-horizontal-title h2 { font-size:clamp(44px,5.2vw,70px); }
+  .draft-horizontal-viewport { min-height:0; }
+  .draft-horizontal-track article { padding:20px; gap:14px; }
+  .draft-horizontal-hint { padding-top:10px; }
 }
 @media (prefers-reduced-motion: reduce) { .homepage-draft *, .homepage-draft *::before, .homepage-draft *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } .motion-ready .draft-reveal, .motion-ready .draft-reveal-item { opacity: 1; transform: none; } }
