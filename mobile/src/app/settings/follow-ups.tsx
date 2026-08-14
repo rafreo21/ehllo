@@ -13,7 +13,7 @@ import { HistoryToolbar } from '@/components/history-toolbar';
 import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { CaptureListSkeleton } from '@/components/skeleton';
-import { Body, Button, HeaderActionButton, PageHeader } from '@/components/ui';
+import { Body, HeaderActionButton, PageHeader, PillButton } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { fetchFollowUps, type FollowUpItem } from '@/features/follow-ups/follow-up-api';
 import {
@@ -189,10 +189,13 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
           ) : null}
 
           {!historyOnly && session ? (
-            <Button variant="secondary" style={styles.addButton} onPress={() => router.push('/quick-follow-up')}>
-              <Plus size={18} color={colors.ink} weight="bold" />
+            <PillButton
+              tone="solid"
+              icon={<Plus size={16} color={colors.white} weight="bold" />}
+              style={styles.addButton}
+              onPress={() => router.push('/quick-follow-up')}>
               Add follow-up
-            </Button>
+            </PillButton>
           ) : null}
 
           {historyOnly && session && hasFollowUps ? (

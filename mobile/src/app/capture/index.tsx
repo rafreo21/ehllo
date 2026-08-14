@@ -21,7 +21,7 @@ import {
 } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
-import { Body, Button, HeaderActionButton, PageHeader, ScreenFrame } from '@/components/ui';
+import { Body, Button, HeaderActionButton, PageHeader, PillButton, ScreenFrame } from '@/components/ui';
 import { HistoryToolbar } from '@/components/history-toolbar';
 import { CaptureDeleteSheet } from '@/components/capture-delete-sheet';
 import { OfflineBanner } from '@/components/offline-banner';
@@ -300,12 +300,18 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
           />
           <OfflineBanner style={styles.offlineBanner} />
           {!historyOnly ? <View style={styles.startActions}>
-            <Button onPress={() => void beginFreshCapture('recording')}>
-              <Microphone size={18} color={colors.ink} weight="fill" /> Start recording
-            </Button>
-            <Button variant="secondary" onPress={() => void beginFreshCapture('quick_context')}>
-              <Notebook size={18} color={colors.ink} weight="bold" /> Add notes
-            </Button>
+            <PillButton
+              tone="solid"
+              icon={<Microphone size={16} color={colors.white} weight="fill" />}
+              onPress={() => void beginFreshCapture('recording')}>
+              Start recording
+            </PillButton>
+            <PillButton
+              tone="outline"
+              icon={<Notebook size={16} color={colors.muted} weight="bold" />}
+              onPress={() => void beginFreshCapture('quick_context')}>
+              Add notes
+            </PillButton>
           </View> : null}
         </View>
 
