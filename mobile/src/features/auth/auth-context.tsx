@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import type { Session } from '@supabase/supabase-js';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
@@ -88,6 +89,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
       });
     });
   }, [session, supabase]);
+
+  useEffect(() => {
+    Sentry.setUser(session?.user ? { id: session.user.id } : null);
+  }, [session?.user]);
 
   const value = useMemo<AuthValue>(() => ({
     session,
