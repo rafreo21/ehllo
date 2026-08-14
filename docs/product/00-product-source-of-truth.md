@@ -246,13 +246,20 @@ Notifications are alerts about work, not a second follow-up system.
 - Settings contain one coherent Device Notifications area for permission, timing, per-type toggles, and reminder preferences, shared in shape (not in per-device state) between mobile and web.
 - Email reminders remain a separate delivery-channel preference, not a duplicate settings section.
 - Remote push delivery is implemented server-side: a dispatcher (`lib/push-dispatch-server.ts`) sends a real Expo push for all four notification types, respecting each per-type preference, recording per-token delivery status/error (no secrets) for debugging, and deactivating a token the moment Expo reports it as unregistered. Every dispatch is best-effort — a failed or unconfigured push never blocks the notification row from being created, and never fails the request that triggered it (an encounter save, the reminder cron, or a guest committing to a follow-up).
-- The one remaining gap is obtaining a valid push token to dispatch *to*: that requires an EAS project id, created by running `eas init` against an authenticated Expo account — a one-time step this repo cannot perform on its own (no Expo account access). Until it exists, `registerPushToken()` on each device correctly no-ops rather than claiming success; Settings only ever reports "background alerts are active" when a token was genuinely registered. Local scheduled notifications and the in-app Supabase-backed centre work fully regardless.
+- Staging and production now have environment-specific EAS project IDs. A signed-in physical device registers its Expo push token only after notification permission and the Device Notifications preference are both enabled; registration is retried whenever the app returns to the foreground. Settings only reports "background alerts are on" after the current device has successfully registered. Local scheduled notifications and the in-app Supabase-backed centre remain available even when remote registration fails.
 
 ### 19. Settings and Connected Accounts
 
 Settings owns profile, authentication, notification preferences, storage preferences, privacy, and connected accounts. Connected Accounts reports provider status and actionable recovery states.
 
 External providers may supply storage or execution, but ehllo remains responsible for clear errors, durable metadata, and safe fallbacks.
+
+#### Calendar integrations
+
+- Calendar availability is a provider health state, not an inference from an empty event list: `ok`, `not_connected`, `needs_reconnect`, or `error`.
+- Events must expose recovery for `not_connected`, `needs_reconnect`, and `error`, alongside the most recent successful sync time when available.
+- A provider is production-ready only after its deployed environment has completed an expired-token refresh and persisted the replacement access token. A successful initial OAuth connection alone is insufficient.
+- A dismissed calendar candidate is suppressed only for that provider-event occurrence, keyed by provider event identity and rounded start time. An event title alone must never suppress future events.
 
 ### 20. Public shared experiences
 
@@ -298,8 +305,8 @@ Every flow must include:
 - Native background recording and interruption recovery
 - Reliable transcription and speaker assignment
 - Capture draft/review lifecycle shared across clients
-- An EAS project id, the one remaining external step before any device can hold a valid push token for the already-built remote-push dispatcher to send to (see Notifications)
-- Explicit conflict protection for cross-device edits is implemented for Encounters only; Cards, Contacts, and other user-editable records remain last-write-wins
+- Physical-device evidence for remote push delivery on each release platform; EAS identity, token registration, and server dispatch are implemented, but simulator registration is not delivery proof
+- Explicit conflict protection is implemented for Encounters, Cards, Contacts, Events, and follow-up lifecycle updates; extend it when another shared user-editable object is introduced
 - Three-day recording-sharing lifecycle and expiry jobs
 - Shared component and copy contracts across mobile and consumer web
 - Connected storage/provider health and recovery

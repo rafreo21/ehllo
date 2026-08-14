@@ -56,11 +56,11 @@ export default function ActivatePage() {
 
   function exportJson() {
     const bundle = buildCrmExportBundle(contacts, encounters);
-    downloadBlob(`aftermeet-export-${Date.now()}.json`, JSON.stringify(bundle, null, 2), "application/json");
+    downloadBlob(`ehllo-export-${Date.now()}.json`, JSON.stringify(bundle, null, 2), "application/json");
   }
 
   function exportCsv() {
-    downloadBlob(`aftermeet-contacts-${Date.now()}.csv`, buildCrmExportCsv(contacts), "text/csv");
+    downloadBlob(`ehllo-contacts-${Date.now()}.csv`, buildCrmExportCsv(contacts), "text/csv");
   }
 
   async function syncAllToHubSpot() {

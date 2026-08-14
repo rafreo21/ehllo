@@ -6,7 +6,7 @@ ehllo uses two QR modes on **Quick Share**. Every other share surface defaults t
 
 - **Quick Share:** toggle **Online contact QR** ON
 - **Widgets, Wallet, tap-to-share, capture flow, email signature, virtual background:** always online
-- QR encodes `https://aftermeet-beta.vercel.app/c/{slug}` (or your configured `NEXT_PUBLIC_APP_URL`)
+- QR encodes `https://ehllo.io/c/{slug}` (or your configured `NEXT_PUBLIC_APP_URL`)
 
 **Visitor with phone camera + internet**
 
@@ -54,7 +54,7 @@ Quick Scan inside the app is for **ehllo users** adding cards to their network â
 ## Before testing
 
 1. Card is **published** on beta
-2. Public URL loads: `https://aftermeet-beta.vercel.app/c/{slug}`
+2. Public URL loads: `https://ehllo.io/c/{slug}`
 3. Mobile app reloaded from Metro after latest changes
 
 ## Tap to share + Wallet

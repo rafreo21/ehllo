@@ -64,7 +64,7 @@ export function channelSupportsGroupFollowUp(channel: FollowUpChannel) {
 
 export function resolveFollowUpUserName(input: {
   activeCardName?: string;
-  cards?: Array<{ name?: string; status?: string }>;
+  cards?: { name?: string; status?: string }[];
   authName?: string;
   authEmail?: string;
 }) {

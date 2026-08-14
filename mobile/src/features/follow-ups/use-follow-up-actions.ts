@@ -6,6 +6,7 @@ import type { FollowUpItem } from '@/features/follow-ups/follow-up-api';
 import {
   completeFollowUp,
   dismissFollowUp,
+  FollowUpConflictError,
   reopenFollowUp,
   snoozeFollowUp,
 } from '@/features/follow-ups/follow-up-api';
@@ -158,12 +159,13 @@ export function useFollowUpActions(
         cancelledAt: undefined,
         statusUpdatedAt: completedAt,
       });
-      await enqueueFollowUpAction({ encounterId: item.encounterId, actionId: item.actionId, action: 'complete', queuedAt: completedAt });
+      await enqueueFollowUpAction({ encounterId: item.encounterId, actionId: item.actionId, action: 'complete', queuedAt: completedAt, expectedStatusUpdatedAt: item.statusUpdatedAt });
       if (isOnline()) {
         try {
-          await completeFollowUp(accessToken, item.encounterId, item.actionId);
+          await completeFollowUp(accessToken, item.encounterId, item.actionId, item.statusUpdatedAt);
           await dequeueFollowUpAction(item.encounterId, item.actionId);
-        } catch {
+        } catch (error) {
+          if (error instanceof FollowUpConflictError) await dequeueFollowUpAction(item.encounterId, item.actionId);
           // Keep queued; retry on the next foreground/reconnect sync — same as card sync failures.
         }
       }
@@ -189,12 +191,13 @@ export function useFollowUpActions(
         cancelledAt: undefined,
         statusUpdatedAt: queuedAt,
       });
-      await enqueueFollowUpAction({ encounterId: item.encounterId, actionId: item.actionId, action: 'reopen', queuedAt });
+      await enqueueFollowUpAction({ encounterId: item.encounterId, actionId: item.actionId, action: 'reopen', queuedAt, expectedStatusUpdatedAt: item.statusUpdatedAt });
       if (isOnline()) {
         try {
-          await reopenFollowUp(accessToken, item.encounterId, item.actionId);
+          await reopenFollowUp(accessToken, item.encounterId, item.actionId, item.statusUpdatedAt);
           await dequeueFollowUpAction(item.encounterId, item.actionId);
-        } catch {
+        } catch (error) {
+          if (error instanceof FollowUpConflictError) await dequeueFollowUpAction(item.encounterId, item.actionId);
           // Keep queued; retry on the next foreground/reconnect sync — same as card sync failures.
         }
       }
@@ -227,12 +230,14 @@ export function useFollowUpActions(
         action: 'snooze',
         snoozedUntil,
         queuedAt,
+        expectedStatusUpdatedAt: item.statusUpdatedAt,
       });
       if (isOnline()) {
         try {
-          await snoozeFollowUp(accessToken, item.encounterId, item.actionId, snoozedUntil);
+          await snoozeFollowUp(accessToken, item.encounterId, item.actionId, snoozedUntil, item.statusUpdatedAt);
           await dequeueFollowUpAction(item.encounterId, item.actionId);
-        } catch {
+        } catch (error) {
+          if (error instanceof FollowUpConflictError) await dequeueFollowUpAction(item.encounterId, item.actionId);
           // Keep queued for foreground/reconnect sync.
         }
       }
@@ -263,12 +268,14 @@ export function useFollowUpActions(
         actionId: item.actionId,
         action: 'dismiss',
         queuedAt: dismissedAt,
+        expectedStatusUpdatedAt: item.statusUpdatedAt,
       });
       if (isOnline()) {
         try {
-          await dismissFollowUp(accessToken, item.encounterId, item.actionId);
+          await dismissFollowUp(accessToken, item.encounterId, item.actionId, item.statusUpdatedAt);
           await dequeueFollowUpAction(item.encounterId, item.actionId);
-        } catch {
+        } catch (error) {
+          if (error instanceof FollowUpConflictError) await dequeueFollowUpAction(item.encounterId, item.actionId);
           // Keep queued for foreground/reconnect sync.
         }
       }

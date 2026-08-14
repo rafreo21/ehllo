@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Service client is not configured." }, { status: 503 });
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://aftermeet.app";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://ehllo.io";
   const todayStart = startOfTodayIso();
 
   // Email and in-app/push notifications are independent preferences, so this

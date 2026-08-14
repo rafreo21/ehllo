@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
-import { Button } from '@/components/ui';
+import { PillButton } from '@/components/ui';
 import type { FollowUpSort } from '@/features/follow-ups/follow-up-list';
 import { spacing } from '@/theme/tokens';
 
@@ -21,30 +21,33 @@ export function FollowUpSortSheet({
   return (
     <BottomSheet visible={visible} title="Sort by" onClose={onClose}>
       <View style={styles.sortOptions}>
-        <Button
-          variant={sort === 'urgency' ? 'primary' : 'secondary'}
+        <PillButton
+          tone={sort === 'urgency' ? 'solid' : 'outline'}
+          style={styles.sortButton}
           onPress={() => {
             onSelect('urgency');
             onClose();
           }}>
           By urgency
-        </Button>
-        <Button
-          variant={sort === 'recent' ? 'primary' : 'secondary'}
+        </PillButton>
+        <PillButton
+          tone={sort === 'recent' ? 'solid' : 'outline'}
+          style={styles.sortButton}
           onPress={() => {
             onSelect('recent');
             onClose();
           }}>
           Most recent
-        </Button>
-        <Button
-          variant={sort === 'az' ? 'primary' : 'secondary'}
+        </PillButton>
+        <PillButton
+          tone={sort === 'az' ? 'solid' : 'outline'}
+          style={styles.sortButton}
           onPress={() => {
             onSelect('az');
             onClose();
           }}>
           Name A–Z
-        </Button>
+        </PillButton>
       </View>
     </BottomSheet>
   );
@@ -52,4 +55,5 @@ export function FollowUpSortSheet({
 
 const styles = StyleSheet.create({
   sortOptions: { gap: spacing.x2 },
+  sortButton: { alignSelf: 'stretch' },
 });

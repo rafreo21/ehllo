@@ -101,6 +101,7 @@ export type RawCalendarEvent = {
   organizerEmail: string;
   attendeeEmails: string[];
   isRecurring: boolean;
+  cancelled: boolean;
 };
 
 type GoogleCalendarListResponse = {
@@ -134,6 +135,7 @@ export async function listGoogleCalendarEvents(
     timeMax: input.timeMaxIso,
     singleEvents: "true",
     orderBy: "startTime",
+    showDeleted: "true",
     maxResults: "250",
   });
   const response = await fetch(
@@ -147,7 +149,11 @@ export async function listGoogleCalendarEvents(
   const payload = await response.json() as GoogleCalendarListResponse;
 
   return (payload.items ?? []).flatMap((item) => {
-    if (item.status === "cancelled" || !item.id) return [];
+    if (!item.id) return [];
+    if (item.status === "cancelled") return [{
+      externalId: item.id, title: item.summary?.trim() ?? "", location: "", startsAt: "", endsAt: "",
+      organizerEmail: item.organizer?.email?.trim() ?? "", attendeeEmails: [], isRecurring: Boolean(item.recurringEventId), cancelled: true,
+    }];
     const startsAt = item.start?.dateTime;
     const endsAt = item.end?.dateTime;
     if (!startsAt || !endsAt) return [];
@@ -160,6 +166,7 @@ export async function listGoogleCalendarEvents(
       organizerEmail: item.organizer?.email?.trim() ?? "",
       attendeeEmails: (item.attendees ?? []).flatMap((attendee) => attendee.email?.trim() ? [attendee.email.trim()] : []),
       isRecurring: Boolean(item.recurringEventId),
+      cancelled: false,
     }];
   });
 }
@@ -209,7 +216,11 @@ export async function listMicrosoftCalendarEvents(
   const payload = await response.json() as MicrosoftCalendarViewResponse;
 
   return (payload.value ?? []).flatMap((item) => {
-    if (item.isCancelled || !item.id) return [];
+    if (!item.id) return [];
+    if (item.isCancelled) return [{
+      externalId: item.id, title: item.subject?.trim() ?? "", location: "", startsAt: "", endsAt: "",
+      organizerEmail: item.organizer?.emailAddress?.address?.trim() ?? "", attendeeEmails: [], isRecurring: item.type !== "singleInstance", cancelled: true,
+    }];
     const startsAt = item.start?.dateTime;
     const endsAt = item.end?.dateTime;
     if (!startsAt || !endsAt) return [];
@@ -227,6 +238,7 @@ export async function listMicrosoftCalendarEvents(
         attendee.emailAddress?.address?.trim() ? [attendee.emailAddress.address.trim()] : []
       )),
       isRecurring: item.type !== "singleInstance",
+      cancelled: false,
     }];
   });
 }

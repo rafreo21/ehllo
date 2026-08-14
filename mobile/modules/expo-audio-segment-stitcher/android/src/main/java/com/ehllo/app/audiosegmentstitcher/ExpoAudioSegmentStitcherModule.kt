@@ -1,4 +1,4 @@
-package com.aftermeet.app.audiosegmentstitcher
+package com.ehllo.app.audiosegmentstitcher
 
 import android.media.MediaCodec
 import android.media.MediaExtractor
@@ -32,7 +32,7 @@ class ExpoAudioSegmentStitcherModule : Module() {
     if (uris.isEmpty()) throw Exception("No audio segments were provided.")
     if (uris.size == 1) return uris[0]
 
-    val outputFile = File.createTempFile("aftermeet-stitched-", ".m4a")
+    val outputFile = File.createTempFile("ehllo-stitched-", ".m4a")
     val muxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
 
     var audioTrackIndex = -1

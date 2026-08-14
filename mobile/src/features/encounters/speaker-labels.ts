@@ -33,7 +33,7 @@ export function renameSpeakerAssignees<
 >(
   actions: T[],
   names: Record<string, string>,
-  participants: Array<{ id: string; name: string }>,
+  participants: { id: string; name: string }[],
 ) {
   return actions.map((action) => {
     const currentName = action.assigneeName?.trim();

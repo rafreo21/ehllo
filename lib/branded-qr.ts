@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import QRCode from "qrcode";
 
-import { AFTERMEET_LOGO_PNG_BASE64 } from "./aftermeet-logo-base64.ts";
+import { EHLLO_LOGO_PNG_BASE64 } from "./ehllo-logo-base64.ts";
 import { loadSharp, sharpAvailable } from "./sharp-runtime.ts";
 
 import type { CardVcardInput } from "./vcard-export.ts";
@@ -15,7 +15,7 @@ const QR_OPTIONS = {
   color: { dark: "#163300", light: "#FFFFFF" },
 };
 
-const EMBEDDED_LOGO_BUFFER = Buffer.from(AFTERMEET_LOGO_PNG_BASE64, "base64");
+const EMBEDDED_LOGO_BUFFER = Buffer.from(EHLLO_LOGO_PNG_BASE64, "base64");
 
 let logoBufferPromise: Promise<Buffer> | null = null;
 
@@ -23,7 +23,7 @@ async function loadEhlloLogoBuffer() {
   if (!logoBufferPromise) {
     logoBufferPromise = (async () => {
       const candidates = [
-        join(process.cwd(), "public", "aftermeet-mark.png"),
+        join(process.cwd(), "public", "ehllo-mark.png"),
         join(process.cwd(), "mobile", "assets", "images", "splash-icon.png"),
       ];
       for (const path of candidates) {
@@ -50,7 +50,15 @@ export async function buildBrandedQrPngBuffer(payload: string, size = 1024) {
   // at all — attempting the import crashes the sandbox itself, not a catchable JS
   // error — so we must skip the attempt entirely there and fall back to a plain QR.
   if (!sharpAvailable()) return qrBuffer;
-  const sharp = await loadSharp();
+  let sharp;
+  try {
+    sharp = await loadSharp();
+  } catch {
+    // A readable QR is more important than the centre badge. Some server
+    // bundlers deliberately externalize native modules; never turn sharing
+    // into a 500 merely because the optional compositor is unavailable.
+    return qrBuffer;
+  }
 
   const logoBuffer = await loadEhlloLogoBuffer();
   const logoSize = Math.round(size * 0.24);

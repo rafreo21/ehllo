@@ -52,7 +52,7 @@ import {
   setActiveCardId,
   upsertLibraryCard,
 } from "../../../../lib/card-library";
-import { hydrateCardLibraryFromServer, queueCardSync } from "../../../../lib/card-library-sync";
+import { flushCardSync, hydrateCardLibraryFromServer, queueCardSync } from "../../../../lib/card-library-sync";
 
 type MethodType =
   | "email" | "phone" | "website" | "link" | "address"
@@ -301,14 +301,16 @@ export default function CardEditor() {
     setPublishing(true);
     setSaveError("");
     try {
+      const savedDraft = await flushCardSync(draft);
+      if (!savedDraft) throw new Error("This card changed on another device. Reload the latest card before publishing again.");
       const response = await fetch("/api/cards/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(draft),
+        body: JSON.stringify({ ...savedDraft, expectedUpdatedAt: savedDraft.updatedAt }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "We couldn’t publish this card.");
-      const published = { ...draft, status: "published" as const, publishedAt: new Date().toISOString() };
+      const published = { ...savedDraft, updatedAt: result.updatedAt || savedDraft.updatedAt, status: "published" as const, publishedAt: new Date().toISOString() };
       setDraft(published);
       persistDraft(published);
       setPublishedFingerprint(cardPublishFingerprint(published));

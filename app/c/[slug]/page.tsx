@@ -8,6 +8,7 @@ import {
   publicCompanyLogoUrl,
 } from "@/lib/card-company-display";
 import { publicCardImageUrl } from "@/lib/card-assets";
+import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import { PublicCardClient } from "./PublicCardClient";
 import "./public-card.css";
 
@@ -15,6 +16,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Params = Promise<{ slug: string }>;
+type SearchParams = Promise<{ event?: string | string[] }>;
 
 async function getCard(slug: string) {
   const url =
@@ -25,7 +27,8 @@ async function getCard(slug: string) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
     process.env.SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) return null;
-  const supabase = createClient(url, key, { auth: { persistSession: false } });
+  const supabase = createServiceSupabaseClient()
+    ?? createClient(url, key, { auth: { persistSession: false } });
   const { data } = await supabase
     .from("cards")
     .select("*, card_methods(*)")
@@ -46,8 +49,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     : { title: "Contact card · ehllo" };
 }
 
-export default async function PublicCardPage({ params }: { params: Params }) {
+export default async function PublicCardPage({ params, searchParams }: { params: Params; searchParams: SearchParams }) {
   const { slug } = await params;
+  const query = await searchParams;
+  const eventTitle = (Array.isArray(query.event) ? query.event[0] : query.event)?.trim().slice(0, 160) ?? "";
   const card = await getCard(slug);
   if (!card) notFound();
   const methods = [...(card.card_methods || [])].sort(
@@ -57,6 +62,7 @@ export default async function PublicCardPage({ params }: { params: Params }) {
   return (
     <PublicCardClient
       slug={slug}
+      eventTitle={eventTitle}
       ownerName={card.full_name}
       jobTitle={card.job_title}
       company={publicCompanyField(card.company, showCompanyDetails)}

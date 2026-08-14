@@ -12,7 +12,7 @@ if (process.env.OPENAI_API_KEY?.trim() || process.env.AI_GATEWAY_API_KEY?.trim()
 }
 
 if (!existsSync(projectLink)) {
-  console.warn("[aftermeet] Skipping AI env refresh: set OPENAI_API_KEY in .env.local, or link with `npx vercel link`.");
+  console.warn("[ehllo] Skipping AI env refresh: set OPENAI_API_KEY in .env.local, or link with `npx vercel link`.");
   process.exit(0);
 }
 
@@ -20,7 +20,7 @@ if (!existsSync(projectLink)) {
 // OIDC token only disables AI-backed conveniences; it should never block the
 // rest of ehllo from starting offline.
 if (!existsSync(localVercelCli)) {
-  console.warn("[aftermeet] Skipping AI env refresh: Vercel CLI is not installed locally. Add OPENAI_API_KEY to .env.local for set-and-forget local AI.");
+  console.warn("[ehllo] Skipping AI env refresh: Vercel CLI is not installed locally. Add OPENAI_API_KEY to .env.local for set-and-forget local AI.");
   process.exit(0);
 }
 
@@ -31,5 +31,5 @@ const result = spawnSync(
 );
 
 if (result.status !== 0) {
-  console.warn("[aftermeet] Could not refresh VERCEL_OIDC_TOKEN. Add OPENAI_API_KEY to .env.local for set-and-forget local AI.");
+  console.warn("[ehllo] Could not refresh VERCEL_OIDC_TOKEN. Add OPENAI_API_KEY to .env.local for set-and-forget local AI.");
 }

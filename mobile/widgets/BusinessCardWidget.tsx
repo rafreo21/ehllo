@@ -53,8 +53,8 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
     name: 'Alex Morgan',
     role: 'Product Designer',
     company: 'ehllo',
-    cardUrl: 'https://aftermeet.app/c/demo',
-    shareDeepLink: 'aftermeet://share-card',
+    cardUrl: 'https://ehllo.io/c/demo',
+    shareDeepLink: 'ehllo://share-card',
     initials: 'AM',
   };
 
@@ -96,7 +96,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
   const cards = parseCardsJson(props.cardsJson);
   const index = activeCardIndex(props.cardIndex);
   const card = activeCard(cards, index);
-  const deepLink = card.shareDeepLink || props.shareDeepLink || 'aftermeet://share-card';
+  const deepLink = card.shareDeepLink || props.shareDeepLink || 'ehllo://share-card';
   const qrImageUri = card.qrImageUri || props.qrImageUri;
   const photoImageUri = card.photoImageUri || props.photoImageUri;
   const initials = card.initials || props.initials || 'AM';
@@ -164,7 +164,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
         ) : null}
         <HStack modifiers={[padding({ top: 4 })]}>
           <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ size: 8, weight: 'bold' })]}>
-            AFTERMEET
+            ehllo
           </Text>
           {cards.length > 1 ? (
             <HStack modifiers={[padding({ leading: 8 })]}>

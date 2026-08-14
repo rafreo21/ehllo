@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CaretUpIcon } from "@phosphor-icons/react/dist/csr/CaretUp";
 import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
@@ -17,7 +17,7 @@ import { Button, LinkButton } from "../../../components/Button";
 import { TextAreaField, SelectField, TextField } from "../../../components/FormField";
 import { buildActionLinkContext, channelLabel } from "../../../../lib/action-links";
 import { findContactById } from "../../../../lib/contacts";
-import { encounterFromApi, encounterToApiBody, formatDuration, readEncounters, updateEncounter, writeEncounter, type Encounter, type EncounterAction } from "../../../../lib/encounters";
+import { encounterToApiBody, formatDuration, readEncounters, updateEncounter, writeEncounter, type Encounter, type EncounterAction } from "../../../../lib/encounters";
 import { supportsOutboundDraft } from "../../../../lib/outbound-habit";
 import { readLocalRecording } from "../../../../lib/local-recordings";
 import { uploadEncounterRecording } from "../../../../lib/recording-upload";
@@ -50,6 +50,9 @@ export default function EncounterReviewPage() {
   const [localAudioUrl, setLocalAudioUrl] = useState<string | null>(null);
   const [localRecordingMimeType, setLocalRecordingMimeType] = useState("audio/mp4");
   const [speakerNames, setSpeakerNames] = useState<Record<string, string>>({});
+  const serverUpdatedAtRef = useRef("");
+  const saveChainRef = useRef<Promise<void>>(Promise.resolve());
+  const saveGenerationRef = useRef(0);
 
   useEffect(() => {
     void Promise.resolve().then(() => {
@@ -71,6 +74,7 @@ export default function EncounterReviewPage() {
         if (response.ok) {
           const payload = await response.json() as { encounter?: Encounter };
           if (payload.encounter) {
+            serverUpdatedAtRef.current = payload.encounter.updatedAt || "";
             writeEncounter(payload.encounter);
             setEncounter(payload.encounter);
             return;
@@ -122,11 +126,7 @@ export default function EncounterReviewPage() {
         writeEncounter(next);
         setEncounter(next);
         setUploadStatus("uploaded");
-        await fetch("/api/encounters", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(encounterToApiBody(next)),
-        });
+        await syncEncounter(next);
       } catch (caught) {
         if (cancelled) return;
         setUploadStatus("failed");
@@ -166,13 +166,53 @@ export default function EncounterReviewPage() {
 
   async function syncEncounter(next: Encounter) {
     writeEncounter(next);
-    try {
-      await fetch("/api/encounters", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(encounterToApiBody(next)),
-      });
-    } catch {}
+    const generation = saveGenerationRef.current;
+    saveChainRef.current = saveChainRef.current.then(async () => {
+      if (generation !== saveGenerationRef.current) return;
+      try {
+        const response = await fetch("/api/encounters", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...encounterToApiBody(next),
+            expectedUpdatedAt: serverUpdatedAtRef.current || next.updatedAt,
+          }),
+        });
+        const payload = await response.json().catch(() => ({})) as {
+          updatedAt?: string;
+          error?: string;
+          conflict?: boolean;
+        };
+        if (response.status === 409 && payload.conflict) {
+          saveGenerationRef.current += 1;
+          const latestResponse = await fetch(`/api/encounters/${encodeURIComponent(next.id)}`, { cache: "no-store" });
+          const latestPayload = await latestResponse.json().catch(() => ({})) as { encounter?: Encounter };
+          if (latestResponse.ok && latestPayload.encounter) {
+            serverUpdatedAtRef.current = latestPayload.encounter.updatedAt || "";
+            writeEncounter(latestPayload.encounter);
+            setEncounter(latestPayload.encounter);
+          }
+          setMessage(payload.error || "This meeting changed on another device. We loaded the latest version; redo your change if it is still needed.");
+          return;
+        }
+        if (!response.ok) {
+          setMessage(payload.error || "Your change is saved in this browser but has not synced yet.");
+          return;
+        }
+        if (payload.updatedAt) {
+          serverUpdatedAtRef.current = payload.updatedAt;
+          setEncounter((current) => {
+            if (!current) return current;
+            const revised = { ...current, updatedAt: payload.updatedAt };
+            writeEncounter(revised);
+            return revised;
+          });
+        }
+      } catch {
+        setMessage("Your change is saved in this browser but has not synced yet.");
+      }
+    });
+    await saveChainRef.current;
   }
 
   function patch(updater: (current: Encounter) => Encounter) {
@@ -633,7 +673,7 @@ export default function EncounterReviewPage() {
           {showEmailRecording ? (
             <>
               <a className="email-invite" href={recordingEmailHref}><EnvelopeSimpleIcon size={18} weight="bold" />Email recording + details</a>
-              <a className="email-invite" href={localAudioUrl ?? "#"} download={`${encounter.title.replace(/[^\w\- ]+/g, "").trim() || "aftermeet"}-recording.${localRecordingMimeType.includes("wav") ? "wav" : "m4a"}`}>Download recording for attachment</a>
+              <a className="email-invite" href={localAudioUrl ?? "#"} download={`${encounter.title.replace(/[^\w\- ]+/g, "").trim() || "ehllo"}-recording.${localRecordingMimeType.includes("wav") ? "wav" : "m4a"}`}>Download recording for attachment</a>
               <small>Email apps cannot attach files automatically. Download the recording, then attach it in your email draft.</small>
             </>
           ) : null}

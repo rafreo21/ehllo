@@ -10,7 +10,7 @@ export type FollowUpChannel =
   | 'send'
   | 'other';
 
-export const FOLLOW_UP_CHANNELS: Array<{ id: FollowUpChannel; label: string }> = [
+export const FOLLOW_UP_CHANNELS: { id: FollowUpChannel; label: string }[] = [
   { id: 'email', label: 'Email' },
   { id: 'linkedin', label: 'LinkedIn' },
   { id: 'call', label: 'Call' },
@@ -84,7 +84,7 @@ export function normalizeFollowUpChannels(values: string[] | undefined): FollowU
   return next;
 }
 
-export function followUpChannelsFromEncounter(actions: Array<{ channel: string }>): FollowUpChannel[] {
+export function followUpChannelsFromEncounter(actions: { channel: string }[]): FollowUpChannel[] {
   const channels: FollowUpChannel[] = [];
   for (const action of actions) {
     if (!isFollowUpChannel(action.channel)) continue;
@@ -94,7 +94,7 @@ export function followUpChannelsFromEncounter(actions: Array<{ channel: string }
   return channels;
 }
 
-export function followUpDueFromEncounter(actions: Array<{ dueAt?: string }>) {
+export function followUpDueFromEncounter(actions: { dueAt?: string }[]) {
   return actions.find((action) => action.dueAt?.trim())?.dueAt?.trim() ?? '';
 }
 

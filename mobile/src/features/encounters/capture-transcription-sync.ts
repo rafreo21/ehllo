@@ -3,21 +3,26 @@ import { listCaptureDrafts, readCaptureDraft, writeCaptureDraft } from '@/featur
 import { transcribeEncounterAudio } from '@/features/encounters/encounter-api';
 import { MIN_USABLE_TRANSCRIPT_LENGTH } from '@/features/encounters/use-capture-recorder';
 import { isOnline } from '@/lib/connectivity';
+import { clearSyncFailure, recordSyncFailure, syncFailureKey } from '@/features/sync/sync-failure-store';
 
-export async function flushPendingTranscriptions(accessToken: string): Promise<void> {
-  if (!isOnline()) return;
-
+export async function listPendingTranscriptionDrafts() {
   const activeEncounterId = getActiveCaptureController()?.snapshot.encounterId;
   const summaries = await listCaptureDrafts();
-  // The `hasLocalAudio && short transcript` heuristic is the authoritative
-  // filter here, not `transcriptPending` alone — if the app is killed in the
-  // narrow window after recordingUri is persisted but before the failure is
-  // even caught, transcriptPending never gets set. This self-heals that gap.
-  const candidates = summaries.filter((summary) => (
+  return summaries.filter((summary) => (
     summary.hasLocalAudio
     && summary.transcriptPreview.trim().length < MIN_USABLE_TRANSCRIPT_LENGTH
     && summary.encounterId !== activeEncounterId
   ));
+}
+
+export async function flushPendingTranscriptions(accessToken: string): Promise<void> {
+  if (!isOnline()) return;
+
+  // The `hasLocalAudio && short transcript` heuristic is the authoritative
+  // filter here, not `transcriptPending` alone — if the app is killed in the
+  // narrow window after recordingUri is persisted but before the failure is
+  // even caught, transcriptPending never gets set. This self-heals that gap.
+  const candidates = await listPendingTranscriptionDrafts();
 
   for (const summary of candidates) {
     const draft = await readCaptureDraft(summary.encounterId);
@@ -43,9 +48,11 @@ export async function flushPendingTranscriptions(accessToken: string): Promise<v
         transcriptPending: false,
         transcriptPendingError: '',
       });
+      await clearSyncFailure(syncFailureKey.transcription(summary.encounterId));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not transcribe this recording.';
       await writeCaptureDraft({ ...draft, transcriptPending: true, transcriptPendingError: message });
+      await recordSyncFailure(syncFailureKey.transcription(summary.encounterId), error);
     }
   }
 }

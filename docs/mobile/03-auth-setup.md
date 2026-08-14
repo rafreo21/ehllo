@@ -38,7 +38,7 @@ npm run configure:supabase-auth  # hook + secrets + redirect URLs
 ```dotenv
 EXPO_PUBLIC_SUPABASE_URL=https://tgpzxgrvdmmwnodxrooh.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
-EXPO_PUBLIC_CARD_BASE_URL=https://aftermeet-beta.vercel.app
+EXPO_PUBLIC_CARD_BASE_URL=https://ehllo.io
 ```
 
 ## Sign-in flow

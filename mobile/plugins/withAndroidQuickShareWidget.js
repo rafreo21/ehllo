@@ -111,7 +111,7 @@ function actionReceiverEntry(packageName) {
 
 function withWidgetManifest(config) {
   return withAndroidManifest(config, (mod) => {
-    const packageName = config.android?.package || 'com.aftermeet.app';
+    const packageName = config.android?.package || 'com.ehllo.app';
     const application = AndroidConfig.Manifest.getMainApplicationOrThrow(mod.modResults);
     application.receiver = (application.receiver || []).filter(
       (item) => !String(item.$?.['android:name'] || '').includes(`${PACKAGE_SUFFIX}.`),
@@ -160,7 +160,7 @@ function addPackageToMainApplication(mainApplication, packageImport, packageInst
 
 function withWidgetModule(config) {
   return withMainApplication(config, (mod) => {
-    const packageName = config.android?.package || 'com.aftermeet.app';
+    const packageName = config.android?.package || 'com.ehllo.app';
     mod.modResults.contents = addPackageToMainApplication(
       mod.modResults.contents,
       `import ${packageName}.widget.QuickShareWidgetPackage`,
@@ -194,7 +194,7 @@ class QuickShareWidgetBridge(private val reactContext: ReactApplicationContext) 
       val editor = prefs.edit()
         .putString("${PREFS.cardsJson}", payload.getString("cardsJson") ?: "[]")
         .putString("${PREFS.logoImageBase64}", payload.getString("logoImageBase64") ?: "")
-        .putString("${PREFS.connectionsDeepLink}", payload.getString("connectionsDeepLink") ?: "aftermeet://connections")
+        .putString("${PREFS.connectionsDeepLink}", payload.getString("connectionsDeepLink") ?: "ehllo://connections")
         .putString("${PREFS.recentConnectionsJson}", payload.getString("recentConnectionsJson") ?: "[]")
 
       for (slot in 1..3) {
@@ -274,8 +274,8 @@ import org.json.JSONObject
 import ${packageName}.R
 
 object WidgetRenderer {
-  private const val DEMO_URL = "https://aftermeet.app/c/demo"
-  private const val DEMO_DEEP_LINK = "aftermeet://share-card"
+  private const val DEMO_URL = "https://ehllo.io/c/demo"
+  private const val DEMO_DEEP_LINK = "ehllo://share-card"
 
   private fun prefs(context: Context) =
     context.getSharedPreferences("${PREFS_NAME}", Context.MODE_PRIVATE)
@@ -533,7 +533,7 @@ object WidgetRenderer {
 
   private fun renderConnections(context: Context, manager: AppWidgetManager, id: Int) {
     val store = prefs(context)
-    val deepLink = store.getString("${PREFS.connectionsDeepLink}", "aftermeet://connections") ?: "aftermeet://connections"
+    val deepLink = store.getString("${PREFS.connectionsDeepLink}", "ehllo://connections") ?: "ehllo://connections"
     val connections = loadConnections(context)
     val views = RemoteViews(context.packageName, R.layout.aftermeet_widget_connections)
     var visibleRows = 0
@@ -772,7 +772,7 @@ function layoutBusinessCard() {
           android:layout_width="0dp"
           android:layout_height="wrap_content"
           android:layout_weight="1"
-          android:text="AFTERMEET"
+          android:text="ehllo"
           android:textColor="#9FE870"
           android:textSize="8sp"
           android:textStyle="bold" />
@@ -1008,7 +1008,7 @@ function withWidgetFiles(config) {
     async (mod) => {
       const projectRoot = mod.modRequest.projectRoot;
       const androidRoot = path.join(projectRoot, 'android', 'app', 'src', 'main');
-      const packageName = config.android?.package || 'com.aftermeet.app';
+      const packageName = config.android?.package || 'com.ehllo.app';
       const packagePath = packageName.split('.').join(path.sep);
       const kotlinDir = path.join(androidRoot, 'java', packagePath, 'widget');
       const layoutDir = path.join(androidRoot, 'res', 'layout');

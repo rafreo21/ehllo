@@ -12,6 +12,7 @@ import { ScanShareSkeleton } from '@/components/skeleton';
 import { useAuth } from '@/features/auth/auth-context';
 import { connectionFromScannedSlug } from '@/features/connections/connections-api';
 import { enqueueOfflineScan } from '@/features/connections/offline-scan-queue';
+import { resolveCachedEventSnapshot } from '@/features/events/event-cache';
 import { setAuthReturnPath } from '@/features/encounters/capture-draft';
 import { isOnline } from '@/lib/connectivity';
 import { parseEhlloCardSlugFromScan } from '@/lib/parse-scanned-qr';
@@ -33,6 +34,7 @@ export default function ScannerScreen() {
 
   async function openScannedCard(slug: string) {
     const normalized = slug.trim().toLowerCase();
+    const eventSnapshot = await resolveCachedEventSnapshot();
     if (!session?.access_token) {
       await setAuthReturnPath(`/connections/scan/${encodeURIComponent(normalized)}`);
       router.replace('/auth');
@@ -40,8 +42,10 @@ export default function ScannerScreen() {
     }
 
     if (!isOnline()) {
-      await enqueueOfflineScan(normalized);
-      setQueuedMessage("You're offline — this card will be added to your connections automatically once you're back online.");
+      await enqueueOfflineScan(normalized, eventSnapshot);
+      setQueuedMessage(eventSnapshot
+        ? `Saved at ${eventSnapshot.eventTitle}. This card will be added to your connections when you're back online.`
+        : "You're offline — this card will be added to your connections automatically once you're back online.");
       setLocked(false);
       return;
     }
@@ -49,7 +53,7 @@ export default function ScannerScreen() {
     setLinking(true);
     setError('');
     try {
-      const connection = await connectionFromScannedSlug(session.access_token, normalized);
+      const connection = await connectionFromScannedSlug(session.access_token, normalized, eventSnapshot);
       if (connection) {
         router.replace(`/connections/${encodeURIComponent(connection.id)}`);
         return;
@@ -58,8 +62,10 @@ export default function ScannerScreen() {
       setLocked(false);
     } catch (caught) {
       if (!isOnline()) {
-        await enqueueOfflineScan(normalized);
-        setQueuedMessage("You're offline — this card will be added to your connections automatically once you're back online.");
+        await enqueueOfflineScan(normalized, eventSnapshot);
+        setQueuedMessage(eventSnapshot
+          ? `Saved at ${eventSnapshot.eventTitle}. This card will be added to your connections when you're back online.`
+          : "You're offline — this card will be added to your connections automatically once you're back online.");
       } else {
         setError(caught instanceof Error ? caught.message : 'Could not open this card.');
       }

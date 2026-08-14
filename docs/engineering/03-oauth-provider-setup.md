@@ -11,7 +11,7 @@ ehllo already supports social sign-in in the app. Providers stay disabled until 
 
 - `http://localhost:3000/auth/callback`
 - `http://localhost:3001/auth/callback` (if port 3000 is taken)
-- Your production URL, e.g. `https://aftermeet-beta.vercel.app/auth/callback`
+- Your production URL, e.g. `https://ehllo.io/auth/callback`
 
 When a provider is enabled, `/auth` picks it up automatically — no deploy required.
 
@@ -73,7 +73,7 @@ Guide: [Supabase — Login with X](https://supabase.com/docs/guides/auth/social-
 1. [Supabase → Authentication → Providers](https://supabase.com/dashboard/project/tgpzxgrvdmmwnodxrooh/auth/providers)
 2. Enable **Google**, **LinkedIn (OIDC)**, and **X / Twitter (OAuth 2.0)** with the client IDs/secrets from above.
 3. [Supabase → Authentication → URL Configuration](https://supabase.com/dashboard/project/tgpzxgrvdmmwnodxrooh/auth/url-configuration)
-   - **Site URL:** `https://aftermeet-beta.vercel.app` (production) or `http://localhost:3000` (local)
+   - **Site URL:** `https://ehllo.io` (production) or `http://localhost:3000` (local)
    - **Redirect URLs:** add production and localhost callback URLs listed above
 
 ### Option C — Redirect URLs only

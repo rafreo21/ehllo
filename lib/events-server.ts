@@ -2,6 +2,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { AppUser } from "./auth/context";
+import { deliverQueuedEventEmail, enqueueEventEmail, type EventEmailKind } from "./event-email-outbox";
+import { buildEventCancelledEmail, buildEventScheduleChangedEmail } from "./event-invitation-email";
 import { candidateSuppressionKey, isEventCandidateWorthy, resolveCurrentEvent, type EventSource } from "./events";
 import { getConnectedAccountAccessTokenStatus } from "./integrations/connected-accounts";
 import {
@@ -33,6 +35,8 @@ export type EventRow = {
   source_url: string;
   organizer_email: string;
   external_id: string | null;
+  status: "scheduled" | "cancelled";
+  cancelled_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -46,6 +50,8 @@ export type EventRecord = {
   source: EventSource;
   sourceUrl: string;
   organizerEmail: string;
+  status: "scheduled" | "cancelled";
+  updatedAt: string;
 };
 
 export function eventFromRow(row: EventRow): EventRecord {
@@ -58,6 +64,8 @@ export function eventFromRow(row: EventRow): EventRecord {
     source: row.source,
     sourceUrl: row.source_url,
     organizerEmail: row.organizer_email,
+    status: row.status ?? "scheduled",
+    updatedAt: row.updated_at,
   };
 }
 
@@ -137,7 +145,20 @@ export async function syncCalendarCandidates(
   const raw = [...google.events, ...microsoft.events];
   if (!raw.length) return { candidates: [], providerStatus, syncedAt };
 
-  const worthy = raw.filter((item) => isEventCandidateWorthy({
+  const externalIds = raw.map((item) => item.externalId);
+  const { data: beforeRows } = await supabase.from("events").select("*")
+    .eq("workspace_id", user.workspaceId).in("external_id", externalIds);
+  const beforeByExternalId = new Map(((beforeRows ?? []) as EventRow[]).map((row) => [row.external_id, row]));
+  const cancelledItems = raw.filter((item) => item.cancelled);
+  for (const item of cancelledItems) {
+    const existing = beforeByExternalId.get(item.externalId);
+    if (!existing || existing.status === "cancelled") continue;
+    const nowIso = new Date().toISOString();
+    await supabase.from("events").update({ status: "cancelled", cancelled_at: nowIso, updated_at: nowIso }).eq("id", existing.id);
+    await notifyCalendarEventGuests(supabase, existing.id, buildEventCancelledEmail(existing.title), "cancellation_notice_sent_at", "cancelled", nowIso, false);
+  }
+
+  const worthy = raw.filter((item) => !item.cancelled && isEventCandidateWorthy({
     startsAt: item.startsAt,
     endsAt: item.endsAt,
     location: item.location,
@@ -163,11 +184,66 @@ export async function syncCalendarCandidates(
       source: "calendar" as const,
       organizer_email: item.organizerEmail.trim().slice(0, 320),
       external_id: item.externalId,
+      status: "scheduled",
+      cancelled_at: null,
     })), { onConflict: "workspace_id,external_id" })
     .select("*");
 
   if (error || !data) return { candidates: [], providerStatus, syncedAt };
+  for (const item of surviving) {
+    const existing = beforeByExternalId.get(item.externalId);
+    if (!existing) continue;
+    const changed = existing.title !== item.title.trim().slice(0, 160)
+      || existing.location !== item.location.trim().slice(0, 320)
+      || !sameInstant(existing.starts_at, item.startsAt)
+      || !sameInstant(existing.ends_at, item.endsAt)
+      || existing.status === "cancelled";
+    if (!changed) continue;
+    await notifyCalendarEventGuests(supabase, existing.id, buildEventScheduleChangedEmail({
+      eventTitle: item.title,
+      startsAt: item.startsAt,
+      location: item.location,
+    }), "schedule_notice_sent_at", "schedule_changed", syncedAt, true);
+  }
   return { candidates: (data as EventRow[]).map(eventFromRow), providerStatus, syncedAt };
+}
+
+function sameInstant(left: string | null, right: string | null) {
+  if (!left || !right) return left === right;
+  const leftTime = Date.parse(left);
+  const rightTime = Date.parse(right);
+  return !Number.isNaN(leftTime) && !Number.isNaN(rightTime) && leftTime === rightTime;
+}
+
+async function notifyCalendarEventGuests(
+  supabase: SupabaseClient,
+  eventId: string,
+  message: { subject: string; html: string },
+  noticeColumn: "schedule_notice_sent_at" | "cancellation_notice_sent_at",
+  kind: EventEmailKind,
+  changeKey: string,
+  resetReminder: boolean,
+) {
+  const { data: invitations } = await supabase.from("event_invitations")
+    .select("id, invited_email").eq("event_id", eventId).neq("status", "revoked");
+  for (const invitation of invitations ?? []) {
+    const queued = await enqueueEventEmail(supabase, {
+      eventId,
+      invitationId: invitation.id,
+      to: invitation.invited_email,
+      kind,
+      subject: message.subject,
+      html: message.html,
+      dedupeKey: `${kind}:${invitation.id}:${changeKey}`,
+    });
+    const delivery = await deliverQueuedEventEmail(supabase, queued.id);
+    if (!delivery.ok) continue;
+    await supabase.from("event_invitations").update({
+      [noticeColumn]: new Date().toISOString(),
+      ...(resetReminder ? { reminder_sent_at: null } : {}),
+      updated_at: new Date().toISOString(),
+    }).eq("id", invitation.id);
+  }
 }
 
 export type GoingEventWindow = { id: string; startsAt: string; endsAt: string | null; leftAt: string | null };

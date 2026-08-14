@@ -3,11 +3,11 @@ plugins {
   id 'expo-module-gradle-plugin'
 }
 
-group = 'com.aftermeet.app.audiosegmentstitcher'
+group = 'com.ehllo.app.audiosegmentstitcher'
 version = '0.1.0'
 
 android {
-  namespace "com.aftermeet.app.audiosegmentstitcher"
+  namespace "com.ehllo.app.audiosegmentstitcher"
   defaultConfig {
     versionCode 1
     versionName "0.1.0"

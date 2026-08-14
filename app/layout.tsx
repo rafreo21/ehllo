@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   title: "ehllo",
   description: "Remember what mattered and know what to do next.",
   icons: {
-    icon: [{ url: "/aftermeet-logo.svg?v=2", type: "image/svg+xml" }],
-    shortcut: "/aftermeet-logo.svg?v=2",
-    apple: "/aftermeet-logo.svg?v=2",
+    icon: [{ url: "/ehllo-logo.svg?v=2", type: "image/svg+xml" }],
+    shortcut: "/ehllo-logo.svg?v=2",
+    apple: "/ehllo-logo.svg?v=2",
   },
 };
 

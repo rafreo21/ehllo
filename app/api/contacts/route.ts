@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { contactFromRow, contactToRow, isContactUuid, type ContactRow } from "../../../lib/contacts-server";
 import type { Contact } from "../../../lib/contacts";
 import { createApiSupabaseClient, resolveApiUser } from "../../../lib/auth/api-request";
+import { detectEncounterConflict } from "../../../lib/encounter-conflict";
 
 function isContact(value: unknown): value is Contact {
   if (!value || typeof value !== "object") return false;
@@ -83,13 +84,37 @@ export async function POST(request: Request) {
 
   const supabase = await createApiSupabaseClient(request);
   const existing = await findExistingContact(supabase, user.workspaceId, body);
+  if (existing && detectEncounterConflict(existing.updated_at, body.updatedAt)) {
+    return NextResponse.json({
+      error: "This contact changed on another device. Reload the latest details before saving again.",
+      conflict: true,
+      serverUpdatedAt: existing.updated_at,
+    }, { status: 409 });
+  }
   const row = contactToRow(body, user.workspaceId, user.id, existing?.id);
 
-  const { data, error } = await supabase
-    .from("contacts")
-    .upsert(row, { onConflict: "id" })
-    .select("*")
-    .single();
+  const write = existing && body.updatedAt
+    ? supabase
+        .from("contacts")
+        .update(row)
+        .eq("id", existing.id)
+        .eq("workspace_id", user.workspaceId)
+        .eq("updated_at", body.updatedAt)
+        .select("*")
+        .maybeSingle()
+    : supabase
+        .from("contacts")
+        .upsert(row, { onConflict: "id" })
+        .select("*")
+        .single();
+  const { data, error } = await write;
+
+  if (!error && !data && existing && body.updatedAt) {
+    return NextResponse.json({
+      error: "This contact changed on another device. Reload the latest details before saving again.",
+      conflict: true,
+    }, { status: 409 });
+  }
 
   if (error || !data) {
     return NextResponse.json({ error: "We couldn’t save this contact." }, { status: 500 });

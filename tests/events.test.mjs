@@ -149,6 +149,13 @@ describe("resolveCurrentEvent", () => {
     ], new Date("2026-08-10T19:00:00.000Z"));
     assert.equal(beyondDefault, null);
   });
+
+  it("uses the default window when legacy event data has an end before its start", () => {
+    const current = resolveCurrentEvent([
+      { id: "legacy-broken-end", startsAt: "2026-08-10T14:00:00.000Z", endsAt: "2025-08-10T18:00:00.000Z" },
+    ], new Date("2026-08-10T15:00:00.000Z"));
+    assert.equal(current, "legacy-broken-end");
+  });
 });
 
 describe("candidateSuppressionKey", () => {

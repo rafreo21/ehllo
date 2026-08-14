@@ -59,8 +59,8 @@ async function main() {
   console.error(`Reason: ${message}`);
   console.error("");
   console.error("Fix:");
-  console.error("  1. Verify aftermeet.app (or your production domain) at https://resend.com/domains");
-  console.error("  2. Set RESEND_FROM_EMAIL=ehllo <auth@aftermeet.app> in .env.local");
+  console.error("  1. Verify ehllo.io at https://resend.com/domains");
+  console.error("  2. Set RESEND_FROM_EMAIL=ehllo <product@ehllo.io> in .env.local");
   console.error("  3. Run npm run configure:supabase-auth");
   console.error("");
   console.error("Temporary beta workaround:");

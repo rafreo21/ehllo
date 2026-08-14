@@ -57,8 +57,8 @@ npx expo run:ios
 npx expo run:android
 ```
 
-The app identifiers are currently `com.aftermeet.app`. Change them before store
-submission if that identifier is not owned by the project.
+The app identifiers are `com.ehllo.app` for production and
+`com.ehllo.app.staging` for staging.
 
 ## Current scope
 

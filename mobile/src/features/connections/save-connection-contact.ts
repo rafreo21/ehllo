@@ -123,11 +123,16 @@ function buildDeviceContactFields(connection: ConnectionItem, card?: MobileCard 
   };
 }
 
-export async function saveConnectionToEhllo(accessToken: string, connection: ConnectionItem, card?: MobileCard | null) {
+export async function saveConnectionToEhllo(
+  accessToken: string,
+  connection: ConnectionItem,
+  card?: MobileCard | null,
+  expectedUpdatedAt?: string,
+) {
   const response = await mobileFetch('/api/contacts', accessToken, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(contactPayloadFromConnection(connection, card)),
+    body: JSON.stringify({ ...contactPayloadFromConnection(connection, card), updatedAt: expectedUpdatedAt }),
   });
   const payload = await response.json() as { error?: string };
   if (!response.ok) {
@@ -169,7 +174,8 @@ export async function updateConnectionDirectory(
   accessToken: string,
   connection: ConnectionItem,
   card?: MobileCard | null,
+  expectedUpdatedAt?: string,
 ) {
-  await saveConnectionToEhllo(accessToken, connection, card);
+  await saveConnectionToEhllo(accessToken, connection, card, expectedUpdatedAt);
   await saveConnectionToDeviceContacts(connection, card);
 }

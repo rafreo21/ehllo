@@ -56,10 +56,18 @@ export function NotificationManager() {
       await syncFollowUpNotifications(followUps);
     }
 
+    async function registerIfEnabled() {
+      if (!await deviceNotificationsEnabled()) return;
+      await registerPushToken(accessToken!);
+    }
+
     void sync().catch(() => undefined);
-    void registerPushToken(accessToken).catch(() => undefined);
+    void registerIfEnabled().catch(() => undefined);
     const appState = AppState.addEventListener('change', (state) => {
-      if (state === 'active') void sync().catch(() => undefined);
+      if (state === 'active') {
+        void sync().catch(() => undefined);
+        void registerIfEnabled().catch(() => undefined);
+      }
     });
     const interval = setInterval(() => void sync().catch(() => undefined), 15 * 60 * 1_000);
     const changed = addFollowUpNotificationSyncListener(() => void sync().catch(() => undefined));

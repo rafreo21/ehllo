@@ -127,7 +127,7 @@ async function syncParticipantsToContacts(
           displayName: participant.name.trim(),
         });
         if (provisioned.ok && provisioned.created) {
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://aftermeet.app";
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://ehllo.io";
           const { subject, html } = buildGuestAddedEmail({
             guestName: participant.name.trim(),
             addedByName,
@@ -282,17 +282,24 @@ export async function POST(request: Request) {
   // neither needs its own copy of this decision); an existing encounter
   // being re-saved for an unrelated edit keeps whatever event it already had.
   const isNewEncounter = !existingRow;
+  const occurredAt = typeof body.startedAt === "string" && !Number.isNaN(Date.parse(body.startedAt))
+    ? new Date(body.startedAt)
+    : new Date();
   let nextEventId: string | null;
   if ("eventId" in body) {
     nextEventId = typeof body.eventId === "string" && body.eventId.trim() ? body.eventId.trim() : null;
+    if (isNewEncounter && nextEventId) {
+      const resolvedAtOccurrence = await resolveCurrentEventIdForUser(supabase, user.id, occurredAt).catch(() => null);
+      if (resolvedAtOccurrence !== nextEventId) nextEventId = resolvedAtOccurrence;
+    }
   } else if (isNewEncounter) {
-    nextEventId = await resolveCurrentEventIdForUser(supabase, user.id).catch(() => null);
+    nextEventId = await resolveCurrentEventIdForUser(supabase, user.id, occurredAt).catch(() => null);
   } else {
     nextEventId = (existingRow?.event_id as string | null | undefined) ?? null;
   }
 
   const nextUpdatedAt = new Date().toISOString();
-  const { error } = await supabase.from("encounters").upsert({
+  const encounterRow = {
     id: body.id,
     workspace_id: user.workspaceId,
     created_by_user_id: user.id,
@@ -315,7 +322,29 @@ export async function POST(request: Request) {
     status: nextStatus,
     share_token: typeof body.shareToken === "string" ? body.shareToken : crypto.randomUUID().replaceAll("-", ""),
     updated_at: nextUpdatedAt,
-  }, { onConflict: "id" });
+  };
+  const write = existingRow && expectedUpdatedAt
+    ? supabase
+        .from("encounters")
+        .update(encounterRow)
+        .eq("id", body.id)
+        .eq("workspace_id", user.workspaceId)
+        .eq("updated_at", expectedUpdatedAt)
+        .select("id")
+        .maybeSingle()
+    : supabase
+        .from("encounters")
+        .upsert(encounterRow, { onConflict: "id" })
+        .select("id")
+        .single();
+  const { data: savedEncounter, error } = await write;
+
+  if (!error && !savedEncounter && existingRow && expectedUpdatedAt) {
+    return NextResponse.json({
+      error: "This meeting changed on another device. Reload to see the latest version before saving your changes.",
+      conflict: true,
+    }, { status: 409 });
+  }
 
   if (error) {
     return NextResponse.json({ error: "The encounter was saved on this device but could not sync." }, { status: 500 });

@@ -59,11 +59,11 @@ echo "Forwarding Metro port 8081…"
 adb reverse tcp:8081 tcp:8081
 
 if [[ "$APP_VARIANT" == "staging" ]]; then
-  PACKAGE="com.aftermeet.app.staging"
-  SCHEME="aftermeet-staging"
+  PACKAGE="com.ehllo.app.staging"
+  SCHEME="ehllo-staging"
 else
-  PACKAGE="com.aftermeet.app"
-  SCHEME="aftermeet"
+  PACKAGE="com.ehllo.app"
+  SCHEME="ehllo"
 fi
 
 echo "Installing $APK"

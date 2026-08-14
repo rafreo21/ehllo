@@ -1,6 +1,6 @@
 import "server-only";
 
-const PRODUCTION_APP_URL = "https://aftermeet-beta.vercel.app";
+const PRODUCTION_APP_URL = "https://ehllo.io";
 
 export function resolveAppUrl(requestUrl?: string) {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/+$/, "");

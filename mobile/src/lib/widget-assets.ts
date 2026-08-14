@@ -6,7 +6,11 @@ import logoAsset from '../../assets/images/splash-icon.png';
 
 import { isRemoteImageUrl } from '@/lib/card-assets-client';
 
-const IOS_APP_GROUP = 'group.com.aftermeet.app';
+const IOS_APP_GROUPS = ['group.com.ehllo.app.staging', 'group.com.ehllo.app'];
+
+function appleWidgetGroup() {
+  return IOS_APP_GROUPS.map((id) => Paths.appleSharedContainers?.[id]).find(Boolean);
+}
 const LOGO_FILE = 'widget-logo.png';
 function photoFileName(fileKey: string) {
   const safeKey = fileKey.replace(/[^a-zA-Z0-9_-]/g, '') || 'default';
@@ -15,7 +19,7 @@ function photoFileName(fileKey: string) {
 
 function widgetStorageDirectory() {
   if (Platform.OS === 'ios') {
-    const group = Paths.appleSharedContainers?.[IOS_APP_GROUP];
+    const group = appleWidgetGroup();
     if (group) return group.uri;
   }
   return FileSystem.cacheDirectory || '';
@@ -42,7 +46,7 @@ export async function ensureWidgetLogoUri() {
   if (!asset.localUri) return undefined;
 
   if (Platform.OS === 'ios') {
-    const group = Paths.appleSharedContainers?.[IOS_APP_GROUP];
+    const group = appleWidgetGroup();
     if (group) {
       const file = new File(group, LOGO_FILE);
       await FileSystem.copyAsync({ from: asset.localUri, to: file.uri });
@@ -67,7 +71,7 @@ export async function cacheWidgetPhotoUri(photo: string, fileKey = 'default') {
   try {
     if (isRemoteImageUrl(trimmed)) {
       if (Platform.OS === 'ios') {
-        const group = Paths.appleSharedContainers?.[IOS_APP_GROUP];
+        const group = appleWidgetGroup();
         if (group) {
           const file = new File(group, PHOTO_FILE);
           await FileSystem.downloadAsync(trimmed, file.uri);
@@ -79,7 +83,7 @@ export async function cacheWidgetPhotoUri(photo: string, fileKey = 'default') {
     }
     if (trimmed.startsWith('file://') || trimmed.startsWith('content://')) {
       if (Platform.OS === 'ios') {
-        const group = Paths.appleSharedContainers?.[IOS_APP_GROUP];
+        const group = appleWidgetGroup();
         if (group) {
           const file = new File(group, PHOTO_FILE);
           await FileSystem.copyAsync({ from: trimmed, to: file.uri });

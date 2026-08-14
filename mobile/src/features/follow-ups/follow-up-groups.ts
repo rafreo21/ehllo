@@ -9,6 +9,7 @@ export type FollowUpGroup = {
   encounterId: string;
   dueAt: string;
   startedAt: string;
+  mostRecentAt: string;
   completedAt?: string;
   items: FollowUpItem[];
 };
@@ -29,6 +30,10 @@ export function groupFollowUpItems(items: FollowUpItem[]): FollowUpGroup[] {
     const existing = groups.get(key);
     if (existing) {
       existing.items.push(item);
+      const itemRecentAt = item.statusUpdatedAt || item.startedAt;
+      if (itemRecentAt > existing.mostRecentAt) {
+        existing.mostRecentAt = itemRecentAt;
+      }
       if ((item.completedAt || '') > (existing.completedAt || '')) {
         existing.completedAt = item.completedAt;
       }
@@ -43,6 +48,7 @@ export function groupFollowUpItems(items: FollowUpItem[]): FollowUpGroup[] {
       encounterId: item.encounterId,
       dueAt: item.dueAt,
       startedAt: item.startedAt,
+      mostRecentAt: item.statusUpdatedAt || item.startedAt,
       completedAt: item.completedAt,
       items: [item],
     });

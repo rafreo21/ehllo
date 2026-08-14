@@ -55,7 +55,7 @@ export function inferDuePreset(dueAt: string): DuePreset {
   return 'custom';
 }
 
-export const DUE_PRESETS: Array<{ id: DuePreset; label: string }> = [
+export const DUE_PRESETS: { id: DuePreset; label: string }[] = [
   { id: 'today', label: 'Today' },
   { id: 'tomorrow', label: 'Tomorrow' },
   { id: 'in_3_days', label: 'In 3 days' },

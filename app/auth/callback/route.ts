@@ -41,6 +41,9 @@ async function linkVisitorConnections(
   intent: ReturnType<typeof parseVisitorIntent>,
 ) {
   if (!intent) return;
+  if (intent.eventInviteToken) {
+    await supabase.rpc("claim_event_invitation", { p_token: intent.eventInviteToken });
+  }
   if (intent.exchangeId) {
     await supabase.rpc("link_people_connection_from_exchange", { p_exchange_id: intent.exchangeId });
   } else if (intent.slug) {

@@ -40,7 +40,7 @@ export function sortFollowUpGroups(groups: FollowUpGroup[], sort: FollowUpSort) 
   }
   if (sort === 'recent') {
     next.sort((left, right) => (
-      (right.completedAt || right.startedAt).localeCompare(left.completedAt || left.startedAt)
+      (right.completedAt || right.mostRecentAt).localeCompare(left.completedAt || left.mostRecentAt)
     ));
     return next;
   }

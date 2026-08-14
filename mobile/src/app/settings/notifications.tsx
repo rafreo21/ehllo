@@ -30,7 +30,7 @@ import {
 } from '@/features/notifications/notification-center-api';
 import { colors, radius, spacing } from '@/theme/tokens';
 
-const NOTIFICATION_TYPE_ROWS: Array<{ type: NotificationType; icon: typeof Bell; label: string; hint: string }> = [
+const NOTIFICATION_TYPE_ROWS: { type: NotificationType; icon: typeof Bell; label: string; hint: string }[] = [
   { type: 'review_ready', icon: CheckCircle, label: 'Transcript ready', hint: 'A capture is ready for your review' },
   { type: 'follow_up_due', icon: CalendarCheck, label: 'Follow-up due', hint: 'A reviewed follow-up is due today' },
   { type: 'follow_up_overdue', icon: ClockCounterClockwise, label: 'Follow-up overdue', hint: 'A reviewed follow-up is overdue' },
@@ -83,16 +83,25 @@ export default function NotificationPreferencesScreen() {
   }
 
   useEffect(() => {
+    let active = true;
     void Promise.all([
       deviceNotificationsEnabled(),
       notificationPermissionGranted(),
       followUpReminderTime(),
-    ]).then(([enabled, granted, storedReminderTime]) => {
+    ]).then(async ([enabled, granted, storedReminderTime]) => {
+      if (!active) return;
       setDeviceEnabled(enabled && granted);
       setDevicePermission(granted);
       setReminderTime(storedReminderTime);
-    });
-  }, []);
+      if (enabled && granted && session?.access_token) {
+        const registered = await registerPushToken(session.access_token);
+        if (active) setPushActive(registered);
+      } else {
+        setPushActive(false);
+      }
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [session?.access_token]);
 
   async function chooseReminderTime(value: ReminderTime) {
     setReminderTime(value);
@@ -138,12 +147,14 @@ export default function NotificationPreferencesScreen() {
 
       await setDeviceNotificationsEnabled(true);
       setDeviceEnabled(true);
+      let registered = false;
       if (session?.access_token) {
         const followUps = await fetchFollowUps(session.access_token);
         await syncFollowUpNotifications(followUps);
-        setPushActive(await registerPushToken(session.access_token));
+        registered = await registerPushToken(session.access_token);
+        setPushActive(registered);
       }
-      setNotificationMessage('Device reminders are on.');
+      setNotificationMessage(registered ? 'Device reminders and background alerts are on.' : 'Device reminders are on.');
     } catch {
       setDeviceEnabled(false);
       setNotificationMessage('Could not enable device reminders. Please try again.');

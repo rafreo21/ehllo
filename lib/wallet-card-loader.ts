@@ -2,7 +2,19 @@ import type { WalletCardPayload } from "./wallet-config";
 
 export function cardUrlForSlug(slug: string, request: Request) {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  const origin = configured || new URL(request.url).origin;
+  const requestOrigin = new URL(request.url).origin;
+  let origin = configured || requestOrigin;
+  if (configured) {
+    try {
+      const configuredUrl = new URL(configured);
+      const requestUrl = new URL(requestOrigin);
+      const configuredIsLocal = configuredUrl.hostname === "localhost" || configuredUrl.hostname === "127.0.0.1";
+      const requestIsLocal = requestUrl.hostname === "localhost" || requestUrl.hostname === "127.0.0.1";
+      if (configuredIsLocal && !requestIsLocal) origin = requestOrigin;
+    } catch {
+      origin = requestOrigin;
+    }
+  }
   return `${origin.replace(/\/+$/, "")}/c/${slug}`;
 }
 

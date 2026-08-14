@@ -37,4 +37,4 @@ Reload the extension at `chrome://extensions` after every update (currently **v0
 
 ## Production
 
-Set the popup base URL to your deployed app, for example `https://aftermeet-beta.vercel.app`.
+Set the popup base URL to your deployed app, for example `https://ehllo.io`.

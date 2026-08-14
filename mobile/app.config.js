@@ -10,7 +10,10 @@ if (!['staging', 'production'].includes(requestedVariant)) {
 const APP_VARIANT = requestedVariant;
 const IS_STAGING = APP_VARIANT === "staging";
 
-const BASE_BUNDLE_ID = "com.aftermeet.app";
+// `ehllo` is the public application identity. The EAS slugs/project IDs below
+// intentionally stay on their existing projects so build credentials and OTA
+// history are not orphaned during the brand migration.
+const BASE_BUNDLE_ID = "com.ehllo.app";
 const bundleId = IS_STAGING ? `${BASE_BUNDLE_ID}.staging` : BASE_BUNDLE_ID;
 const EAS_PROJECT = IS_STAGING
   ? {
@@ -31,7 +34,7 @@ const BACKEND = IS_STAGING
   : {
       supabaseUrl: "https://tgpzxgrvdmmwnodxrooh.supabase.co",
       supabaseAnonKey: "sb_publishable_pKxGkQpYza-qmBXOMrP7qQ_D4BfJ3Uj",
-      publicCardBaseUrl: "https://aftermeet-beta.vercel.app",
+      publicCardBaseUrl: "https://ehllo.io",
     };
 
 module.exports = {
@@ -39,16 +42,21 @@ module.exports = {
     name: IS_STAGING ? "ehllo Staging" : "ehllo",
     owner: "rafreo",
     slug: EAS_PROJECT.slug,
-    version: "1.0.1",
+    version: "1.0.2",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: IS_STAGING ? "aftermeet-staging" : "aftermeet",
+    // Keep the AfterMeet schemes as inbound aliases for links already shared
+    // by staging builds. New links are always emitted with the ehllo scheme.
+    scheme: IS_STAGING
+      ? ["ehllo-staging", "aftermeet-staging"]
+      : ["ehllo", "aftermeet"],
     userInterfaceStyle: "automatic",
     ios: {
       icon: "./assets/images/icon.png",
       bundleIdentifier: bundleId,
       supportsTablet: true,
       infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
         LSApplicationQueriesSchemes: [
           "linkedin",
           "twitter",
@@ -96,6 +104,9 @@ module.exports = {
     plugins: [
       "expo-router",
       "expo-dev-client",
+      "expo-asset",
+      "expo-image",
+      "expo-sharing",
       [
         "expo-notifications",
         {
@@ -198,6 +209,16 @@ module.exports = {
     experiments: {
       typedRoutes: true,
     },
+    ...(IS_STAGING
+      ? {
+          updates: {
+            url: `https://u.expo.dev/${EAS_PROJECT.projectId}`,
+          },
+          runtimeVersion: {
+            policy: "appVersion",
+          },
+        }
+      : {}),
     extra: {
       eas: {
         projectId: EAS_PROJECT.projectId,
@@ -209,8 +230,8 @@ module.exports = {
       // plain text input until this is set. Same key for both variants
       // (Places is billing-account-scoped, not staging/production-split).
       googlePlacesApiKey: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || "",
-      buildNumber: 4,
-      buildStamp: IS_STAGING ? "2026-07-28-standalone-staging" : "2026-07-28-standalone",
+      buildNumber: 5,
+      buildStamp: IS_STAGING ? "2026-08-14-ehllo-staging" : "2026-08-14-ehllo",
       appVariant: APP_VARIANT,
     },
   },

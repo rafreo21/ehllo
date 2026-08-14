@@ -1,8 +1,9 @@
-import type { EncounterAction, EncounterParticipant, EncounterPayload } from '@/features/encounters/encounter-api';
+import type { EncounterAction, EncounterParticipant } from '@/features/encounters/encounter-api';
 import { mobileFetch, readMobileApiJson } from '@/lib/mobile-api';
 import { sortFollowUps } from '@/lib/due-date';
 import type { ContactMethod } from '@/features/card/types';
 import { requestFollowUpNotificationSync } from '@/features/notifications/notification-sync-events';
+import { mapEncounterRow } from '@/features/follow-ups/encounter-mapper';
 
 export type FollowUpItem = {
   encounterId: string;
@@ -32,6 +33,13 @@ export type FollowUpItem = {
   /** The linked event's title, if any — event is an activator: absent means nothing about the follow-up's copy changes. */
   eventTitle?: string;
 };
+
+export class FollowUpConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'FollowUpConflictError';
+  }
+}
 
 const followUpMethodTypes = new Set<ContactMethod['type']>([
   'email', 'phone', 'linkedin', 'whatsapp', 'instagram', 'x', 'tiktok',
@@ -65,7 +73,7 @@ export async function fetchFollowUps(
   if (connection?.exchangeId?.trim()) params.set('exchangeId', connection.exchangeId.trim());
   const query = params.toString();
   const response = await mobileFetch(`/api/follow-ups${query ? `?${query}` : ''}`, accessToken);
-  const payload = await readMobileApiJson<{ followUps?: Array<Record<string, unknown>>; error?: string }>(
+  const payload = await readMobileApiJson<{ followUps?: Record<string, unknown>[]; error?: string }>(
     response,
     'Could not read follow-ups from ehllo.',
   );
@@ -109,32 +117,36 @@ async function updateFollowUpStatus(
   actionId: string,
   status: EncounterAction['status'],
   snoozedUntil?: string,
+  expectedStatusUpdatedAt?: string,
 ) {
   const response = await mobileFetch(`/api/encounters/${encounterId}/actions/${actionId}`, accessToken, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status, snoozedUntil }),
+    body: JSON.stringify({ status, snoozedUntil, expectedStatusUpdatedAt: expectedStatusUpdatedAt ?? null }),
   });
-  const payload = await readMobileApiJson<{ ok?: boolean; error?: string }>(
+  const payload = await readMobileApiJson<{ ok?: boolean; error?: string; conflict?: boolean }>(
     response,
     'Could not read the follow-up completion response.',
   );
+  if (response.status === 409 && payload.conflict) {
+    throw new FollowUpConflictError(payload.error || 'This follow-up changed on another device.');
+  }
   if (!response.ok || !payload.ok) {
     throw new Error(payload.error || 'Could not update this follow-up.');
   }
   requestFollowUpNotificationSync();
 }
 
-export async function completeFollowUp(accessToken: string, encounterId: string, actionId: string) {
-  await updateFollowUpStatus(accessToken, encounterId, actionId, 'completed');
+export async function completeFollowUp(accessToken: string, encounterId: string, actionId: string, expectedStatusUpdatedAt?: string) {
+  await updateFollowUpStatus(accessToken, encounterId, actionId, 'completed', undefined, expectedStatusUpdatedAt);
 }
 
-export async function reopenFollowUp(accessToken: string, encounterId: string, actionId: string) {
-  await updateFollowUpStatus(accessToken, encounterId, actionId, 'open');
+export async function reopenFollowUp(accessToken: string, encounterId: string, actionId: string, expectedStatusUpdatedAt?: string) {
+  await updateFollowUpStatus(accessToken, encounterId, actionId, 'open', undefined, expectedStatusUpdatedAt);
 }
 
-export async function dismissFollowUp(accessToken: string, encounterId: string, actionId: string) {
-  await updateFollowUpStatus(accessToken, encounterId, actionId, 'dismissed');
+export async function dismissFollowUp(accessToken: string, encounterId: string, actionId: string, expectedStatusUpdatedAt?: string) {
+  await updateFollowUpStatus(accessToken, encounterId, actionId, 'dismissed', undefined, expectedStatusUpdatedAt);
 }
 
 export async function snoozeFollowUp(
@@ -142,20 +154,21 @@ export async function snoozeFollowUp(
   encounterId: string,
   actionId: string,
   snoozedUntil: string,
+  expectedStatusUpdatedAt?: string,
 ) {
-  await updateFollowUpStatus(accessToken, encounterId, actionId, 'snoozed', snoozedUntil);
+  await updateFollowUpStatus(accessToken, encounterId, actionId, 'snoozed', snoozedUntil, expectedStatusUpdatedAt);
 }
 
 export async function fetchEncounterRecords(accessToken: string) {
   const response = await mobileFetch('/api/encounters', accessToken);
-  const payload = await readMobileApiJson<{ encounters?: Array<Record<string, unknown>>; error?: string }>(
+  const payload = await readMobileApiJson<{ encounters?: Record<string, unknown>[]; error?: string }>(
     response,
     'Could not read meetings from ehllo.',
   );
   if (!response.ok) {
     throw new Error(payload.error || 'Could not load encounters.');
   }
-  return (payload.encounters ?? []).map((row) => mapEncounter(row));
+  return (payload.encounters ?? []).map(mapEncounterRow);
 }
 
 export async function fetchEncountersForConnection(
@@ -169,7 +182,7 @@ export async function fetchEncountersForConnection(
   if (input.exchangeId?.trim()) params.set('exchangeId', input.exchangeId.trim());
 
   const response = await mobileFetch(`/api/encounters?${params.toString()}`, accessToken);
-  const payload = await readMobileApiJson<{ encounters?: Array<Record<string, unknown>>; error?: string }>(
+  const payload = await readMobileApiJson<{ encounters?: Record<string, unknown>[]; error?: string }>(
     response,
     'Could not read meetings for this person.',
   );
@@ -177,30 +190,7 @@ export async function fetchEncountersForConnection(
     throw new Error(payload.error || 'Could not load meetings.');
   }
 
-  return (payload.encounters ?? []).map((row) => mapEncounter(row));
-}
-
-function mapEncounter(row: Record<string, unknown>): EncounterPayload {
-  return {
-    id: String(row.id ?? ''),
-    title: String(row.title ?? ''),
-    personName: String(row.personName ?? row.person_name ?? ''),
-    personEmail: String(row.personEmail ?? row.person_email ?? ''),
-    contactId: typeof row.contactId === 'string' ? row.contactId : typeof row.contact_id === 'string' ? row.contact_id : undefined,
-    exchangeId: typeof row.exchangeId === 'string' ? row.exchangeId : typeof row.exchange_id === 'string' ? row.exchange_id : undefined,
-    startedAt: String(row.startedAt ?? row.started_at ?? ''),
-    endedAt: String(row.endedAt ?? row.ended_at ?? ''),
-    durationSeconds: typeof row.durationSeconds === 'number' ? row.durationSeconds : Number(row.duration_seconds ?? 0),
-    consent: row.consent as EncounterPayload['consent'],
-    transcript: String(row.transcript ?? ''),
-    privateNotes: String(row.privateNotes ?? row.private_notes ?? ''),
-    sharedSummary: String(row.sharedSummary ?? row.shared_summary ?? ''),
-    actions: Array.isArray(row.actions) ? row.actions as EncounterAction[] : [],
-    participants: Array.isArray(row.participants) ? row.participants as EncounterPayload['participants'] : [],
-    status: (row.status as EncounterPayload['status']) ?? 'draft',
-    shareToken: String(row.shareToken ?? row.share_token ?? ''),
-    recording: row.recording as EncounterPayload['recording'],
-  };
+  return (payload.encounters ?? []).map(mapEncounterRow);
 }
 
 export function followUpsForPerson(items: FollowUpItem[], personName: string, personEmail?: string) {

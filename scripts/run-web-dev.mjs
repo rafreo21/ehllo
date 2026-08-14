@@ -8,8 +8,8 @@ if (!['staging', 'production'].includes(environment)) {
   process.exit(1);
 }
 
-if (environment === 'production' && process.env.AFTERMEET_ALLOW_PRODUCTION !== '1') {
-  console.error('Production access is locked. Set AFTERMEET_ALLOW_PRODUCTION=1 for this command only.');
+if (environment === 'production' && process.env.EHLLO_ALLOW_PRODUCTION !== '1' && process.env.AFTERMEET_ALLOW_PRODUCTION !== '1') {
+  console.error('Production access is locked. Set EHLLO_ALLOW_PRODUCTION=1 for this command only.');
   process.exit(1);
 }
 
@@ -62,6 +62,8 @@ for (const key of [
   delete childEnv[key];
 }
 Object.assign(childEnv, selected, {
+  EHLLO_ENVIRONMENT: environment,
+  // Legacy alias retained until all deployed jobs use EHLLO_ENVIRONMENT.
   AFTERMEET_ENVIRONMENT: environment,
   WRANGLER_LOG_PATH: '.wrangler/wrangler.log',
 });

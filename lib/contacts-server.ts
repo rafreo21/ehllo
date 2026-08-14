@@ -53,6 +53,7 @@ export function contactFromRow(row: ContactRow): Contact {
     exchangeId: row.exchange_id ?? undefined,
     campaignId: row.campaign_id ?? undefined,
     legacyId: row.legacy_id ?? undefined,
+    updatedAt: row.updated_at,
   };
 }
 

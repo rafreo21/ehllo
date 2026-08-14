@@ -11,6 +11,7 @@ import {
 import type { LibraryCard } from "../../../lib/card-library";
 import { resolveCardImagesForPublish } from "../../../lib/card-publish-images";
 import { createServiceSupabaseClient } from "../../../lib/supabase/service";
+import { detectEncounterConflict } from "../../../lib/encounter-conflict";
 
 const slugPattern = /^card-[a-f0-9]{16}$|^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const themePattern = /^#[0-9A-Fa-f]{6}$/;
@@ -111,6 +112,16 @@ export async function POST(request: Request) {
 
   const supabase = await createApiSupabaseClient(request);
   const existing = await findExistingCard(supabase, user.workspaceId, body);
+  const expectedUpdatedAt = typeof (body as LibraryCard & { expectedUpdatedAt?: unknown }).expectedUpdatedAt === "string"
+    ? (body as LibraryCard & { expectedUpdatedAt: string }).expectedUpdatedAt
+    : undefined;
+  if (existing && detectEncounterConflict(existing.updated_at, expectedUpdatedAt)) {
+    return NextResponse.json({
+      error: "This card changed on another device. Reload the latest card before saving again.",
+      conflict: true,
+      serverUpdatedAt: existing.updated_at,
+    }, { status: 409 });
+  }
   const status = existing?.status === "published" ? "published" : "draft";
 
   let photo = body.photo || "";
@@ -138,11 +149,28 @@ export async function POST(request: Request) {
     owner_user_id: user.id,
   };
 
-  const { data: saved, error } = await supabase
-    .from("cards")
-    .upsert(row, { onConflict: "id" })
-    .select("*")
-    .single();
+  const write = existing && expectedUpdatedAt
+    ? supabase
+        .from("cards")
+        .update(row)
+        .eq("id", existing.id)
+        .eq("workspace_id", user.workspaceId)
+        .eq("updated_at", expectedUpdatedAt)
+        .select("*")
+        .maybeSingle()
+    : supabase
+        .from("cards")
+        .upsert(row, { onConflict: "id" })
+        .select("*")
+        .single();
+  const { data: saved, error } = await write;
+
+  if (!error && !saved && existing && expectedUpdatedAt) {
+    return NextResponse.json({
+      error: "This card changed on another device. Reload the latest card before saving again.",
+      conflict: true,
+    }, { status: 409 });
+  }
 
   if (error || !saved) {
     const limitReached = error?.message.toLowerCase().includes("five active cards");

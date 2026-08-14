@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState } from 'react-native';
 
 import { useAuth } from '@/features/auth/auth-context';
 import {
@@ -22,6 +21,7 @@ import { syncCardToolsForCard } from '@/features/card/card-tools-sync';
 import { uploadCardImagesForPublish } from '@/features/card/card-image-upload';
 import { describePublishError, formatPublishError, type PublishCardResult, validateCardForPublish } from '@/features/card/publish-card';
 import { readEnv } from '@/lib/env';
+import { useForegroundSync } from '@/lib/background-sync';
 import { mobileFetch } from '@/lib/mobile-api';
 import { clearPublishedBaseline, ensurePublishedBaseline, writePublishedBaseline } from '@/lib/published-baseline';
 import { getSupabase } from '@/lib/supabase';
@@ -282,25 +282,7 @@ export function CardProvider({ children }: PropsWithChildren) {
     }
   }, [persistCards, saveRemoteCard, session, setCardDirty]);
 
-  useEffect(() => {
-    if (!session) return;
-    const task = setTimeout(() => { void sync(); }, 0);
-    return () => clearTimeout(task);
-  }, [session, sync]);
-
-  useEffect(() => {
-    if (!session) return;
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') void sync();
-    });
-    const interval = setInterval(() => {
-      if (AppState.currentState === 'active') void sync();
-    }, 30_000);
-    return () => {
-      subscription.remove();
-      clearInterval(interval);
-    };
-  }, [session, sync]);
+  useForegroundSync(Boolean(session), sync);
 
   const setPrimaryCard = useCallback(async (id: string) => {
     const currentCards = cardsRef.current;
@@ -370,12 +352,11 @@ export function CardProvider({ children }: PropsWithChildren) {
   }, []);
 
   const publishCard = useCallback(async (id = activeCardId, cardOverride?: MobileCard): Promise<PublishCardResult> => {
-    const supabase = getSupabase();
     const target = cardOverride
       ?? cardsRef.current.find((item) => item.id === id)
       ?? cardsRef.current.find((item) => item.id === activeCardIdRef.current)
       ?? activeCard;
-    if (!supabase || !session) {
+    if (!session) {
       const failure = describePublishError('Sign in to publish this card.');
       setPublishError(failure.message);
       return { ok: false, ...failure };
@@ -400,24 +381,21 @@ export function CardProvider({ children }: PropsWithChildren) {
           publishTarget = await saveRemoteCard(target, { strictImages: true }) || target;
         }
 
-        const { data, error } = await supabase.rpc('publish_my_card', {
-          p_slug: publishTarget.slug,
-          p_full_name: publishTarget.name,
-          p_job_title: publishTarget.role,
-          p_company: publishTarget.company,
-          p_bio: publishTarget.bio,
-          p_theme_color: normalizeThemeColor(publishTarget.theme),
-          p_profile_image_url: publishTarget.photo || '',
-          p_company_logo_url: publishTarget.showCompanyDetails !== false ? (publishTarget.companyLogo || '') : '',
-          p_cover_image_url: publishTarget.coverPhoto || '',
-          p_show_company_details: publishTarget.showCompanyDetails !== false,
-          p_methods: publishTarget.methods.map((method, sortOrder) => ({ ...method, sortOrder })),
+        const response = await mobileFetch('/api/cards/publish', session.access_token, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...publishTarget,
+            expectedUpdatedAt: publishTarget.serverUpdatedAt,
+          }),
         });
-        if (error) throw error;
+        const publishPayload = await response.json().catch(() => null) as { cardId?: string; updatedAt?: string; error?: string } | null;
+        if (!response.ok) throw new Error(publishPayload?.error || 'We couldn’t publish this card.');
 
         const publishedCard = normalizeCard({
           ...publishTarget,
-          id: String(data),
+          id: String(publishPayload?.cardId || publishTarget.id),
+          serverUpdatedAt: publishPayload?.updatedAt || publishTarget.serverUpdatedAt,
           status: 'published',
         });
         const nextCards = cardsRef.current.map((item) => (

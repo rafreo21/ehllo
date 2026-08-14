@@ -11,9 +11,9 @@
 
 export APP_VARIANT="${APP_VARIANT:-production}"
 if [ "$APP_VARIANT" = "staging" ]; then
-  BUNDLE_ID="com.aftermeet.app.staging"
+  BUNDLE_ID="com.ehllo.app.staging"
 else
-  BUNDLE_ID="com.aftermeet.app"
+  BUNDLE_ID="com.ehllo.app"
 fi
 set -euo pipefail
 

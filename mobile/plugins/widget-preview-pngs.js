@@ -146,7 +146,7 @@ function drawQrScanPreview() {
   canvas.strokeRoundRect(inset, inset, frame, frame, 18 * scale, 3 * scale, COLORS.accent);
   const qrInset = inset + 10 * scale;
   const qrSize = frame - 20 * scale;
-  drawQr(canvas, qrInset, qrInset, qrSize, qrMatrix('https://aftermeet.app/c/demo'), { logoSize: 22 * scale });
+  drawQr(canvas, qrInset, qrInset, qrSize, qrMatrix('https://ehllo.io/c/demo'), { logoSize: 22 * scale });
   return canvas.toPng();
 }
 
@@ -162,7 +162,7 @@ function drawBusinessCardPreview() {
   const qrX = 12 * scale;
   const qrY = Math.round((height - qrBox) / 2);
   canvas.fillRoundRect(qrX, qrY, qrBox, qrBox, 12 * scale, COLORS.panel);
-  drawQr(canvas, qrX + 6 * scale, qrY + 6 * scale, qrBox - 12 * scale, qrMatrix('https://aftermeet.app/c/demo'), { logoSize: 16 * scale });
+  drawQr(canvas, qrX + 6 * scale, qrY + 6 * scale, qrBox - 12 * scale, qrMatrix('https://ehllo.io/c/demo'), { logoSize: 16 * scale });
 
   const textX = qrX + qrBox + 12 * scale;
   canvas.fillRoundRect(textX, 18 * scale, 28 * scale, 28 * scale, 14 * scale, COLORS.avatar);

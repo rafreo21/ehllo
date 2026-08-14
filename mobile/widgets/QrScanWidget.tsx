@@ -39,8 +39,8 @@ function QrScanWidget(props: QrScanWidgetProps) {
     name: 'Alex Morgan',
     role: 'Product Designer',
     company: 'ehllo',
-    cardUrl: 'https://aftermeet.app/c/demo',
-    shareDeepLink: 'aftermeet://share-card',
+    cardUrl: 'https://ehllo.io/c/demo',
+    shareDeepLink: 'ehllo://share-card',
     initials: 'AM',
   };
 
@@ -71,7 +71,7 @@ function QrScanWidget(props: QrScanWidgetProps) {
 
   const cards = parseCardsJson(props.cardsJson);
   const card = activeCard(cards, 0);
-  const deepLink = card.shareDeepLink || props.shareDeepLink || 'aftermeet://share-card';
+  const deepLink = card.shareDeepLink || props.shareDeepLink || 'ehllo://share-card';
   const qrImageUri = card.qrImageUri || props.qrImageUri;
 
   return (

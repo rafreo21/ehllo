@@ -12,9 +12,9 @@ cd "$ROOT"
 
 export APP_VARIANT="${APP_VARIANT:-production}"
 METRO_PORT=8081
-SCHEME="aftermeet"
+SCHEME="ehllo"
 if [[ "$APP_VARIANT" == "staging" ]]; then
-  SCHEME="aftermeet-staging"
+  SCHEME="ehllo-staging"
 fi
 
 if adb devices | grep -v '^List' | grep -q 'device$'; then

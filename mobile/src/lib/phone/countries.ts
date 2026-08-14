@@ -5,7 +5,7 @@ export type Country = {
   flag: string;
 };
 
-const RAW: Array<[iso: string, name: string, dialCode: string]> = [
+const RAW: [iso: string, name: string, dialCode: string][] = [
   ["AF", "Afghanistan", "93"],
   ["AL", "Albania", "355"],
   ["DZ", "Algeria", "213"],

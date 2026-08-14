@@ -19,6 +19,7 @@ type MeetingDetailSheetProps = {
   followUps: FollowUpItem[];
   /** The linked event's title, if any — event is an activator here: with nothing linked, the meta row is unchanged. */
   eventTitle?: string;
+  eventLocation?: string;
   onClose: () => void;
   onPressFollowUp: (item: FollowUpItem) => void;
   onCompleteFollowUp: (item: FollowUpItem) => void;
@@ -33,6 +34,7 @@ export function MeetingDetailSheet({
   recordingUri,
   followUps,
   eventTitle,
+  eventLocation,
   onClose,
   onPressFollowUp,
   onCompleteFollowUp,
@@ -55,7 +57,11 @@ export function MeetingDetailSheet({
       title={encounter.title.trim() || formatMeetingDate(encounter.startedAt)}
       onClose={onClose}>
       <View style={styles.metaRow}>
-        {eventTitle ? <Text style={styles.meta}>Where we met: {eventTitle}</Text> : null}
+        {eventTitle ? (
+          <Text style={styles.meta}>
+            Where we met: {eventTitle}{eventLocation ? ` · ${eventLocation}` : ''}
+          </Text>
+        ) : null}
         <Text style={styles.meta}>{formatMeetingDate(encounter.startedAt)}</Text>
       </View>
 

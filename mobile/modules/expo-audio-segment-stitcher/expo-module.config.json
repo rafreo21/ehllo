@@ -4,6 +4,6 @@
     "modules": ["ExpoAudioSegmentStitcherModule"]
   },
   "android": {
-    "modules": ["com.aftermeet.app.audiosegmentstitcher.ExpoAudioSegmentStitcherModule"]
+    "modules": ["com.ehllo.app.audiosegmentstitcher.ExpoAudioSegmentStitcherModule"]
   }
 }

@@ -20,6 +20,7 @@ export async function GET(request: Request) {
     .select("left_at, events!inner(*)")
     .eq("user_id", user.id)
     .eq("status", "going")
+    .eq("events.status", "scheduled")
     .order("starts_at", { referencedTable: "events", ascending: true });
 
   if (error) {
@@ -46,7 +47,11 @@ export async function POST(request: Request) {
   if (!body || !title || !startsAt || Number.isNaN(Date.parse(startsAt))) {
     return NextResponse.json({ error: "An event needs at least a name and a start time." }, { status: 400 });
   }
-  const endsAt = body.endsAt?.trim() && !Number.isNaN(Date.parse(body.endsAt.trim())) ? body.endsAt.trim() : null;
+  const suppliedEnd = body.endsAt?.trim() ?? "";
+  if (suppliedEnd && (Number.isNaN(Date.parse(suppliedEnd)) || Date.parse(suppliedEnd) <= Date.parse(startsAt))) {
+    return NextResponse.json({ error: "The event end time must be after its start time." }, { status: 400 });
+  }
+  const endsAt = suppliedEnd || null;
   const sourceUrl = body.sourceUrl?.trim().slice(0, 2000) ?? "";
 
   const user = await resolveApiUser(request);
@@ -69,20 +74,6 @@ export async function POST(request: Request) {
 
   if (error || !data) {
     return NextResponse.json({ error: "We couldn’t save this event." }, { status: 500 });
-  }
-
-  // A user who bothered to add this event themselves is, by definition,
-  // going — no separate Going/Not going ask for a self-added event, that
-  // question only applies to calendar-suggested candidates.
-  const { error: attendanceError } = await supabase.from("event_attendance").upsert({
-    event_id: data.id,
-    user_id: user.id,
-    status: "going",
-    updated_at: new Date().toISOString(),
-  }, { onConflict: "event_id,user_id" });
-
-  if (attendanceError) {
-    return NextResponse.json({ error: "The event was saved but we couldn’t mark you as going." }, { status: 500 });
   }
 
   return NextResponse.json(

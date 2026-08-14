@@ -53,6 +53,19 @@ test("google wallet jwt origins use hostnames", async () => {
   process.env.NEXT_PUBLIC_APP_URL = previous;
 });
 
+test("wallet card URLs never leak a local development origin into a deployed request", async () => {
+  const previous = process.env.NEXT_PUBLIC_APP_URL;
+  process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
+  const { cardUrlForSlug } = await import("../lib/wallet-card-loader.ts");
+
+  assert.equal(
+    cardUrlForSlug("demo", new Request("https://aftermeet-staging.vercel.app/api/mobile/wallet/google/demo")),
+    "https://aftermeet-staging.vercel.app/c/demo",
+  );
+
+  process.env.NEXT_PUBLIC_APP_URL = previous;
+});
+
 test("html email signature includes structured layout and card link", async () => {
   const { buildHtmlSignature } = await import("../lib/email-signature.ts");
   const html = buildHtmlSignature({

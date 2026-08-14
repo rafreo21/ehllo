@@ -10,7 +10,7 @@ import { cacheWidgetPhotoUri, ensureWidgetLogoUri, readUriAsBase64 } from '@/lib
 import { readEnv } from '@/lib/env';
 import { buildWidgetQrFileUri } from '@/lib/widget-qr';
 
-export const CONNECTIONS_DEEP_LINK = 'aftermeet://connections';
+export const CONNECTIONS_DEEP_LINK = 'ehllo://connections';
 
 type WidgetBridge = {
   updateWidget?: (payload: Record<string, string | undefined>) => Promise<void>;
@@ -126,7 +126,7 @@ export async function buildWidgetSnapshot(
   const widgetCards = await Promise.all(
     cardTargets.map(async (card, index) => {
       const resolvedUrl = cardPublicUrl(card)
-        || `${env?.publicCardBaseUrl || 'https://aftermeet.app'}/c/${card.slug || 'demo'}`;
+        || `${env?.publicCardBaseUrl || 'https://ehllo.io'}/c/${card.slug || 'demo'}`;
       return buildWidgetCardPayload(card, resolvedUrl, widgetAssetKey(card, index));
     }),
   );
@@ -263,7 +263,7 @@ export async function updateQuickShareWidget(
   const env = readEnv();
   const urlFn = cardPublicUrl || ((item: MobileCard) => {
     if (item.id === card.id && publicUrl) return publicUrl;
-    return `${env?.publicCardBaseUrl || 'https://aftermeet.app'}/c/${item.slug}`;
+    return `${env?.publicCardBaseUrl || 'https://ehllo.io'}/c/${item.slug}`;
   });
   await syncAllWidgets(allCards, urlFn, accessToken, card);
 }

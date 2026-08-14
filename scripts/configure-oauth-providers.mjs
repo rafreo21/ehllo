@@ -18,14 +18,14 @@
  *
  * Optional:
  *   SUPABASE_PROJECT_REF=tgpzxgrvdmmwnodxrooh
- *   AFTERMEET_SITE_URL=http://localhost:3000
+ *   EHLLO_SITE_URL=http://localhost:3000
  *   AFTERMEET_REDIRECT_URLS=http://localhost:3000/auth/callback,http://localhost:3001/auth/callback
  */
 
 const PROJECT_REF = process.env.SUPABASE_PROJECT_REF ?? "tgpzxgrvdmmwnodxrooh";
 const ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN?.trim();
-const PRODUCTION_URL = "https://aftermeet-beta.vercel.app";
-const SITE_URL = (process.env.AFTERMEET_SITE_URL ?? PRODUCTION_URL).replace(/\/+$/, "");
+const PRODUCTION_URL = "https://ehllo.io";
+const SITE_URL = (process.env.EHLLO_SITE_URL ?? process.env.AFTERMEET_SITE_URL ?? PRODUCTION_URL).replace(/\/+$/, "");
 const REDIRECT_URLS =
   process.env.AFTERMEET_REDIRECT_URLS ??
   [

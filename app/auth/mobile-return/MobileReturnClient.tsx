@@ -18,7 +18,7 @@ export function MobileReturnClient({ appBaseUrl }: { appBaseUrl: string }) {
 
   const code = readParam(params, "code");
   const oauthError = readParam(params, "error") || readParam(params, "error_description");
-  const returnTo = readParam(params, "return_to") || "aftermeet://auth/callback";
+  const returnTo = readParam(params, "return_to") || "ehllo://auth/callback";
   const [opened, setOpened] = useState(false);
 
   const appLink = code ? buildAppLink(returnTo, code) : "";

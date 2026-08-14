@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { QuickFollowUpItem, QuickFollowUpTarget } from '@/features/follow-ups/quick-follow-up-types';
+import type { EventSnapshot } from '@/features/events/event-cache';
 
 export const QUICK_FOLLOW_UP_QUEUE_KEY = 'aftermeet.mobile.quick-follow-up-queue.v1';
 
@@ -8,6 +9,7 @@ export type QuickFollowUpQueueEntry = QuickFollowUpTarget & {
   id: string;
   followUps: QuickFollowUpItem[];
   queuedAt: string;
+  eventSnapshot?: EventSnapshot;
 };
 
 export async function readQuickFollowUpQueue(): Promise<QuickFollowUpQueueEntry[]> {
