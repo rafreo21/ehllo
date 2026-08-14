@@ -123,8 +123,8 @@ module.exports = {
       [
         "@sentry/react-native/expo",
         {
-          organization: process.env.SENTRY_ORG,
-          project: process.env.SENTRY_PROJECT_MOBILE,
+          organization: "ehllo",
+          project: "ehllo-mobile",
         },
       ],
       [
@@ -250,6 +250,11 @@ module.exports = {
       // plain text input until this is set. Same key for both variants
       // (Places is billing-account-scoped, not staging/production-split).
       googlePlacesApiKey: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || "",
+      // DSNs are not secret (Sentry's own docs: safe to expose client-side,
+      // same trust tier as the Supabase anon key above) — hardcoded here
+      // rather than via env var since this project never wires EAS env vars
+      // through to runtime (see BACKEND above), only local-only .env.
+      sentryDsn: "https://95ecbc235e3dc8301c48cb83da697b06@o4511911251214336.ingest.us.sentry.io/4511911445463040",
       buildNumber: 5,
       buildStamp: IS_STAGING ? "2026-08-14-ehllo-staging" : "2026-08-14-ehllo",
       appVariant: APP_VARIANT,

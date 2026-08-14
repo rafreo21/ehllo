@@ -26,7 +26,7 @@ import { WidgetQrRenderer } from '@/lib/widget-qr-renderer';
 import { colors } from '@/theme/tokens';
 
 Sentry.init({
-  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  dsn: Constants.expoConfig?.extra?.sentryDsn,
   environment: Constants.expoConfig?.extra?.appVariant || 'unknown',
   tracesSampleRate: 0.1,
   enableAutoSessionTracking: true,
