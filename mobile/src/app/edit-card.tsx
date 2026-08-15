@@ -308,8 +308,8 @@ export default function EditCardScreen() {
 
                 <View style={styles.photoRow}>
                   {([
-                    ['companyLogo', 'Company logo'],
                     ['photo', 'Profile photo'],
+                    ['companyLogo', 'Company logo'],
                   ] as const).map(([key, label]) => (
                     <View key={key} style={styles.photoWrap}>
                       <Pressable
@@ -627,12 +627,14 @@ const styles = StyleSheet.create({
     gap: spacing.x2,
     borderRadius: radius.medium,
     backgroundColor: colors.canvas,
-    borderWidth: 1,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
     borderColor: colors.line,
     overflow: 'hidden',
   },
   photoSlotFilled: {
     padding: 0,
+    borderStyle: 'solid',
   },
   photoPreview: {
     ...StyleSheet.absoluteFill,

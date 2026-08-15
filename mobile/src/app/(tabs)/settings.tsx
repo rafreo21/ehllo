@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { Bell, CalendarBlank, CaretRight, CloudArrowUp, DeviceMobile, IdentificationBadge, ListChecks, Microphone, Plugs, Scan, UsersThree } from 'phosphor-react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { QuickActionsFab } from '@/components/quick-actions-fab';
@@ -24,6 +24,19 @@ export default function SettingsScreen() {
   const [recordingSheetOpen, setRecordingSheetOpen] = useState(false);
   const [integrationStatus, setIntegrationStatus] = useState<ConnectedAccountStatus | null>(null);
 
+  // A single tap can occasionally deliver more than one onPress call on this
+  // screen's Pressables (seen on both platforms) — each call pushes another
+  // stack entry, so the same screen opens 2-3 times. Gate every navigation
+  // here behind a short cooldown instead of relying on distinguishing real
+  // repeat taps from duplicate events at the touch layer.
+  const lastNavRef = useRef(0);
+  function navigate(href: Parameters<typeof router.push>[0]) {
+    const now = Date.now();
+    if (now - lastNavRef.current < 700) return;
+    lastNavRef.current = now;
+    router.push(href);
+  }
+
   useEffect(() => {
     void readRecordingStorageDestination().then(setRecordingDestination);
   }, []);
@@ -40,7 +53,7 @@ export default function SettingsScreen() {
 
   function openConnectedAccounts() {
     setRecordingSheetOpen(false);
-    router.push('/settings/connected-accounts');
+    navigate('/settings/connected-accounts');
   }
 
   if (loading) {
@@ -64,12 +77,12 @@ export default function SettingsScreen() {
         }>
         <Pressable
         accessibilityRole="button"
-        onPress={() => router.push('/settings/edit-profile')}
+        onPress={() => navigate('/settings/edit-profile')}
         style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
         <View style={styles.linkCopy}>
           <View style={styles.linkTitleRow}>
             <IdentificationBadge size={18} color={colors.ink} weight="bold" />
-            <Text style={styles.label}>Edit profile</Text>
+            <Text style={styles.rowTitle}>Edit profile</Text>
           </View>
           <Text style={styles.linkHint}>Full name, email, and phone number</Text>
         </View>
@@ -78,12 +91,12 @@ export default function SettingsScreen() {
 
       <Pressable
         accessibilityRole="button"
-        onPress={() => router.push('/settings/follow-ups')}
+        onPress={() => navigate('/settings/follow-ups')}
         style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
         <View style={styles.linkCopy}>
           <View style={styles.linkTitleRow}>
             <ListChecks size={18} color={colors.ink} weight="bold" />
-            <Text style={styles.label}>Follow-ups</Text>
+            <Text style={styles.rowTitle}>Follow-ups</Text>
           </View>
           <Text style={styles.linkHint}>Current actions and completed follow-ups</Text>
         </View>
@@ -92,12 +105,12 @@ export default function SettingsScreen() {
 
       <Pressable
         accessibilityRole="button"
-        onPress={() => router.push('/events')}
+        onPress={() => navigate('/events')}
         style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
         <View style={styles.linkCopy}>
           <View style={styles.linkTitleRow}>
             <CalendarBlank size={18} color={colors.ink} weight="bold" />
-            <Text style={styles.label}>My events</Text>
+            <Text style={styles.rowTitle}>My events</Text>
           </View>
           <Text style={styles.linkHint}>Events you&apos;re going to, and ones from your calendar</Text>
         </View>
@@ -106,12 +119,12 @@ export default function SettingsScreen() {
 
       <Pressable
         accessibilityRole="button"
-        onPress={() => router.push('/connections')}
+        onPress={() => navigate('/connections')}
         style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
         <View style={styles.linkCopy}>
           <View style={styles.linkTitleRow}>
             <UsersThree size={18} color={colors.ink} weight="bold" />
-            <Text style={styles.label}>My connections</Text>
+            <Text style={styles.rowTitle}>My connections</Text>
           </View>
           <Text style={styles.linkHint}>People you&apos;ve met and cards you&apos;ve saved</Text>
         </View>
@@ -120,12 +133,12 @@ export default function SettingsScreen() {
 
       <Pressable
         accessibilityRole="button"
-        onPress={() => router.push('/settings/recent-scans')}
+        onPress={() => navigate('/settings/recent-scans')}
         style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
         <View style={styles.linkCopy}>
           <View style={styles.linkTitleRow}>
             <Scan size={18} color={colors.ink} weight="bold" />
-            <Text style={styles.label}>Recent scans</Text>
+            <Text style={styles.rowTitle}>Recent scans</Text>
           </View>
           <Text style={styles.linkHint}>People who scanned your card but aren&apos;t saved yet</Text>
         </View>
@@ -134,12 +147,12 @@ export default function SettingsScreen() {
 
       <Pressable
         accessibilityRole="button"
-        onPress={() => router.push('/capture')}
+        onPress={() => navigate('/capture')}
         style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
         <View style={styles.linkCopy}>
           <View style={styles.linkTitleRow}>
             <Microphone size={18} color={colors.ink} weight="bold" />
-            <Text style={styles.label}>Capture context</Text>
+            <Text style={styles.rowTitle}>Capture context</Text>
           </View>
           <Text style={styles.linkHint}>Recordings, drafts, and captures needing review</Text>
         </View>
@@ -148,12 +161,12 @@ export default function SettingsScreen() {
 
       <Pressable
         accessibilityRole="button"
-        onPress={() => router.push('/settings/pending-sync')}
+        onPress={() => navigate('/settings/pending-sync')}
         style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
         <View style={styles.linkCopy}>
           <View style={styles.linkTitleRow}>
             <CloudArrowUp size={18} color={colors.ink} weight="bold" />
-            <Text style={styles.label}>Pending sync</Text>
+            <Text style={styles.rowTitle}>Pending sync</Text>
           </View>
           <Text style={styles.linkHint}>See work saved on this device and retry uploads</Text>
         </View>
@@ -162,12 +175,12 @@ export default function SettingsScreen() {
 
       <Pressable
         accessibilityRole="button"
-        onPress={() => router.push('/settings/connected-accounts')}
+        onPress={() => navigate('/settings/connected-accounts')}
         style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
         <View style={styles.linkCopy}>
           <View style={styles.linkTitleRow}>
             <Plugs size={18} color={colors.ink} weight="bold" />
-            <Text style={styles.label}>Connected accounts</Text>
+            <Text style={styles.rowTitle}>Connected accounts</Text>
           </View>
           <Text style={styles.linkHint}>Google, Microsoft, and future integrations</Text>
         </View>
@@ -177,12 +190,12 @@ export default function SettingsScreen() {
       {session ? (
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.push('/settings/notifications')}
+          onPress={() => navigate('/settings/notifications')}
           style={({ pressed }) => [styles.linkPanel, pressed && styles.linkPanelPressed]}>
           <View style={styles.linkCopy}>
             <View style={styles.linkTitleRow}>
               <Bell size={18} color={colors.ink} weight="bold" />
-              <Text style={styles.label}>Notification preferences</Text>
+              <Text style={styles.rowTitle}>Notification preferences</Text>
             </View>
             <Text style={styles.linkHint}>How ehllo reminds you about follow-ups</Text>
           </View>
@@ -197,7 +210,7 @@ export default function SettingsScreen() {
         <View style={styles.linkCopy}>
           <View style={styles.linkTitleRow}>
             <CloudArrowUp size={18} color={colors.ink} weight="bold" />
-            <Text style={styles.label}>Recording storage</Text>
+            <Text style={styles.rowTitle}>Recording storage</Text>
           </View>
           <Text style={styles.linkHint}>{recordingStorageDestinationLabel(recordingDestination)}</Text>
         </View>
@@ -270,7 +283,7 @@ export default function SettingsScreen() {
         <Text style={styles.hint}>Android and iOS staging should show the same runtime and update ID.</Text>
       </Panel>
       {!session ? (
-        <Button onPress={() => router.push('/auth')}>Sign in or sign up</Button>
+        <Button onPress={() => navigate('/auth')}>Sign in or sign up</Button>
       ) : (
         <Button
           variant="secondary"
@@ -294,6 +307,7 @@ const styles = StyleSheet.create({
   header: { gap: spacing.x3 },
   title: { fontSize: 30, lineHeight: 32 },
   label: { color: colors.muted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  rowTitle: { color: colors.ink, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
   value: { marginTop: 8, color: colors.ink, fontSize: 17, fontWeight: '800' },
   hint: { marginTop: 5, color: colors.muted, fontSize: 12, lineHeight: 18 },
   linkPanel: {

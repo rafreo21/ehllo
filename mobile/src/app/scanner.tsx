@@ -2,13 +2,12 @@ import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'ex
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
-import { QrCode } from 'phosphor-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BackButton, Body, Button, Eyebrow } from '@/components/ui';
 import { ConnectionSuccessSheet } from '@/components/connection-success-sheet';
-import { GreenHeroCard } from '@/components/green-hero-card';
+import { EmptyState } from '@/components/empty-state';
 import { ScanShareSkeleton } from '@/components/skeleton';
 import { useAuth } from '@/features/auth/auth-context';
 import { connectionFromScannedSlug, type ScannedCardResult } from '@/features/connections/connections-api';
@@ -116,8 +115,8 @@ export default function ScannerScreen() {
               <Body>Scan someone’s ehllo QR code to save their card and open their connection.</Body>
             </View>
           </View>
-          <GreenHeroCard
-            icon={<QrCode size={28} color={colors.white} weight="bold" />}
+          <EmptyState
+            illustration={require('@/assets/animations/scanner.json')}
             title="Sign in to scan cards"
             copy="Save cards you scan and keep everyone you meet in one place."
             primaryLabel="Sign in"

@@ -3,6 +3,7 @@ import LottieView from 'lottie-react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button, PillButton } from '@/components/ui';
+import { useDeferredMount } from '@/lib/use-deferred-mount';
 import { colors, spacing } from '@/theme/tokens';
 
 type ConnectionSuccessSheetProps = {
@@ -23,6 +24,7 @@ export function ConnectionSuccessSheet({
   onViewCard,
 }: ConnectionSuccessSheetProps) {
   const name = personName.trim() || 'them';
+  const showLottie = useDeferredMount(visible);
 
   return (
     <BottomSheet
@@ -39,12 +41,14 @@ export function ConnectionSuccessSheet({
       )}>
       <View style={styles.body}>
         <View style={styles.icon}>
-          <LottieView
-            source={require('@/assets/animations/connection-captured.json')}
-            autoPlay
-            loop={false}
-            style={styles.lottie}
-          />
+          {showLottie ? (
+            <LottieView
+              source={require('@/assets/animations/connection-captured.json')}
+              autoPlay
+              loop={false}
+              style={styles.lottie}
+            />
+          ) : null}
         </View>
         <Text style={styles.title}>You&apos;re connected with {name}</Text>
         <Body style={styles.copy}>

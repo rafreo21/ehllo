@@ -3,6 +3,7 @@ import LottieView, { type AnimationObject } from 'lottie-react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
+import { useDeferredMount } from '@/lib/use-deferred-mount';
 import { spacing } from '@/theme/tokens';
 
 type OutcomeSuccessSheetProps = {
@@ -21,6 +22,7 @@ export function OutcomeSuccessSheet({
   lottieSource,
 }: OutcomeSuccessSheetProps) {
   const trimmed = message.trim();
+  const showLottie = useDeferredMount(visible);
 
   return (
     <BottomSheet
@@ -30,12 +32,14 @@ export function OutcomeSuccessSheet({
       footer={<Button onPress={onClose}>OK</Button>}>
       <View style={styles.group}>
         <View style={styles.videoWrap}>
-          <LottieView
-            source={lottieSource || require('@/assets/animations/success.json')}
-            autoPlay
-            loop={false}
-            style={styles.video}
-          />
+          {showLottie ? (
+            <LottieView
+              source={lottieSource || require('@/assets/animations/success.json')}
+              autoPlay
+              loop={false}
+              style={styles.video}
+            />
+          ) : null}
         </View>
         <Body style={styles.message}>{trimmed || 'All set.'}</Body>
       </View>

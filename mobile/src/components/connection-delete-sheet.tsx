@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
+import { useDeferredMount } from '@/lib/use-deferred-mount';
 
 type ConnectionDeleteSheetProps = {
   visible: boolean;
@@ -19,6 +20,7 @@ export function ConnectionDeleteSheet({
   onConfirm,
   loading,
 }: ConnectionDeleteSheetProps) {
+  const showLottie = useDeferredMount(visible);
   return (
     <BottomSheet
       visible={visible}
@@ -31,12 +33,14 @@ export function ConnectionDeleteSheet({
         </>
       }>
       <View style={styles.iconWrap}>
-        <LottieView
-          source={require('@/assets/animations/warning.json')}
-          autoPlay
-          loop={false}
-          style={styles.lottie}
-        />
+        {showLottie ? (
+          <LottieView
+            source={require('@/assets/animations/warning.json')}
+            autoPlay
+            loop={false}
+            style={styles.lottie}
+          />
+        ) : null}
       </View>
       <Body>
         Remove {name || 'this connection'} from your connections? Their card stays live online. You just won't see them in your list or shared directory anymore.

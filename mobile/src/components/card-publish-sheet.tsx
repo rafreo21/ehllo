@@ -3,6 +3,7 @@ import LottieView from 'lottie-react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
+import { useDeferredMount } from '@/lib/use-deferred-mount';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 type CardPublishSheetProps = {
@@ -33,6 +34,7 @@ export function CardPublishSheet({
   loading,
 }: CardPublishSheetProps) {
   const isSuccess = variant === 'success';
+  const showLottie = useDeferredMount(visible);
 
   return (
     <BottomSheet
@@ -52,14 +54,16 @@ export function CardPublishSheet({
         </>
       }>
       <View style={styles.iconWrap}>
-        <LottieView
-          source={isSuccess
-            ? require('@/assets/animations/card-published.json')
-            : require('@/assets/animations/error.json')}
-          autoPlay
-          loop={false}
-          style={styles.lottie}
-        />
+        {showLottie ? (
+          <LottieView
+            source={isSuccess
+              ? require('@/assets/animations/card-published.json')
+              : require('@/assets/animations/error.json')}
+            autoPlay
+            loop={false}
+            style={styles.lottie}
+          />
+        ) : null}
       </View>
       <Body style={styles.message}>{message}</Body>
       {detail ? (

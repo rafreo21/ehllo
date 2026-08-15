@@ -3,6 +3,7 @@ import LottieView, { type AnimationObject } from 'lottie-react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
+import { useDeferredMount } from '@/lib/use-deferred-mount';
 import { colors } from '@/theme/tokens';
 
 type OutcomeErrorSheetProps = {
@@ -23,6 +24,7 @@ export function OutcomeErrorSheet({
   lottieSource,
 }: OutcomeErrorSheetProps) {
   const trimmed = message.trim();
+  const showLottie = useDeferredMount(visible);
 
   return (
     <BottomSheet
@@ -31,12 +33,14 @@ export function OutcomeErrorSheet({
       onClose={onClose}
       footer={<Button onPress={onClose}>OK</Button>}>
       <View style={styles.iconWrap}>
-        <LottieView
-          source={lottieSource || require('@/assets/animations/error.json')}
-          autoPlay
-          loop={false}
-          style={styles.lottie}
-        />
+        {showLottie ? (
+          <LottieView
+            source={lottieSource || require('@/assets/animations/error.json')}
+            autoPlay
+            loop={false}
+            style={styles.lottie}
+          />
+        ) : null}
       </View>
       <Body style={styles.message}>{trimmed || 'Something went wrong.'}</Body>
       {hint ? <Text style={styles.hint}>{hint}</Text> : null}

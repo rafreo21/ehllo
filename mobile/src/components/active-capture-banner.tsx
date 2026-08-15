@@ -1,4 +1,4 @@
-import { router, usePathname } from 'expo-router';
+import { usePathname } from 'expo-router';
 import { Microphone, Pause, Play, Stop } from 'phosphor-react-native';
 import { useSyncExternalStore } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -9,11 +9,13 @@ import {
 } from '@/features/encounters/active-capture-controller';
 import { formatDuration } from '@/features/encounters/local-recordings';
 import { useAppInsets } from '@/lib/safe-area';
+import { useDebouncedNavigate } from '@/lib/use-debounced-navigate';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 export function ActiveCaptureBanner() {
   const pathname = usePathname();
   const insets = useAppInsets();
+  const navigate = useDebouncedNavigate();
   const active = useSyncExternalStore(
     subscribeToActiveCapture,
     getActiveCaptureController,
@@ -34,7 +36,7 @@ export function ActiveCaptureBanner() {
   const statusLabel = isProcessing ? 'Preparing review' : isPaused ? 'Recording paused' : 'Recording';
 
   function openCapture() {
-    router.navigate({
+    navigate({
       pathname: '/capture/new',
       params: { draftId: snapshot.encounterId },
     });

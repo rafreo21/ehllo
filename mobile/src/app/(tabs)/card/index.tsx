@@ -1,11 +1,11 @@
-import { router } from 'expo-router';
-import { IdentificationCard, Plus, Scan } from 'phosphor-react-native';
+import { Plus, Scan } from 'phosphor-react-native';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useState } from 'react';
 
 import { CardLibraryTile } from '@/components/card-library-tile';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
-import { GreenHeroCard } from '@/components/green-hero-card';
+import { EmptyState } from '@/components/empty-state';
+import { OfflineBanner } from '@/components/offline-banner';
 import { QuickActionsFab } from '@/components/quick-actions-fab';
 import { CardGridSkeleton } from '@/components/skeleton';
 
@@ -15,6 +15,7 @@ import { MAX_CARDS } from '@/features/card/card-library';
 import { useCard } from '@/features/card/card-context';
 import { describeError } from '@/lib/friendly-error';
 import { useAppInsets, useTabBarHeight } from '@/lib/safe-area';
+import { useDebouncedNavigate } from '@/lib/use-debounced-navigate';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 export default function CardLibraryScreen() {
@@ -22,6 +23,7 @@ export default function CardLibraryScreen() {
   const { cards, activeCardId, syncing, canCreateCard, createCard } = useCard();
   const insets = useAppInsets();
   const tabBarHeight = useTabBarHeight();
+  const navigate = useDebouncedNavigate();
   const [errorSheetOpen, setErrorSheetOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -30,7 +32,7 @@ export default function CardLibraryScreen() {
   async function startCreateCard(label?: string) {
     try {
       const created = await createCard(label ? { label } : undefined);
-      if (created) router.push(`/edit-card?id=${created.id}`);
+      if (created) navigate(`/edit-card?id=${created.id}`);
       else {
         setErrorMessage('You can save a maximum of five cards.');
         setErrorSheetOpen(true);
@@ -61,10 +63,11 @@ export default function CardLibraryScreen() {
             </View>
             <HeaderActionButton
               accessibilityLabel="Scan QR code"
-              onPress={() => router.push('/scanner')}>
+              onPress={() => navigate('/scanner')}>
               <Scan size={22} color={colors.ink} weight="bold" />
             </HeaderActionButton>
           </View>
+          <OfflineBanner message="Offline. Your cards are saved on this device and will sync once you're back online." />
         </View>
 
         <ScrollView
@@ -73,14 +76,14 @@ export default function CardLibraryScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
           {!session && !hasCards ? (
-            <GreenHeroCard
-              icon={<IdentificationCard size={28} color={colors.white} weight="fill" />}
+            <EmptyState
+              illustration={require('@/assets/animations/set-up-your-identity.json')}
               title="Create your first card"
               copy="Add your name, role, and contact methods. Sign in when you are ready to publish."
               primaryLabel="Create card"
               onPrimary={() => void startCreateCard()}
               secondaryLabel="Sign in"
-              onSecondary={() => router.push('/auth')}
+              onSecondary={() => navigate('/auth')}
             />
           ) : null}
 
@@ -97,7 +100,7 @@ export default function CardLibraryScreen() {
                   key={item.id}
                   card={item}
                   isPrimary={item.id === activeCardId}
-                  onPress={() => router.push(`/card/${item.id}`)}
+                  onPress={() => navigate(`/card/${item.id}`)}
                 />
               ))}
 
@@ -117,8 +120,8 @@ export default function CardLibraryScreen() {
           ) : null}
 
           {session && !hasCards ? (
-            <GreenHeroCard
-              icon={<IdentificationCard size={28} color={colors.white} weight="fill" />}
+            <EmptyState
+              illustration={require('@/assets/animations/set-up-your-identity.json')}
               title="Create your first card"
               copy="Add your identity and the ways people can reach you."
               primaryLabel="Create your first card"
@@ -127,7 +130,7 @@ export default function CardLibraryScreen() {
           ) : null}
 
           {!session && hasCards ? (
-            <Button onPress={() => router.push('/auth')}>Sign in to publish</Button>
+            <Button onPress={() => navigate('/auth')}>Sign in to publish</Button>
           ) : null}
         </ScrollView>
       </View>

@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
-import { CaretRight, MagnifyingGlass, Plus, SortAscending, UsersThree } from 'phosphor-react-native';
+import { CaretRight, MagnifyingGlass, Plus, SortAscending } from 'phosphor-react-native';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -10,13 +10,13 @@ import {
   ConnectionSortSheet,
 } from '@/components/connection-sheets';
 import { EmptyState } from '@/components/empty-state';
+import { OfflineBanner } from '@/components/offline-banner';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import {
   ConnectionsListSkeleton,
 } from '@/components/skeleton';
 import { BackButton, Body, Eyebrow } from '@/components/ui';
-import { GreenHeroCard } from '@/components/green-hero-card';
 import { useAuth } from '@/features/auth/auth-context';
 import { connectionAvatarUrl } from '@/features/connections/connection-public-card';
 import {
@@ -175,6 +175,7 @@ export function ConnectionsScreen({ showBack = true }: { showBack?: boolean }) {
           <View style={styles.headerCopy}>
             <Eyebrow>Connections</Eyebrow>
             <Text style={styles.title}>People you’ve met</Text>
+            <OfflineBanner message="Offline. Showing your saved connections. New ones will sync once you're back online." />
             <Body>Cards you saved and people who shared their details with you.</Body>
           </View>
 
@@ -207,8 +208,8 @@ export function ConnectionsScreen({ showBack = true }: { showBack?: boolean }) {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
           {!session ? (
-            <GreenHeroCard
-              icon={<UsersThree size={28} color={colors.white} weight="fill" />}
+            <EmptyState
+              illustration={require('@/assets/animations/no-connections-yet.json')}
               title="Sign in to see connections"
               copy="Save cards you scan and people who share their details with you."
               primaryLabel="Sign in"

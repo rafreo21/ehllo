@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
+import { useDeferredMount } from '@/lib/use-deferred-mount';
 
 type CardDeleteSheetProps = {
   visible: boolean;
@@ -19,6 +20,7 @@ export function CardDeleteSheet({
   onConfirm,
   loading,
 }: CardDeleteSheetProps) {
+  const showLottie = useDeferredMount(visible);
   return (
     <BottomSheet
       visible={visible}
@@ -31,12 +33,14 @@ export function CardDeleteSheet({
         </>
       }>
       <View style={styles.iconWrap}>
-        <LottieView
-          source={require('@/assets/animations/warning.json')}
-          autoPlay
-          loop={false}
-          style={styles.lottie}
-        />
+        {showLottie ? (
+          <LottieView
+            source={require('@/assets/animations/warning.json')}
+            autoPlay
+            loop={false}
+            style={styles.lottie}
+          />
+        ) : null}
       </View>
       <Body>
         {title ? `Delete "${title}"?` : 'Delete this card?'} It will be removed from your library and taken offline. This cannot be undone.

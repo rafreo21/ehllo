@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { router, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import {
   Bell,
   CaretRight,
@@ -54,6 +54,7 @@ import {
 } from '@/features/notifications/notification-center-api';
 import { formatRelativeTime } from '@/lib/relative-time';
 import { useAppInsets, useTabBarHeight } from '@/lib/safe-area';
+import { useDebouncedNavigate } from '@/lib/use-debounced-navigate';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 function timeGreeting() {
@@ -74,6 +75,7 @@ type ActiveWorkItem = {
 export default function HomeScreen() {
   const insets = useAppInsets();
   const tabBarHeight = useTabBarHeight();
+  const navigate = useDebouncedNavigate();
   const { session, loading: authLoading } = useAuth();
   const { card, cards, loading: cardLoading } = useCard();
   const [followUps, setFollowUps] = useState<FollowUpItem[]>([]);
@@ -210,7 +212,7 @@ export default function HomeScreen() {
   function openNudge(item: NotificationRecord) {
     void dismissNudge(item.id);
     const destination = notificationDeepLink(item);
-    if (destination) router.push(destination as never);
+    if (destination) navigate(destination as never);
   }
 
   async function decideEventCandidate(event: EventItem, status: 'going' | 'not_going') {
@@ -263,7 +265,7 @@ export default function HomeScreen() {
   const activeWorkItems = useMemo<ActiveWorkItem[]>(() => {
     if (activeCapture) {
       const { status, seconds } = activeCapture.snapshot;
-      const openCapture = () => router.navigate({
+      const openCapture = () => navigate({
         pathname: '/capture/new',
         params: { draftId: activeCapture.snapshot.encounterId },
       });
@@ -289,11 +291,11 @@ export default function HomeScreen() {
         key: 'capture',
         icon: Notebook,
         label: parts.join(' · '),
-        onPress: () => router.push('/capture'),
+        onPress: () => navigate('/capture'),
       });
     }
     return items;
-  }, [activeCapture, pendingReviewCount, draftCount]);
+  }, [activeCapture, pendingReviewCount, draftCount, navigate]);
 
   const sortedConnections = useMemo(
     () => sortConnections(connections, 'date'),
@@ -321,7 +323,7 @@ export default function HomeScreen() {
             accessibilityRole="button"
             accessibilityLabel={unreadNotifications ? `${unreadNotifications} unread notifications` : 'Notifications'}
             hitSlop={4}
-            onPress={() => router.push('/notifications')}
+            onPress={() => navigate('/notifications')}
             style={({ pressed }) => [styles.bellButton, pressed && styles.bellButtonPressed]}>
             <Bell size={21} color={colors.ink} weight="bold" />
             {unreadNotifications ? (
@@ -359,7 +361,7 @@ export default function HomeScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`${attention.headline}. Open follow-ups`}
-                onPress={() => router.push('/settings/follow-ups')}
+                onPress={() => navigate('/settings/follow-ups')}
                 style={({ pressed }) => [styles.attentionCard, pressed && styles.attentionCardPressed]}>
                 {attention.hasData ? (
                   <View style={styles.attentionRingWrap}>
@@ -394,14 +396,14 @@ export default function HomeScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Sign in to see your follow-ups. Open sign in"
-                onPress={() => router.push('/auth')}
+                onPress={() => navigate('/auth')}
                 style={({ pressed }) => [styles.attentionCard, pressed && styles.attentionCardPressed]}>
                 <View style={styles.attentionIcon}>
                   <ListChecks size={20} color={colors.ink} weight="bold" />
                 </View>
                 <View style={styles.attentionCopy}>
-                  <Text style={styles.attentionHeadline}>Sign in to see your follow-ups</Text>
-                  <Text style={styles.attentionSubline}>Commitments from your meetings will show up here.</Text>
+                  <Text style={styles.attentionHeadline}>Follow-ups</Text>
+                  <Text style={styles.attentionSubline}>Sign in to start tracking.</Text>
                 </View>
                 <CaretRight size={14} color={colors.muted} weight="bold" />
               </Pressable>
@@ -463,7 +465,7 @@ export default function HomeScreen() {
               <View style={styles.sectionHead}>
                 <Text style={styles.sectionTitle}>Recent connections</Text>
                 {session && sortedConnections.length > 2 ? (
-                  <Pressable accessibilityRole="button" onPress={() => router.push('/connections')}>
+                  <Pressable accessibilityRole="button" onPress={() => navigate('/connections')}>
                     <Text style={styles.viewAll}>View all</Text>
                   </Pressable>
                 ) : null}
@@ -479,14 +481,14 @@ export default function HomeScreen() {
                   icon={<UsersThree size={18} color={colors.ink} weight="fill" />}
                   title="No recent connections yet."
                   copy="Scan a card or add someone after your next conversation."
-                  onPress={() => router.push('/scanner')}
+                  onPress={() => navigate('/scanner')}
                 />
               ) : (
                 <MiniPromptCard
                   icon={<UsersThree size={18} color={colors.ink} weight="fill" />}
-                  title="Sign in to see recent connections"
-                  copy="People you scan or add will show up here."
-                  onPress={() => router.push('/auth')}
+                  title="Sign in to see connections"
+                  copy="Scanned or added people show up here."
+                  onPress={() => navigate('/auth')}
                 />
               )}
             </View>
@@ -496,10 +498,10 @@ export default function HomeScreen() {
               {!cardLoading && hasCard ? (
                 <Pressable
                   accessibilityRole="button"
-                  onPress={() => router.push(`/card/${card.id}`)}
+                  onPress={() => navigate(`/card/${card.id}`)}
                   style={({ pressed }) => [styles.myCardRow, pressed && styles.myCardRowPressed]}>
                   {card.photo ? (
-                    <Image source={card.photo} style={styles.myCardAvatar} contentFit="cover" alt="" />
+                    <Image source={card.photo} style={styles.myCardAvatar} contentFit="cover" transition={200} alt="" />
                   ) : (
                     <View style={styles.myCardAvatarFallback}>
                       <IdentificationCard size={20} color={colors.ink} weight="bold" />
@@ -518,8 +520,8 @@ export default function HomeScreen() {
                 <MiniPromptCard
                   icon={<IdentificationCard size={18} color={colors.ink} weight="bold" />}
                   title="Create your first card"
-                  copy="Publish a card so people can save your details instantly."
-                  onPress={() => router.push(`/edit-card?id=${card.id}`)}
+                  copy="One tap, and anyone can save your details instantly."
+                  onPress={() => navigate(`/edit-card?id=${card.id}`)}
                 />
               ) : null}
             </View>
@@ -555,6 +557,7 @@ function HomeEventCard({
   onNotGoing: (event: EventItem) => void;
   onLeave: (event: EventItem) => void;
 }) {
+  const navigate = useDebouncedNavigate();
   if (state.type === 'none') return null;
   const variant = state.type === 'upcoming' ? 'going' : state.type;
 
@@ -563,7 +566,7 @@ function HomeEventCard({
       event={state.event}
       variant={variant}
       busy={busy}
-      onPress={() => router.push('/events')}
+      onPress={() => navigate('/events')}
       onGoing={onGoing}
       onNotGoing={onNotGoing}
       onLeave={onLeave}
@@ -579,15 +582,16 @@ function isRecentConnection(connectedAt?: string) {
 }
 
 function RecentPersonRow({ connection }: { connection: ConnectionItem }) {
+  const navigate = useDebouncedNavigate();
   const avatar = connection.photoUrl || connectionAvatarUrl(connection);
   const isNew = isRecentConnection(connection.connectedAt);
 
   return (
     <Pressable
       accessibilityRole="button"
-      onPress={() => router.push(`/connections/${encodeURIComponent(connection.id)}`)}
+      onPress={() => navigate(`/connections/${encodeURIComponent(connection.id)}`)}
       style={({ pressed }) => [styles.personRow, pressed && styles.personRowPressed]}>
-      <Image source={avatar} style={styles.personAvatar} contentFit="cover" alt={`${connection.name} profile photo`} />
+      <Image source={avatar} style={styles.personAvatar} contentFit="cover" transition={200} alt={`${connection.name} profile photo`} />
       <View style={styles.personCopy}>
         <Text style={styles.personName} numberOfLines={1}>{connection.name}</Text>
         <Text style={styles.personSubtitle} numberOfLines={1}>

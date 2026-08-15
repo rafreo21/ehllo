@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
+import { useDeferredMount } from '@/lib/use-deferred-mount';
 
 type CaptureDeleteSheetProps = {
   visible: boolean;
@@ -19,6 +20,7 @@ export function CaptureDeleteSheet({
   onConfirm,
   loading,
 }: CaptureDeleteSheetProps) {
+  const showLottie = useDeferredMount(visible);
   return (
     <BottomSheet
       visible={visible}
@@ -31,12 +33,14 @@ export function CaptureDeleteSheet({
         </>
       }>
       <View style={styles.iconWrap}>
-        <LottieView
-          source={require('@/assets/animations/warning.json')}
-          autoPlay
-          loop={false}
-          style={styles.lottie}
-        />
+        {showLottie ? (
+          <LottieView
+            source={require('@/assets/animations/warning.json')}
+            autoPlay
+            loop={false}
+            style={styles.lottie}
+          />
+        ) : null}
       </View>
       <Body>
         {title ? `Delete "${title}"?` : 'Delete this capture?'} You will lose access to the summary, notes, transcript, and voice recording in the app. This cannot be undone.

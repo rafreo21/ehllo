@@ -20,12 +20,12 @@ export function MobileCardPreview({ card, compact = false }: { card: MobileCard;
     <View style={styles.card}>
       <View style={styles.cover}>
         {!visible.coverPhoto ? <CardThemeGradientFill theme={visible.theme} /> : null}
-        {visible.coverPhoto ? <Image alt="" source={visible.coverPhoto} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
+        {visible.coverPhoto ? <Image alt="" source={visible.coverPhoto} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} /> : null}
         {showCompany && (visible.companyLogo || visible.company) ? (
           <View style={styles.companyRow}>
             <View style={[styles.logo, { backgroundColor: coverBadge.backgroundColor }]}>
               {visible.companyLogo ? (
-                <Image alt={`${visible.company} logo`} source={visible.companyLogo} style={styles.fill} />
+                <Image alt={`${visible.company} logo`} source={visible.companyLogo} style={styles.fill} transition={200} />
               ) : (
                 <Text style={[styles.logoText, { color: coverBadge.color }]}>{visible.company[0] || 'A'}</Text>
               )}
@@ -35,7 +35,7 @@ export function MobileCardPreview({ card, compact = false }: { card: MobileCard;
         ) : null}
       </View>
       <View style={styles.body}>
-        <View style={styles.avatar}>{visible.photo ? <Image alt={visible.name} source={visible.photo} style={styles.fill} /> : <Text style={styles.avatarText}>{initials}</Text>}</View>
+        <View style={styles.avatar}>{visible.photo ? <Image alt={visible.name} source={visible.photo} style={styles.fill} transition={200} /> : <Text style={styles.avatarText}>{initials}</Text>}</View>
         <Text style={styles.name}>{visible.name}</Text>
         <Text style={styles.role}>{visible.role}{visible.company ? ` · ${visible.company}` : ''}</Text>
         {!compact && visible.bio ? <Text style={styles.bio}>{visible.bio}</Text> : null}

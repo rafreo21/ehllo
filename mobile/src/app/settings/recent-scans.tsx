@@ -1,8 +1,11 @@
+import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { CaretRight, CheckCircle, Trash } from 'phosphor-react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { EmptyState } from '@/components/empty-state';
+import { OfflineBanner } from '@/components/offline-banner';
 import { Body, Button, PageHeader, Panel, Screen } from '@/components/ui';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { SettingsSkeleton } from '@/components/skeleton';
@@ -160,6 +163,7 @@ export default function RecentScansScreen() {
   const header = (
     <>
       <PageHeader eyebrow="Settings" title="Recent scans" />
+      <OfflineBanner message="Offline. Showing your saved scans. New scans will sync once you're back online." />
       <Body>Everyone who scanned your card. Already-saved people are marked.</Body>
     </>
   );
@@ -169,10 +173,13 @@ export default function RecentScansScreen() {
       {session && initialLoading ? <SettingsSkeleton /> : null}
 
       {!session ? (
-        <Panel>
-          <Text style={styles.panelTitle}>Sign in required</Text>
-          <Text style={styles.panelCopy}>Sign in to see who has scanned your card.</Text>
-        </Panel>
+        <EmptyState
+          illustration={require('@/assets/animations/recent-scans.json')}
+          title="Sign in to see recent scans"
+          copy="People who scanned your card but aren't saved yet will show up here."
+          primaryLabel="Sign in"
+          onPrimary={() => router.push('/auth')}
+        />
       ) : null}
 
       {session && !initialLoading && !groups.length ? (

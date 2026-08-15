@@ -9,6 +9,7 @@ import { useAuth } from '@/features/auth/auth-context';
 import { readPendingSyncStatus, type PendingSyncStatus } from '@/features/sync/pending-sync-status';
 import { requestForegroundSync } from '@/lib/background-sync';
 import { useIsOnline } from '@/lib/connectivity';
+import { useDeferredMount } from '@/lib/use-deferred-mount';
 import { colors, spacing } from '@/theme/tokens';
 
 const EMPTY_STATUS: PendingSyncStatus = {
@@ -21,6 +22,7 @@ export default function PendingSyncScreen() {
   const [status, setStatus] = useState(EMPTY_STATUS);
   const [loading, setLoading] = useState(true);
   const [retrying, setRetrying] = useState(false);
+  const showLottie = useDeferredMount(true);
 
   const refresh = useCallback(async () => {
     setStatus(await readPendingSyncStatus());
@@ -69,16 +71,18 @@ export default function PendingSyncScreen() {
       header={<PageHeader eyebrow="Synchronization" title="Pending sync" description="Work saved on this device that has not reached ehllo yet." />}>
       <Panel style={styles.summary}>
         <View style={styles.summaryIconWrap}>
-          <LottieView
-            source={loading
-              ? require('@/assets/animations/processing.json')
-              : status.total
-                ? require('@/assets/animations/pending.json')
-                : require('@/assets/animations/success.json')}
-            autoPlay
-            loop={loading || status.total > 0}
-            style={styles.summaryLottie}
-          />
+          {showLottie ? (
+            <LottieView
+              source={loading
+                ? require('@/assets/animations/processing.json')
+                : status.total
+                  ? require('@/assets/animations/pending.json')
+                  : require('@/assets/animations/success.json')}
+              autoPlay
+              loop={loading || status.total > 0}
+              style={styles.summaryLottie}
+            />
+          ) : null}
         </View>
         <Text style={styles.summaryTitle}>{loading ? 'Checking this device…' : status.total ? `${status.total} item${status.total === 1 ? '' : 's'} waiting` : 'Everything is synced'}</Text>
         <Text style={styles.summaryDetail}>{online ? 'Online · ehllo retries automatically' : 'Offline · your work remains safely on this device'}</Text>

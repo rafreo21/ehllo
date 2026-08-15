@@ -15,7 +15,7 @@ import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { SettingsSkeleton } from '@/components/skeleton';
-import { Button, HeaderActionButton, PageHeader, Panel, Screen } from '@/components/ui';
+import { Button, HeaderActionButton, PageHeader, Screen } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { fetchAddressSuggestions, type AddressSuggestion } from '@/features/events/address-autocomplete';
 import {
@@ -390,10 +390,13 @@ export default function EventsScreen() {
       {loading ? <SettingsSkeleton /> : null}
 
       {!loading && !accessToken ? (
-        <Panel>
-          <Text style={styles.panelTitle}>Sign in required</Text>
-          <Text style={styles.panelCopy}>Sign in to see your events.</Text>
-        </Panel>
+        <EmptyState
+          illustration={require('@/assets/animations/no-events.json')}
+          title="Sign in to see events"
+          copy="Confirm where you're going, and captures made there will keep the event context."
+          primaryLabel="Sign in"
+          onPrimary={() => router.push('/auth')}
+        />
       ) : null}
 
       {!loading && accessToken ? (
@@ -906,8 +909,6 @@ function AddressAutocompleteField({ value, onChange }: { value: string; onChange
 const styles = StyleSheet.create({
   fixedHeader: { gap: spacing.x2 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  panelTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
-  panelCopy: { color: colors.muted, fontSize: 13, lineHeight: 19 },
   section: { gap: spacing.x4 },
   eventGroup: { gap: spacing.x2 },
   eventGroupHeading: { gap: spacing.x1 },

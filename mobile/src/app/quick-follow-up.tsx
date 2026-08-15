@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { OfflineBanner } from '@/components/offline-banner';
 import { BrandedQrCode } from '@/components/branded-qr-code';
 import { FollowUpDuePicker } from '@/components/follow-up-due-picker';
 import { Body, Button, PageHeader } from '@/components/ui';
@@ -300,6 +301,7 @@ export default function QuickFollowUpScreen() {
           onBack={() => router.back()}
         />
         <Body>Create a reminder without recording a conversation. Nothing is sent automatically.</Body>
+        <OfflineBanner message="Offline. This follow-up will save on this device and sync once you're back online." />
         {eventContext ? (
           <Text style={styles.eventContext}>
             At {eventContext.eventTitle}{eventContext.eventLocation ? ` · ${eventContext.eventLocation}` : ''}

@@ -17,6 +17,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { EmptyState } from '@/components/empty-state';
 import { CardToolErrorSheet } from '@/components/card-tool-error-sheet';
 import { CardToolSuccessSheet } from '@/components/card-tool-success-sheet';
 import { BackButton, Body, Button, Eyebrow, Panel } from '@/components/ui';
@@ -302,11 +303,13 @@ export default function CardToolsScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
           {!session ? (
-            <Panel>
-              <Text style={styles.panelTitle}>Sign in to sync tools</Text>
-              <Body>Publish your card first, then unlock Wallet and NFC on this device.</Body>
-              <Button onPress={() => router.push('/auth')}>Sign in</Button>
-            </Panel>
+            <EmptyState
+              illustration={require('@/assets/animations/card-tools.json')}
+              title="Sign in to sync tools"
+              copy="Publish your card first, then unlock Wallet and NFC on this device."
+              primaryLabel="Sign in"
+              onPrimary={() => router.push('/auth')}
+            />
           ) : !published ? (
             <Panel>
               <Text style={styles.panelTitle}>Publish your card</Text>
