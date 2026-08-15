@@ -698,11 +698,7 @@ function AddEventSheet({
         <View style={styles.chooseList}>
           <Pressable
             accessibilityRole="button"
-            onPress={() => {
-              setDateNeedsReview(true);
-              setDateNotice('Choose the event’s start date and time before adding it.');
-              setStep('form');
-            }}
+            onPress={() => setStep('form')}
             style={styles.chooseOption}>
             <View style={styles.chooseIcon}><NotePencil size={20} color={colors.ink} weight="bold" /></View>
             <View style={styles.chooseCopy}>
