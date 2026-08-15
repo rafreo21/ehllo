@@ -6,6 +6,7 @@ import { CardLibraryTile } from '@/components/card-library-tile';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { EmptyState } from '@/components/empty-state';
 import { OfflineBanner } from '@/components/offline-banner';
+import { PendingSyncBadge } from '@/components/pending-sync-badge';
 import { QuickActionsFab } from '@/components/quick-actions-fab';
 import { CardGridSkeleton } from '@/components/skeleton';
 
@@ -14,6 +15,7 @@ import { useAuth } from '@/features/auth/auth-context';
 import { MAX_CARDS } from '@/features/card/card-library';
 import { useCard } from '@/features/card/card-context';
 import { describeError } from '@/lib/friendly-error';
+import { usePendingSyncCount } from '@/features/sync/use-pending-sync-count';
 import { useAppInsets, useTabBarHeight } from '@/lib/safe-area';
 import { useDebouncedNavigate } from '@/lib/use-debounced-navigate';
 import { colors, radius, spacing } from '@/theme/tokens';
@@ -24,6 +26,7 @@ export default function CardLibraryScreen() {
   const insets = useAppInsets();
   const tabBarHeight = useTabBarHeight();
   const navigate = useDebouncedNavigate();
+  const pendingSync = usePendingSyncCount();
   const [errorSheetOpen, setErrorSheetOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -75,6 +78,7 @@ export default function CardLibraryScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
           <OfflineBanner message="Offline. Your cards are saved on this device and will sync once you're back online." />
+          <PendingSyncBadge count={pendingSync.cardChanges.length + pendingSync.cardDeletes.length} />
           {!session && !hasCards ? (
             <EmptyState
               illustration={require('@/assets/animations/set-up-your-identity.json')}

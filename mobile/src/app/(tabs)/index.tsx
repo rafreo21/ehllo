@@ -18,12 +18,14 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { EventCard } from '@/components/event-card';
 import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OfflineBanner } from '@/components/offline-banner';
+import { PendingSyncBadge } from '@/components/pending-sync-badge';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { ProgressRing } from '@/components/progress-ring';
 import { QuickActionsFab } from '@/components/quick-actions-fab';
 import { Skeleton, SkeletonCircle, SkeletonLine } from '@/components/skeleton';
 import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
+import { usePendingSyncCount } from '@/features/sync/use-pending-sync-count';
 import {
   getActiveCaptureController,
   subscribeToActiveCapture,
@@ -77,6 +79,7 @@ export default function HomeScreen() {
   const tabBarHeight = useTabBarHeight();
   const navigate = useDebouncedNavigate();
   const { session, loading: authLoading } = useAuth();
+  const pendingSync = usePendingSyncCount();
   const { card, cards, loading: cardLoading } = useCard();
   const [followUps, setFollowUps] = useState<FollowUpItem[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -344,6 +347,7 @@ export default function HomeScreen() {
           message="Offline. Showing what's saved on this device. It'll sync when you're back online."
           style={styles.offlineBanner}
         />
+        <PendingSyncBadge count={pendingSync.total} />
         {authLoading || (loading && !hasLoadedOnce) ? (
           <HomeSkeleton />
         ) : (
