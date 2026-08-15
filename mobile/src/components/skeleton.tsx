@@ -122,6 +122,23 @@ export function CardGridSkeleton({ count = 2 }: { count?: number }) {
   );
 }
 
+export function PendingSyncSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <View style={styles.list}>
+      {Array.from({ length: count }, (_, index) => (
+        <View key={index} style={styles.pendingRow}>
+          <SkeletonCircle size={38} />
+          <View style={styles.pendingRowCopy}>
+            <SkeletonLine width="46%" height={13} />
+            <SkeletonLine width="72%" height={11} />
+          </View>
+          <Skeleton style={styles.pendingRowCount} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export function ScanShareSkeleton() {
   return (
     <View style={styles.scanWrap}>
@@ -196,6 +213,17 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: radius.large,
   },
+  pendingRow: {
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+  },
+  pendingRowCopy: { flex: 1, minWidth: 0, gap: 6 },
+  pendingRowCount: { width: 28, height: 28, borderRadius: 14 },
   scanWrap: { gap: 12 },
   scanHero: {
     width: '100%',

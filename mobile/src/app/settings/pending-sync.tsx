@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Button, PageHeader, Panel, Screen } from '@/components/ui';
+import { PendingSyncSkeleton } from '@/components/skeleton';
 import { useAuth } from '@/features/auth/auth-context';
 import { readPendingSyncStatus, type PendingSyncStatus } from '@/features/sync/pending-sync-status';
 import { requestForegroundSync } from '@/lib/background-sync';
@@ -90,18 +91,22 @@ export default function PendingSyncScreen() {
         <Text style={styles.summaryDetail}>{online ? 'Online · ehllo retries automatically' : 'Offline · your work remains safely on this device'}</Text>
       </Panel>
 
-      <View style={styles.list}>
-        {rows.map(({ key, icon: Icon, label, count, detail }) => (
-          <View key={key} style={styles.row}>
-            <View style={styles.rowIcon}><Icon size={19} color={colors.ink} weight="bold" /></View>
-            <View style={styles.rowCopy}>
-              <Text style={styles.rowTitle}>{label}</Text>
-              <Text style={styles.rowDetail}>{detail}</Text>
+      {loading ? (
+        <PendingSyncSkeleton count={rows.length} />
+      ) : (
+        <View style={styles.list}>
+          {rows.map(({ key, icon: Icon, label, count, detail }) => (
+            <View key={key} style={styles.row}>
+              <View style={styles.rowIcon}><Icon size={19} color={colors.ink} weight="bold" /></View>
+              <View style={styles.rowCopy}>
+                <Text style={styles.rowTitle}>{label}</Text>
+                <Text style={styles.rowDetail}>{detail}</Text>
+              </View>
+              <Text accessibilityLabel={`${count} pending`} style={[styles.count, count === 0 && styles.countZero]}>{count}</Text>
             </View>
-            <Text accessibilityLabel={`${count} pending`} style={[styles.count, count === 0 && styles.countZero]}>{count}</Text>
-          </View>
-        ))}
-      </View>
+          ))}
+        </View>
+      )}
 
       {status.items.length ? (
         <View style={styles.detailSection}>

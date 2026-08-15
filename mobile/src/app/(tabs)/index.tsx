@@ -615,6 +615,7 @@ function RecentPersonRow({ connection }: { connection: ConnectionItem }) {
 function HomeSkeleton() {
   return (
     <View style={styles.skeletonWrap}>
+      <Skeleton style={styles.skeletonBanner} />
       <Skeleton style={styles.skeletonAttention} />
       <View style={styles.skeletonRow}>
         <Skeleton style={styles.skeletonButton} />
@@ -820,6 +821,7 @@ const styles = StyleSheet.create({
   myCardMeta: { color: colors.muted, fontSize: 12 },
   myCardAction: { color: colors.link, fontSize: 12, fontWeight: '800' },
   skeletonWrap: { gap: spacing.x4 },
+  skeletonBanner: { height: 60, borderRadius: radius.medium },
   skeletonAttention: { height: 72, borderRadius: radius.medium },
   skeletonRow: { flexDirection: 'row', gap: spacing.x3 },
   skeletonButton: { flex: 1, height: 48, borderRadius: radius.small },
