@@ -107,20 +107,6 @@ export default function AuthScreen() {
 
       {step === 'email' ? (
         <>
-          <Button
-            variant="secondary"
-            loading={googleLoading}
-            disabled={!configured}
-            onPress={() => void continueWithGoogle()}>
-            <GoogleIcon size={18} /> Continue with Google
-          </Button>
-
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
           <View style={styles.field}>
             <EnvelopeSimple size={20} color={colors.muted} />
             <TextInput
@@ -140,6 +126,20 @@ export default function AuthScreen() {
           </Button>
           <Button variant="secondary" onPress={() => router.back()}>
             Continue in preview mode
+          </Button>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <Button
+            variant="secondary"
+            loading={googleLoading}
+            disabled={!configured}
+            onPress={() => void continueWithGoogle()}>
+            <GoogleIcon size={18} /> Continue with Google
           </Button>
         </>
       ) : (
