@@ -3,6 +3,7 @@ import { listCaptureDrafts, readCaptureDraft, writeCaptureDraft } from '@/featur
 import { transcribeEncounterAudio } from '@/features/encounters/encounter-api';
 import { MIN_USABLE_TRANSCRIPT_LENGTH } from '@/features/encounters/use-capture-recorder';
 import { isOnline } from '@/lib/connectivity';
+import { describeError } from '@/lib/friendly-error';
 import { clearSyncFailure, recordSyncFailure, syncFailureKey } from '@/features/sync/sync-failure-store';
 
 export async function listPendingTranscriptionDrafts() {
@@ -50,7 +51,7 @@ export async function flushPendingTranscriptions(accessToken: string): Promise<v
       });
       await clearSyncFailure(syncFailureKey.transcription(summary.encounterId));
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not transcribe this recording.';
+      const message = describeError(error, 'Could not transcribe this recording.');
       await writeCaptureDraft({ ...draft, transcriptPending: true, transcriptPendingError: message });
       await recordSyncFailure(syncFailureKey.transcription(summary.encounterId), error);
     }

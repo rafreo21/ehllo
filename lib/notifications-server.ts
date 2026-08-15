@@ -4,7 +4,9 @@ export type NotificationType =
   | "review_ready"
   | "follow_up_due"
   | "follow_up_overdue"
-  | "shared_meeting_update";
+  | "shared_meeting_update"
+  | "connection_added"
+  | "keep_in_touch";
 
 export type NotificationRow = {
   id: string;

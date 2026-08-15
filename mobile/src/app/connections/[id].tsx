@@ -15,7 +15,7 @@ import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { ConnectionDetailSkeleton } from '@/components/skeleton';
-import { BackButton, Body, Button, Eyebrow, Title } from '@/components/ui';
+import { BackButton, Body, Eyebrow, PillButton, Title } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { loadConnectionLiveCard } from '@/features/connections/connection-card-loader';
 import {
@@ -49,6 +49,7 @@ import {
 import { isOpenFollowUp } from '@/features/follow-ups/follow-up-list';
 import { useFollowUpActions } from '@/features/follow-ups/use-follow-up-actions';
 import { formatMeetingDate } from '@/lib/due-date';
+import { describeError } from '@/lib/friendly-error';
 import { useAppInsets } from '@/lib/safe-area';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -138,7 +139,7 @@ export default function ConnectionDetailScreen() {
       setConnection(match || null);
       if (!match) showError('This connection could not be found.');
     } catch (caught) {
-      showError(caught instanceof Error ? caught.message : 'Could not load this connection.');
+      showError(describeError(caught, 'Could not load this connection.'));
       setConnection(null);
     } finally {
       setLoading(false);
@@ -307,7 +308,7 @@ export default function ConnectionDetailScreen() {
       setDeleteOpen(false);
       router.back();
     } catch (caught) {
-      showError(caught instanceof Error ? caught.message : 'Could not remove this connection.');
+      showError(describeError(caught, 'Could not remove this connection.'));
       setDeleteOpen(false);
     } finally {
       setDeleting(false);
@@ -328,7 +329,7 @@ export default function ConnectionDetailScreen() {
       }
       await loadSavedDirectoryContact(connection, cardSlug);
     } catch (caught) {
-      const message = caught instanceof Error ? caught.message : 'Could not save this connection.';
+      const message = describeError(caught, 'Could not save this connection.');
       if (message.toLowerCase().includes('session has expired')) {
         showError('Your app session could not reach ehllo. Sign out from Settings, sign in again, then retry.');
       } else {
@@ -387,8 +388,11 @@ export default function ConnectionDetailScreen() {
               ) : null}
               {recordedMeetings.length ? <Body style={styles.countLine}>{meetingCountLabel}</Body> : null}
               <View style={styles.relationshipActions}>
-                <Button
-                  style={styles.relationshipAction}
+                <PillButton
+                  tone="solid"
+                  style={styles.relationshipActionPill}
+                  textStyle={styles.relationshipActionPillText}
+                  icon={<Microphone size={18} color={colors.white} weight="fill" />}
                   onPress={() => router.push({
                     pathname: '/capture/new',
                     params: {
@@ -399,12 +403,13 @@ export default function ConnectionDetailScreen() {
                       exchange: connection.source === 'inbound' ? connection.sourceId : '',
                     },
                   })}>
-                  <Microphone size={18} color={colors.ink} weight="fill" />
                   Capture
-                </Button>
-                <Button
-                  variant="secondary"
-                  style={styles.relationshipAction}
+                </PillButton>
+                <PillButton
+                  tone="outline"
+                  style={styles.relationshipActionPill}
+                  textStyle={styles.relationshipActionPillText}
+                  icon={<Plus size={18} color={colors.muted} weight="bold" />}
                   onPress={() => router.push({
                     pathname: '/quick-follow-up',
                     params: {
@@ -415,9 +420,8 @@ export default function ConnectionDetailScreen() {
                       exchangeId: connection.source === 'inbound' ? connection.sourceId : '',
                     },
                   })}>
-                  <Plus size={18} color={colors.ink} weight="bold" />
                   Follow-up
-                </Button>
+                </PillButton>
               </View>
             </View>
           ) : null}
@@ -555,7 +559,7 @@ export default function ConnectionDetailScreen() {
                 setMeetingsSheetOpen(false);
                 if (item.meeting) void openMeeting(item.meeting);
               }}
-              style={({ pressed }) => [styles.meetingCell, pressed && styles.pressed]}>
+              style={({ pressed }) => [styles.meetingCell, styles.meetingCellSheet, pressed && styles.pressed]}>
               <View style={[styles.timelineMarker, item.kind === 'completed' && styles.timelineMarkerCompleted]}>
                 {item.kind === 'completed'
                   ? <CheckCircle size={17} color={colors.ink} weight="fill" />
@@ -680,7 +684,8 @@ const styles = StyleSheet.create({
   countLine: { color: colors.muted, fontSize: 13 },
   eventContext: { color: colors.ink, fontSize: 13, lineHeight: 18, fontWeight: '700' },
   relationshipActions: { flexDirection: 'row', gap: spacing.x2, marginTop: spacing.x1 },
-  relationshipAction: { flex: 1 },
+  relationshipActionPill: { paddingHorizontal: spacing.x5, paddingVertical: spacing.x3 },
+  relationshipActionPillText: { fontSize: 14 },
   scroll: { flex: 1, marginTop: spacing.x5 },
   scrollContent: { paddingHorizontal: spacing.x5, gap: spacing.x3 },
   content: { gap: spacing.x5 },
@@ -700,6 +705,13 @@ const styles = StyleSheet.create({
     padding: spacing.x4,
     borderRadius: radius.medium,
     backgroundColor: colors.surface,
+  },
+  // The History bottom sheet has no other surface to separate cells from —
+  // unlike the same list embedded in the page, it reads as too flat/white
+  // without a border here.
+  meetingCellSheet: {
+    borderWidth: 1,
+    borderColor: colors.line,
   },
   timelineMarker: {
     width: 34,

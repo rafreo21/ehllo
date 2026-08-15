@@ -1,9 +1,10 @@
-import { WarningCircle } from 'phosphor-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import LottieView, { type AnimationObject } from 'lottie-react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
-import { Body } from '@/components/ui';
-import { colors, radius } from '@/theme/tokens';
+import { Body, Button } from '@/components/ui';
+import { useDeferredMount } from '@/lib/use-deferred-mount';
+import { colors } from '@/theme/tokens';
 
 type OutcomeErrorSheetProps = {
   visible: boolean;
@@ -11,6 +12,7 @@ type OutcomeErrorSheetProps = {
   hint?: string;
   title?: string;
   onClose: () => void;
+  lottieSource?: AnimationObject;
 };
 
 export function OutcomeErrorSheet({
@@ -19,24 +21,26 @@ export function OutcomeErrorSheet({
   hint,
   title = 'Something went wrong',
   onClose,
+  lottieSource,
 }: OutcomeErrorSheetProps) {
   const trimmed = message.trim();
+  const showLottie = useDeferredMount(visible);
 
   return (
     <BottomSheet
       visible={visible && Boolean(trimmed)}
       title={title}
       onClose={onClose}
-      footer={
-        <Pressable
-          accessibilityRole="button"
-          onPress={onClose}
-          style={({ pressed }) => [styles.okButton, pressed && styles.okButtonPressed]}>
-          <Text style={styles.okLabel}>OK</Text>
-        </Pressable>
-      }>
+      footer={<Button onPress={onClose}>OK</Button>}>
       <View style={styles.iconWrap}>
-        <WarningCircle size={34} color={colors.danger} weight="fill" />
+        {showLottie ? (
+          <LottieView
+            source={lottieSource || require('@/assets/animations/error.json')}
+            autoPlay
+            loop={false}
+            style={styles.lottie}
+          />
+        ) : null}
       </View>
       <Body style={styles.message}>{trimmed || 'Something went wrong.'}</Body>
       {hint ? <Text style={styles.hint}>{hint}</Text> : null}
@@ -47,22 +51,12 @@ export function OutcomeErrorSheet({
 const styles = StyleSheet.create({
   iconWrap: {
     alignSelf: 'center',
-    width: 72,
-    height: 72,
-    borderRadius: radius.round,
+    width: 200,
+    height: 200,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FDECEA',
   },
+  lottie: { width: '100%', height: '100%' },
   message: { textAlign: 'center' },
   hint: { color: colors.muted, fontSize: 13, lineHeight: 18, textAlign: 'center' },
-  okButton: {
-    minHeight: 48,
-    borderRadius: radius.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.accent,
-  },
-  okButtonPressed: { opacity: 0.86 },
-  okLabel: { color: colors.ink, fontSize: 15, fontWeight: '800' },
 });

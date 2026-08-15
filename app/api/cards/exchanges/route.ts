@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const supabase = await createApiSupabaseClient(request);
   const { data, error } = await supabase
     .from("card_exchanges")
-    .select("id, visitor_name, visitor_email, visitor_phone, visitor_company, visitor_role, note, status, created_at, cards(full_name, slug)")
+    .select("id, visitor_name, visitor_email, visitor_phone, visitor_company, visitor_role, note, status, created_at, event_id, events(title), cards(full_name, slug)")
     .in("status", ["new", "imported"])
     .order("created_at", { ascending: false })
     .limit(50);

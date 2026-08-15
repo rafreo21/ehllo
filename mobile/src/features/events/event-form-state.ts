@@ -1,5 +1,5 @@
 export type EventDateForm = {
-  start: Date;
+  start: Date | null;
   end: Date | null;
 };
 
@@ -15,7 +15,7 @@ export function applyEventDateChange(
 ): EventDateForm {
   if (field === 'end') return { ...form, end: date };
 
-  const previousDuration = form.end ? form.end.getTime() - form.start.getTime() : null;
+  const previousDuration = form.end && form.start ? form.end.getTime() - form.start.getTime() : null;
   return {
     start: date,
     end: previousDuration !== null && previousDuration > 0
@@ -26,7 +26,6 @@ export function applyEventDateChange(
 
 export function resolveExtractedEventDates(
   extracted: ExtractedEventDates,
-  fallbackStart: Date,
   now = new Date(),
 ): EventDateForm & { needsReview: boolean; notice: string } {
   const parsedStart = extracted.startsAt ? new Date(extracted.startsAt) : null;
@@ -36,7 +35,7 @@ export function resolveExtractedEventDates(
 
   if (!validStart) {
     return {
-      start: fallbackStart,
+      start: null,
       end: null,
       needsReview: true,
       notice: 'We could not read a reliable date from this link. Choose the correct start date and time before adding it.',
@@ -45,7 +44,7 @@ export function resolveExtractedEventDates(
 
   if (validStart.getTime() <= now.getTime()) {
     return {
-      start: fallbackStart,
+      start: null,
       end: null,
       needsReview: true,
       notice: 'This link contains a past event date. Choose the current event’s correct start date and time before adding it.',

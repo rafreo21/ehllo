@@ -2,19 +2,20 @@ import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'ex
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
-import { QrCode } from 'phosphor-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BackButton, Body, Button, Eyebrow } from '@/components/ui';
-import { GreenHeroCard } from '@/components/green-hero-card';
+import { ConnectionSuccessSheet } from '@/components/connection-success-sheet';
+import { EmptyState } from '@/components/empty-state';
 import { ScanShareSkeleton } from '@/components/skeleton';
 import { useAuth } from '@/features/auth/auth-context';
-import { connectionFromScannedSlug } from '@/features/connections/connections-api';
+import { connectionFromScannedSlug, type ScannedCardResult } from '@/features/connections/connections-api';
 import { enqueueOfflineScan } from '@/features/connections/offline-scan-queue';
 import { resolveCachedEventSnapshot } from '@/features/events/event-cache';
 import { setAuthReturnPath } from '@/features/encounters/capture-draft';
 import { isOnline } from '@/lib/connectivity';
+import { describeError } from '@/lib/friendly-error';
 import { parseEhlloCardSlugFromScan } from '@/lib/parse-scanned-qr';
 import { useAppInsets } from '@/lib/safe-area';
 import { colors, spacing } from '@/theme/tokens';
@@ -30,6 +31,7 @@ export default function ScannerScreen() {
   const [linking, setLinking] = useState(false);
   const [error, setError] = useState('');
   const [queuedMessage, setQueuedMessage] = useState('');
+  const [scanResult, setScanResult] = useState<ScannedCardResult | null>(null);
   const insets = useAppInsets();
 
   async function openScannedCard(slug: string) {
@@ -45,7 +47,7 @@ export default function ScannerScreen() {
       await enqueueOfflineScan(normalized, eventSnapshot);
       setQueuedMessage(eventSnapshot
         ? `Saved at ${eventSnapshot.eventTitle}. This card will be added to your connections when you're back online.`
-        : "You're offline — this card will be added to your connections automatically once you're back online.");
+        : "You're offline. This card will be added to your connections automatically once you're back online.");
       setLocked(false);
       return;
     }
@@ -53,9 +55,10 @@ export default function ScannerScreen() {
     setLinking(true);
     setError('');
     try {
-      const connection = await connectionFromScannedSlug(session.access_token, normalized, eventSnapshot);
-      if (connection) {
-        router.replace(`/connections/${encodeURIComponent(connection.id)}`);
+      const result = await connectionFromScannedSlug(session.access_token, normalized, eventSnapshot);
+      if (result) {
+        setScanResult(result);
+        setLinking(false);
         return;
       }
       setError('This card could not be added. Ask them to publish their card, then try again.');
@@ -65,9 +68,9 @@ export default function ScannerScreen() {
         await enqueueOfflineScan(normalized, eventSnapshot);
         setQueuedMessage(eventSnapshot
           ? `Saved at ${eventSnapshot.eventTitle}. This card will be added to your connections when you're back online.`
-          : "You're offline — this card will be added to your connections automatically once you're back online.");
+          : "You're offline. This card will be added to your connections automatically once you're back online.");
       } else {
-        setError(caught instanceof Error ? caught.message : 'Could not open this card.');
+        setError(describeError(caught, 'Could not open this card.'));
       }
       setLocked(false);
     } finally {
@@ -112,8 +115,8 @@ export default function ScannerScreen() {
               <Body>Scan someone’s ehllo QR code to save their card and open their connection.</Body>
             </View>
           </View>
-          <GreenHeroCard
-            icon={<QrCode size={28} color={colors.white} weight="bold" />}
+          <EmptyState
+            illustration={require('@/assets/animations/scanner.json')}
             title="Sign in to scan cards"
             copy="Save cards you scan and keep everyone you meet in one place."
             primaryLabel="Sign in"
@@ -181,6 +184,35 @@ export default function ScannerScreen() {
           </View>
         ) : null}
       </View>
+
+      <ConnectionSuccessSheet
+        visible={Boolean(scanResult)}
+        personName={scanResult?.connection.name || ''}
+        mutual={scanResult?.mutual ?? false}
+        onClose={() => {
+          setScanResult(null);
+          if (router.canGoBack()) router.back();
+          else router.replace('/connections');
+        }}
+        onViewCard={() => {
+          const id = scanResult?.connection.id;
+          setScanResult(null);
+          if (id) router.replace(`/connections/${encodeURIComponent(id)}`);
+        }}
+        onAddFollowUp={() => {
+          const connection = scanResult?.connection;
+          setScanResult(null);
+          if (!connection) return;
+          router.replace({
+            pathname: '/quick-follow-up',
+            params: {
+              personName: connection.name,
+              personEmail: connection.email || '',
+              sourceId: connection.sourceId,
+            },
+          });
+        }}
+      />
     </View>
   );
 }

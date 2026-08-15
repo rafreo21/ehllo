@@ -73,7 +73,7 @@ export function EventInviteSheet({
                 ? 'Revoked'
                 : 'Awaiting response';
         const deliveryStatus = invitation.deliveryStatus === 'failed'
-          ? 'Email failed — retry scheduled'
+          ? 'Email failed. Retry scheduled'
           : invitation.deliveryStatus === 'pending' || invitation.deliveryStatus === 'processing'
             ? 'Email queued'
             : invitation.deliveryStatus === 'sent'

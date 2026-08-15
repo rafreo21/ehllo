@@ -2,10 +2,12 @@ import * as Brightness from 'expo-brightness';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ContactlessPayment, Scan, ShareNetwork, Wallet } from 'phosphor-react-native';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, Share, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Platform, Pressable, Share, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
+import { BottomSheet } from '@/components/bottom-sheet';
 import { BrandedQrCode, type QrShareMode } from '@/components/branded-qr-code';
 import { GoogleWalletButton } from '@/components/google-wallet-button';
+import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { BackButton, Body, Button, Eyebrow, PillButton, ScreenFrame } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
@@ -26,6 +28,7 @@ import {
   addGoogleWalletPass,
   fetchWalletAvailability,
 } from '@/features/card/wallet-actions';
+import { describeError } from '@/lib/friendly-error';
 import { readGoogleWalletSaved, writeGoogleWalletSaved } from '@/lib/google-wallet-state';
 import { readQuickShareQrMode, writeQuickShareQrMode } from '@/lib/quick-share-preferences';
 import { colors, radius, spacing } from '@/theme/tokens';
@@ -48,6 +51,8 @@ export default function ShareCardScreen() {
   const [walletBusy, setWalletBusy] = useState(false);
   const [googleWalletSaved, setGoogleWalletSaved] = useState(false);
   const [walletNote, setWalletNote] = useState('');
+  const [walletConfirmOpen, setWalletConfirmOpen] = useState(false);
+  const [walletSuccessOpen, setWalletSuccessOpen] = useState(false);
   const [qrMode, setQrMode] = useState<QrShareMode>('online');
   const onlineQrEnabled = qrMode === 'online';
   const [activeEventTitle, setActiveEventTitle] = useState<string | undefined>(undefined);
@@ -97,7 +102,7 @@ export default function ShareCardScreen() {
       if (cancelled) return;
       setWalletAvailable(result.available);
       setWalletNote(result.message);
-    });
+    }).catch(() => undefined);
 
     return () => {
       cancelled = true;
@@ -135,12 +140,12 @@ export default function ShareCardScreen() {
       setTapToShareReadListener(() => {
         setTapMessage('Card link shared by tap.');
       });
-      await startTapToShare(publicUrl);
+      await startTapToShare(onlineCardUrl || publicUrl);
       setTapActive(true);
       setTapMessage('Ready. Ask them to hold their phone against yours.');
     } catch (error) {
       setTapActive(false);
-      setTapMessage(error instanceof Error ? error.message : 'Could not start tap to share.');
+      setTapMessage(describeError(error, 'Could not start tap to share.'));
     } finally {
       setTapBusy(false);
     }
@@ -164,31 +169,25 @@ export default function ShareCardScreen() {
       } else if (Platform.OS === 'android') {
         await addGoogleWalletPass(card.slug, session.access_token);
         if (!googleWalletSaved) {
-          Alert.alert(
-            'Was the pass added?',
-            'Confirm only after Google Wallet shows that the pass was added.',
-            [
-              { text: 'Not yet', style: 'cancel' },
-              {
-                text: 'Yes, added',
-                onPress: () => {
-                  void writeGoogleWalletSaved(card.slug, true);
-                  setGoogleWalletSaved(true);
-                  setWalletNote('Saved to Google Wallet.');
-                },
-              },
-            ],
-          );
+          setWalletConfirmOpen(true);
         }
       }
     } catch (error) {
-      setWalletNote(error instanceof Error ? error.message : 'Could not open Wallet.');
+      setWalletNote(describeError(error, 'Could not open Wallet.'));
     } finally {
       setWalletBusy(false);
     }
   }
 
   const walletLabel = Platform.OS === 'ios' ? 'Add to Apple Wallet' : 'Add to Google Wallet';
+
+  function confirmWalletSaved() {
+    setWalletConfirmOpen(false);
+    if (!card.slug) return;
+    void writeGoogleWalletSaved(card.slug, true);
+    setGoogleWalletSaved(true);
+    setWalletSuccessOpen(true);
+  }
 
   return (
     <ScreenFrame style={styles.frame}>
@@ -321,6 +320,29 @@ export default function ShareCardScreen() {
         </View>
       </View>
       <Text style={styles.helper}>Brightness is temporarily increased while this screen is open.</Text>
+      <BottomSheet
+        visible={walletConfirmOpen}
+        title="Was the pass added?"
+        onClose={() => setWalletConfirmOpen(false)}
+        footer={
+          <View style={styles.walletConfirmRow}>
+            <Button style={styles.walletConfirmButton} variant="secondary" onPress={() => setWalletConfirmOpen(false)}>
+              Not yet
+            </Button>
+            <Button style={styles.walletConfirmButton} onPress={confirmWalletSaved}>
+              Yes, added
+            </Button>
+          </View>
+        }>
+        <Body>Confirm only after Google Wallet shows that the pass was added.</Body>
+      </BottomSheet>
+      <OutcomeSuccessSheet
+        visible={walletSuccessOpen}
+        title="Done"
+        message="Saved to Google Wallet."
+        lottieSource={require('@/assets/animations/wallet-added.json')}
+        onClose={() => setWalletSuccessOpen(false)}
+      />
     </ScreenFrame>
   );
 }
@@ -412,6 +434,8 @@ const styles = StyleSheet.create({
   walletNote: { color: colors.muted, fontSize: 12, textAlign: 'center', lineHeight: 17 },
   actions: { gap: spacing.x2 },
   shareActionRow: { flexDirection: 'row', gap: spacing.x2 },
+  walletConfirmRow: { flexDirection: 'row', gap: spacing.x2 },
+  walletConfirmButton: { flex: 1 },
   sharePill: { flex: 1, alignSelf: 'stretch', height: 50 },
   sharePillText: { fontSize: 15, lineHeight: 19, fontWeight: '600' },
   actionButton: { alignSelf: 'stretch' },

@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import type { MobileCard } from '@/features/card/types';
+import { describeError } from '@/lib/friendly-error';
 import { buildOfflineQrPayload, tryBuildOfflineQrPayloadWithPhoto, type OfflineQrPayload } from '@/lib/offline-qr-payload';
 import { QR_LOGO } from '@/lib/widget-qr';
 import { colors } from '@/theme/tokens';
@@ -107,7 +108,7 @@ export function BrandedQrCode({
         backgroundColor={backgroundColor}
         ecl={active.ecl}
         onError={(error: unknown) => {
-          setRenderError(error instanceof Error ? error.message : 'Could not render this QR code.');
+          setRenderError(describeError(error, 'Could not render this QR code.'));
         }}
       />
       {showLogo ? (

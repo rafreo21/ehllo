@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { ListChecks, Microphone, Plus, QrCode, Scan } from 'phosphor-react-native';
 import { useState, useSyncExternalStore } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -11,11 +10,13 @@ import {
 } from '@/features/encounters/active-capture-controller';
 import { createFreshCaptureDraft, writeCaptureDraft } from '@/features/encounters/capture-draft';
 import { useTabBarHeight } from '@/lib/safe-area';
+import { useDebouncedNavigate } from '@/lib/use-debounced-navigate';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 export function QuickActionsFab() {
   const { card } = useCard();
   const tabBarHeight = useTabBarHeight();
+  const navigate = useDebouncedNavigate();
   const [fabOpen, setFabOpen] = useState(false);
 
   const activeCapture = useSyncExternalStore(
@@ -27,7 +28,7 @@ export function QuickActionsFab() {
   async function startCaptureNow() {
     setFabOpen(false);
     if (activeCapture) {
-      router.navigate({
+      navigate({
         pathname: '/capture/new',
         params: { draftId: activeCapture.snapshot.encounterId },
       });
@@ -35,7 +36,7 @@ export function QuickActionsFab() {
     }
     const draft = { ...createFreshCaptureDraft(), captureMode: 'recording' as const };
     await writeCaptureDraft(draft);
-    router.navigate({
+    navigate({
       pathname: '/capture/new',
       params: { draftId: draft.encounterId, openConsent: '1' },
     });
@@ -64,9 +65,9 @@ export function QuickActionsFab() {
             onPress={() => {
               setFabOpen(false);
               if (card.status === 'published') {
-                router.navigate(`/share-card?id=${card.id}`);
+                navigate(`/share-card?id=${card.id}`);
               } else {
-                router.navigate(`/edit-card?id=${card.id}`);
+                navigate(`/edit-card?id=${card.id}`);
               }
             }}
             style={({ pressed }) => [styles.fabOption, pressed && styles.fabOptionPressed]}>
@@ -79,7 +80,7 @@ export function QuickActionsFab() {
             accessibilityRole="button"
             onPress={() => {
               setFabOpen(false);
-              router.push('/quick-follow-up');
+              navigate('/quick-follow-up');
             }}
             style={({ pressed }) => [styles.fabOption, pressed && styles.fabOptionPressed]}>
             <View style={styles.fabOptionIcon}>
@@ -91,7 +92,7 @@ export function QuickActionsFab() {
             accessibilityRole="button"
             onPress={() => {
               setFabOpen(false);
-              router.push('/scanner');
+              navigate('/scanner');
             }}
             style={({ pressed }) => [styles.fabOption, pressed && styles.fabOptionPressed]}>
             <View style={styles.fabOptionIcon}>

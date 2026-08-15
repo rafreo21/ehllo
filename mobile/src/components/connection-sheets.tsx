@@ -131,7 +131,7 @@ export function ConnectionManualAddSheet({
         loading={saving}
         disabled={!name.trim()}
         onPress={() => onSave({ name, email, role, company })}>
-        <ContactlessPayment size={18} color={colors.ink} weight="bold" />
+        <ContactlessPayment size={18} color={colors.white} weight="bold" />
         Save connection
       </Button>
     </BottomSheet>

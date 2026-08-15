@@ -28,7 +28,7 @@ export function CardLibraryTile({ card, isPrimary, onPress }: CardLibraryTilePro
       style={({ pressed }) => [styles.cardTile, pressed && styles.pressed]}>
       <View style={styles.coverWrap}>
         {card.coverPhoto ? (
-          <Image alt="" source={card.coverPhoto} style={styles.coverImage} contentFit="cover" />
+          <Image alt="" source={card.coverPhoto} style={styles.coverImage} contentFit="cover" transition={200} />
         ) : (
           <View style={styles.coverFallback}>
             <CardThemeGradientFill theme={card.theme} />
@@ -36,7 +36,7 @@ export function CardLibraryTile({ card, isPrimary, onPress }: CardLibraryTilePro
         )}
         <View style={styles.avatar}>
           {card.photo ? (
-            <Image alt={card.name || label} source={card.photo} style={styles.avatarImage} contentFit="cover" />
+            <Image alt={card.name || label} source={card.photo} style={styles.avatarImage} contentFit="cover" transition={200} />
           ) : (
             <View style={styles.avatarFallback}>
               <Text style={styles.avatarText}>{initials}</Text>

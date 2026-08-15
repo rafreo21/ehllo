@@ -233,7 +233,14 @@ export function CardProvider({ children }: PropsWithChildren) {
         }
       }
 
-      const { data: rawContext } = await supabase.rpc('get_my_app_context').single();
+      // Re-check session right before this call (not just at the top of sync)
+      // — a sign-out or a sign-in-in-progress token swap between here and the
+      // dirty-card reconciliation above would otherwise fire this RPC with a
+      // stale/missing session, which fails as a permission error since anon
+      // has no grant on it.
+      if (!session?.access_token) return;
+      const { data: rawContext, error: contextError } = await supabase.rpc('get_my_app_context').single();
+      if (contextError) return;
       const context = rawContext as { workspace_id?: string } | null;
       if (!context?.workspace_id) return;
       const { data: remoteRows } = await supabase

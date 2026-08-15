@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import { requireOptionalNativeModule } from 'expo-modules-core';
 import * as FileSystem from 'expo-file-system/legacy';
 
+import { describeError } from '@/lib/friendly-error';
 import { joinSpeechResults } from '@/lib/live-transcript-merge';
 
 type SpeechResultEvent = {
@@ -283,7 +284,7 @@ export class NativeSpeechCapture {
       return true;
     } catch (error) {
       this.active = false;
-      onError?.(error instanceof Error ? error.message : 'Could not start live transcription.');
+      onError?.(describeError(error, 'Could not start live transcription.'));
       onUnavailable();
       return false;
     }

@@ -7,6 +7,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { AppleIcon, GoogleIcon, LinkedInIcon, MicrosoftIcon } from '@/components/provider-icons';
 import { Body, Button, PageHeader, Panel, PillButton, Screen } from '@/components/ui';
 import { DisconnectAccountSheet } from '@/components/disconnect-account-sheet';
+import { EmptyState } from '@/components/empty-state';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { SettingsSkeleton } from '@/components/skeleton';
@@ -191,11 +192,13 @@ export default function ConnectedAccountsScreen() {
       {session && initialLoading ? <SettingsSkeleton /> : null}
 
       {!session ? (
-        <Panel>
-          <Text style={styles.panelTitle}>Sign in required</Text>
-          <Text style={styles.panelCopy}>Sign in to connect Gmail, Outlook, and other accounts.</Text>
-          <Button onPress={() => router.push('/auth')}>Sign in</Button>
-        </Panel>
+        <EmptyState
+          illustration={require('@/assets/animations/connected-accounts.json')}
+          title="Sign in to connect accounts"
+          copy="Connect Gmail, Outlook, and other accounts for calendar and recording sync."
+          primaryLabel="Sign in"
+          onPrimary={() => router.push('/auth')}
+        />
       ) : null}
 
       {session && !initialLoading ? (
@@ -214,7 +217,7 @@ export default function ConnectedAccountsScreen() {
                   <Text style={styles.cardTitle}>{provider.name}</Text>
                   <Text style={styles.cardDescription}>
                     {needsReconnect
-                      ? 'Connection stopped working — reconnect to keep syncing.'
+                      ? 'Connection stopped working. Reconnect to keep syncing.'
                       : connected && account?.email ? account.email : provider.description}
                   </Text>
                   {provider.id === 'google' && connected ? (

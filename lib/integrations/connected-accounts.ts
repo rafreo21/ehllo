@@ -101,7 +101,7 @@ export async function saveConnectedAccount(
     updated_at: new Date().toISOString(),
   }, { onConflict: "workspace_id,user_id,provider" });
 
-  if (error) throw new Error("We couldn’t save this connected account.");
+  if (error) throw new Error(`We couldn’t save this connected account: ${error.message}`);
 }
 
 export async function deleteConnectedAccount(user: AppUser, provider: IntegrationProvider, client?: SupabaseClient) {
@@ -119,6 +119,7 @@ export async function connectProviderFromCode(
   provider: IntegrationProvider,
   requestUrl: string,
   code: string,
+  client?: SupabaseClient,
 ) {
   if (provider === "google") {
     const token = await exchangeGoogleCode(requestUrl, code);
@@ -129,7 +130,7 @@ export async function connectProviderFromCode(
       refreshToken: token.refresh_token ?? null,
       expiresAt: expiresAtFromNow(token.expires_in),
       scopes: parseScopes(token.scope),
-    });
+    }, client);
     return email;
   }
 
@@ -141,7 +142,7 @@ export async function connectProviderFromCode(
     refreshToken: token.refresh_token ?? null,
     expiresAt: expiresAtFromNow(token.expires_in),
     scopes: parseScopes(token.scope),
-  });
+  }, client);
   return email;
 }
 

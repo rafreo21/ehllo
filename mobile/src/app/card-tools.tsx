@@ -17,6 +17,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { EmptyState } from '@/components/empty-state';
 import { CardToolErrorSheet } from '@/components/card-tool-error-sheet';
 import { CardToolSuccessSheet } from '@/components/card-tool-success-sheet';
 import { BackButton, Body, Button, Eyebrow, Panel } from '@/components/ui';
@@ -37,6 +38,7 @@ import { themeSurfaceStyle } from '@/features/card/theme-colors';
 import { fetchWalletAvailability } from '@/features/card/wallet-actions';
 import { buildHtmlSignature, buildPlainSignature } from '@/lib/email-signature';
 import { fetchBrandedQrDataUri } from '@/lib/branded-qr-client';
+import { describeError } from '@/lib/friendly-error';
 import { useAppInsets } from '@/lib/safe-area';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -120,7 +122,7 @@ export default function CardToolsScreen() {
       if (cancelled) return;
       setWalletAvailable(result.available);
       setWalletNote(result.message);
-    });
+    }).catch(() => undefined);
 
     return () => {
       cancelled = true;
@@ -159,7 +161,7 @@ export default function CardToolsScreen() {
         setSuccessSheetOpen(true);
       }
     } catch (caught) {
-      const nextMessage = caught instanceof Error ? caught.message : 'Something went wrong.';
+      const nextMessage = describeError(caught, 'Something went wrong.');
       setActiveSheet('none');
       setErrorMessage(nextMessage);
       setErrorSheetOpen(true);
@@ -241,7 +243,7 @@ export default function CardToolsScreen() {
       setTimeout(() => setCopied(''), 1500);
       showSuccess(kind === 'plain' ? 'Plain signature copied.' : 'HTML signature copied.');
     } catch (caught) {
-      showError(caught instanceof Error ? caught.message : 'Could not copy the signature.');
+      showError(describeError(caught, 'Could not copy the signature.'));
     }
   }
 
@@ -301,11 +303,13 @@ export default function CardToolsScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
           {!session ? (
-            <Panel>
-              <Text style={styles.panelTitle}>Sign in to sync tools</Text>
-              <Body>Publish your card first, then unlock Wallet and NFC on this device.</Body>
-              <Button onPress={() => router.push('/auth')}>Sign in</Button>
-            </Panel>
+            <EmptyState
+              illustration={require('@/assets/animations/card-tools.json')}
+              title="Sign in to sync tools"
+              copy="Publish your card first, then unlock Wallet and NFC on this device."
+              primaryLabel="Sign in"
+              onPrimary={() => router.push('/auth')}
+            />
           ) : !published ? (
             <Panel>
               <Text style={styles.panelTitle}>Publish your card</Text>
@@ -319,7 +323,7 @@ export default function CardToolsScreen() {
               <Text style={styles.sectionLabel}>Quick share</Text>
               <View style={styles.heroActions}>
                 <Button onPress={() => router.push(`/share-card?id=${card.id}`)}>
-                  <QrCode size={18} color={colors.ink} weight="bold" />
+                  <QrCode size={18} color={colors.white} weight="bold" />
                   Show QR
                 </Button>
                 <Button variant="secondary" onPress={() => void shareCardLink()}>
@@ -443,6 +447,7 @@ export default function CardToolsScreen() {
         visible={successSheetOpen}
         message={successMessage}
         onClose={closeSuccessSheet}
+        lottieSource={require('@/assets/animations/wallet-added.json')}
       />
     </View>
   );

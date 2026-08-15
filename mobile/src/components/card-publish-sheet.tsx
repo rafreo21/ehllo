@@ -1,8 +1,9 @@
-import { CheckCircle, WarningCircle } from 'phosphor-react-native';
 import { StyleSheet, Text, View } from 'react-native';
+import LottieView from 'lottie-react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
+import { useDeferredMount } from '@/lib/use-deferred-mount';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 type CardPublishSheetProps = {
@@ -33,7 +34,7 @@ export function CardPublishSheet({
   loading,
 }: CardPublishSheetProps) {
   const isSuccess = variant === 'success';
-  const Icon = isSuccess ? CheckCircle : WarningCircle;
+  const showLottie = useDeferredMount(visible);
 
   return (
     <BottomSheet
@@ -52,8 +53,17 @@ export function CardPublishSheet({
           </Button>
         </>
       }>
-      <View style={[styles.iconWrap, isSuccess ? styles.iconSuccess : styles.iconError]}>
-        <Icon size={34} color={isSuccess ? colors.ink : colors.danger} weight="fill" />
+      <View style={styles.iconWrap}>
+        {showLottie ? (
+          <LottieView
+            source={isSuccess
+              ? require('@/assets/animations/card-published.json')
+              : require('@/assets/animations/error.json')}
+            autoPlay
+            loop={false}
+            style={styles.lottie}
+          />
+        ) : null}
       </View>
       <Body style={styles.message}>{message}</Body>
       {detail ? (
@@ -68,14 +78,12 @@ export function CardPublishSheet({
 const styles = StyleSheet.create({
   iconWrap: {
     alignSelf: 'center',
-    width: 72,
-    height: 72,
-    borderRadius: radius.round,
+    width: 200,
+    height: 200,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconSuccess: { backgroundColor: '#E2F6D5' },
-  iconError: { backgroundColor: '#FDECEA' },
+  lottie: { width: '100%', height: '100%' },
   message: { textAlign: 'center' },
   detailBox: {
     padding: spacing.x4,

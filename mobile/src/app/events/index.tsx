@@ -6,14 +6,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { EmptyState } from '@/components/empty-state';
 import { EventCard } from '@/components/event-card';
 import { EventInviteSheet } from '@/components/event-invite-sheet';
+import { OfflineBanner } from '@/components/offline-banner';
 import { EventManageSheet } from '@/components/event-manage-sheet';
 import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { SettingsSkeleton } from '@/components/skeleton';
-import { Button, HeaderActionButton, PageHeader, Panel, Screen } from '@/components/ui';
+import { Button, HeaderActionButton, PageHeader, Screen } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { fetchAddressSuggestions, type AddressSuggestion } from '@/features/events/address-autocomplete';
 import {
@@ -43,6 +45,7 @@ import { cacheEventAttendance, cacheEventLeftAt } from '@/features/events/event-
 import { fetchConnectedAccounts } from '@/features/integrations/integrations-api';
 import { readEnv } from '@/lib/env';
 import { isOnline } from '@/lib/connectivity';
+import { describeError } from '@/lib/friendly-error';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 function formatSyncedAgo(syncedAt: string, now: Date): string {
@@ -142,17 +145,14 @@ export default function EventsScreen() {
         } else {
           setRefreshTitle('Events synced');
           setRefreshMessage(suggested.length
-            ? `Synced with your calendar — ${suggested.length} suggestion${suggested.length === 1 ? '' : 's'} found.`
-            : "Synced with your calendar — you're all caught up.");
+            ? `Synced with your calendar. ${suggested.length} suggestion${suggested.length === 1 ? '' : 's'} found.`
+            : "Synced with your calendar. You're all caught up.");
         }
       }
     } catch (caught) {
-      // fetchMyEvents isn't wrapped like candidates above, so a total outage
-      // lands here — raw fetch/DNS errors ("UnknownHostException…") aren't
-      // fit to show, so a manual refresh always gets the friendly copy.
       setError(options?.manual
         ? 'Could not refresh your events. Check your connection and try again.'
-        : caught instanceof Error ? caught.message : 'Could not load your events.');
+        : describeError(caught, 'Could not load your events.'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -199,7 +199,7 @@ export default function EventsScreen() {
       else setEvents((current) => current.filter((item) => item.id !== event.id));
       if (isOnline()) await refresh();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not update this event.');
+      setError(describeError(caught, 'Could not update this event.'));
     } finally {
       setBusyId('');
     }
@@ -214,7 +214,7 @@ export default function EventsScreen() {
       await cacheEventLeftAt(event.id, new Date().toISOString());
       await refresh();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not update this event.');
+      setError(describeError(caught, 'Could not update this event.'));
     } finally {
       setBusyId('');
     }
@@ -251,7 +251,7 @@ export default function EventsScreen() {
         : result.warning || 'Email could not be sent, so share the invitation link instead.');
       if (!result.emailSent) await Share.share({ message: `${inviteEvent.title}\n${result.guestUrl}`, url: result.guestUrl });
     } catch (caught) {
-      setInviteError(caught instanceof Error ? caught.message : 'Could not invite this guest.');
+      setInviteError(describeError(caught, 'Could not invite this guest.'));
     } finally {
       setInviteLoading(false);
     }
@@ -266,7 +266,7 @@ export default function EventsScreen() {
     try {
       setInvitations(await fetchEventInvitations(accessToken, event.id));
     } catch (caught) {
-      setInviteError(caught instanceof Error ? caught.message : 'Could not load this event’s invitations.');
+      setInviteError(describeError(caught, 'Could not load this event’s invitations.'));
     } finally {
       setInvitationsLoading(false);
     }
@@ -289,7 +289,7 @@ export default function EventsScreen() {
               .then(() => setInvitations((current) => current.map((item) => (
                 item.id === invitation.id ? { ...item, status: 'revoked', updatedAt: new Date().toISOString() } : item
               ))))
-              .catch((caught) => setInviteError(caught instanceof Error ? caught.message : 'Could not revoke this invitation.'))
+              .catch((caught) => setInviteError(describeError(caught, 'Could not revoke this invitation.')))
               .finally(() => setRevokingInvitationId(''));
           },
         },
@@ -314,7 +314,7 @@ export default function EventsScreen() {
         setEvents((current) => current.map((item) => item.id === caught.latestEvent!.id ? caught.latestEvent! : item));
         setManageEvent(caught.latestEvent);
       }
-      setManageError(caught instanceof Error ? caught.message : 'Could not update this event.');
+      setManageError(describeError(caught, 'Could not update this event.'));
     } finally {
       setManageLoading(false);
     }
@@ -337,7 +337,7 @@ export default function EventsScreen() {
         setEvents((current) => current.map((item) => item.id === caught.latestEvent!.id ? caught.latestEvent! : item));
         setManageEvent(caught.latestEvent);
       }
-      setManageError(caught instanceof Error ? caught.message : 'Could not cancel this event.');
+      setManageError(describeError(caught, 'Could not cancel this event.'));
     } finally {
       setManageLoading(false);
     }
@@ -363,6 +363,7 @@ export default function EventsScreen() {
           </View>
         ) : undefined}
       />
+      <OfflineBanner message="Offline. Showing your saved events. New changes will sync once you're back online." />
       {!loading && accessToken ? (
         <View style={styles.tabRow}>
           <Pressable
@@ -389,10 +390,13 @@ export default function EventsScreen() {
       {loading ? <SettingsSkeleton /> : null}
 
       {!loading && !accessToken ? (
-        <Panel>
-          <Text style={styles.panelTitle}>Sign in required</Text>
-          <Text style={styles.panelCopy}>Sign in to see your events.</Text>
-        </Panel>
+        <EmptyState
+          illustration={require('@/assets/animations/no-events.json')}
+          title="Sign in to see events"
+          copy="Confirm where you're going, and captures made there will keep the event context."
+          primaryLabel="Sign in"
+          onPrimary={() => router.push('/auth')}
+        />
       ) : null}
 
       {!loading && accessToken ? (
@@ -446,13 +450,13 @@ export default function EventsScreen() {
                 ) : null}
               </>
             ) : (
-              <Panel>
-                <Text style={styles.panelCopy}>
-                  {calendarConnected
-                    ? 'Nothing coming up. Add an event, or wait for your calendar to sync a suggestion.'
-                    : 'Nothing coming up. Add an event, or connect your calendar in Settings.'}
-                </Text>
-              </Panel>
+              <EmptyState
+                illustration={require('@/assets/animations/no-events.json')}
+                title="Nothing coming up"
+                copy={calendarConnected
+                  ? 'Add an event, or wait for your calendar to sync a suggestion.'
+                  : 'Add an event, or connect your calendar in Settings.'}
+              />
             )
           ) : (
             past.length ? past.map((event) => (
@@ -463,9 +467,10 @@ export default function EventsScreen() {
                 busy={busyId === event.id}
               />
             )) : (
-              <Panel>
-                <Text style={styles.panelCopy}>No past events yet.</Text>
-              </Panel>
+              <EmptyState
+                illustration={require('@/assets/animations/no-events.json')}
+                title="No past events yet"
+              />
             )
           )}
         </View>
@@ -503,19 +508,29 @@ export default function EventsScreen() {
         visible={Boolean(refreshMessage)}
         title={refreshTitle}
         message={refreshMessage}
+        // This sheet is reused for every event outcome (sync, add, invite,
+        // update, cancel) — all of them are event-themed, so they share this
+        // illustration rather than falling through to the generic default.
+        lottieSource={require('@/assets/animations/event-synced.json')}
         onClose={() => setRefreshMessage('')}
       />
     </Screen>
   );
 }
 
-type AddEventForm = { title: string; location: string; start: Date; end: Date | null; sourceUrl: string };
+type AddEventForm = { title: string; location: string; start: Date | null; end: Date | null; sourceUrl: string };
 
 function defaultForm(): AddEventForm {
-  const start = new Date();
-  start.setMinutes(0, 0, 0);
-  start.setHours(start.getHours() + 1);
-  return { title: '', location: '', start, end: null, sourceUrl: '' };
+  return { title: '', location: '', start: null, end: null, sourceUrl: '' };
+}
+
+// Seed value for opening a picker on a field that has no date yet — the
+// next round hour, matching what "Starts" used to default the whole form to.
+function nextHourDefault(): Date {
+  const date = new Date();
+  date.setMinutes(0, 0, 0);
+  date.setHours(date.getHours() + 1);
+  return date;
 }
 
 // choose: the two big entry options. link: paste + Continue. link-loading:
@@ -571,7 +586,7 @@ function AddEventSheet({
 
   function openAndroidPicker(field: 'start' | 'end') {
     const current = (field === 'start' ? form.start : form.end)
-      ?? new Date(form.start.getTime() + 60 * 60 * 1000);
+      ?? (field === 'end' && form.start ? new Date(form.start.getTime() + 60 * 60 * 1000) : nextHourDefault());
     DateTimePickerAndroid.open({
       value: current,
       mode: 'date',
@@ -610,7 +625,7 @@ function AddEventSheet({
     setError('');
     try {
       const extracted = await extractEventFromLink(accessToken, url);
-      const dates = resolveExtractedEventDates(extracted, defaultForm().start);
+      const dates = resolveExtractedEventDates(extracted);
       setForm({
         title: extracted.title || '',
         location: extracted.location || '',
@@ -623,7 +638,7 @@ function AddEventSheet({
       setCameFromLink(true);
       setStep('form');
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not read that link.');
+      setError(describeError(caught, 'Could not read that link.'));
       setStep('link');
     }
   }
@@ -635,6 +650,10 @@ function AddEventSheet({
     }
     if (dateNeedsReview) {
       setError('Choose and confirm the event’s correct start date and time.');
+      return;
+    }
+    if (!form.start) {
+      setError('Choose the event’s start date and time.');
       return;
     }
     if (form.end && form.end.getTime() <= form.start.getTime()) {
@@ -652,7 +671,7 @@ function AddEventSheet({
         sourceUrl: form.sourceUrl,
       });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not save this event.');
+      setError(describeError(caught, 'Could not save this event.'));
     } finally {
       setSaving(false);
     }
@@ -688,16 +707,12 @@ function AddEventSheet({
         <View style={styles.chooseList}>
           <Pressable
             accessibilityRole="button"
-            onPress={() => {
-              setDateNeedsReview(true);
-              setDateNotice('Choose the event’s start date and time before adding it.');
-              setStep('form');
-            }}
+            onPress={() => setStep('form')}
             style={styles.chooseOption}>
             <View style={styles.chooseIcon}><NotePencil size={20} color={colors.ink} weight="bold" /></View>
             <View style={styles.chooseCopy}>
               <Text style={styles.chooseTitle}>Enter details</Text>
-              <Text style={styles.chooseHint}>Name, location, and time — by hand.</Text>
+              <Text style={styles.chooseHint}>Enter the name, location, and time yourself.</Text>
             </View>
             <CaretRight size={16} color={colors.muted} weight="bold" />
           </Pressable>
@@ -762,7 +777,9 @@ function AddEventSheet({
             <Text style={styles.label}>Starts</Text>
             <Pressable accessibilityRole="button" onPress={() => openPicker('start')} style={styles.dateButton}>
               <CalendarBlank size={16} color={colors.ink} weight="bold" />
-              <Text style={styles.dateButtonText}>{formatEventWhen({ startsAt: form.start.toISOString() })}</Text>
+              <Text style={styles.dateButtonText}>
+                {form.start ? formatEventWhen({ startsAt: form.start.toISOString() }) : 'Not set'}
+              </Text>
             </Pressable>
             {dateNotice ? <Text style={styles.dateNotice}>{dateNotice}</Text> : null}
           </View>
@@ -794,7 +811,8 @@ function AddEventSheet({
             setIosPicker(null);
           }}>Use this time</Button>}>
           <DateTimePicker
-            value={(iosPicker === 'start' ? form.start : form.end) ?? new Date()}
+            value={(iosPicker === 'start' ? form.start : form.end)
+              ?? (iosPicker === 'end' && form.start ? new Date(form.start.getTime() + 60 * 60 * 1000) : nextHourDefault())}
             mode="datetime"
             display="spinner"
             onChange={(_, date) => {
@@ -891,9 +909,7 @@ function AddressAutocompleteField({ value, onChange }: { value: string; onChange
 const styles = StyleSheet.create({
   fixedHeader: { gap: spacing.x2 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  panelTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
-  panelCopy: { color: colors.muted, fontSize: 13, lineHeight: 19 },
-  section: { gap: spacing.x2 },
+  section: { gap: spacing.x4 },
   eventGroup: { gap: spacing.x2 },
   eventGroupHeading: { gap: spacing.x1 },
   eventGroupTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },

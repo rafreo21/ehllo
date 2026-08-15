@@ -55,7 +55,11 @@ export default defineConfig(async () => {
           preset: "vercel",
         }),
       ],
-      build: { rolldownOptions: { external: nativeServerPackages } },
+      // Sentry stack traces need these — this build goes through Nitro/Rolldown,
+      // not webpack, so @sentry/nextjs's webpack plugin never runs. A manual
+      // sentry-cli inject+upload step in build:vercel (package.json) reads
+      // whatever .map files land in .vercel/output/** after this build.
+      build: { sourcemap: true, rolldownOptions: { external: nativeServerPackages } },
     };
   }
 

@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { OfflineBanner } from '@/components/offline-banner';
 import { BrandedQrCode } from '@/components/branded-qr-code';
 import { FollowUpDuePicker } from '@/components/follow-up-due-picker';
 import { Body, Button, PageHeader } from '@/components/ui';
@@ -28,7 +29,9 @@ import { buildEncounterPayload, fetchInboundExchanges, saveEncounter, type Inbou
 import { displayFollowUpTitle, SELECTABLE_FOLLOW_UP_CHANNELS, type FollowUpChannel } from '@/features/follow-ups/follow-up-channels';
 import { clearQuickFollowUpDraft, readQuickFollowUpDraft, writeQuickFollowUpDraft } from '@/features/follow-ups/quick-follow-up-draft';
 import { enqueueQuickFollowUp } from '@/features/follow-ups/quick-follow-up-queue';
+import { describeError } from '@/lib/friendly-error';
 import { resolveCachedEventSnapshot, type EventSnapshot } from '@/features/events/event-cache';
+import { useActiveEventTitle } from '@/features/events/use-active-event-title';
 import type { QuickFollowUpItem } from '@/features/follow-ups/quick-follow-up-types';
 import { formatDueLabel } from '@/lib/due-date';
 import { isOnline } from '@/lib/connectivity';
@@ -48,6 +51,10 @@ export default function QuickFollowUpScreen() {
   const { session } = useAuth();
   const { card, publicUrl } = useCard();
   const insets = useAppInsets();
+  const activeEventTitle = useActiveEventTitle(session?.access_token);
+  const qrCardUrl = publicUrl && activeEventTitle
+    ? `${publicUrl}?event=${encodeURIComponent(activeEventTitle)}`
+    : publicUrl;
 
   const [personName, setPersonName] = useState(params.personName?.trim() || '');
   const [personEmail, setPersonEmail] = useState(params.personEmail?.trim() || '');
@@ -280,7 +287,7 @@ export default function QuickFollowUpScreen() {
         await queueForLater(cleanName);
         return;
       }
-      setOutcomeError(caught instanceof Error ? caught.message : 'Could not add this follow-up.');
+      setOutcomeError(describeError(caught, 'Could not add this follow-up.'));
       setSaving(false);
     }
   }
@@ -294,6 +301,7 @@ export default function QuickFollowUpScreen() {
           onBack={() => router.back()}
         />
         <Body>Create a reminder without recording a conversation. Nothing is sent automatically.</Body>
+        <OfflineBanner message="Offline. This follow-up will save on this device and sync once you're back online." />
         {eventContext ? (
           <Text style={styles.eventContext}>
             At {eventContext.eventTitle}{eventContext.eventLocation ? ` · ${eventContext.eventLocation}` : ''}
@@ -384,7 +392,7 @@ export default function QuickFollowUpScreen() {
           onClose={() => setComposerOpen(false)}
           footer={
             <Button onPress={addFollowUp}>
-              <Plus size={18} color={colors.ink} weight="bold" />
+              <Plus size={18} color={colors.white} weight="bold" />
               Add follow-up
             </Button>
           }>
@@ -467,7 +475,7 @@ export default function QuickFollowUpScreen() {
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.x2 }]}>
         <Button loading={saving} disabled={saving} onPress={() => void submit()}>
-          <CheckCircle size={19} color={colors.ink} weight="bold" />
+          <CheckCircle size={19} color={colors.white} weight="bold" />
           Save follow-ups
         </Button>
       </View>
@@ -666,7 +674,7 @@ export default function QuickFollowUpScreen() {
         }>
         <Body style={styles.centerCopy}>They scan this code and their details link here automatically.</Body>
         <View style={styles.qrWrap}>
-          <BrandedQrCode card={card} cardUrl={publicUrl} size={220} />
+          <BrandedQrCode card={card} cardUrl={qrCardUrl} size={220} />
           <Text style={styles.qrHint}>{card.name}</Text>
         </View>
       </BottomSheet>
@@ -702,7 +710,7 @@ export default function QuickFollowUpScreen() {
         visible={successOpen}
         title={queuedOffline ? 'Saved for when you’re back online' : 'Follow-up added'}
         message={queuedOffline
-          ? "You're offline — this will be added to Follow-ups automatically the moment you reconnect."
+          ? "You're offline. This will be added to Follow-ups automatically the moment you reconnect."
           : newGuestName
             ? `It is now in Follow-ups. We also emailed ${newGuestName} to let them know and invite them to claim their own ehllo card.`
             : 'It is now in Follow-ups and will stay there until you complete it.'}

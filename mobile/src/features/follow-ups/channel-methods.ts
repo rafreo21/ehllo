@@ -1,6 +1,5 @@
 import type { EncounterAction } from '@/features/encounters/encounter-api';
 import {
-  displayFollowUpTitle,
   isFollowUpChannel,
   isGarbageFollowUpText,
 } from '@/features/follow-ups/follow-up-channels';
@@ -66,6 +65,22 @@ export function resolveMethodHref(methods: ContactMethod[], type: ContactMethodT
   return null;
 }
 
+/** A natural "I wanted to ___" phrase for the default (untitled) follow-up on this channel. */
+function followUpActionPhrase(channel: EncounterAction['channel']) {
+  switch (channel) {
+    case 'email': return 'follow up by email';
+    case 'linkedin': return 'connect on LinkedIn';
+    case 'call': return 'follow up on our call';
+    case 'whatsapp': return 'message you on WhatsApp';
+    case 'meeting': return 'schedule a meeting';
+    case 'instagram': return 'connect on Instagram';
+    case 'x': return 'connect on X';
+    case 'tiktok': return 'connect on TikTok';
+    case 'send': return 'send the promised file';
+    default: return 'follow up on next steps';
+  }
+}
+
 export function buildTailoredRequestEmail(input: {
   personName: string;
   methodType: MissingMethodType;
@@ -77,15 +92,13 @@ export function buildTailoredRequestEmail(input: {
   const greeting = input.personName.trim()
     ? `Hey ${input.personName.split(' ')[0]},`
     : 'Hey there,';
-  const cleanedFollowUp = input.followUpTitle?.trim()
-    && !isGarbageFollowUpText(input.followUpTitle)
-    && input.followUpChannel
-    && isFollowUpChannel(input.followUpChannel)
-    ? displayFollowUpTitle(input.followUpTitle, input.followUpChannel)
-    : '';
-  const followUp = cleanedFollowUp
-    ? `\n\nI wanted to follow up on ${cleanedFollowUp}.`
-    : '';
+  const trimmedTitle = input.followUpTitle?.trim();
+  const hasCustomTitle = Boolean(trimmedTitle) && !isGarbageFollowUpText(trimmedTitle!);
+  const followUp = hasCustomTitle
+    ? `\n\nI wanted to follow up on ${trimmedTitle}.`
+    : input.followUpChannel && isFollowUpChannel(input.followUpChannel)
+      ? `\n\nI wanted to ${followUpActionPhrase(input.followUpChannel)}.`
+      : '';
   const methodLabel = methodRequestLabel(input.methodType);
   const eventTitle = input.eventTitle?.trim();
   const opener = eventTitle ? `It was great meeting you at ${eventTitle}.` : 'It was great meeting you.';

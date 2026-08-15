@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import { Component, type ErrorInfo, type PropsWithChildren } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -18,6 +19,7 @@ export class AppErrorBoundary extends Component<PropsWithChildren, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('Mobile app crashed:', error, info.componentStack);
+    Sentry.captureException(error, { contexts: { react: { componentStack: info.componentStack } } });
     void reportClientError({
       route: 'app-root',
       message: error.message || 'Mobile app crashed',

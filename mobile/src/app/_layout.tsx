@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/react-native';
+import Constants from 'expo-constants';
 import { Stack } from 'expo-router';
 import { NavigationBar } from 'expo-navigation-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -20,8 +22,18 @@ import { AppErrorBoundary } from '@/components/app-error-boundary';
 import { CaptureRecorderProvider } from '@/features/encounters/capture-recorder-context';
 import { CaptureTranscriptionSyncManager } from '@/features/encounters/capture-transcription-sync-manager';
 import { EventActionSyncManager } from '@/features/events/event-action-sync-manager';
+import { installRouterDebounce } from '@/lib/router-debounce';
 import { WidgetQrRenderer } from '@/lib/widget-qr-renderer';
 import { colors } from '@/theme/tokens';
+
+Sentry.init({
+  dsn: Constants.expoConfig?.extra?.sentryDsn,
+  environment: Constants.expoConfig?.extra?.appVariant || 'unknown',
+  tracesSampleRate: 0.1,
+  enableAutoSessionTracking: true,
+});
+
+installRouterDebounce();
 
 function applyAndroidNavigationBar() {
   NavigationBar.setStyle('dark');
@@ -70,7 +82,7 @@ function RootNavigator() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   useEffect(() => {
     void SystemUI.setBackgroundColorAsync(colors.canvas);
 
@@ -118,3 +130,5 @@ export default function RootLayout() {
     </AppErrorBoundary>
   );
 }
+
+export default Sentry.wrap(RootLayout);

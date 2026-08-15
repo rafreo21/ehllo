@@ -21,7 +21,7 @@ export function integrationRedirectUri(requestUrl: string, provider: Integration
   return `${appBaseUrl(requestUrl)}/api/integrations/${provider}/callback`;
 }
 
-export function googleAuthorizeUrl(requestUrl: string, state: string) {
+export function googleAuthorizeUrl(requestUrl: string, state: string, loginHint?: string) {
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_INTEGRATION_CLIENT_ID!.trim(),
     redirect_uri: integrationRedirectUri(requestUrl, "google"),
@@ -32,6 +32,11 @@ export function googleAuthorizeUrl(requestUrl: string, state: string) {
     prompt: "select_account consent",
     state,
   });
+  // Pre-selects the account tied to this ehllo login — the user can still
+  // pick a different Google account via the chooser, but this saves them
+  // from Google silently defaulting to whichever account the device's
+  // browser last used, which may not be the one they meant to connect.
+  if (loginHint) params.set("login_hint", loginHint);
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
@@ -58,7 +63,7 @@ export async function exchangeGoogleCode(requestUrl: string, code: string) {
       grant_type: "authorization_code",
     }),
   });
-  if (!response.ok) throw new Error("Google token exchange failed.");
+  if (!response.ok) throw new Error(`Google token exchange failed: ${response.status} ${await response.text()}`);
   return response.json() as Promise<{
     access_token: string;
     refresh_token?: string;

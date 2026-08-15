@@ -1,9 +1,11 @@
+import * as Sentry from '@sentry/react-native';
 import type { Session } from '@supabase/supabase-js';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { createContext, type PropsWithChildren, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createAuthRedirectUri } from '@/lib/auth-redirect';
+import { describeError } from '@/lib/friendly-error';
 import { describeOtpDeliveryError } from '@/lib/otp-delivery-error';
 import { completeAuthSessionFromUrl, readLaunchAuthUrl } from '@/lib/auth-session-url';
 import { readMobileAuthRedirectUris } from '@/lib/env';
@@ -89,6 +91,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
     });
   }, [session, supabase]);
 
+  useEffect(() => {
+    Sentry.setUser(session?.user ? { id: session.user.id } : null);
+  }, [session?.user]);
+
   const value = useMemo<AuthValue>(() => ({
     session,
     loading,
@@ -111,7 +117,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         token: cleaned,
         type: 'email',
       });
-      return error ? { error: error.message } : {};
+      return error ? { error: describeError(error, 'Could not verify this code.') } : {};
     },
     signOut: async () => { await supabase?.auth.signOut(); },
     completeUseCaseSelection: async () => {

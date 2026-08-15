@@ -4,19 +4,23 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { EmptyState } from '@/components/empty-state';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { PhoneInput } from '@/components/phone-input';
 import { SettingsSkeleton } from '@/components/skeleton';
 import { Body, Button, Panel, PageHeader, Screen } from '@/components/ui';
+import { useAuth } from '@/features/auth/auth-context';
 import {
   fetchAccountProfile,
   updateAccountProfile,
   type AccountProfile,
 } from '@/features/account/account-api';
+import { describeError } from '@/lib/friendly-error';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 export default function EditProfileScreen() {
+  const { session } = useAuth();
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState('');
@@ -28,6 +32,13 @@ export default function EditProfileScreen() {
   const [verifyNoticeOpen, setVerifyNoticeOpen] = useState(false);
 
   useEffect(() => {
+    // fetchAccountProfile calls an RPC that requires a real session — without
+    // this gate, opening this screen signed out always failed with a raw
+    // "permission denied" error instead of showing anything useful.
+    if (!session?.access_token) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     void fetchAccountProfile()
       .then((result) => {
@@ -38,12 +49,12 @@ export default function EditProfileScreen() {
       })
       .catch((caught) => {
         if (cancelled) return;
-        setErrorMessage(caught instanceof Error ? caught.message : 'Could not load your account.');
+        setErrorMessage(describeError(caught, 'Could not load your account.'));
         setErrorOpen(true);
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, [session?.access_token]);
 
   async function save() {
     setSaving(true);
@@ -57,7 +68,7 @@ export default function EditProfileScreen() {
       });
       setSuccessOpen(true);
     } catch (caught) {
-      setErrorMessage(caught instanceof Error ? caught.message : 'Could not save your account details.');
+      setErrorMessage(describeError(caught, 'Could not save your account details.'));
       setErrorOpen(true);
     } finally {
       setSaving(false);
@@ -73,17 +84,25 @@ export default function EditProfileScreen() {
           onBack={() => router.back()}
         />
       }
-      footer={loading ? undefined : (
+      footer={loading || !session ? undefined : (
         <Button onPress={() => void save()} loading={saving}>
           Save changes
         </Button>
       )}>
-      {loading ? (
+      {!session ? (
+        <EmptyState
+          illustration={require('@/assets/animations/set-up-your-identity.json')}
+          title="Sign in to edit your profile"
+          copy="Your full name, email, and phone number live here."
+          primaryLabel="Sign in"
+          onPrimary={() => router.push('/auth')}
+        />
+      ) : loading ? (
         <SettingsSkeleton />
       ) : (
         <View style={styles.content}>
           <Body>
-            Account details only — your public card is edited from My Cards.
+            Account details only. Your public card is edited from My Cards.
           </Body>
 
           <Panel style={styles.panel}>

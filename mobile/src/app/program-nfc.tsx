@@ -7,6 +7,7 @@ import {
   DeviceMobile,
   WarningCircle,
 } from 'phosphor-react-native';
+import LottieView from 'lottie-react-native';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -16,6 +17,7 @@ import {
   programNfcTag,
   type NfcProgrammingStage,
 } from '@/features/card/nfc-actions';
+import { describeError } from '@/lib/friendly-error';
 import { useAppInsets } from '@/lib/safe-area';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -85,7 +87,7 @@ export default function ProgramNfcScreen() {
       setState('success');
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'ehllo could not program this NFC tag.');
+      setError(describeError(caught, 'ehllo could not program this NFC tag.'));
       setState('error');
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
@@ -111,9 +113,14 @@ export default function ProgramNfcScreen() {
 
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + spacing.x5 }]}>
         <View style={[styles.hero, state === 'success' && styles.heroSuccess, state === 'error' && styles.heroError]}>
-          <View style={styles.heroIcon}>
+          <View style={state === 'success' ? styles.heroIconLarge : styles.heroIcon}>
             {running ? <ActivityIndicator color={colors.ink} /> : state === 'success' ? (
-              <CheckCircle size={28} color={colors.ink} weight="fill" />
+              <LottieView
+                source={require('@/assets/animations/nfc-written.json')}
+                autoPlay
+                loop={false}
+                style={styles.lottie}
+              />
             ) : state === 'error' ? (
               <WarningCircle size={28} color={colors.danger} weight="fill" />
             ) : (
@@ -156,7 +163,7 @@ export default function ProgramNfcScreen() {
           <>
             <Button onPress={() => router.back()}>
               Done
-              <ArrowRight size={18} color={colors.ink} weight="bold" />
+              <ArrowRight size={18} color={colors.white} weight="bold" />
             </Button>
             <Button variant="secondary" onPress={() => setState('ready')}>Program another tag</Button>
           </>
@@ -168,7 +175,7 @@ export default function ProgramNfcScreen() {
         ) : (
           <Button loading={running} disabled={running} onPress={() => void startProgramming()}>
             Start programming
-            <ArrowRight size={18} color={colors.ink} weight="bold" />
+            <ArrowRight size={18} color={colors.white} weight="bold" />
           </Button>
         )}
       </ScrollView>
@@ -186,6 +193,8 @@ const styles = StyleSheet.create({
   heroSuccess: { backgroundColor: colors.surfaceMuted },
   heroError: { borderWidth: 1, borderColor: colors.danger },
   heroIcon: { width: 52, height: 52, borderRadius: radius.medium, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.x2 },
+  heroIconLarge: { alignSelf: 'center', width: 200, height: 200, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.x2 },
+  lottie: { width: '100%', height: '100%' },
   title: { color: colors.ink, fontSize: 28, lineHeight: 31, fontWeight: '800', letterSpacing: -0.9 },
   description: { color: colors.muted },
   errorText: { color: colors.danger, fontSize: 14, lineHeight: 20, fontWeight: '700', marginTop: spacing.x2 },

@@ -10,6 +10,7 @@ import { MethodListEditor } from '@/components/method-list-editor';
 import { MobileCardPreview } from '@/components/mobile-card';
 import { Body, Button, FooterBackButton, PageHeader } from '@/components/ui';
 import { cardDraftSignature, cardNeedsPublish } from '@/lib/card-draft';
+import { describeError } from '@/lib/friendly-error';
 import {
   ensurePublishedBaseline,
   writePublishedBaseline,
@@ -224,7 +225,7 @@ export default function EditCardScreen() {
       setSheetDetail(result.detail || '');
       setSheet('error');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Something went wrong.';
+      const message = describeError(error, 'Something went wrong.');
       const failure = describePublishError(message);
       setSheetTitle(failure.title);
       setSheetMessage(failure.message);
@@ -307,8 +308,8 @@ export default function EditCardScreen() {
 
                 <View style={styles.photoRow}>
                   {([
-                    ['companyLogo', 'Company logo'],
                     ['photo', 'Profile photo'],
+                    ['companyLogo', 'Company logo'],
                   ] as const).map(([key, label]) => (
                     <View key={key} style={styles.photoWrap}>
                       <Pressable
@@ -570,8 +571,6 @@ const styles = StyleSheet.create({
     padding: spacing.x5,
     borderRadius: radius.large,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
   },
   sectionHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
   sectionIcon: {
@@ -628,12 +627,14 @@ const styles = StyleSheet.create({
     gap: spacing.x2,
     borderRadius: radius.medium,
     backgroundColor: colors.canvas,
-    borderWidth: 1,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
     borderColor: colors.line,
     overflow: 'hidden',
   },
   photoSlotFilled: {
     padding: 0,
+    borderStyle: 'solid',
   },
   photoPreview: {
     ...StyleSheet.absoluteFill,
@@ -690,8 +691,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.x2,
     borderRadius: radius.medium,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
   },
   statValue: { color: colors.ink, fontSize: 16, fontWeight: '900' },
   statSwatch: {
@@ -710,8 +709,6 @@ const styles = StyleSheet.create({
     padding: spacing.x4,
     borderRadius: radius.medium,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
   },
   reviewOptionCopy: { flex: 1, gap: 4 },
   reviewOptionTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },

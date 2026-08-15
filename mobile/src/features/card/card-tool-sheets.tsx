@@ -46,6 +46,7 @@ import {
   addAppleWalletPass,
   addGoogleWalletPass,
 } from '@/features/card/wallet-actions';
+import { readGoogleWalletSaved, writeGoogleWalletSaved } from '@/lib/google-wallet-state';
 import type { MobileCard } from '@/features/card/types';
 import type { SignatureProfile } from '@/lib/email-signature';
 import { colors, radius, spacing } from '@/theme/tokens';
@@ -86,6 +87,12 @@ export function WalletToolSheetContent({
   showCompany: boolean;
 }) {
   const { busy, run } = actions;
+  const [googleWalletSaved, setGoogleWalletSaved] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !card.slug) return;
+    void readGoogleWalletSaved(card.slug).then(setGoogleWalletSaved);
+  }, [card.slug]);
 
   return (
     <View style={styles.sheetBody}>
@@ -127,7 +134,7 @@ export function WalletToolSheetContent({
               if (!accessToken) throw new Error('Sign in required.');
               await addAppleWalletPass(card.slug, accessToken);
             }, { successMessage: 'Choose Add to Wallet from the share sheet.' })}>
-            <Wallet size={18} color={colors.ink} weight="bold" />
+            <Wallet size={18} color={colors.white} weight="bold" />
             Add to Apple Wallet
           </Button>
           {walletAvailable === false && walletNote ? (
@@ -140,9 +147,12 @@ export function WalletToolSheetContent({
           <GoogleWalletButton
             loading={busy === 'google'}
             disabled={walletAvailable === false}
+            mode={googleWalletSaved ? 'view' : 'add'}
             onPress={() => void run('google', async () => {
               if (!accessToken) throw new Error('Sign in required.');
               await addGoogleWalletPass(card.slug, accessToken);
+              void writeGoogleWalletSaved(card.slug, true);
+              setGoogleWalletSaved(true);
             }, { successMessage: 'Finish adding the pass in Google Wallet.' })}
           />
           {walletAvailable === false && walletNote ? (
@@ -191,7 +201,7 @@ export function NfcToolSheetContent({
               ? 'Tap to share turned off.'
               : 'Ready. Ask them to tap your phone.',
           })}>
-          <ContactlessPayment size={18} color={colors.ink} weight="bold" />
+          <ContactlessPayment size={18} color={tapActive ? colors.ink : colors.white} weight="bold" />
           {tapActive ? 'Stop tap to share' : 'Tap to share'}
         </Button>
       ) : null}
@@ -200,7 +210,7 @@ export function NfcToolSheetContent({
           <Button
             disabled={!publicUrl}
             onPress={() => router.push(`/program-nfc?id=${card.id}`)}>
-            <ContactlessPayment size={18} color={colors.ink} weight="bold" />
+            <ContactlessPayment size={18} color={colors.white} weight="bold" />
             Program NFC tag
           </Button>
           <Button variant="secondary" onPress={() => void openNfcSettings()}>
@@ -534,8 +544,6 @@ const styles = StyleSheet.create({
     padding: spacing.x4,
     borderRadius: radius.medium,
     backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.line,
   },
   signaturePreview: {
     flexDirection: 'row',
@@ -543,8 +551,6 @@ const styles = StyleSheet.create({
     padding: spacing.x4,
     gap: spacing.x4,
     backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.line,
   },
   signaturePhoto: {
     width: 64,

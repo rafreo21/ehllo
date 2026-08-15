@@ -53,6 +53,9 @@ export function GroupedFollowUpCell({
           {group.encounterTitle ? (
             <Text style={styles.meta} numberOfLines={1}>{group.encounterTitle}</Text>
           ) : null}
+          {group.eventTitle ? (
+            <Text style={styles.eventMeta} numberOfLines={1}>At {group.eventTitle}</Text>
+          ) : null}
         </View>
         {isCompleted ? (
           <Text style={styles.dueCompleted}>{completedLabel(group.completedAt)}</Text>
@@ -187,6 +190,7 @@ const styles = StyleSheet.create({
   },
   subtitle: { color: colors.muted, fontSize: 13, lineHeight: 18 },
   meta: { color: colors.muted, fontSize: 11, lineHeight: 16 },
+  eventMeta: { color: colors.inkSoft, fontSize: 11, fontWeight: '700', lineHeight: 16 },
   due: { color: colors.muted, fontSize: 11, fontWeight: '700' },
   dueOverdue: { color: colors.danger },
   dueToday: { color: colors.warning },

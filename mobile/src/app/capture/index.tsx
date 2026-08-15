@@ -10,6 +10,7 @@ import {
   Trash,
   UserCircle,
 } from 'phosphor-react-native';
+import LottieView from 'lottie-react-native';
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import {
   Pressable,
@@ -21,11 +22,13 @@ import {
 } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
-import { Body, Button, HeaderActionButton, PageHeader, ScreenFrame } from '@/components/ui';
+import { Body, Button, HeaderActionButton, PageHeader, PillButton, ScreenFrame } from '@/components/ui';
 import { HistoryToolbar } from '@/components/history-toolbar';
 import { CaptureDeleteSheet } from '@/components/capture-delete-sheet';
+import { EmptyState } from '@/components/empty-state';
 import { OfflineBanner } from '@/components/offline-banner';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
+import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { CaptureListSkeleton } from '@/components/skeleton';
 import { useAuth } from '@/features/auth/auth-context';
 import {
@@ -44,6 +47,7 @@ import {
   getActiveCaptureController,
   subscribeToActiveCapture,
 } from '@/features/encounters/active-capture-controller';
+import { describeError } from '@/lib/friendly-error';
 import { isNetworkError } from '@/lib/mobile-api';
 import { formatAbsoluteTime, formatRelativeTime } from '@/lib/relative-time';
 import { colors, radius, spacing } from '@/theme/tokens';
@@ -81,7 +85,9 @@ function draftStateLabel(draft: CaptureDraftSummary) {
   if (draft.sessionStatus === 'paused') return 'Paused draft';
   if (draft.sessionStatus === 'recording') return 'Unfinished draft';
   if (draft.sessionStatus === 'processing') return 'Preparing review';
-  if (draft.sessionStatus === 'review_ready') return 'Ready to review';
+  if (draft.sessionStatus === 'review_ready') {
+    return draft.transcriptPending ? 'Needs transcript. Tap to retry' : 'Ready to review';
+  }
   return stepLabel(draft.step);
 }
 
@@ -97,6 +103,7 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
   const [errorMessage, setErrorMessage] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<EncounterSummary | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteSuccessOpen, setDeleteSuccessOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<CaptureSort>('recent');
   const [sortOpen, setSortOpen] = useState(false);
@@ -200,7 +207,7 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
         setEncounters([]);
       }
     } catch (caught) {
-      setErrorMessage(caught instanceof Error ? caught.message : 'Could not load captures.');
+      setErrorMessage(describeError(caught, 'Could not load captures.'));
       setErrorSheetOpen(true);
     } finally {
       setLoading(false);
@@ -270,8 +277,9 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
       await deleteLocalRecording(deleteTarget.id);
       setEncounters((current) => current.filter((item) => item.id !== deleteTarget.id));
       setDeleteTarget(null);
+      setDeleteSuccessOpen(true);
     } catch (caught) {
-      setErrorMessage(caught instanceof Error ? caught.message : 'Could not delete this capture.');
+      setErrorMessage(describeError(caught, 'Could not delete this capture.'));
       setErrorSheetOpen(true);
     } finally {
       setDeleting(false);
@@ -298,14 +306,27 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
               </HeaderActionButton>
             ) : undefined}
           />
-          <OfflineBanner style={styles.offlineBanner} />
+          <OfflineBanner
+            message="Offline. You can still record or add notes. It'll sync once you're back online."
+            style={styles.offlineBanner}
+          />
           {!historyOnly ? <View style={styles.startActions}>
-            <Button onPress={() => void beginFreshCapture('recording')}>
-              <Microphone size={18} color={colors.ink} weight="fill" /> Start recording
-            </Button>
-            <Button variant="secondary" onPress={() => void beginFreshCapture('quick_context')}>
-              <Notebook size={18} color={colors.ink} weight="bold" /> Add notes
-            </Button>
+            <PillButton
+              tone="solid"
+              style={styles.startActionPill}
+              textStyle={styles.startActionPillText}
+              icon={<Microphone size={18} color={colors.white} weight="fill" />}
+              onPress={() => void beginFreshCapture('recording')}>
+              Start recording
+            </PillButton>
+            <PillButton
+              tone="outline"
+              style={styles.startActionPill}
+              textStyle={styles.startActionPillText}
+              icon={<Notebook size={18} color={colors.muted} weight="bold" />}
+              onPress={() => void beginFreshCapture('quick_context')}>
+              Add notes
+            </PillButton>
           </View> : null}
         </View>
 
@@ -385,7 +406,10 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
                     </View>
                     <Text style={styles.when}>{formatRelativeTime(draft.updatedAt)}</Text>
                   </View>
-                  <Text style={[styles.draftMeta, draft.sessionStatus === 'failed' && styles.draftMetaInterrupted]}>
+                  <Text style={[
+                    styles.draftMeta,
+                    (draft.sessionStatus === 'failed' || draft.transcriptPending) && styles.draftMetaInterrupted,
+                  ]}>
                     {draftStateLabel(draft)}
                   </Text>
                   <View style={styles.cardFooter}>
@@ -452,23 +476,21 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
               ))}
 
               {!loading && visibleDrafts.length === 0 && pendingReviewEncounters.length === 0 && !activeCapture ? (
-                <View style={styles.emptyCard}>
-                  <Notebook size={28} color={colors.muted} weight="bold" />
-                  <Text style={styles.emptyTitle}>Nothing in progress</Text>
-                  <Body style={styles.emptyCopy}>Start a recording or add notes after a conversation.</Body>
-                </View>
+                <EmptyState
+                  illustration={require('@/assets/animations/capture.json')}
+                  title="Nothing in progress"
+                  copy="Start a recording or add notes after a conversation."
+                />
               ) : null}
             </>
           ) : (
             <>
               {!loading && encounters.length === 0 ? (
-                <View style={styles.emptyCard}>
-                  <Notebook size={28} color={colors.muted} weight="bold" />
-                  <Text style={styles.emptyTitle}>No captures yet</Text>
-                  <Body style={styles.emptyCopy}>
-                    Your saved meeting contexts and follow-ups will appear here after you complete a capture.
-                  </Body>
-                </View>
+                <EmptyState
+                  illustration={require('@/assets/animations/capture.json')}
+                  title="No captures yet"
+                  copy="Your saved meeting contexts and follow-ups will appear here after you complete a capture."
+                />
               ) : null}
 
               {encounters.length ? <Text style={styles.sectionLabel}>Completed captures</Text> : null}
@@ -537,6 +559,13 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
         onConfirm={() => void confirmDeleteEncounter()}
       />
 
+      <OutcomeSuccessSheet
+        visible={deleteSuccessOpen}
+        title="Deleted"
+        message="This capture has been deleted."
+        onClose={() => setDeleteSuccessOpen(false)}
+      />
+
       <OutcomeErrorSheet
         visible={errorSheetOpen}
         message={errorMessage}
@@ -561,6 +590,14 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
           setCaptureBlockedOpen(false);
         }}>
         <View style={styles.blockedSheet}>
+          <View style={styles.blockedIconWrap}>
+            <LottieView
+              source={require('@/assets/animations/warning.json')}
+              autoPlay
+              loop={false}
+              style={styles.blockedLottie}
+            />
+          </View>
           <Body>
             ehllo keeps one live recording at a time so its audio, people, and transcript never get mixed together.
           </Body>
@@ -594,7 +631,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.x2,
   },
-  offlineBanner: { marginTop: spacing.x2, alignSelf: 'stretch' },
+  startActionPill: { paddingHorizontal: spacing.x5, paddingVertical: spacing.x3 },
+  startActionPillText: { fontSize: 14 },
+  offlineBanner: { marginTop: spacing.x2 },
   activeCard: {
     minHeight: 72,
     padding: spacing.x2,
@@ -706,16 +745,9 @@ const styles = StyleSheet.create({
   },
   sortOptions: { gap: spacing.x2 },
   blockedSheet: { gap: spacing.x3 },
+  blockedIconWrap: { alignSelf: 'center', width: 160, height: 160, alignItems: 'center', justifyContent: 'center' },
+  blockedLottie: { width: '100%', height: '100%' },
   emptySearch: { textAlign: 'center', color: colors.muted, paddingVertical: spacing.x4 },
-  emptyCard: {
-    alignItems: 'flex-start',
-    gap: spacing.x2,
-    padding: spacing.x5,
-    borderRadius: radius.large,
-    backgroundColor: colors.surface,
-  },
-  emptyTitle: { color: colors.ink, fontSize: 18, fontWeight: '800' },
-  emptyCopy: { lineHeight: 20 },
   draftCard: {
     gap: spacing.x2,
     padding: spacing.x4,

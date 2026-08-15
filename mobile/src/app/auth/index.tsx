@@ -109,7 +109,7 @@ export default function AuthScreen() {
           </View>
           {message ? <Text style={[styles.message, message.startsWith('Check') && styles.success]}>{message}</Text> : null}
           <Button loading={loading} disabled={!configured} onPress={submitEmail}>
-            Continue <ArrowRight size={18} color={colors.ink} />
+            Continue <ArrowRight size={18} color={colors.white} />
           </Button>
           <Button variant="secondary" onPress={() => router.back()}>
             Continue in preview mode
@@ -134,7 +134,7 @@ export default function AuthScreen() {
           <Text style={[styles.expiry, secondsLeft === 0 && styles.expiryExpired]}>
             {secondsLeft > 0
               ? `Code expires in ${formatCountdown(secondsLeft)}`
-              : 'Code expired — resend to get a new one.'}
+              : 'Code expired. Resend to get a new one.'}
           </Text>
           {message ? <Text style={[styles.message, message.startsWith('Check') && styles.success]}>{message}</Text> : null}
           <Button loading={loading} disabled={!configured || code.replace(/\D/g, '').length < 6} onPress={submitCode}>

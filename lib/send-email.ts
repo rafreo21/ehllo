@@ -20,7 +20,9 @@ export async function sendEmail(input: { to: string; subject: string; html: stri
   });
 
   if (!response.ok) {
-    return { ok: false as const, error: await response.text() };
+    const error = await response.text();
+    console.error("Resend send failed", response.status, error);
+    return { ok: false as const, error };
   }
 
   return { ok: true as const };

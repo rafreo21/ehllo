@@ -29,7 +29,7 @@ const BACKEND = IS_STAGING
   ? {
       supabaseUrl: "https://vgrxsdjfrkmpmpqvuqty.supabase.co",
       supabaseAnonKey: "sb_publishable_eSjPw8e5uHqCDUtAf_vdDQ_SXAS-hsW",
-      publicCardBaseUrl: "https://aftermeet-staging.vercel.app",
+      publicCardBaseUrl: "https://staging.ehllo.io",
     }
   : {
       supabaseUrl: "https://tgpzxgrvdmmwnodxrooh.supabase.co",
@@ -42,7 +42,7 @@ module.exports = {
     name: IS_STAGING ? "ehllo Staging" : "ehllo",
     owner: "rafreo",
     slug: EAS_PROJECT.slug,
-    version: "1.0.2",
+    version: "1.1.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     // Keep the AfterMeet schemes as inbound aliases for links already shared
@@ -55,6 +55,12 @@ module.exports = {
       icon: "./assets/images/icon.png",
       bundleIdentifier: bundleId,
       supportsTablet: true,
+      // Universal Links — matches the Android intentFilter's /c/ pathPrefix
+      // above. The apple-app-site-association file served at this domain
+      // lives in site/app/.well-known/apple-app-site-association/route.ts.
+      associatedDomains: [
+        `applinks:${IS_STAGING ? "staging.ehllo.io" : "ehllo.io"}`,
+      ],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         LSApplicationQueriesSchemes: [
@@ -77,7 +83,6 @@ module.exports = {
       },
     },
     android: {
-      versionCode: 3,
       package: bundleId,
       adaptiveIcon: {
         backgroundColor: "#87EA5C",
@@ -87,6 +92,20 @@ module.exports = {
       },
       predictiveBackGestureEnabled: false,
       softwareKeyboardLayoutMode: "resize",
+      intentFilters: [
+        {
+          action: "VIEW",
+          autoVerify: true,
+          data: [
+            {
+              scheme: "https",
+              host: IS_STAGING ? "staging.ehllo.io" : "ehllo.io",
+              pathPrefix: "/c/",
+            },
+          ],
+          category: ["BROWSABLE", "DEFAULT"],
+        },
+      ],
     },
     androidStatusBar: {
       backgroundColor: "#F5F7F3",
@@ -107,6 +126,13 @@ module.exports = {
       "expo-asset",
       "expo-image",
       "expo-sharing",
+      [
+        "@sentry/react-native/expo",
+        {
+          organization: "ehllo",
+          project: "ehllo-mobile",
+        },
+      ],
       [
         "expo-notifications",
         {
@@ -226,10 +252,21 @@ module.exports = {
       publicCardBaseUrl: BACKEND.publicCardBaseUrl,
       supabaseUrl: BACKEND.supabaseUrl,
       supabaseAnonKey: BACKEND.supabaseAnonKey,
-      // Not yet provisioned — the address-autocomplete field falls back to a
-      // plain text input until this is set. Same key for both variants
-      // (Places is billing-account-scoped, not staging/production-split).
-      googlePlacesApiKey: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || "",
+      // Hardcoded rather than env-driven for the same reason as sentryDsn
+      // above — EAS builds never see local .env, so this silently fell back
+      // to "" (plain text input, no autocomplete) on every real build.
+      // Split per platform since a Google Cloud API key can only carry one
+      // application-restriction type (Android apps OR iOS apps, not both) —
+      // each is restricted in Cloud Console to its own package name/SHA-1 or
+      // bundle ID, and to the Places API only. Same key for both app
+      // variants (Places is billing-account-scoped, not staging/production-split).
+      googlePlacesApiKeyAndroid: "AIzaSyBzK6N7DA6itgONIYotNSPoo6MuvQa7Fbc",
+      googlePlacesApiKeyIos: "AIzaSyD0QU2QDSaYG_C5k9h0224wlToCf_TevKE",
+      // DSNs are not secret (Sentry's own docs: safe to expose client-side,
+      // same trust tier as the Supabase anon key above) — hardcoded here
+      // rather than via env var since this project never wires EAS env vars
+      // through to runtime (see BACKEND above), only local-only .env.
+      sentryDsn: "https://95ecbc235e3dc8301c48cb83da697b06@o4511911251214336.ingest.us.sentry.io/4511911445463040",
       buildNumber: 5,
       buildStamp: IS_STAGING ? "2026-08-14-ehllo-staging" : "2026-08-14-ehllo",
       appVariant: APP_VARIANT,

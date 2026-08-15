@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
-import { CaretRight, MagnifyingGlass, Plus, SortAscending, UsersThree } from 'phosphor-react-native';
+import { CaretRight, MagnifyingGlass, Plus, SortAscending } from 'phosphor-react-native';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -9,14 +9,14 @@ import {
   ConnectionManualAddSheet,
   ConnectionSortSheet,
 } from '@/components/connection-sheets';
-import { MiniPromptCard } from '@/components/mini-prompt-card';
+import { EmptyState } from '@/components/empty-state';
+import { OfflineBanner } from '@/components/offline-banner';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import {
   ConnectionsListSkeleton,
 } from '@/components/skeleton';
 import { BackButton, Body, Eyebrow } from '@/components/ui';
-import { GreenHeroCard } from '@/components/green-hero-card';
 import { useAuth } from '@/features/auth/auth-context';
 import { connectionAvatarUrl } from '@/features/connections/connection-public-card';
 import {
@@ -29,6 +29,7 @@ import {
   type ConnectionItem,
   type ConnectionSort,
 } from '@/features/connections/connections-api';
+import { describeError } from '@/lib/friendly-error';
 import { useAppInsets } from '@/lib/safe-area';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -55,6 +56,11 @@ function ConnectionRow({ connection, onPress }: { connection: ConnectionItem; on
           <Text style={styles.source}>{connectionSourceLabel(connection.source)}</Text>
           {connection.connectedAt ? <Text style={styles.when}>{formatWhen(connection.connectedAt)}</Text> : null}
         </View>
+        {connection.eventTitle ? (
+          <Text style={styles.eventMeta} numberOfLines={1}>
+            At {connection.eventTitle}{connection.eventLocation ? ` · ${connection.eventLocation}` : ''}
+          </Text>
+        ) : null}
       </View>
       <CaretRight size={16} color={colors.muted} weight="bold" />
     </Pressable>
@@ -108,7 +114,7 @@ export function ConnectionsScreen({ showBack = true }: { showBack?: boolean }) {
         .then(setConnections)
         .finally(() => setEnriching(false));
     } catch (caught) {
-      showError(caught instanceof Error ? caught.message : 'Could not load connections.');
+      showError(describeError(caught, 'Could not load connections.'));
       setConnections([]);
       setLoading(false);
       setEnriching(false);
@@ -141,7 +147,7 @@ export function ConnectionsScreen({ showBack = true }: { showBack?: boolean }) {
       showSuccess(`${input.name.trim()} was added to your connections.`);
       await load();
     } catch (caught) {
-      showError(caught instanceof Error ? caught.message : 'Could not save this connection.');
+      showError(describeError(caught, 'Could not save this connection.'));
     } finally {
       setSavingManual(false);
     }
@@ -169,6 +175,7 @@ export function ConnectionsScreen({ showBack = true }: { showBack?: boolean }) {
           <View style={styles.headerCopy}>
             <Eyebrow>Connections</Eyebrow>
             <Text style={styles.title}>People you’ve met</Text>
+            <OfflineBanner message="Offline. Showing your saved connections. New ones will sync once you're back online." />
             <Body>Cards you saved and people who shared their details with you.</Body>
           </View>
 
@@ -201,8 +208,8 @@ export function ConnectionsScreen({ showBack = true }: { showBack?: boolean }) {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
           {!session ? (
-            <GreenHeroCard
-              icon={<UsersThree size={28} color={colors.white} weight="fill" />}
+            <EmptyState
+              illustration={require('@/assets/animations/no-connections-yet.json')}
               title="Sign in to see connections"
               copy="Save cards you scan and people who share their details with you."
               primaryLabel="Sign in"
@@ -227,8 +234,8 @@ export function ConnectionsScreen({ showBack = true }: { showBack?: boolean }) {
               ) : null}
             </View>
           ) : (
-            <MiniPromptCard
-              icon={<UsersThree size={18} color={colors.ink} weight="fill" />}
+            <EmptyState
+              illustration={require('@/assets/animations/no-connections-yet.json')}
               title="No connections yet"
               copy="Scan a card or add someone manually."
               onPress={() => setAddOpen(true)}
@@ -367,5 +374,6 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2, marginTop: 4 },
   source: { color: colors.inkSoft, fontSize: 10, fontWeight: '700' },
   when: { color: colors.muted, fontSize: 10 },
+  eventMeta: { marginTop: 2, color: colors.inkSoft, fontSize: 11, fontWeight: '700' },
   emptySearch: { textAlign: 'center', color: colors.muted },
 });

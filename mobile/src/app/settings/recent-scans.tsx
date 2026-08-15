@@ -1,8 +1,11 @@
+import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { CaretRight, CheckCircle, Trash } from 'phosphor-react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { EmptyState } from '@/components/empty-state';
+import { OfflineBanner } from '@/components/offline-banner';
 import { Body, Button, PageHeader, Panel, Screen } from '@/components/ui';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { SettingsSkeleton } from '@/components/skeleton';
@@ -13,6 +16,7 @@ import type { SavedDirectoryContact } from '@/features/connections/connection-di
 import { saveConnectionToEhllo } from '@/features/connections/save-connection-contact';
 import { fetchInboundExchanges, type InboundExchange } from '@/features/encounters/encounter-api';
 import { normalizeEmailForMatching, normalizePhoneForMatching } from '@/lib/contact-identity';
+import { describeError } from '@/lib/friendly-error';
 import { mobileFetch } from '@/lib/mobile-api';
 import { formatDateTime } from '@/lib/relative-time';
 import { colors, spacing } from '@/theme/tokens';
@@ -99,7 +103,7 @@ export default function RecentScansScreen() {
       setExchanges(items);
       setSavedContacts(contacts);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not load your scans.');
+      setError(describeError(caught, 'Could not load your scans.'));
     } finally {
       setInitialLoading(false);
     }
@@ -131,7 +135,7 @@ export default function RecentScansScreen() {
       setHistoryGroup(null);
       await refresh();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not save this person to your directory.');
+      setError(describeError(caught, 'Could not save this person to your directory.'));
     } finally {
       setBusyId('');
     }
@@ -147,7 +151,7 @@ export default function RecentScansScreen() {
       setExchanges((current) => current.filter((item) => !dismissedIds.has(item.id)));
       setHistoryGroup(null);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not update this scan.');
+      setError(describeError(caught, 'Could not update this scan.'));
     } finally {
       setBusyId('');
     }
@@ -159,6 +163,7 @@ export default function RecentScansScreen() {
   const header = (
     <>
       <PageHeader eyebrow="Settings" title="Recent scans" />
+      <OfflineBanner message="Offline. Showing your saved scans. New scans will sync once you're back online." />
       <Body>Everyone who scanned your card. Already-saved people are marked.</Body>
     </>
   );
@@ -168,10 +173,13 @@ export default function RecentScansScreen() {
       {session && initialLoading ? <SettingsSkeleton /> : null}
 
       {!session ? (
-        <Panel>
-          <Text style={styles.panelTitle}>Sign in required</Text>
-          <Text style={styles.panelCopy}>Sign in to see who has scanned your card.</Text>
-        </Panel>
+        <EmptyState
+          illustration={require('@/assets/animations/recent-scans.json')}
+          title="Sign in to see recent scans"
+          copy="People who scanned your card but aren't saved yet will show up here."
+          primaryLabel="Sign in"
+          onPrimary={() => router.push('/auth')}
+        />
       ) : null}
 
       {session && !initialLoading && !groups.length ? (
@@ -227,7 +235,7 @@ export default function RecentScansScreen() {
                 ) : (
                   <View style={styles.cardActions}>
                     <Button onPress={() => void addGroupToDirectory(group)}>
-                      <CheckCircle size={16} color={colors.ink} weight="bold" />
+                      <CheckCircle size={16} color={colors.white} weight="bold" />
                       Add
                     </Button>
                     <Button variant="ghost" onPress={() => void dismissGroup(group)}>
@@ -270,7 +278,7 @@ export default function RecentScansScreen() {
               <View style={styles.cardActions}>
                 {alreadyInDirectory(historyGroup.latest, savedContacts) ? null : (
                   <Button onPress={() => void addGroupToDirectory(historyGroup)}>
-                    <CheckCircle size={16} color={colors.ink} weight="bold" />
+                    <CheckCircle size={16} color={colors.white} weight="bold" />
                     Add
                   </Button>
                 )}
