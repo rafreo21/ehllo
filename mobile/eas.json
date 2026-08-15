@@ -30,6 +30,14 @@
         "APP_VARIANT": "staging"
       }
     },
+    "staging-store": {
+      "distribution": "store",
+      "channel": "staging",
+      "autoIncrement": true,
+      "env": {
+        "APP_VARIANT": "staging"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "env": {
@@ -38,6 +46,7 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "staging-store": {}
   }
 }
