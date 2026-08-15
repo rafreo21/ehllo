@@ -1,13 +1,17 @@
 import { router } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { ArrowRight, EnvelopeSimple } from 'phosphor-react-native';
 import { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BrandMark } from '@/components/brand-mark';
+import { GoogleIcon } from '@/components/provider-icons';
 import { BackButton, Body, Button, Eyebrow, Screen, Title } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { consumeAuthReturnPath } from '@/features/encounters/capture-draft';
 import { colors, radius, spacing } from '@/theme/tokens';
+
+WebBrowser.maybeCompleteAuthSession();
 
 // Supabase's dashboard-configured email OTP expiry isn't readable from the
 // client — this mirrors what's been observed in testing (~1 minute). Update
@@ -22,11 +26,12 @@ function formatCountdown(seconds: number) {
 }
 
 export default function AuthScreen() {
-  const { signIn, verifyEmailCode, configured, session } = useAuth();
+  const { signIn, verifyEmailCode, signInWithGoogle, configured, session } = useAuth();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [secondsLeft, setSecondsLeft] = useState(OTP_EXPIRY_SECONDS);
   // Bumped every time a code is (re)sent, so the countdown restarts even
@@ -48,6 +53,14 @@ export default function AuthScreen() {
       else router.replace('/(tabs)');
     });
   }, [session]);
+
+  async function continueWithGoogle() {
+    setGoogleLoading(true);
+    setMessage('');
+    const result = await signInWithGoogle();
+    setGoogleLoading(false);
+    if (result.error) setMessage(result.error);
+  }
 
   async function submitEmail() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setMessage('Enter a valid email address.');
@@ -94,6 +107,20 @@ export default function AuthScreen() {
 
       {step === 'email' ? (
         <>
+          <Button
+            variant="secondary"
+            loading={googleLoading}
+            disabled={!configured}
+            onPress={() => void continueWithGoogle()}>
+            <GoogleIcon size={18} /> Continue with Google
+          </Button>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
           <View style={styles.field}>
             <EnvelopeSimple size={20} color={colors.muted} />
             <TextInput
@@ -163,6 +190,9 @@ const styles = StyleSheet.create({
   brandWrap: { alignItems: 'flex-start', marginBottom: spacing.x2 },
   authHeaderCopy: { gap: spacing.x2 },
   authTitle: { fontSize: 34, lineHeight: 36, letterSpacing: -1.2 },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.line },
+  dividerText: { color: colors.muted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
   field: { minHeight: 54, paddingHorizontal: spacing.x4, flexDirection: 'row', alignItems: 'center', gap: spacing.x3, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, backgroundColor: colors.surface },
   input: { flex: 1, color: colors.ink, fontSize: 16 },
   codeInput: { letterSpacing: 8, fontSize: 24, fontWeight: '700', textAlign: 'center' },

@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/react-native';
 import type { Session } from '@supabase/supabase-js';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { createContext, type PropsWithChildren, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createAuthRedirectUri } from '@/lib/auth-redirect';
@@ -19,6 +20,7 @@ type AuthValue = {
   redirectUri: string | null;
   signIn: (email: string) => Promise<{ error?: string; sent?: boolean }>;
   verifyEmailCode: (email: string, token: string) => Promise<{ error?: string }>;
+  signInWithGoogle: () => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   completeUseCaseSelection: () => Promise<void>;
 };
@@ -118,6 +120,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
         type: 'email',
       });
       return error ? { error: describeError(error, 'Could not verify this code.') } : {};
+    },
+    signInWithGoogle: async () => {
+      if (!supabase) return { error: 'Connect the mobile environment to Supabase first.' };
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: redirectUri ?? undefined, skipBrowserRedirect: true },
+      });
+      if (error || !data?.url) return { error: describeError(error, 'Could not start Google sign-in.') };
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri ?? undefined);
+      if (result.type !== 'success' || !result.url) return {};
+      const outcome = await completeAuthSessionFromUrl(supabase, result.url);
+      if (!outcome.ok) {
+        return { error: outcome.reason === 'exchange_failed' ? describeError(new Error(outcome.message), 'Could not complete Google sign-in.') : 'Could not complete Google sign-in.' };
+      }
+      return {};
     },
     signOut: async () => { await supabase?.auth.signOut(); },
     completeUseCaseSelection: async () => {

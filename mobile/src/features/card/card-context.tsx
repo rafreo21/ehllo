@@ -21,6 +21,7 @@ import { syncCardToolsForCard } from '@/features/card/card-tools-sync';
 import { uploadCardImagesForPublish } from '@/features/card/card-image-upload';
 import { describePublishError, formatPublishError, type PublishCardResult, validateCardForPublish } from '@/features/card/publish-card';
 import { dequeueCardDelete, enqueueCardDelete, readCardDeleteQueue } from '@/features/card/card-delete-queue';
+import { isOnline } from '@/lib/connectivity';
 import { readEnv } from '@/lib/env';
 import { useForegroundSync } from '@/lib/background-sync';
 import { mobileFetch } from '@/lib/mobile-api';
@@ -215,7 +216,7 @@ export function CardProvider({ children }: PropsWithChildren) {
 
   const sync = useCallback(async () => {
     const supabase = getSupabase();
-    if (!supabase || !session) return;
+    if (!supabase || !session || !isOnline()) return;
     setSyncing(true);
     try {
       if (session.access_token) {
