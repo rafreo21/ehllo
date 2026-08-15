@@ -57,4 +57,6 @@ export const syncFailureKey = {
   followUpAction: (encounterId: string, actionId: string) => `follow-up:${encounterId}:${actionId}`,
   transcription: (encounterId: string) => `transcription:${encounterId}`,
   eventAction: (eventId: string, action: string) => `event:${eventId}:${action}`,
+  cardChange: (cardId: string) => `card-change:${cardId}`,
+  cardDelete: (cardId: string) => `card-delete:${cardId}`,
 };

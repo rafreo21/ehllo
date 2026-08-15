@@ -2,6 +2,7 @@ import LottieView from 'lottie-react-native';
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 import { useIsOnline } from '@/lib/connectivity';
+import { useDeferredMount } from '@/lib/use-deferred-mount';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 export function OfflineBanner({
@@ -12,17 +13,20 @@ export function OfflineBanner({
   style?: ViewStyle;
 }) {
   const online = useIsOnline();
+  const showLottie = useDeferredMount(!online);
   if (online) return null;
 
   return (
     <View style={[styles.banner, style]}>
       <View style={styles.iconWrap}>
-        <LottieView
-          source={require('@/assets/animations/offline-mode.json')}
-          autoPlay
-          loop
-          style={styles.lottie}
-        />
+        {showLottie ? (
+          <LottieView
+            source={require('@/assets/animations/offline-mode.json')}
+            autoPlay
+            loop={false}
+            style={styles.lottie}
+          />
+        ) : null}
       </View>
       <Text style={styles.text}>{message}</Text>
     </View>

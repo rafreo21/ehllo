@@ -333,10 +333,6 @@ export default function HomeScreen() {
             ) : null}
           </Pressable>
         </View>
-        <OfflineBanner
-          message="Offline. Showing what's saved on this device. It'll sync when you're back online."
-          style={styles.offlineBanner}
-        />
       </View>
 
       <ScrollView
@@ -344,6 +340,10 @@ export default function HomeScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: fabClearance }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
+        <OfflineBanner
+          message="Offline. Showing what's saved on this device. It'll sync when you're back online."
+          style={styles.offlineBanner}
+        />
         {authLoading || (loading && !hasLoadedOnce) ? (
           <HomeSkeleton />
         ) : (

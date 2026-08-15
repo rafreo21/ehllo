@@ -306,10 +306,6 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
               </HeaderActionButton>
             ) : undefined}
           />
-          <OfflineBanner
-            message="Offline. You can still record or add notes. It'll sync once you're back online."
-            style={styles.offlineBanner}
-          />
           {!historyOnly ? <View style={styles.startActions}>
             <PillButton
               tone="solid"
@@ -346,6 +342,11 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
               onPressSort={() => setSortOpen(true)}
             />
           </View> : null}
+
+          <OfflineBanner
+            message="Offline. You can still record or add notes. It'll sync once you're back online."
+            style={styles.offlineBanner}
+          />
 
           <View style={styles.listBlock}>
           {loading && !hasLoadedOnce ? <CaptureListSkeleton count={4} /> : (

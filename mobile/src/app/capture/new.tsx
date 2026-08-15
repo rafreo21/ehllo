@@ -1160,10 +1160,6 @@ export default function CaptureWizardScreen() {
               </Pressable>
             ) : undefined}
           />
-          <OfflineBanner
-            message="Offline. This capture is saving to your device and will sync once you're back online."
-            style={styles.offlineBanner}
-          />
           {eventContext ? (
             <Text style={styles.eventContext}>
               At {eventContext.eventTitle}{eventContext.eventLocation ? ` · ${eventContext.eventLocation}` : ''}
@@ -1180,6 +1176,10 @@ export default function CaptureWizardScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
+          <OfflineBanner
+            message="Offline. This capture is saving to your device and will sync once you're back online."
+            style={styles.offlineBanner}
+          />
           {draft.step === 0 ? (
             <CaptureInteractionStep
               draft={draft}

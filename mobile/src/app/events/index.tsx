@@ -363,7 +363,6 @@ export default function EventsScreen() {
           </View>
         ) : undefined}
       />
-      <OfflineBanner message="Offline. Showing your saved events. New changes will sync once you're back online." />
       {!loading && accessToken ? (
         <View style={styles.tabRow}>
           <Pressable
@@ -387,6 +386,7 @@ export default function EventsScreen() {
 
   return (
     <Screen header={header}>
+      <OfflineBanner message="Offline. Showing your saved events. New changes will sync once you're back online." />
       {loading ? <SettingsSkeleton /> : null}
 
       {!loading && !accessToken ? (

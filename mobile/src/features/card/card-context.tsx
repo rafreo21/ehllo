@@ -20,9 +20,11 @@ import type { ContactMethod, MobileCard } from '@/features/card/types';
 import { syncCardToolsForCard } from '@/features/card/card-tools-sync';
 import { uploadCardImagesForPublish } from '@/features/card/card-image-upload';
 import { describePublishError, formatPublishError, type PublishCardResult, validateCardForPublish } from '@/features/card/publish-card';
+import { dequeueCardDelete, enqueueCardDelete, readCardDeleteQueue } from '@/features/card/card-delete-queue';
 import { readEnv } from '@/lib/env';
 import { useForegroundSync } from '@/lib/background-sync';
 import { mobileFetch } from '@/lib/mobile-api';
+import { clearSyncFailure, recordSyncFailure, syncFailureKey } from '@/features/sync/sync-failure-store';
 import { clearPublishedBaseline, ensurePublishedBaseline, writePublishedBaseline } from '@/lib/published-baseline';
 import { getSupabase } from '@/lib/supabase';
 
@@ -216,6 +218,21 @@ export function CardProvider({ children }: PropsWithChildren) {
     if (!supabase || !session) return;
     setSyncing(true);
     try {
+      if (session.access_token) {
+        const queuedDeletes = await readCardDeleteQueue();
+        for (const entry of queuedDeletes) {
+          try {
+            const { error } = await supabase.from('cards').update({ status: 'archived' }).eq('id', entry.cardId);
+            if (error) throw error;
+            await dequeueCardDelete(entry.cardId);
+            await clearSyncFailure(syncFailureKey.cardDelete(entry.cardId));
+          } catch (caught) {
+            // Offline or the request failed — stays queued for the next foreground sync.
+            await recordSyncFailure(syncFailureKey.cardDelete(entry.cardId), caught);
+          }
+        }
+      }
+
       if (session.access_token && dirtyCardIdsRef.current.size) {
         const localCards = withoutPreviewCards(cardsRef.current);
         let reconciledCards = localCards;
@@ -224,8 +241,10 @@ export function CardProvider({ children }: PropsWithChildren) {
             const saved = await saveRemoteCard(local);
             reconciledCards = reconciledCards.map((card) => card.id === local.id ? saved : card);
             await setCardDirty(local.id!, false, saved.id);
-          } catch {
+            await clearSyncFailure(syncFailureKey.cardChange(local.id!));
+          } catch (caught) {
             // Keep this local card dirty and retry on the next foreground sync.
+            await recordSyncFailure(syncFailureKey.cardChange(local.id!), caught);
           }
         }
         if (cardsSnapshot(reconciledCards) !== cardsSnapshot(cardsRef.current)) {
@@ -457,9 +476,26 @@ export function CardProvider({ children }: PropsWithChildren) {
     if (!target?.id) throw new Error('This card could not be found.');
 
     const supabase = getSupabase();
+    let archived = false;
     if (supabase && session) {
-      const { error } = await supabase.from('cards').update({ status: 'archived' }).eq('id', id);
-      if (error) throw error;
+      try {
+        const { error } = await supabase.from('cards').update({ status: 'archived' }).eq('id', id);
+        if (error) throw error;
+        archived = true;
+        await clearSyncFailure(syncFailureKey.cardDelete(id));
+      } catch (caught) {
+        // Offline or the request failed — queue it and retry on the next foreground sync
+        // instead of blocking the local delete on connectivity.
+        await recordSyncFailure(syncFailureKey.cardDelete(id), caught);
+      }
+    }
+    if (archived) {
+      await dequeueCardDelete(id);
+    } else if (session) {
+      // No session means this card never had a server copy to begin with —
+      // nothing to queue. With a session, the archive above failed or was
+      // skipped for connectivity, so remember to retry it later.
+      await enqueueCardDelete({ cardId: id, cardLabel: target.label || target.name || 'Untitled card' });
     }
 
     let nextCards = currentCards.filter((item) => item.id !== id);

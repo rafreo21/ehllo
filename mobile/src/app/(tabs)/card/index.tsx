@@ -67,7 +67,6 @@ export default function CardLibraryScreen() {
               <Scan size={22} color={colors.ink} weight="bold" />
             </HeaderActionButton>
           </View>
-          <OfflineBanner message="Offline. Your cards are saved on this device and will sync once you're back online." />
         </View>
 
         <ScrollView
@@ -75,6 +74,7 @@ export default function CardLibraryScreen() {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: tabBarHeight + spacing.x3 + 56 + spacing.x4 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
+          <OfflineBanner message="Offline. Your cards are saved on this device and will sync once you're back online." />
           {!session && !hasCards ? (
             <EmptyState
               illustration={require('@/assets/animations/set-up-your-identity.json')}

@@ -1,5 +1,5 @@
 import { useFocusEffect } from 'expo-router';
-import { ArrowsClockwise, CalendarCheck, CheckCircle, ListChecks, Microphone, Scan } from 'phosphor-react-native';
+import { ArrowsClockwise, CalendarCheck, CheckCircle, IdentificationCard, ListChecks, Microphone, Scan } from 'phosphor-react-native';
 import LottieView from 'lottie-react-native';
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -13,7 +13,8 @@ import { useDeferredMount } from '@/lib/use-deferred-mount';
 import { colors, spacing } from '@/theme/tokens';
 
 const EMPTY_STATUS: PendingSyncStatus = {
-  scans: [], quickFollowUps: [], followUpActions: [], transcriptions: [], eventActions: [], items: [], total: 0,
+  scans: [], quickFollowUps: [], followUpActions: [], transcriptions: [], eventActions: [],
+  cardChanges: [], cardDeletes: [], items: [], total: 0,
 };
 
 export default function PendingSyncScreen() {
@@ -49,6 +50,7 @@ export default function PendingSyncScreen() {
     { key: 'actions', icon: CheckCircle, label: 'Follow-up changes', count: status.followUpActions.length, detail: 'Complete, reopen, snooze, or dismiss changes' },
     { key: 'transcriptions', icon: Microphone, label: 'Transcriptions', count: status.transcriptions.length, detail: 'Local recordings waiting for transcription' },
     { key: 'events', icon: CalendarCheck, label: 'Event attendance', count: status.eventActions.length, detail: 'Going, Not going, or I’ve left changes' },
+    { key: 'cards', icon: IdentificationCard, label: 'Cards', count: status.cardChanges.length + status.cardDeletes.length, detail: 'Card edits and deletes waiting to sync' },
   ];
 
   const retryFooter = (

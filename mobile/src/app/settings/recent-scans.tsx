@@ -163,13 +163,13 @@ export default function RecentScansScreen() {
   const header = (
     <>
       <PageHeader eyebrow="Settings" title="Recent scans" />
-      <OfflineBanner message="Offline. Showing your saved scans. New scans will sync once you're back online." />
       <Body>Everyone who scanned your card. Already-saved people are marked.</Body>
     </>
   );
 
   return (
     <Screen header={header}>
+      <OfflineBanner message="Offline. Showing your saved scans. New scans will sync once you're back online." />
       {session && initialLoading ? <SettingsSkeleton /> : null}
 
       {!session ? (

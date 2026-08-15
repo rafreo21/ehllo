@@ -179,7 +179,6 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
               </HeaderActionButton>
             ) : undefined}
           />
-          <OfflineBanner message="Offline. Showing your saved follow-ups. New changes will sync once you're back online." />
           <View style={styles.headerCopy}>
             <Body>
               {historyOnly ? 'Everything you have checked off.' : 'Everything left to do, yours and theirs.'}
@@ -212,6 +211,7 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
           contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + spacing.x6 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
+          <OfflineBanner message="Offline. Showing your saved follow-ups. New changes will sync once you're back online." />
           {!session ? (
             <EmptyState
               illustration={require('@/assets/animations/follow-through.json')}

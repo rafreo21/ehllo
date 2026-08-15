@@ -301,7 +301,6 @@ export default function QuickFollowUpScreen() {
           onBack={() => router.back()}
         />
         <Body>Create a reminder without recording a conversation. Nothing is sent automatically.</Body>
-        <OfflineBanner message="Offline. This follow-up will save on this device and sync once you're back online." />
         {eventContext ? (
           <Text style={styles.eventContext}>
             At {eventContext.eventTitle}{eventContext.eventLocation ? ` · ${eventContext.eventLocation}` : ''}
@@ -314,6 +313,7 @@ export default function QuickFollowUpScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
+        <OfflineBanner message="Offline. This follow-up will save on this device and sync once you're back online." />
         {validationError ? <Text style={styles.error}>{validationError}</Text> : null}
 
         <Pressable

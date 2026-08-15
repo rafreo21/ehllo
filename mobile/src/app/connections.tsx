@@ -175,7 +175,6 @@ export function ConnectionsScreen({ showBack = true }: { showBack?: boolean }) {
           <View style={styles.headerCopy}>
             <Eyebrow>Connections</Eyebrow>
             <Text style={styles.title}>People you’ve met</Text>
-            <OfflineBanner message="Offline. Showing your saved connections. New ones will sync once you're back online." />
             <Body>Cards you saved and people who shared their details with you.</Body>
           </View>
 
@@ -207,6 +206,7 @@ export function ConnectionsScreen({ showBack = true }: { showBack?: boolean }) {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + spacing.x6 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
+          <OfflineBanner message="Offline. Showing your saved connections. New ones will sync once you're back online." />
           {!session ? (
             <EmptyState
               illustration={require('@/assets/animations/no-connections-yet.json')}
