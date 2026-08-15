@@ -55,6 +55,12 @@ module.exports = {
       icon: "./assets/images/icon.png",
       bundleIdentifier: bundleId,
       supportsTablet: true,
+      // Universal Links — matches the Android intentFilter's /c/ pathPrefix
+      // above. The apple-app-site-association file served at this domain
+      // lives in site/app/.well-known/apple-app-site-association/route.ts.
+      associatedDomains: [
+        `applinks:${IS_STAGING ? "staging.ehllo.io" : "ehllo.io"}`,
+      ],
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         LSApplicationQueriesSchemes: [
