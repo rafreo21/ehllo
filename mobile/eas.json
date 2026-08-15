@@ -35,13 +35,15 @@
       "channel": "staging",
       "autoIncrement": true,
       "env": {
-        "APP_VARIANT": "staging"
+        "APP_VARIANT": "staging",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "APP_VARIANT": "production"
+        "APP_VARIANT": "production",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     }
   },
