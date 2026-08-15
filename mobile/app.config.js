@@ -84,6 +84,12 @@ module.exports = {
     },
     android: {
       package: bundleId,
+      // Without these, @react-native-community/netinfo's native module can't
+      // properly query the ConnectivityManager or register for connectivity
+      // broadcasts — confirmed on-device: it silently reported a stale
+      // isConnected:true/type:wifi reading while the device was genuinely,
+      // fully offline (WiFi off, no active network per `dumpsys connectivity`).
+      permissions: ["ACCESS_NETWORK_STATE", "ACCESS_WIFI_STATE"],
       adaptiveIcon: {
         backgroundColor: "#87EA5C",
         foregroundImage: "./assets/images/android-icon-foreground.png",
