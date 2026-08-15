@@ -1,7 +1,8 @@
 import { useFocusEffect } from 'expo-router';
-import { ArrowsClockwise, CalendarCheck, CheckCircle, CloudArrowUp, ListChecks, Microphone, Scan } from 'phosphor-react-native';
+import { ArrowsClockwise, CalendarCheck, CheckCircle, ListChecks, Microphone, Scan } from 'phosphor-react-native';
+import LottieView from 'lottie-react-native';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { Button, PageHeader, Panel, Screen } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
@@ -67,13 +68,20 @@ export default function PendingSyncScreen() {
       footer={retryFooter}
       header={<PageHeader eyebrow="Synchronization" title="Pending sync" description="Work saved on this device that has not reached ehllo yet." />}>
       <Panel style={styles.summary}>
-        <View style={styles.summaryIcon}>
-          {loading ? <ActivityIndicator color={colors.ink} /> : <CloudArrowUp size={22} color={colors.ink} weight="bold" />}
+        <View style={styles.summaryIconWrap}>
+          <LottieView
+            source={loading
+              ? require('@/assets/animations/processing.json')
+              : status.total
+                ? require('@/assets/animations/pending.json')
+                : require('@/assets/animations/success.json')}
+            autoPlay
+            loop={loading || status.total > 0}
+            style={styles.summaryLottie}
+          />
         </View>
-        <View style={styles.summaryCopy}>
-          <Text style={styles.summaryTitle}>{loading ? 'Checking this device…' : status.total ? `${status.total} item${status.total === 1 ? '' : 's'} waiting` : 'Everything is synced'}</Text>
-          <Text style={styles.summaryDetail}>{online ? 'Online · ehllo retries automatically' : 'Offline · your work remains safely on this device'}</Text>
-        </View>
+        <Text style={styles.summaryTitle}>{loading ? 'Checking this device…' : status.total ? `${status.total} item${status.total === 1 ? '' : 's'} waiting` : 'Everything is synced'}</Text>
+        <Text style={styles.summaryDetail}>{online ? 'Online · ehllo retries automatically' : 'Offline · your work remains safely on this device'}</Text>
       </Panel>
 
       <View style={styles.list}>
@@ -117,11 +125,11 @@ export default function PendingSyncScreen() {
 }
 
 const styles = StyleSheet.create({
-  summary: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
-  summaryIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
-  summaryCopy: { flex: 1, minWidth: 0 },
-  summaryTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
-  summaryDetail: { color: colors.muted, fontSize: 12, lineHeight: 17, marginTop: 3 },
+  summary: { alignItems: 'center', gap: spacing.x1 },
+  summaryIconWrap: { width: 120, height: 120, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.x1 },
+  summaryLottie: { width: '100%', height: '100%' },
+  summaryTitle: { color: colors.ink, fontSize: 16, fontWeight: '800', textAlign: 'center' },
+  summaryDetail: { color: colors.muted, fontSize: 12, lineHeight: 17, textAlign: 'center' },
   list: { gap: spacing.x2 },
   row: { minHeight: 72, padding: spacing.x4, borderRadius: 16, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
   rowIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' },

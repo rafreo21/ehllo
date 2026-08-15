@@ -1,9 +1,9 @@
-import { CheckCircle } from 'phosphor-react-native';
 import { StyleSheet, Text, View } from 'react-native';
+import LottieView from 'lottie-react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button, PillButton } from '@/components/ui';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, spacing } from '@/theme/tokens';
 
 type ConnectionSuccessSheetProps = {
   visible: boolean;
@@ -39,12 +39,17 @@ export function ConnectionSuccessSheet({
       )}>
       <View style={styles.body}>
         <View style={styles.icon}>
-          <CheckCircle size={28} color={colors.white} weight="fill" />
+          <LottieView
+            source={require('@/assets/animations/connection-captured.json')}
+            autoPlay
+            loop={false}
+            style={styles.lottie}
+          />
         </View>
         <Text style={styles.title}>You&apos;re connected with {name}</Text>
         <Body style={styles.copy}>
           {mutual
-            ? `${name} has been added to your list, and you've been added to theirs — they've been notified too.`
+            ? `${name} has been added to your list, and you've been added to theirs. They've been notified too.`
             : `${name} has been added to your list.`}
         </Body>
       </View>
@@ -53,15 +58,14 @@ export function ConnectionSuccessSheet({
 }
 
 const styles = StyleSheet.create({
-  body: { alignItems: 'center', gap: spacing.x3, paddingVertical: spacing.x2 },
+  body: { alignItems: 'center', gap: spacing.x2, paddingVertical: spacing.x2 },
   icon: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.round,
+    width: 200,
+    height: 200,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.ink,
   },
+  lottie: { width: '100%', height: '100%' },
   title: { color: colors.ink, fontSize: 18, fontWeight: '800', textAlign: 'center' },
   copy: { textAlign: 'center' },
   viewCardButton: { alignSelf: 'center' },

@@ -8,6 +8,7 @@ import { FollowUpAudienceSheet } from '@/components/follow-up-audience-sheet';
 import { FollowUpMissingSheet } from '@/components/follow-up-missing-sheet';
 import { FollowUpSortSheet } from '@/components/follow-up-sheets';
 import { GroupedFollowUpActions, GroupedFollowUpCell } from '@/components/grouped-follow-up-cell';
+import { EmptyState } from '@/components/empty-state';
 import { GreenHeroCard } from '@/components/green-hero-card';
 import { HistoryToolbar } from '@/components/history-toolbar';
 import { MiniPromptCard } from '@/components/mini-prompt-card';
@@ -35,12 +36,13 @@ import {
 } from '@/features/follow-ups/follow-up-list';
 import type { FollowUpGroup } from '@/features/follow-ups/follow-up-groups';
 import { useFollowUpActions } from '@/features/follow-ups/use-follow-up-actions';
+import { describeError } from '@/lib/friendly-error';
 import { isNetworkError } from '@/lib/mobile-api';
 import { useAppInsets } from '@/lib/safe-area';
 import { colors, spacing } from '@/theme/tokens';
 
 export function FollowUpsScreen({ showBack = true, historyOnly = false }: { showBack?: boolean; historyOnly?: boolean }) {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const accessToken = session?.access_token;
   const insets = useAppInsets();
   const scope: FollowUpScope = historyOnly ? 'past' : 'current';
@@ -75,6 +77,11 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
   });
 
   const loadFollowUps = useCallback(async (background = false) => {
+    // Same reasoning as Home: session can momentarily read null while it's
+    // still resolving (e.g. right after a reload), not because the user
+    // actually signed out — don't wipe a working list on that transient window.
+    if (authLoading) return;
+
     if (!accessToken) {
       setFollowUps([]);
       setError('');
@@ -101,12 +108,12 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
         setOffline(true);
       } else {
         setFollowUps([]);
-        setError(caught instanceof Error ? caught.message : 'Could not load follow-ups.');
+        setError(describeError(caught, 'Could not load follow-ups.'));
       }
     } finally {
       setLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, authLoading]);
 
   useFocusEffect(
     useCallback(() => {
@@ -184,7 +191,7 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
           {offline && followUps.length ? (
             <View style={styles.offlineTag}>
               <WifiSlash size={14} color={colors.muted} weight="bold" />
-              <Text style={styles.offlineTagText}>Offline — showing your saved list</Text>
+              <Text style={styles.offlineTagText}>Offline. Showing your saved list</Text>
             </View>
           ) : null}
 
@@ -254,8 +261,8 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
               ) : null}
             </View>
           ) : (
-            <MiniPromptCard
-              icon={<ListChecks size={18} color={colors.ink} weight="bold" />}
+            <EmptyState
+              illustration={require('@/assets/animations/follow-through.json')}
               title={historyOnly ? 'No completed follow-ups yet' : 'No current follow-ups'}
               copy={historyOnly
                 ? 'Completed follow-ups will appear here after you check them off.'
@@ -309,6 +316,7 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
         visible={Boolean(completedMessage)}
         title={completedMessage.startsWith('Moved') ? 'Follow-up reopened' : 'Follow-up done'}
         message={completedMessage}
+        lottieSource={completedMessage.startsWith('Moved') ? undefined : require('@/assets/animations/follow-up-completed.json')}
         onClose={() => setCompletedMessage('')}
       />
 

@@ -9,7 +9,7 @@ import {
   ConnectionManualAddSheet,
   ConnectionSortSheet,
 } from '@/components/connection-sheets';
-import { MiniPromptCard } from '@/components/mini-prompt-card';
+import { EmptyState } from '@/components/empty-state';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import {
@@ -29,6 +29,7 @@ import {
   type ConnectionItem,
   type ConnectionSort,
 } from '@/features/connections/connections-api';
+import { describeError } from '@/lib/friendly-error';
 import { useAppInsets } from '@/lib/safe-area';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -113,7 +114,7 @@ export function ConnectionsScreen({ showBack = true }: { showBack?: boolean }) {
         .then(setConnections)
         .finally(() => setEnriching(false));
     } catch (caught) {
-      showError(caught instanceof Error ? caught.message : 'Could not load connections.');
+      showError(describeError(caught, 'Could not load connections.'));
       setConnections([]);
       setLoading(false);
       setEnriching(false);
@@ -146,7 +147,7 @@ export function ConnectionsScreen({ showBack = true }: { showBack?: boolean }) {
       showSuccess(`${input.name.trim()} was added to your connections.`);
       await load();
     } catch (caught) {
-      showError(caught instanceof Error ? caught.message : 'Could not save this connection.');
+      showError(describeError(caught, 'Could not save this connection.'));
     } finally {
       setSavingManual(false);
     }
@@ -232,8 +233,8 @@ export function ConnectionsScreen({ showBack = true }: { showBack?: boolean }) {
               ) : null}
             </View>
           ) : (
-            <MiniPromptCard
-              icon={<UsersThree size={18} color={colors.ink} weight="fill" />}
+            <EmptyState
+              illustration={require('@/assets/animations/no-connections-yet.json')}
               title="No connections yet"
               copy="Scan a card or add someone manually."
               onPress={() => setAddOpen(true)}

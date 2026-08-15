@@ -1,3 +1,6 @@
+import LottieView from 'lottie-react-native';
+import { StyleSheet, View } from 'react-native';
+
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
 
@@ -27,9 +30,28 @@ export function ConnectionDeleteSheet({
           <Button onPress={onConfirm} loading={loading}>Yes, delete</Button>
         </>
       }>
+      <View style={styles.iconWrap}>
+        <LottieView
+          source={require('@/assets/animations/warning.json')}
+          autoPlay
+          loop={false}
+          style={styles.lottie}
+        />
+      </View>
       <Body>
-        Remove {name || 'this connection'} from your list? Their card stays online. This only removes them from your connections and shared directory link here.
+        Remove {name || 'this connection'} from your connections? Their card stays live online. You just won't see them in your list or shared directory anymore.
       </Body>
     </BottomSheet>
   );
 }
+
+const styles = StyleSheet.create({
+  iconWrap: {
+    alignSelf: 'center',
+    width: 160,
+    height: 160,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lottie: { width: '100%', height: '100%' },
+});

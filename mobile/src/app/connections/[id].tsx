@@ -49,6 +49,7 @@ import {
 import { isOpenFollowUp } from '@/features/follow-ups/follow-up-list';
 import { useFollowUpActions } from '@/features/follow-ups/use-follow-up-actions';
 import { formatMeetingDate } from '@/lib/due-date';
+import { describeError } from '@/lib/friendly-error';
 import { useAppInsets } from '@/lib/safe-area';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -138,7 +139,7 @@ export default function ConnectionDetailScreen() {
       setConnection(match || null);
       if (!match) showError('This connection could not be found.');
     } catch (caught) {
-      showError(caught instanceof Error ? caught.message : 'Could not load this connection.');
+      showError(describeError(caught, 'Could not load this connection.'));
       setConnection(null);
     } finally {
       setLoading(false);
@@ -307,7 +308,7 @@ export default function ConnectionDetailScreen() {
       setDeleteOpen(false);
       router.back();
     } catch (caught) {
-      showError(caught instanceof Error ? caught.message : 'Could not remove this connection.');
+      showError(describeError(caught, 'Could not remove this connection.'));
       setDeleteOpen(false);
     } finally {
       setDeleting(false);
@@ -328,7 +329,7 @@ export default function ConnectionDetailScreen() {
       }
       await loadSavedDirectoryContact(connection, cardSlug);
     } catch (caught) {
-      const message = caught instanceof Error ? caught.message : 'Could not save this connection.';
+      const message = describeError(caught, 'Could not save this connection.');
       if (message.toLowerCase().includes('session has expired')) {
         showError('Your app session could not reach ehllo. Sign out from Settings, sign in again, then retry.');
       } else {
@@ -389,7 +390,7 @@ export default function ConnectionDetailScreen() {
               <View style={styles.relationshipActions}>
                 <PillButton
                   tone="solid"
-                  style={[styles.relationshipAction, styles.relationshipActionPill]}
+                  style={styles.relationshipActionPill}
                   textStyle={styles.relationshipActionPillText}
                   icon={<Microphone size={18} color={colors.white} weight="fill" />}
                   onPress={() => router.push({
@@ -406,7 +407,7 @@ export default function ConnectionDetailScreen() {
                 </PillButton>
                 <PillButton
                   tone="outline"
-                  style={[styles.relationshipAction, styles.relationshipActionPill]}
+                  style={styles.relationshipActionPill}
                   textStyle={styles.relationshipActionPillText}
                   icon={<Plus size={18} color={colors.muted} weight="bold" />}
                   onPress={() => router.push({
@@ -683,7 +684,6 @@ const styles = StyleSheet.create({
   countLine: { color: colors.muted, fontSize: 13 },
   eventContext: { color: colors.ink, fontSize: 13, lineHeight: 18, fontWeight: '700' },
   relationshipActions: { flexDirection: 'row', gap: spacing.x2, marginTop: spacing.x1 },
-  relationshipAction: { flex: 1 },
   relationshipActionPill: { paddingHorizontal: spacing.x5, paddingVertical: spacing.x3 },
   relationshipActionPillText: { fontSize: 14 },
   scroll: { flex: 1, marginTop: spacing.x5 },

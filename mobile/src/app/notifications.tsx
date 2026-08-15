@@ -12,7 +12,8 @@ import {
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Body, PageHeader, ScreenFrame } from '@/components/ui';
+import { PageHeader, ScreenFrame } from '@/components/ui';
+import { EmptyState } from '@/components/empty-state';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { CaptureListSkeleton } from '@/components/skeleton';
 import { FollowUpAudienceSheet } from '@/components/follow-up-audience-sheet';
@@ -28,6 +29,7 @@ import {
   type NotificationRecord,
   type NotificationType,
 } from '@/features/notifications/notification-center-api';
+import { describeError } from '@/lib/friendly-error';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 const FOLLOW_UP_NOTIFICATION_TYPES = new Set<NotificationType>(['follow_up_due', 'follow_up_overdue']);
@@ -100,7 +102,7 @@ export default function NotificationCenterScreen() {
       else throw notificationsResult.reason;
       if (followUpsResult.status === 'fulfilled') setFollowUps(followUpsResult.value);
     } catch (caught) {
-      setErrorMessage(caught instanceof Error ? caught.message : 'Could not load your notifications.');
+      setErrorMessage(describeError(caught, 'Could not load your notifications.'));
       setErrorSheetOpen(true);
     } finally {
       setLoading(false);
@@ -141,7 +143,7 @@ export default function NotificationCenterScreen() {
       await markAllNotificationsRead(session.access_token);
       await Notifications.setBadgeCountAsync(0).catch(() => false);
     } catch (caught) {
-      setErrorMessage(caught instanceof Error ? caught.message : 'Could not update your notifications.');
+      setErrorMessage(describeError(caught, 'Could not update your notifications.'));
       setErrorSheetOpen(true);
       void load();
     } finally {
@@ -178,13 +180,12 @@ export default function NotificationCenterScreen() {
         {loading ? <CaptureListSkeleton count={4} /> : null}
 
         {!loading && notifications.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Bell size={28} color={colors.muted} weight="bold" />
-            <Text style={styles.emptyTitle}>Nothing yet</Text>
-            <Body style={styles.emptyCopy}>
-              You&apos;ll see review-ready captures, due follow-ups, and shared-meeting updates here.
-            </Body>
-          </View>
+          <EmptyState
+            illustration={require('@/assets/animations/share.json')}
+            title="Nothing yet"
+            copy="You'll see review-ready captures, due follow-ups, and shared-meeting updates here."
+            bordered
+          />
         ) : null}
 
         {notifications.map((notification) => {
@@ -258,17 +259,6 @@ const styles = StyleSheet.create({
   },
   markAllButtonPressed: { backgroundColor: colors.surfaceMuted },
   markAllText: { color: colors.ink, fontSize: 12, fontWeight: '800' },
-  emptyCard: {
-    alignItems: 'flex-start',
-    gap: spacing.x2,
-    padding: spacing.x5,
-    borderRadius: radius.large,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  emptyTitle: { color: colors.ink, fontSize: 18, fontWeight: '800' },
-  emptyCopy: { lineHeight: 20 },
   row: {
     flexDirection: 'row',
     alignItems: 'flex-start',

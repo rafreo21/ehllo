@@ -88,6 +88,7 @@ import {
 import { formatDueLabel } from '@/lib/due-date';
 import { stitchRecordingSegments } from '@/lib/audio-segment-stitch';
 import { isOnline } from '@/lib/connectivity';
+import { describeError } from '@/lib/friendly-error';
 import { useSharedCaptureRecorder, type ImportRecordingMeta } from '@/features/encounters/capture-recorder-context';
 import { normalizeTranscriptForExtraction } from '@/lib/transcript-cleanup';
 import { notifyMeetingReviewReady } from '@/features/notifications/notification-service';
@@ -416,7 +417,7 @@ export default function CaptureWizardScreen() {
       });
     } catch (caught) {
       if (activeRequest !== requestRef.current) return;
-      const message = caught instanceof Error ? caught.message : 'Could not generate meeting context right now.';
+      const message = describeError(caught, 'Could not generate meeting context right now.');
       setGenerationStatus('error');
       setGenerationError(message);
       showCaptureError(message);
@@ -983,7 +984,7 @@ export default function CaptureWizardScreen() {
         setSaving(false);
       }
       if (retried.length < 20) {
-        showCaptureError('This recording has no transcript yet — try transcribing again before saving, or continue without one.');
+        showCaptureError('This recording has no transcript yet. Try transcribing again before saving, or continue without one.');
         return;
       }
       updateDraft({ transcript: retried });
@@ -1109,7 +1110,7 @@ export default function CaptureWizardScreen() {
       await deleteCaptureDraft(draft.encounterId);
       router.replace(`/capture/${payload.id}`);
     } catch (caught) {
-      showCaptureError(caught instanceof Error ? caught.message : 'Could not save this meeting.');
+      showCaptureError(describeError(caught, 'Could not save this meeting.'));
     } finally {
       setSaving(false);
     }
@@ -1159,7 +1160,10 @@ export default function CaptureWizardScreen() {
               </Pressable>
             ) : undefined}
           />
-          <OfflineBanner style={styles.offlineBanner} />
+          <OfflineBanner
+            message="Offline. This capture is saving to your device and will sync once you're back online."
+            style={styles.offlineBanner}
+          />
           {eventContext ? (
             <Text style={styles.eventContext}>
               At {eventContext.eventTitle}{eventContext.eventLocation ? ` · ${eventContext.eventLocation}` : ''}
@@ -1703,7 +1707,7 @@ const styles = StyleSheet.create({
   loadingCopy: { color: colors.muted, fontSize: 14 },
   page: { flex: 1 },
   header: { paddingHorizontal: spacing.x5 },
-  offlineBanner: { marginTop: spacing.x2, alignSelf: 'stretch' },
+  offlineBanner: { marginTop: spacing.x2 },
   eventContext: { color: colors.ink, fontSize: 13, lineHeight: 18, fontWeight: '700' },
   headerModeAction: {
     minHeight: 44,

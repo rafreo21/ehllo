@@ -111,6 +111,12 @@ export default function HomeScreen() {
     const draftList = await listCaptureDrafts();
     setDrafts(draftList);
 
+    // authLoading means the session hasn't finished resolving yet (e.g. right
+    // after a reload) — session momentarily reads null even though the user
+    // is signed in. Only wipe the lists once we're sure they're actually
+    // signed out, not mid-resolve, so a real reconnect doesn't flash "empty".
+    if (authLoading) return;
+
     if (!session?.access_token) {
       setFollowUps([]);
       setUnreadNotifications(0);
@@ -152,7 +158,7 @@ export default function HomeScreen() {
     // fail by design, and that must stay silent, not read as an outage.
     void fetchMyEvents(token).then(setGoingEvents).catch(() => undefined);
     void fetchEventCandidates(token).then((result) => setEventCandidates(result.candidates)).catch(() => setEventCandidates([]));
-  }, [session]);
+  }, [session, authLoading]);
 
   useFocusEffect(
     useCallback(() => {
@@ -304,26 +310,31 @@ export default function HomeScreen() {
   return (
     <View style={styles.safe}>
       <View style={[styles.fixedBar, { paddingTop: insets.top + spacing.x2 }]}>
-        <View style={styles.greetingBlock}>
-          <Text style={styles.greetingTitle}>
-            {greetingName ? `${timeGreeting()}, ${greetingName}` : timeGreeting()}
-          </Text>
-          <Text style={styles.greetingSubtitle} numberOfLines={1}>Here’s a quick look at what’s ahead.</Text>
-          <OfflineBanner style={styles.offlineBanner} />
+        <View style={styles.fixedBarRow}>
+          <View style={styles.greetingBlock}>
+            <Text style={styles.greetingTitle}>
+              {greetingName ? `${timeGreeting()}, ${greetingName}` : timeGreeting()}
+            </Text>
+            <Text style={styles.greetingSubtitle} numberOfLines={1}>Here’s a quick look at what’s ahead.</Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={unreadNotifications ? `${unreadNotifications} unread notifications` : 'Notifications'}
+            hitSlop={4}
+            onPress={() => router.push('/notifications')}
+            style={({ pressed }) => [styles.bellButton, pressed && styles.bellButtonPressed]}>
+            <Bell size={21} color={colors.ink} weight="bold" />
+            {unreadNotifications ? (
+              <View style={styles.bellBadge}>
+                <Text style={styles.bellBadgeText}>{Math.min(unreadNotifications, 9)}</Text>
+              </View>
+            ) : null}
+          </Pressable>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={unreadNotifications ? `${unreadNotifications} unread notifications` : 'Notifications'}
-          hitSlop={4}
-          onPress={() => router.push('/notifications')}
-          style={({ pressed }) => [styles.bellButton, pressed && styles.bellButtonPressed]}>
-          <Bell size={21} color={colors.ink} weight="bold" />
-          {unreadNotifications ? (
-            <View style={styles.bellBadge}>
-              <Text style={styles.bellBadgeText}>{Math.min(unreadNotifications, 9)}</Text>
-            </View>
-          ) : null}
-        </Pressable>
+        <OfflineBanner
+          message="Offline. Showing what's saved on this device. It'll sync when you're back online."
+          style={styles.offlineBanner}
+        />
       </View>
 
       <ScrollView
@@ -621,13 +632,15 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.x3,
     backgroundColor: colors.canvas,
     zIndex: 2,
+  },
+  fixedBarRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: spacing.x3,
   },
   greetingBlock: { flex: 1, minWidth: 0, gap: 2 },
-  offlineBanner: { marginTop: spacing.x2, alignSelf: 'stretch' },
+  offlineBanner: { marginTop: spacing.x2 },
   greetingTitle: { color: colors.ink, fontSize: 30, lineHeight: 32, fontWeight: '700', letterSpacing: -0.4 },
   greetingSubtitle: { color: colors.muted, fontSize: 13 },
   bellButton: {

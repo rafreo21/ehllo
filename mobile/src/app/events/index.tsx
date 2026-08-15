@@ -6,8 +6,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { EmptyState } from '@/components/empty-state';
 import { EventCard } from '@/components/event-card';
 import { EventInviteSheet } from '@/components/event-invite-sheet';
+import { OfflineBanner } from '@/components/offline-banner';
 import { EventManageSheet } from '@/components/event-manage-sheet';
 import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
@@ -43,6 +45,7 @@ import { cacheEventAttendance, cacheEventLeftAt } from '@/features/events/event-
 import { fetchConnectedAccounts } from '@/features/integrations/integrations-api';
 import { readEnv } from '@/lib/env';
 import { isOnline } from '@/lib/connectivity';
+import { describeError } from '@/lib/friendly-error';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 function formatSyncedAgo(syncedAt: string, now: Date): string {
@@ -142,17 +145,14 @@ export default function EventsScreen() {
         } else {
           setRefreshTitle('Events synced');
           setRefreshMessage(suggested.length
-            ? `Synced with your calendar — ${suggested.length} suggestion${suggested.length === 1 ? '' : 's'} found.`
-            : "Synced with your calendar — you're all caught up.");
+            ? `Synced with your calendar. ${suggested.length} suggestion${suggested.length === 1 ? '' : 's'} found.`
+            : "Synced with your calendar. You're all caught up.");
         }
       }
     } catch (caught) {
-      // fetchMyEvents isn't wrapped like candidates above, so a total outage
-      // lands here — raw fetch/DNS errors ("UnknownHostException…") aren't
-      // fit to show, so a manual refresh always gets the friendly copy.
       setError(options?.manual
         ? 'Could not refresh your events. Check your connection and try again.'
-        : caught instanceof Error ? caught.message : 'Could not load your events.');
+        : describeError(caught, 'Could not load your events.'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -199,7 +199,7 @@ export default function EventsScreen() {
       else setEvents((current) => current.filter((item) => item.id !== event.id));
       if (isOnline()) await refresh();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not update this event.');
+      setError(describeError(caught, 'Could not update this event.'));
     } finally {
       setBusyId('');
     }
@@ -214,7 +214,7 @@ export default function EventsScreen() {
       await cacheEventLeftAt(event.id, new Date().toISOString());
       await refresh();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not update this event.');
+      setError(describeError(caught, 'Could not update this event.'));
     } finally {
       setBusyId('');
     }
@@ -251,7 +251,7 @@ export default function EventsScreen() {
         : result.warning || 'Email could not be sent, so share the invitation link instead.');
       if (!result.emailSent) await Share.share({ message: `${inviteEvent.title}\n${result.guestUrl}`, url: result.guestUrl });
     } catch (caught) {
-      setInviteError(caught instanceof Error ? caught.message : 'Could not invite this guest.');
+      setInviteError(describeError(caught, 'Could not invite this guest.'));
     } finally {
       setInviteLoading(false);
     }
@@ -266,7 +266,7 @@ export default function EventsScreen() {
     try {
       setInvitations(await fetchEventInvitations(accessToken, event.id));
     } catch (caught) {
-      setInviteError(caught instanceof Error ? caught.message : 'Could not load this event’s invitations.');
+      setInviteError(describeError(caught, 'Could not load this event’s invitations.'));
     } finally {
       setInvitationsLoading(false);
     }
@@ -289,7 +289,7 @@ export default function EventsScreen() {
               .then(() => setInvitations((current) => current.map((item) => (
                 item.id === invitation.id ? { ...item, status: 'revoked', updatedAt: new Date().toISOString() } : item
               ))))
-              .catch((caught) => setInviteError(caught instanceof Error ? caught.message : 'Could not revoke this invitation.'))
+              .catch((caught) => setInviteError(describeError(caught, 'Could not revoke this invitation.')))
               .finally(() => setRevokingInvitationId(''));
           },
         },
@@ -314,7 +314,7 @@ export default function EventsScreen() {
         setEvents((current) => current.map((item) => item.id === caught.latestEvent!.id ? caught.latestEvent! : item));
         setManageEvent(caught.latestEvent);
       }
-      setManageError(caught instanceof Error ? caught.message : 'Could not update this event.');
+      setManageError(describeError(caught, 'Could not update this event.'));
     } finally {
       setManageLoading(false);
     }
@@ -337,7 +337,7 @@ export default function EventsScreen() {
         setEvents((current) => current.map((item) => item.id === caught.latestEvent!.id ? caught.latestEvent! : item));
         setManageEvent(caught.latestEvent);
       }
-      setManageError(caught instanceof Error ? caught.message : 'Could not cancel this event.');
+      setManageError(describeError(caught, 'Could not cancel this event.'));
     } finally {
       setManageLoading(false);
     }
@@ -363,6 +363,7 @@ export default function EventsScreen() {
           </View>
         ) : undefined}
       />
+      <OfflineBanner message="Offline. Showing your saved events. New changes will sync once you're back online." />
       {!loading && accessToken ? (
         <View style={styles.tabRow}>
           <Pressable
@@ -446,13 +447,13 @@ export default function EventsScreen() {
                 ) : null}
               </>
             ) : (
-              <Panel>
-                <Text style={styles.panelCopy}>
-                  {calendarConnected
-                    ? 'Nothing coming up. Add an event, or wait for your calendar to sync a suggestion.'
-                    : 'Nothing coming up. Add an event, or connect your calendar in Settings.'}
-                </Text>
-              </Panel>
+              <EmptyState
+                illustration={require('@/assets/animations/no-events.json')}
+                title="Nothing coming up"
+                copy={calendarConnected
+                  ? 'Add an event, or wait for your calendar to sync a suggestion.'
+                  : 'Add an event, or connect your calendar in Settings.'}
+              />
             )
           ) : (
             past.length ? past.map((event) => (
@@ -463,9 +464,10 @@ export default function EventsScreen() {
                 busy={busyId === event.id}
               />
             )) : (
-              <Panel>
-                <Text style={styles.panelCopy}>No past events yet.</Text>
-              </Panel>
+              <EmptyState
+                illustration={require('@/assets/animations/no-events.json')}
+                title="No past events yet"
+              />
             )
           )}
         </View>
@@ -503,6 +505,10 @@ export default function EventsScreen() {
         visible={Boolean(refreshMessage)}
         title={refreshTitle}
         message={refreshMessage}
+        // This sheet is reused for every event outcome (sync, add, invite,
+        // update, cancel) — all of them are event-themed, so they share this
+        // illustration rather than falling through to the generic default.
+        lottieSource={require('@/assets/animations/event-synced.json')}
         onClose={() => setRefreshMessage('')}
       />
     </Screen>
@@ -629,7 +635,7 @@ function AddEventSheet({
       setCameFromLink(true);
       setStep('form');
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not read that link.');
+      setError(describeError(caught, 'Could not read that link.'));
       setStep('link');
     }
   }
@@ -662,7 +668,7 @@ function AddEventSheet({
         sourceUrl: form.sourceUrl,
       });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not save this event.');
+      setError(describeError(caught, 'Could not save this event.'));
     } finally {
       setSaving(false);
     }
@@ -703,7 +709,7 @@ function AddEventSheet({
             <View style={styles.chooseIcon}><NotePencil size={20} color={colors.ink} weight="bold" /></View>
             <View style={styles.chooseCopy}>
               <Text style={styles.chooseTitle}>Enter details</Text>
-              <Text style={styles.chooseHint}>Name, location, and time — by hand.</Text>
+              <Text style={styles.chooseHint}>Enter the name, location, and time yourself.</Text>
             </View>
             <CaretRight size={16} color={colors.muted} weight="bold" />
           </Pressable>

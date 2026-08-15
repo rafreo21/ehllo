@@ -1,9 +1,9 @@
-import { WarningCircle } from 'phosphor-react-native';
 import { StyleSheet, Text, View } from 'react-native';
+import LottieView, { type AnimationObject } from 'lottie-react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
-import { colors, radius } from '@/theme/tokens';
+import { colors } from '@/theme/tokens';
 
 type OutcomeErrorSheetProps = {
   visible: boolean;
@@ -11,6 +11,7 @@ type OutcomeErrorSheetProps = {
   hint?: string;
   title?: string;
   onClose: () => void;
+  lottieSource?: AnimationObject;
 };
 
 export function OutcomeErrorSheet({
@@ -19,6 +20,7 @@ export function OutcomeErrorSheet({
   hint,
   title = 'Something went wrong',
   onClose,
+  lottieSource,
 }: OutcomeErrorSheetProps) {
   const trimmed = message.trim();
 
@@ -29,7 +31,12 @@ export function OutcomeErrorSheet({
       onClose={onClose}
       footer={<Button onPress={onClose}>OK</Button>}>
       <View style={styles.iconWrap}>
-        <WarningCircle size={34} color={colors.danger} weight="fill" />
+        <LottieView
+          source={lottieSource || require('@/assets/animations/error.json')}
+          autoPlay
+          loop={false}
+          style={styles.lottie}
+        />
       </View>
       <Body style={styles.message}>{trimmed || 'Something went wrong.'}</Body>
       {hint ? <Text style={styles.hint}>{hint}</Text> : null}
@@ -40,13 +47,12 @@ export function OutcomeErrorSheet({
 const styles = StyleSheet.create({
   iconWrap: {
     alignSelf: 'center',
-    width: 72,
-    height: 72,
-    borderRadius: radius.round,
+    width: 200,
+    height: 200,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FDECEA',
   },
+  lottie: { width: '100%', height: '100%' },
   message: { textAlign: 'center' },
   hint: { color: colors.muted, fontSize: 13, lineHeight: 18, textAlign: 'center' },
 });

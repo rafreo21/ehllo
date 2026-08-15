@@ -1,15 +1,16 @@
-import { CheckCircle } from 'phosphor-react-native';
 import { StyleSheet, View } from 'react-native';
+import LottieView, { type AnimationObject } from 'lottie-react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
-import { colors, radius } from '@/theme/tokens';
+import { spacing } from '@/theme/tokens';
 
 type OutcomeSuccessSheetProps = {
   visible: boolean;
   message: string;
   title?: string;
   onClose: () => void;
+  lottieSource?: AnimationObject;
 };
 
 export function OutcomeSuccessSheet({
@@ -17,6 +18,7 @@ export function OutcomeSuccessSheet({
   message,
   title = 'Done',
   onClose,
+  lottieSource,
 }: OutcomeSuccessSheetProps) {
   const trimmed = message.trim();
 
@@ -26,23 +28,36 @@ export function OutcomeSuccessSheet({
       title={title}
       onClose={onClose}
       footer={<Button onPress={onClose}>OK</Button>}>
-      <View style={styles.iconWrap}>
-        <CheckCircle size={34} color={colors.ink} weight="fill" />
+      <View style={styles.group}>
+        <View style={styles.videoWrap}>
+          <LottieView
+            source={lottieSource || require('@/assets/animations/success.json')}
+            autoPlay
+            loop={false}
+            style={styles.video}
+          />
+        </View>
+        <Body style={styles.message}>{trimmed || 'All set.'}</Body>
       </View>
-      <Body style={styles.message}>{trimmed || 'All set.'}</Body>
     </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  iconWrap: {
+  // Tighter than the body's default inter-child gap (spacing.x4) — the
+  // video's own frame already reads as a distinct block, so the message
+  // doesn't need as much air under it as two separate sheet sections would.
+  group: {
+    gap: spacing.x2,
+  },
+  videoWrap: {
     alignSelf: 'center',
-    width: 72,
-    height: 72,
-    borderRadius: radius.round,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.accent,
+    width: 200,
+    height: 200,
+  },
+  video: {
+    width: '100%',
+    height: '100%',
   },
   message: { textAlign: 'center' },
 });
