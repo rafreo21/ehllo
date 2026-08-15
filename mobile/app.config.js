@@ -249,11 +249,13 @@ module.exports = {
       // Hardcoded rather than env-driven for the same reason as sentryDsn
       // above — EAS builds never see local .env, so this silently fell back
       // to "" (plain text input, no autocomplete) on every real build.
-      // Google's own model for mobile client keys is app-restriction in
-      // Cloud Console, not secrecy — same key for both variants (Places is
-      // billing-account-scoped, not staging/production-split). Confirm this
-      // key is restricted to this app's package name/SHA-1 + bundle ID.
-      googlePlacesApiKey: "AIzaSyDnAdi0gDvSzo9Y45aSZ83UBtVSCQ7CMwA",
+      // Split per platform since a Google Cloud API key can only carry one
+      // application-restriction type (Android apps OR iOS apps, not both) —
+      // each is restricted in Cloud Console to its own package name/SHA-1 or
+      // bundle ID, and to the Places API only. Same key for both app
+      // variants (Places is billing-account-scoped, not staging/production-split).
+      googlePlacesApiKeyAndroid: "AIzaSyBzK6N7DA6itgONIYotNSPoo6MuvQa7Fbc",
+      googlePlacesApiKeyIos: "AIzaSyD0QU2QDSaYG_C5k9h0224wlToCf_TevKE",
       // DSNs are not secret (Sentry's own docs: safe to expose client-side,
       // same trust tier as the Supabase anon key above) — hardcoded here
       // rather than via env var since this project never wires EAS env vars
