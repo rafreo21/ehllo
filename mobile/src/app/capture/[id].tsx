@@ -36,6 +36,7 @@ import {
 } from '@/features/follow-ups/follow-up-channels';
 import { formatDueLabel } from '@/lib/due-date';
 import { openEmailCompose } from '@/lib/email-compose';
+import { describeError } from '@/lib/friendly-error';
 import { readEnv } from '@/lib/env';
 import { buildRecordingShareEmail, formatMeetingEmailDate } from '@/lib/recording-email';
 import {
@@ -137,7 +138,7 @@ export default function CaptureDetailScreen() {
     } catch (caught) {
       setUploadStatus('failed');
       setUploadRetryable((caught as Error & { retryable?: boolean })?.retryable !== false);
-      setUploadError(caught instanceof Error ? caught.message : 'Could not upload recording for guests.');
+      setUploadError(describeError(caught, 'Could not upload recording for guests.'));
       return null;
     }
   }
@@ -175,7 +176,7 @@ export default function CaptureDetailScreen() {
         }
       } catch (caught) {
         if (cancelled) return;
-        setErrorMessage(caught instanceof Error ? caught.message : 'Could not load this meeting.');
+        setErrorMessage(describeError(caught, 'Could not load this meeting.'));
         setErrorSheetOpen(true);
       } finally {
         if (!cancelled) {
@@ -262,7 +263,7 @@ export default function CaptureDetailScreen() {
       setApproving(true);
       saveWithConflictGuard(reverted)
         .catch((caught) => {
-          setErrorMessage(caught instanceof Error ? caught.message : 'Could not turn off guest sharing.');
+          setErrorMessage(describeError(caught, 'Could not turn off guest sharing.'));
           setErrorSheetOpen(true);
         })
         .finally(() => setApproving(false));
@@ -280,7 +281,7 @@ export default function CaptureDetailScreen() {
         setSuccessSheetOpen(true);
       }
     } catch (caught) {
-      setErrorMessage(caught instanceof Error ? caught.message : 'Could not save changes.');
+      setErrorMessage(describeError(caught, 'Could not save changes.'));
       setErrorSheetOpen(true);
     } finally {
       setSaving(false);
@@ -362,7 +363,7 @@ export default function CaptureDetailScreen() {
         setSuccessSheetOpen(true);
       }
     } catch (caught) {
-      setErrorMessage(caught instanceof Error ? caught.message : 'Could not confirm this review.');
+      setErrorMessage(describeError(caught, 'Could not confirm this review.'));
       setErrorSheetOpen(true);
     } finally {
       setConfirmingReview(false);
@@ -406,7 +407,7 @@ export default function CaptureDetailScreen() {
         setSuccessSheetOpen(true);
       }
     } catch (caught) {
-      setErrorMessage(caught instanceof Error ? caught.message : 'Could not approve the guest view.');
+      setErrorMessage(describeError(caught, 'Could not approve the guest view.'));
       setErrorSheetOpen(true);
     } finally {
       setApproving(false);

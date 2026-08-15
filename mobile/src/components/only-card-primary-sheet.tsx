@@ -6,6 +6,7 @@ import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
 import { MAX_CARDS } from '@/features/card/card-library';
 import { useCard } from '@/features/card/card-context';
+import { describeError } from '@/lib/friendly-error';
 import { spacing } from '@/theme/tokens';
 
 type OnlyCardPrimarySheetProps = {
@@ -35,7 +36,7 @@ export function OnlyCardPrimarySheet({ visible, onClose, onError }: OnlyCardPrim
       }
       onError?.(`You can save a maximum of ${MAX_CARDS} cards.`);
     } catch (caught) {
-      onError?.(caught instanceof Error ? caught.message : 'Could not create a card.');
+      onError?.(describeError(caught, 'Could not create a card.'));
       onClose();
     } finally {
       setCreating(false);

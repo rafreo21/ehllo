@@ -22,6 +22,7 @@ import { AppErrorBoundary } from '@/components/app-error-boundary';
 import { CaptureRecorderProvider } from '@/features/encounters/capture-recorder-context';
 import { CaptureTranscriptionSyncManager } from '@/features/encounters/capture-transcription-sync-manager';
 import { EventActionSyncManager } from '@/features/events/event-action-sync-manager';
+import { installRouterDebounce } from '@/lib/router-debounce';
 import { WidgetQrRenderer } from '@/lib/widget-qr-renderer';
 import { colors } from '@/theme/tokens';
 
@@ -31,6 +32,8 @@ Sentry.init({
   tracesSampleRate: 0.1,
   enableAutoSessionTracking: true,
 });
+
+installRouterDebounce();
 
 function applyAndroidNavigationBar() {
   NavigationBar.setStyle('dark');

@@ -12,6 +12,7 @@ import { MobileCardPreview } from '@/components/mobile-card';
 import { BackButton, Button, Eyebrow, HeaderActionButton } from '@/components/ui';
 import { cardDisplayLabel } from '@/features/card/card-display';
 import { useCard } from '@/features/card/card-context';
+import { describeError } from '@/lib/friendly-error';
 import { useAppInsets, useTabBarHeight } from '@/lib/safe-area';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -79,7 +80,7 @@ export default function CardDetailScreen() {
       setDeleteOpen(false);
       setDeleteSuccessOpen(true);
     } catch (caught) {
-      setErrorMessage(caught instanceof Error ? caught.message : 'Could not delete this card.');
+      setErrorMessage(describeError(caught, 'Could not delete this card.'));
       setErrorSheetOpen(true);
       setDeleteOpen(false);
     } finally {
@@ -109,7 +110,7 @@ export default function CardDetailScreen() {
       await setPrimaryCard(selected.id);
       setPrimarySheetOpen(false);
     } catch (caught) {
-      setErrorMessage(caught instanceof Error ? caught.message : 'Could not update your primary card.');
+      setErrorMessage(describeError(caught, 'Could not update your primary card.'));
       setErrorSheetOpen(true);
       setPrimarySheetOpen(false);
     } finally {

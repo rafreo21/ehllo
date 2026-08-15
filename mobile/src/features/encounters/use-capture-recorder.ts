@@ -22,6 +22,7 @@ import {
 import { isSupportedAudioImport } from '@/features/encounters/audio-upload';
 import { ensureRecordingsDirectory, formatDuration, recordingsDirectory } from '@/features/encounters/local-recordings';
 import { isOnline } from '@/lib/connectivity';
+import { describeError } from '@/lib/friendly-error';
 import { isNetworkError } from '@/lib/mobile-api';
 import { isExpoGo } from '@/lib/runtime';
 
@@ -276,7 +277,7 @@ export function useCaptureRecorder({
     interruptionHandledRef.current = true;
     onErrorRef.current(
       'Recording was interrupted by the system (a call, Siri, or another app using the microphone). '
-      + 'What was captured up to that point is saved below — start a new recording to keep going.',
+      + 'What was captured up to that point is saved below. Start a new recording to keep going.',
     );
     void stopRecordingRef.current('interrupted');
   }, [
@@ -353,7 +354,7 @@ export function useCaptureRecorder({
     } catch (error) {
       const message = isNetworkError(error)
         ? "You're offline. This will retry automatically once you're back online."
-        : (error instanceof Error ? error.message : 'Could not transcribe this recording.');
+        : describeError(error, 'Could not transcribe this recording.');
       setServerTranscribePhase('failed');
       setServerTranscribeError(message);
       liveTranscript.markIdle();
@@ -621,7 +622,7 @@ export function useCaptureRecorder({
           onErrorRef.current('Finish stopped the session, but no audio was saved. Tap Record and try again.');
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Finish stopped the session, but nothing was saved. Tap Record and try again.';
+        const message = describeError(error, 'Finish stopped the session, but nothing was saved. Tap Record and try again.');
         onErrorRef.current(message);
       } finally {
         setIsFinishing(false);

@@ -37,6 +37,7 @@ import { themeSurfaceStyle } from '@/features/card/theme-colors';
 import { fetchWalletAvailability } from '@/features/card/wallet-actions';
 import { buildHtmlSignature, buildPlainSignature } from '@/lib/email-signature';
 import { fetchBrandedQrDataUri } from '@/lib/branded-qr-client';
+import { describeError } from '@/lib/friendly-error';
 import { useAppInsets } from '@/lib/safe-area';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -120,7 +121,7 @@ export default function CardToolsScreen() {
       if (cancelled) return;
       setWalletAvailable(result.available);
       setWalletNote(result.message);
-    });
+    }).catch(() => undefined);
 
     return () => {
       cancelled = true;
@@ -159,7 +160,7 @@ export default function CardToolsScreen() {
         setSuccessSheetOpen(true);
       }
     } catch (caught) {
-      const nextMessage = caught instanceof Error ? caught.message : 'Something went wrong.';
+      const nextMessage = describeError(caught, 'Something went wrong.');
       setActiveSheet('none');
       setErrorMessage(nextMessage);
       setErrorSheetOpen(true);
@@ -241,7 +242,7 @@ export default function CardToolsScreen() {
       setTimeout(() => setCopied(''), 1500);
       showSuccess(kind === 'plain' ? 'Plain signature copied.' : 'HTML signature copied.');
     } catch (caught) {
-      showError(caught instanceof Error ? caught.message : 'Could not copy the signature.');
+      showError(describeError(caught, 'Could not copy the signature.'));
     }
   }
 
@@ -443,6 +444,7 @@ export default function CardToolsScreen() {
         visible={successSheetOpen}
         message={successMessage}
         onClose={closeSuccessSheet}
+        lottieSource={require('@/assets/animations/wallet-added.json')}
       />
     </View>
   );

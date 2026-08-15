@@ -10,6 +10,7 @@ import { MethodListEditor } from '@/components/method-list-editor';
 import { MobileCardPreview } from '@/components/mobile-card';
 import { Body, Button, FooterBackButton, PageHeader } from '@/components/ui';
 import { cardDraftSignature, cardNeedsPublish } from '@/lib/card-draft';
+import { describeError } from '@/lib/friendly-error';
 import {
   ensurePublishedBaseline,
   writePublishedBaseline,
@@ -224,7 +225,7 @@ export default function EditCardScreen() {
       setSheetDetail(result.detail || '');
       setSheet('error');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Something went wrong.';
+      const message = describeError(error, 'Something went wrong.');
       const failure = describePublishError(message);
       setSheetTitle(failure.title);
       setSheetMessage(failure.message);

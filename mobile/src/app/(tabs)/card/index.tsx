@@ -13,6 +13,7 @@ import { Body, Button, Eyebrow, HeaderActionButton, Title } from '@/components/u
 import { useAuth } from '@/features/auth/auth-context';
 import { MAX_CARDS } from '@/features/card/card-library';
 import { useCard } from '@/features/card/card-context';
+import { describeError } from '@/lib/friendly-error';
 import { useAppInsets, useTabBarHeight } from '@/lib/safe-area';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -35,7 +36,7 @@ export default function CardLibraryScreen() {
         setErrorSheetOpen(true);
       }
     } catch (caught) {
-      setErrorMessage(caught instanceof Error ? caught.message : 'Could not create a card.');
+      setErrorMessage(describeError(caught, 'Could not create a card.'));
       setErrorSheetOpen(true);
     }
   }

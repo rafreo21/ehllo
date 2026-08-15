@@ -46,6 +46,7 @@ import {
   addAppleWalletPass,
   addGoogleWalletPass,
 } from '@/features/card/wallet-actions';
+import { readGoogleWalletSaved, writeGoogleWalletSaved } from '@/lib/google-wallet-state';
 import type { MobileCard } from '@/features/card/types';
 import type { SignatureProfile } from '@/lib/email-signature';
 import { colors, radius, spacing } from '@/theme/tokens';
@@ -86,6 +87,12 @@ export function WalletToolSheetContent({
   showCompany: boolean;
 }) {
   const { busy, run } = actions;
+  const [googleWalletSaved, setGoogleWalletSaved] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !card.slug) return;
+    void readGoogleWalletSaved(card.slug).then(setGoogleWalletSaved);
+  }, [card.slug]);
 
   return (
     <View style={styles.sheetBody}>
@@ -140,9 +147,12 @@ export function WalletToolSheetContent({
           <GoogleWalletButton
             loading={busy === 'google'}
             disabled={walletAvailable === false}
+            mode={googleWalletSaved ? 'view' : 'add'}
             onPress={() => void run('google', async () => {
               if (!accessToken) throw new Error('Sign in required.');
               await addGoogleWalletPass(card.slug, accessToken);
+              void writeGoogleWalletSaved(card.slug, true);
+              setGoogleWalletSaved(true);
             }, { successMessage: 'Finish adding the pass in Google Wallet.' })}
           />
           {walletAvailable === false && walletNote ? (

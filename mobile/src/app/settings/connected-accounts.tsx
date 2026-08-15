@@ -214,7 +214,7 @@ export default function ConnectedAccountsScreen() {
                   <Text style={styles.cardTitle}>{provider.name}</Text>
                   <Text style={styles.cardDescription}>
                     {needsReconnect
-                      ? 'Connection stopped working — reconnect to keep syncing.'
+                      ? 'Connection stopped working. Reconnect to keep syncing.'
                       : connected && account?.email ? account.email : provider.description}
                   </Text>
                   {provider.id === 'google' && connected ? (

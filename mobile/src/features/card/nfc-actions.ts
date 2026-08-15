@@ -3,6 +3,7 @@ import { Linking, Platform } from 'react-native';
 
 import type { MobileCard } from '@/features/card/types';
 import { buildMobileContactQrPayload } from '@/lib/contact-qr-payload';
+import { describeError } from '@/lib/friendly-error';
 import { nfcManufacturerPayload, normalizeCardUrl } from '@/lib/nfc-ndef';
 
 export function isNativeNfcSupported() {
@@ -119,7 +120,7 @@ async function writeNdefMessage(
 }
 
 function explainNfcFailure(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error || '');
+  const message = describeError(error, '');
   if (/read.?only|not writable/i.test(message)) {
     return 'This tag is locked or read-only. Use a new writable NFC tag.';
   }

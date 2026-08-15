@@ -28,6 +28,7 @@ import { buildEncounterPayload, fetchInboundExchanges, saveEncounter, type Inbou
 import { displayFollowUpTitle, SELECTABLE_FOLLOW_UP_CHANNELS, type FollowUpChannel } from '@/features/follow-ups/follow-up-channels';
 import { clearQuickFollowUpDraft, readQuickFollowUpDraft, writeQuickFollowUpDraft } from '@/features/follow-ups/quick-follow-up-draft';
 import { enqueueQuickFollowUp } from '@/features/follow-ups/quick-follow-up-queue';
+import { describeError } from '@/lib/friendly-error';
 import { resolveCachedEventSnapshot, type EventSnapshot } from '@/features/events/event-cache';
 import { useActiveEventTitle } from '@/features/events/use-active-event-title';
 import type { QuickFollowUpItem } from '@/features/follow-ups/quick-follow-up-types';
@@ -285,7 +286,7 @@ export default function QuickFollowUpScreen() {
         await queueForLater(cleanName);
         return;
       }
-      setOutcomeError(caught instanceof Error ? caught.message : 'Could not add this follow-up.');
+      setOutcomeError(describeError(caught, 'Could not add this follow-up.'));
       setSaving(false);
     }
   }
@@ -707,7 +708,7 @@ export default function QuickFollowUpScreen() {
         visible={successOpen}
         title={queuedOffline ? 'Saved for when you’re back online' : 'Follow-up added'}
         message={queuedOffline
-          ? "You're offline — this will be added to Follow-ups automatically the moment you reconnect."
+          ? "You're offline. This will be added to Follow-ups automatically the moment you reconnect."
           : newGuestName
             ? `It is now in Follow-ups. We also emailed ${newGuestName} to let them know and invite them to claim their own ehllo card.`
             : 'It is now in Follow-ups and will stay there until you complete it.'}

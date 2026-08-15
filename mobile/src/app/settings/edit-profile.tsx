@@ -14,6 +14,7 @@ import {
   updateAccountProfile,
   type AccountProfile,
 } from '@/features/account/account-api';
+import { describeError } from '@/lib/friendly-error';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 export default function EditProfileScreen() {
@@ -38,7 +39,7 @@ export default function EditProfileScreen() {
       })
       .catch((caught) => {
         if (cancelled) return;
-        setErrorMessage(caught instanceof Error ? caught.message : 'Could not load your account.');
+        setErrorMessage(describeError(caught, 'Could not load your account.'));
         setErrorOpen(true);
       })
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -57,7 +58,7 @@ export default function EditProfileScreen() {
       });
       setSuccessOpen(true);
     } catch (caught) {
-      setErrorMessage(caught instanceof Error ? caught.message : 'Could not save your account details.');
+      setErrorMessage(describeError(caught, 'Could not save your account details.'));
       setErrorOpen(true);
     } finally {
       setSaving(false);
@@ -83,7 +84,7 @@ export default function EditProfileScreen() {
       ) : (
         <View style={styles.content}>
           <Body>
-            Account details only — your public card is edited from My Cards.
+            Account details only. Your public card is edited from My Cards.
           </Body>
 
           <Panel style={styles.panel}>

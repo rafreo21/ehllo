@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { describeError } from '@/lib/friendly-error';
+
 const SYNC_FAILURES_KEY = 'aftermeet.mobile.sync-failures.v1';
 
 export type SyncFailure = {
@@ -10,8 +12,7 @@ export type SyncFailure = {
 };
 
 export function syncErrorMessage(error: unknown) {
-  const message = error instanceof Error ? error.message.trim() : '';
-  return message || 'ehllo could not sync this item. It remains saved on this device.';
+  return describeError(error, 'ehllo could not sync this item. It remains saved on this device.');
 }
 
 export async function readSyncFailures(): Promise<SyncFailure[]> {

@@ -13,6 +13,7 @@ import type { SavedDirectoryContact } from '@/features/connections/connection-di
 import { saveConnectionToEhllo } from '@/features/connections/save-connection-contact';
 import { fetchInboundExchanges, type InboundExchange } from '@/features/encounters/encounter-api';
 import { normalizeEmailForMatching, normalizePhoneForMatching } from '@/lib/contact-identity';
+import { describeError } from '@/lib/friendly-error';
 import { mobileFetch } from '@/lib/mobile-api';
 import { formatDateTime } from '@/lib/relative-time';
 import { colors, spacing } from '@/theme/tokens';
@@ -99,7 +100,7 @@ export default function RecentScansScreen() {
       setExchanges(items);
       setSavedContacts(contacts);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not load your scans.');
+      setError(describeError(caught, 'Could not load your scans.'));
     } finally {
       setInitialLoading(false);
     }
@@ -131,7 +132,7 @@ export default function RecentScansScreen() {
       setHistoryGroup(null);
       await refresh();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not save this person to your directory.');
+      setError(describeError(caught, 'Could not save this person to your directory.'));
     } finally {
       setBusyId('');
     }
@@ -147,7 +148,7 @@ export default function RecentScansScreen() {
       setExchanges((current) => current.filter((item) => !dismissedIds.has(item.id)));
       setHistoryGroup(null);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not update this scan.');
+      setError(describeError(caught, 'Could not update this scan.'));
     } finally {
       setBusyId('');
     }
