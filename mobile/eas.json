@@ -49,6 +49,11 @@
   },
   "submit": {
     "production": {},
-    "staging-store": {}
+    "staging-store": {
+      "ios": {
+        "ascAppId": "6801942243",
+        "appleTeamId": "VDR84B8UU2"
+      }
+    }
   }
 }

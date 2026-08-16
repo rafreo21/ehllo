@@ -233,6 +233,7 @@ module.exports = {
         "react-native-nfc-manager",
         {
           nfcPermission: "Allow ehllo to program NFC tags and share your card when someone taps your phone.",
+          includeNdefEntitlement: false,
         },
       ],
       "./plugins/withAndroidNfcHce",
