@@ -8,6 +8,7 @@ import { Button, PageHeader, Panel, Screen } from '@/components/ui';
 import { PendingSyncSkeleton } from '@/components/skeleton';
 import { useAuth } from '@/features/auth/auth-context';
 import { readPendingSyncStatus, type PendingSyncStatus } from '@/features/sync/pending-sync-status';
+import { useOtherDevicesPendingCount } from '@/features/sync/use-other-devices-pending';
 import { requestForegroundSync } from '@/lib/background-sync';
 import { useIsOnline } from '@/lib/connectivity';
 import { useDeferredMount } from '@/lib/use-deferred-mount';
@@ -25,6 +26,7 @@ export default function PendingSyncScreen() {
   const [loading, setLoading] = useState(true);
   const [retrying, setRetrying] = useState(false);
   const showLottie = useDeferredMount(true);
+  const otherDevicesPending = useOtherDevicesPendingCount(status.total);
 
   const refresh = useCallback(async () => {
     setStatus(await readPendingSyncStatus());
@@ -89,6 +91,11 @@ export default function PendingSyncScreen() {
         </View>
         <Text style={styles.summaryTitle}>{loading ? 'Checking this device…' : status.total ? `${status.total} item${status.total === 1 ? '' : 's'} waiting` : 'Everything is synced'}</Text>
         <Text style={styles.summaryDetail}>{online ? 'Online · ehllo retries automatically' : 'Offline · your work remains safely on this device'}</Text>
+        {otherDevicesPending > 0 ? (
+          <Text style={styles.summaryDetail}>
+            {otherDevicesPending} item{otherDevicesPending === 1 ? '' : 's'} also waiting on another device
+          </Text>
+        ) : null}
       </Panel>
 
       {loading ? (

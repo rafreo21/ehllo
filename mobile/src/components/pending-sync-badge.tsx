@@ -5,14 +5,28 @@ import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native'
 import { useDeferredMount } from '@/lib/use-deferred-mount';
 import { colors, radius, spacing } from '@/theme/tokens';
 
-export function PendingSyncBadge({ count, style }: { count: number; style?: ViewStyle }) {
-  const showLottie = useDeferredMount(count > 0);
-  if (count <= 0) return null;
+export function PendingSyncBadge({
+  count,
+  otherDevicesCount = 0,
+  style,
+}: {
+  count: number;
+  /** Items waiting to sync on other devices on this account, not this one — see useOtherDevicesPendingCount. */
+  otherDevicesCount?: number;
+  style?: ViewStyle;
+}) {
+  const total = count + otherDevicesCount;
+  const showLottie = useDeferredMount(total > 0);
+  if (total <= 0) return null;
+
+  const label = count > 0
+    ? `${count} item${count === 1 ? '' : 's'} waiting to sync${otherDevicesCount > 0 ? `, plus ${otherDevicesCount} on another device` : ''}. Tap to review.`
+    : `${otherDevicesCount} item${otherDevicesCount === 1 ? '' : 's'} waiting to sync on another device.`;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${count} item${count === 1 ? '' : 's'} waiting to sync`}
+      accessibilityLabel={label}
       onPress={() => router.push('/settings/pending-sync')}
       style={({ pressed }) => [styles.banner, style, pressed && styles.pressed]}>
       <View style={styles.iconWrap}>
@@ -25,7 +39,7 @@ export function PendingSyncBadge({ count, style }: { count: number; style?: View
           />
         ) : null}
       </View>
-      <Text style={styles.text}>{count} item{count === 1 ? '' : 's'} waiting to sync. Tap to review.</Text>
+      <Text style={styles.text}>{label}</Text>
     </Pressable>
   );
 }

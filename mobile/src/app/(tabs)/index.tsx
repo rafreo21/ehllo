@@ -26,6 +26,7 @@ import { Skeleton, SkeletonCircle, SkeletonLine } from '@/components/skeleton';
 import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
 import { usePendingSyncCount } from '@/features/sync/use-pending-sync-count';
+import { useOtherDevicesPendingCount } from '@/features/sync/use-other-devices-pending';
 import {
   getActiveCaptureController,
   subscribeToActiveCapture,
@@ -80,6 +81,7 @@ export default function HomeScreen() {
   const navigate = useDebouncedNavigate();
   const { session, loading: authLoading } = useAuth();
   const pendingSync = usePendingSyncCount();
+  const otherDevicesPending = useOtherDevicesPendingCount(pendingSync.total);
   const { card, cards, loading: cardLoading } = useCard();
   const [followUps, setFollowUps] = useState<FollowUpItem[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -347,7 +349,7 @@ export default function HomeScreen() {
           message="Offline. Showing what's saved on this device. It'll sync when you're back online."
           style={styles.offlineBanner}
         />
-        <PendingSyncBadge count={pendingSync.total} />
+        <PendingSyncBadge count={pendingSync.total} otherDevicesCount={otherDevicesPending} />
         {authLoading || (loading && !hasLoadedOnce) ? (
           <HomeSkeleton />
         ) : (
