@@ -1,12 +1,14 @@
+import dynamic from "next/dynamic";
 import { ArrowDownIcon } from "@phosphor-icons/react/dist/ssr/ArrowDown";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import { ArrowUpIcon } from "@phosphor-icons/react/dist/ssr/ArrowUp";
 import { BrandMark } from "./components/BrandMark";
 import { IconLinkButton, LinkButton } from "./components/Button";
-import { LifecycleDemo } from "./homepage-draft/LifecycleDemo";
-import { DraftMotion } from "./homepage-draft/DraftMotion";
-import { HorizontalLoops } from "./homepage-draft/HorizontalLoops";
-import { InteractiveAppDemo } from "./homepage-draft/InteractiveAppDemo";
+
+const DraftMotion = dynamic(() => import("./homepage-draft/DraftMotion").then((m) => m.DraftMotion), { ssr: false, loading: () => null });
+const LifecycleDemo = dynamic(() => import("./homepage-draft/LifecycleDemo").then((m) => m.LifecycleDemo), { ssr: false, loading: () => null });
+const HorizontalLoops = dynamic(() => import("./homepage-draft/HorizontalLoops").then((m) => m.HorizontalLoops), { ssr: false, loading: () => null });
+const InteractiveAppDemo = dynamic(() => import("./homepage-draft/InteractiveAppDemo").then((m) => m.InteractiveAppDemo), { ssr: false, loading: () => null });
 
 export default function Home() {
   return <main className="homepage-draft">
