@@ -1,8 +1,7 @@
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { GoogleWalletIcon } from '@/components/google-wallet-icon';
-const WALLET_LABEL = 'Add to Google Wallet';
-const OFFICIAL_BUTTON = require('@/assets/images/add-to-google-wallet-en-gb.png');
+const ADD_LABEL = 'Add to Google Wallet';
 const VIEW_LABEL = 'View in Google Wallet';
 
 type GoogleWalletButtonProps = {
@@ -14,18 +13,19 @@ type GoogleWalletButtonProps = {
 };
 
 /**
- * Google's official localized English (Great Britain) Add to Google Wallet
- * primary button. The image is rendered at its intrinsic aspect ratio and is
- * not recolored, relabeled, cropped, or distorted.
+ * A custom black pill — Google's wallet icon plus real text, laid out with
+ * flexbox — so it fills the same width as the Share button in both modes.
+ * Matches AppleWalletButton's shape/sizing.
  */
 export function GoogleWalletButton({ onPress, loading, disabled, mode = 'add', style }: GoogleWalletButtonProps) {
   const unavailable = Boolean(disabled || loading);
   const viewing = mode === 'view';
+  const label = viewing ? VIEW_LABEL : ADD_LABEL;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={viewing ? VIEW_LABEL : WALLET_LABEL}
+      accessibilityLabel={label}
       accessibilityState={{ busy: Boolean(loading), disabled: unavailable }}
       disabled={unavailable}
       onPress={onPress}
@@ -35,15 +35,11 @@ export function GoogleWalletButton({ onPress, loading, disabled, mode = 'add', s
         unavailable && styles.disabledState,
         style,
       ]}>
-      <View style={[styles.assetFrame, { width: viewing ? 287 : 283 }]}>
-        {viewing ? (
-          <View style={styles.viewContent}>
-            <GoogleWalletIcon size={21} />
-            <Text style={styles.viewLabel}>{VIEW_LABEL}</Text>
-          </View>
-        ) : (
-          <Image source={OFFICIAL_BUTTON} resizeMode="contain" style={styles.asset} />
-        )}
+      <View style={styles.assetFrame}>
+        <View style={styles.content}>
+          <GoogleWalletIcon size={21} />
+          <Text style={styles.label}>{label}</Text>
+        </View>
         {loading ? (
           <View pointerEvents="none" style={styles.loadingOverlay}>
             <ActivityIndicator color="#FFFFFF" />
@@ -62,19 +58,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   assetFrame: {
+    width: '100%',
     height: 50,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     borderRadius: 25,
-    backgroundColor: '#1F1F1F',
   },
-  asset: {
+  content: {
     width: '100%',
     height: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#000000',
   },
-  viewContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  viewLabel: { color: '#FFFFFF', fontSize: 15, lineHeight: 19, fontWeight: '600' },
+  label: { color: '#FFFFFF', fontSize: 15, lineHeight: 19, fontWeight: '600' },
   loadingOverlay: {
     position: 'absolute',
     top: 0,
