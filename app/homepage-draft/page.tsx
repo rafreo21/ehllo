@@ -1,5 +1,5 @@
-import HomepageClientGate from "../HomepageHydrationGate";
+import HomepageClient from "../HomepageClient";
 
 export default function HomepageDraft() {
-  return <HomepageClientGate includeDraftReviewLink />;
+  return <HomepageClient includeDraftReviewLink />;
 }

@@ -1,5 +1,5 @@
-import HomepageClientGate from "./HomepageHydrationGate";
+import HomepageClient from "./HomepageClient";
 
 export default function Home() {
-  return <HomepageClientGate />;
+  return <HomepageClient />;
 }
