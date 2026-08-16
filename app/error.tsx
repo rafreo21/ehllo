@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import * as Sentry from "@sentry/nextjs";
 
 const HYDRATION_ERROR_CODES = ["418", "419", "421", "422", "425"];
 
@@ -14,7 +13,11 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
 
   useEffect(() => {
     console.error(error);
-    Sentry.captureException(error);
+    if (typeof window !== "undefined") {
+      void import("@sentry/nextjs").then((Sentry) => {
+        Sentry.captureException(error);
+      }).catch(() => {});
+    }
     // Hydration mismatches (often caused by browser extensions injecting DOM
     // content before React attaches) are one-time by nature: once this retry
     // renders fully client-side, there's no server HTML left to mismatch
