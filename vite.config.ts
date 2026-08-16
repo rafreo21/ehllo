@@ -53,6 +53,15 @@ export default defineConfig(async () => {
         tailwindcss(),
         nitro({
           preset: "vercel",
+          // Covers native deps if anything ever imports them from Nitro's
+          // own runtime graph (_libs). It does NOT cover sharp/resvg as
+          // actually used here — they're only imported from vinext's own
+          // Vite/Rolldown-built _ssr route chunks, which Nitro's trace step
+          // never sees, so their real binaries never land in the deployed
+          // function despite being marked `external` below. That's fixed
+          // separately by scripts/copy-native-server-deps.mjs (run in
+          // build:vercel), which traces and copies them by hand.
+          traceDeps: nativeServerPackages,
         }),
       ],
       // Sentry stack traces need these — this build goes through Nitro/Rolldown,

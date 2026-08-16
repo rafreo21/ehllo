@@ -6,7 +6,6 @@ import {
   LinkSimple,
   Monitor,
   SquaresFour,
-  Wallet,
   Watch,
 } from 'phosphor-react-native';
 import { Platform, Image, StyleSheet, Text, View } from 'react-native';
@@ -15,6 +14,7 @@ import { router } from 'expo-router';
 
 import { BrandedQrPreview } from '@/components/branded-qr-preview';
 import { VirtualBackgroundPreviewBackground, WalletPreviewBackground } from '@/components/card-tool-preview-backgrounds';
+import { AppleWalletButton } from '@/components/apple-wallet-button';
 import { GoogleWalletButton } from '@/components/google-wallet-button';
 import { Body, Button } from '@/components/ui';
 import { showsCompanyDetails } from '@/features/card/company-display';
@@ -46,6 +46,7 @@ import {
   addAppleWalletPass,
   addGoogleWalletPass,
 } from '@/features/card/wallet-actions';
+import { readAppleWalletSaved, writeAppleWalletSaved } from '@/lib/apple-wallet-state';
 import { readGoogleWalletSaved, writeGoogleWalletSaved } from '@/lib/google-wallet-state';
 import type { MobileCard } from '@/features/card/types';
 import type { SignatureProfile } from '@/lib/email-signature';
@@ -88,18 +89,24 @@ export function WalletToolSheetContent({
 }) {
   const { busy, run } = actions;
   const [googleWalletSaved, setGoogleWalletSaved] = useState(false);
+  const [appleWalletSaved, setAppleWalletSaved] = useState(false);
 
   useEffect(() => {
     if (Platform.OS !== 'android' || !card.slug) return;
     void readGoogleWalletSaved(card.slug).then(setGoogleWalletSaved);
   }, [card.slug]);
 
+  useEffect(() => {
+    if (Platform.OS !== 'ios' || !card.slug) return;
+    void readAppleWalletSaved(card.slug).then(setAppleWalletSaved);
+  }, [card.slug]);
+
   return (
     <View style={styles.sheetBody}>
       <Body>
-        Google Wallet shows your name, role, and a scannable link. The list icon uses your profile photo when one is published.
-        Google renders the scan code itself, so it will not match the branded QR in the app until you re-save the pass after publishing.
-        While your Google issuer is in demo mode, passes may show a [TEST ONLY] prefix. That clears once publishing access is approved.
+        {Platform.OS === 'ios'
+          ? 'Your name, role, and a scannable link, ready for Apple Wallet.'
+          : 'Your name, role, and a scannable link, ready for Google Wallet. While the issuer is in demo mode, passes may show a [TEST ONLY] prefix.'}
       </Body>
       <WalletPreviewBackground theme={card.theme} style={styles.walletPreview}>
         <Text style={[styles.walletHeader, { color: theme.softColor }]}>ehllo Card</Text>
@@ -127,16 +134,17 @@ export function WalletToolSheetContent({
       </WalletPreviewBackground>
       {Platform.OS === 'ios' ? (
         <>
-          <Button
+          <AppleWalletButton
             loading={busy === 'apple'}
             disabled={walletAvailable === false}
+            mode={appleWalletSaved ? 'view' : 'add'}
             onPress={() => void run('apple', async () => {
               if (!accessToken) throw new Error('Sign in required.');
               await addAppleWalletPass(card.slug, accessToken);
-            }, { successMessage: 'Choose Add to Wallet from the share sheet.' })}>
-            <Wallet size={18} color={colors.white} weight="bold" />
-            Add to Apple Wallet
-          </Button>
+              void writeAppleWalletSaved(card.slug, true);
+              setAppleWalletSaved(true);
+            }, { successMessage: 'Choose Add to Wallet from the share sheet.' })}
+          />
           {walletAvailable === false && walletNote ? (
             <Text style={styles.note}>{walletNote} Ask your admin to add Apple Wallet signing keys on the server.</Text>
           ) : null}

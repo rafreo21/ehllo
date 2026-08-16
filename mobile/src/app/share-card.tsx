@@ -1,11 +1,12 @@
 import * as Brightness from 'expo-brightness';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ContactlessPayment, Scan, ShareNetwork, Wallet } from 'phosphor-react-native';
+import { ContactlessPayment, Scan, ShareNetwork } from 'phosphor-react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, Share, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { BrandedQrCode, type QrShareMode } from '@/components/branded-qr-code';
+import { AppleWalletButton } from '@/components/apple-wallet-button';
 import { GoogleWalletButton } from '@/components/google-wallet-button';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { BackButton, Body, Button, Eyebrow, PillButton, ScreenFrame } from '@/components/ui';
@@ -29,6 +30,7 @@ import {
   fetchWalletAvailability,
 } from '@/features/card/wallet-actions';
 import { describeError } from '@/lib/friendly-error';
+import { readAppleWalletSaved, writeAppleWalletSaved } from '@/lib/apple-wallet-state';
 import { readGoogleWalletSaved, writeGoogleWalletSaved } from '@/lib/google-wallet-state';
 import { readQuickShareQrMode, writeQuickShareQrMode } from '@/lib/quick-share-preferences';
 import { colors, radius, spacing } from '@/theme/tokens';
@@ -50,6 +52,7 @@ export default function ShareCardScreen() {
   const [walletAvailable, setWalletAvailable] = useState<boolean | null>(null);
   const [walletBusy, setWalletBusy] = useState(false);
   const [googleWalletSaved, setGoogleWalletSaved] = useState(false);
+  const [appleWalletSaved, setAppleWalletSaved] = useState(false);
   const [walletNote, setWalletNote] = useState('');
   const [walletConfirmOpen, setWalletConfirmOpen] = useState(false);
   const [walletSuccessOpen, setWalletSuccessOpen] = useState(false);
@@ -63,6 +66,11 @@ export default function ShareCardScreen() {
   useEffect(() => {
     if (Platform.OS !== 'android' || !card.slug) return;
     void readGoogleWalletSaved(card.slug).then(setGoogleWalletSaved);
+  }, [card.slug]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios' || !card.slug) return;
+    void readAppleWalletSaved(card.slug).then(setAppleWalletSaved);
   }, [card.slug]);
 
   useEffect(() => {
@@ -166,6 +174,8 @@ export default function ShareCardScreen() {
     try {
       if (Platform.OS === 'ios') {
         await addAppleWalletPass(card.slug, session.access_token);
+        void writeAppleWalletSaved(card.slug, true);
+        setAppleWalletSaved(true);
       } else if (Platform.OS === 'android') {
         await addGoogleWalletPass(card.slug, session.access_token);
         if (!googleWalletSaved) {
@@ -178,8 +188,6 @@ export default function ShareCardScreen() {
       setWalletBusy(false);
     }
   }
-
-  const walletLabel = Platform.OS === 'ios' ? 'Add to Apple Wallet' : 'Add to Google Wallet';
 
   function confirmWalletSaved() {
     setWalletConfirmOpen(false);
@@ -285,14 +293,12 @@ export default function ShareCardScreen() {
               onPress={() => void addToWallet()}
             />
           ) : (
-            <Button
-              style={[styles.actionButton, styles.whiteActionButton]}
-              variant="secondary"
+            <AppleWalletButton
+              style={styles.actionButton}
               loading={walletBusy}
-              onPress={() => void addToWallet()}>
-              <Wallet size={18} color={colors.ink} weight="bold" />
-              {walletLabel}
-            </Button>
+              mode={appleWalletSaved ? 'view' : 'add'}
+              onPress={() => void addToWallet()}
+            />
           )
         ) : null}
         {walletNote ? <Text style={styles.walletNote}>{walletNote}</Text> : null}
@@ -439,6 +445,5 @@ const styles = StyleSheet.create({
   sharePill: { flex: 1, alignSelf: 'stretch', height: 50 },
   sharePillText: { fontSize: 15, lineHeight: 19, fontWeight: '600' },
   actionButton: { alignSelf: 'stretch' },
-  whiteActionButton: { backgroundColor: colors.white },
   helper: { color: colors.muted, fontSize: 11, textAlign: 'center' },
 });
