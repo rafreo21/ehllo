@@ -1,12 +1,17 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import * as Linking from 'expo-linking';
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
+import { completeAuthSessionFromUrl } from '@/lib/auth-session-url';
 import { getSupabase } from '@/lib/supabase';
 import { colors, spacing } from '@/theme/tokens';
 
 export default function AuthCallbackScreen() {
-  const params = useLocalSearchParams<{ code?: string | string[] }>();
+  // useLocalSearchParams only sees query params, not a #fragment — Google's
+  // redirect lands with tokens in the fragment (see auth-session-url.ts), so
+  // this needs the raw incoming URL, not expo-router's parsed params.
+  const url = Linking.useLinkingURL();
   const [message, setMessage] = useState('Finishing sign-in…');
 
   useEffect(() => {
@@ -14,23 +19,20 @@ export default function AuthCallbackScreen() {
 
     async function finish() {
       const supabase = getSupabase();
-      const rawCode = params.code;
-      const code = Array.isArray(rawCode) ? rawCode[0] : rawCode;
-
       if (!supabase) {
         if (active) setMessage('Supabase is not configured.');
         return;
       }
-      if (!code) {
+      if (!url) {
         if (active) setMessage('No sign-in code found. Request a new link or enter the 6-digit code.');
         return;
       }
 
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      const outcome = await completeAuthSessionFromUrl(supabase, url);
       if (!active) return;
 
-      if (error) {
-        setMessage(error.message || 'That sign-in link expired. Request a new one.');
+      if (!outcome.ok) {
+        setMessage(outcome.reason === 'exchange_failed' ? outcome.message : 'No sign-in code found. Request a new link or enter the 6-digit code.');
         return;
       }
 
@@ -41,7 +43,7 @@ export default function AuthCallbackScreen() {
     return () => {
       active = false;
     };
-  }, [params.code]);
+  }, [url]);
 
   return (
     <View style={styles.screen}>
