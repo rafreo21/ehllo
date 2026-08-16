@@ -73,9 +73,17 @@ export default defineConfig(async () => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
-    server: isCodexSeatbeltSandbox
-      ? { watch: { useFsEvents: false, usePolling: true } }
-      : undefined,
+    server: {
+      watch: {
+        // mobile/ is a separate React Native app living in this same repo
+        // root, with its own ~12GB node_modules — nothing in it affects this
+        // web app, but left unignored it was fully in-scope for the file
+        // watcher, growing its in-memory file-state graph for the entire
+        // session and driving the dev server's gradual slowdown.
+        ignored: ["**/mobile/**"],
+        ...(isCodexSeatbeltSandbox ? { useFsEvents: false, usePolling: true } : {}),
+      },
+    },
     optimizeDeps: {
       // Deep CSR icon imports churn often during development and can stale the dep cache.
       exclude: ["@phosphor-icons/react", ...nativeServerPackages],
