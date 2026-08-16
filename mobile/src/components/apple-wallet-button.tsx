@@ -1,9 +1,10 @@
-import { Wallet } from 'phosphor-react-native';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 const ADD_LABEL = 'Add to Apple Wallet';
 const VIEW_LABEL = 'View in Apple Wallet';
-const OFFICIAL_BADGE = require('@/assets/images/add-to-apple-wallet-badge.png');
+// Cropped from Apple's own official badge artwork (background and text
+// removed), rendered here as a plain glyph rather than the certified badge.
+const WALLET_ICON = require('@/assets/images/apple-wallet-icon.png');
 
 type AppleWalletButtonProps = {
   onPress?: () => void | Promise<void>;
@@ -14,11 +15,10 @@ type AppleWalletButtonProps = {
 };
 
 /**
- * Apple's official "Add to Apple Wallet" badge, rendered at its intrinsic
- * aspect ratio and not recolored, relabeled, cropped, or distorted — mirrors
- * how GoogleWalletButton renders Google's official primary button. "View"
- * mode has no equivalent official artwork, so it falls back to a plain
- * labeled pill sized to match GoogleWalletButton's view mode.
+ * A custom black pill — Apple's icon glyph plus real text, laid out with
+ * flexbox rather than a fixed-aspect-ratio image — so it can fill the same
+ * width as the Share button without stretching or distorting anything.
+ * Same shape/sizing as GoogleWalletButton's view mode.
  */
 export function AppleWalletButton({ onPress, loading, disabled, mode = 'add', style }: AppleWalletButtonProps) {
   const unavailable = Boolean(disabled || loading);
@@ -39,14 +39,10 @@ export function AppleWalletButton({ onPress, loading, disabled, mode = 'add', st
         style,
       ]}>
       <View style={styles.assetFrame}>
-        {viewing ? (
-          <View style={styles.content}>
-            <Wallet size={21} color="#FFFFFF" weight="fill" />
-            <Text style={styles.label}>{label}</Text>
-          </View>
-        ) : (
-          <Image source={OFFICIAL_BADGE} resizeMode="contain" style={styles.asset} accessibilityIgnoresInvertColors />
-        )}
+        <View style={styles.content}>
+          <Image source={WALLET_ICON} resizeMode="contain" style={styles.icon} accessibilityIgnoresInvertColors />
+          <Text style={styles.label}>{label}</Text>
+        </View>
         {loading ? (
           <View pointerEvents="none" style={styles.loadingOverlay}>
             <ActivityIndicator color="#FFFFFF" />
@@ -72,7 +68,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderRadius: 25,
   },
-  asset: { width: '100%', height: '100%' },
   content: {
     width: '100%',
     height: '100%',
@@ -82,6 +77,7 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: '#000000',
   },
+  icon: { width: 21, height: 21 },
   label: { color: '#FFFFFF', fontSize: 15, lineHeight: 19, fontWeight: '600' },
   loadingOverlay: {
     position: 'absolute',
