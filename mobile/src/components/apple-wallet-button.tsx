@@ -14,11 +14,12 @@ type AppleWalletButtonProps = {
 };
 
 /**
- * Apple's official "Add to Apple Wallet" badge, rendered at its intrinsic
- * aspect ratio and not recolored, relabeled, cropped, or distorted — mirrors
- * how GoogleWalletButton renders Google's official primary button. "View"
- * mode has no equivalent official artwork, so it falls back to a plain
- * labeled pill sized to match GoogleWalletButton's view mode.
+ * Apple's official "Add to Apple Wallet" badge. Apple's guidelines call for
+ * rendering it at its intrinsic aspect ratio; stretched to full width here
+ * instead, per explicit product direction, so it matches the width of the
+ * other action buttons on this screen. "View" mode has no equivalent
+ * official artwork, so it falls back to a plain labeled pill sized to
+ * match GoogleWalletButton's view mode.
  */
 export function AppleWalletButton({ onPress, loading, disabled, mode = 'add', style }: AppleWalletButtonProps) {
   const unavailable = Boolean(disabled || loading);
@@ -45,7 +46,7 @@ export function AppleWalletButton({ onPress, loading, disabled, mode = 'add', st
             <Text style={styles.label}>{label}</Text>
           </View>
         ) : (
-          <Image source={OFFICIAL_BADGE} resizeMode="contain" style={styles.asset} accessibilityIgnoresInvertColors />
+          <Image source={OFFICIAL_BADGE} resizeMode="stretch" style={styles.asset} accessibilityIgnoresInvertColors />
         )}
         {loading ? (
           <View pointerEvents="none" style={styles.loadingOverlay}>
