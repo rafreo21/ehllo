@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { HouseIcon } from "@phosphor-icons/react/dist/csr/House";
 import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
 import { ListIcon } from "@phosphor-icons/react/dist/csr/List";
-import { MicrophoneIcon } from "@phosphor-icons/react/dist/csr/Microphone";
 import { PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
@@ -20,7 +19,6 @@ import { hydrateContactsFromServer } from "../../lib/contacts-sync";
 import { hydrateEncountersFromServer } from "../../lib/encounters-sync";
 import { hydrateCardLibraryFromServer } from "../../lib/card-library-sync";
 import { NotificationBell } from "./NotificationBell";
-import { ActiveCaptureBar } from "./ActiveCaptureBar";
 
 export type AppShellActive = "home" | "people" | "cards" | "capture" | "scan" | "followups" | "settings";
 
@@ -40,11 +38,10 @@ function deriveActive(pathname: string): AppShellActive {
 
 const consumerNav = [
   ["home", "/app", HouseIcon, "Home"],
-  ["cards", "/app/cards", IdentificationCardIcon, "My card"],
-  ["capture", "/app/encounters/new", MicrophoneIcon, "Capture"],
-  ["scan", "/app/scan", QrCodeIcon, "Scan"],
-  ["followups", "/app/followups", PaperPlaneTiltIcon, "Follow-ups"],
+  ["cards", "/app/cards", IdentificationCardIcon, "My Cards"],
   ["people", "/app/people", UsersThreeIcon, "Connections"],
+  ["followups", "/app/followups", PaperPlaneTiltIcon, "Follow-ups"],
+  ["scan", "/app/scan", QrCodeIcon, "Scan"],
   ["settings", "/app/settings", UserCircleIcon, "My account"],
 ] as const;
 
@@ -98,7 +95,6 @@ export function AppShell({ children }: AppShellProps) {
 
       <section className="product-main">
         <div className="consumer-global-bell"><NotificationBell onActionableCountChange={updateActionableCount} /></div>
-        <ActiveCaptureBar />
         <header className="product-mobile-header">
           <IconButton className="menu-button" aria-label="Toggle navigation" onClick={() => setMobileNav(!mobileNav)}>
             <ListIcon size={25} weight="bold" />

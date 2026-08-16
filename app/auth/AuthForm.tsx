@@ -4,11 +4,10 @@ import { useState } from "react";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
-import { XLogoIcon } from "@phosphor-icons/react/dist/csr/XLogo";
 import { describeOtpDeliveryError } from "../../lib/auth/otp-delivery-error";
 import { appendVisitorIntentToCallback, VISITOR_DEFAULT_DESTINATION, type VisitorIntent, visitorOnboardingPath } from "../../lib/auth/visitor-intent";
 import { Button } from "../components/Button";
-import { GoogleProviderIcon, LinkedInProviderIcon } from "../components/ProviderIcons";
+import { GoogleProviderIcon } from "../components/ProviderIcons";
 import { TextField } from "../components/FormField";
 import { createClient } from "../../lib/supabase/client";
 
@@ -210,16 +209,6 @@ export function AuthForm({
           <GoogleProviderIcon />
           {loadingProvider === "google" ? "Connecting to Google…" : "Continue with Google"}
           <span>{providerAvailability?.google === false ? "Soon" : "Account"}</span>
-        </Button>
-        <Button className="provider-button" fullWidth variant="secondary" disabled={Boolean(loadingProvider) || providerAvailability?.linkedin_oidc === false} onClick={() => void signInWithProvider("linkedin_oidc")}>
-          <LinkedInProviderIcon />
-          {loadingProvider === "linkedin_oidc" ? "Connecting to LinkedIn…" : "Continue with LinkedIn"}
-          <span>{providerAvailability?.linkedin_oidc === false ? "Soon" : "Profile"}</span>
-        </Button>
-        <Button className="provider-button" fullWidth variant="secondary" disabled={Boolean(loadingProvider) || providerAvailability?.x === false} onClick={() => void signInWithProvider("x")}>
-          <XLogoIcon size={20} weight="bold" />
-          {loadingProvider === "x" ? "Connecting to X…" : "Continue with X"}
-          <span>{providerAvailability?.x === false ? "Soon" : "Profile"}</span>
         </Button>
       </div>
       {providerError && <p className="auth-provider-error" role="alert">{providerError}</p>}

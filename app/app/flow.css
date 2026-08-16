@@ -395,12 +395,29 @@
 .timeline-marker { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 999px; display: grid; place-items: center; color: var(--p-navy); background: var(--p-ice); }
 .timeline-marker.completed { background: var(--p-mint); }
 .connections-count { display: block; margin-top: 6px; color: var(--p-muted); font-size: 13px; }
+.connections-list { display: grid; gap: 8px; }
+.connections-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid var(--p-line); border-radius: 10px; background: white; color: var(--p-navy); text-decoration: none; }
+.connections-row:hover { background: var(--p-ice); }
+.connections-copy { min-width: 0; display: grid; gap: 2px; }
+.connections-copy strong { font-size: 14px; }
+.connections-copy span { display: block; color: var(--p-muted); font-size: 12px; }
+.connections-copy small { display: block; color: var(--p-muted); font-size: 11px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .connections-card-cta { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 12px; background: var(--p-navy); color: white; text-decoration: none; }
 .connections-card-cta strong { display: block; font-size: 15px; }
 .connections-card-cta span { color: #C5D3BF; font-size: 12px; }
 .connections-card-cta-muted { background: white; color: var(--p-navy); border: 1px solid rgba(22,51,0,.08); }
 .connections-card-cta-muted span { color: var(--p-muted); }
 .header-actions-row { display: flex; align-items: center; gap: 8px; }
+
+.capture-promo { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 12px; background: var(--p-green); color: var(--p-navy); text-decoration: none; }
+.capture-promo-pending { cursor: default; }
+.capture-promo-icon { width: 38px; height: 38px; flex: 0 0 38px; display: grid; place-items: center; border-radius: 50%; background: white; color: var(--p-navy); }
+.capture-promo-copy { flex: 1; min-width: 0; }
+.capture-promo-copy strong { display: block; font-size: 14px; }
+.capture-promo-copy span { display: block; margin-top: 2px; color: var(--p-muted); font-size: 12px; line-height: 1.4; }
+.capture-promo-chevron { flex: 0 0 auto; color: var(--p-muted); }
+.capture-promo-compact .capture-promo-icon { width: 32px; height: 32px; flex-basis: 32px; }
+.capture-promo-compact .capture-promo-copy strong { font-size: 13px; }
 
 @media (max-width: 720px) {
   .connections-modal-backdrop { place-items: end center; }

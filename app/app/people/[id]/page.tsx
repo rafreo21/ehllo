@@ -11,6 +11,7 @@ import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import { PageSkeleton, StatusMessage } from "../../../components/AsyncState";
 import { Button, LinkButton } from "../../../components/Button";
+import { CapturePromoBanner } from "../../../components/CapturePromoBanner";
 import {
   deleteConnection,
   fetchAllConnectionsMerged,
@@ -173,9 +174,6 @@ export default function ConnectionDetailPage() {
     }
   }
 
-  const captureHref = connection
-    ? `/app/encounters/new?personName=${encodeURIComponent(connection.name)}&sourceId=${encodeURIComponent(connection.sourceId)}${connection.email ? `&personEmail=${encodeURIComponent(connection.email)}` : ""}${connection.source === "contact" ? `&contact=${encodeURIComponent(connection.sourceId)}` : ""}${connection.source === "inbound" ? `&exchangeId=${encodeURIComponent(connection.sourceId)}` : ""}`
-    : "/app/encounters/new";
   const followUpHref = connection
     ? `/app/followups/new?personName=${encodeURIComponent(connection.name)}&sourceId=${encodeURIComponent(connection.sourceId)}${connection.email ? `&personEmail=${encodeURIComponent(connection.email)}` : ""}${connection.source === "contact" ? `&contactId=${encodeURIComponent(connection.sourceId)}` : ""}${connection.source === "inbound" ? `&exchangeId=${encodeURIComponent(connection.sourceId)}` : ""}`
     : "/app/followups/new";
@@ -212,10 +210,11 @@ export default function ConnectionDetailPage() {
                 ) : null}
               </div>
               <div className="flow-heading-actions">
-                <LinkButton variant="secondary" href={followUpHref}><PlusIcon size={16} weight="bold" />Follow-up</LinkButton>
-                <LinkButton href={captureHref}><MicrophoneIcon size={16} weight="fill" />Capture</LinkButton>
+                <LinkButton href={followUpHref}><PlusIcon size={16} weight="bold" />Follow-up</LinkButton>
               </div>
             </div>
+
+            <CapturePromoBanner compact />
 
             <section className="connections-section relationship-timeline">
               <div className="connections-section-head">
@@ -238,10 +237,7 @@ export default function ConnectionDetailPage() {
                   ))}
                 </div>
               ) : (
-                <LinkButton variant="secondary" href={captureHref}>
-                  <MicrophoneIcon size={16} weight="bold" />
-                  No meetings yet, capture a conversation
-                </LinkButton>
+                <p className="connections-count">No meetings recorded yet.</p>
               )}
             </section>
 

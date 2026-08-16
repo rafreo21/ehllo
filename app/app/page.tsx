@@ -4,12 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
 import { ListChecksIcon } from "@phosphor-icons/react/dist/csr/ListChecks";
-import { MicrophoneIcon } from "@phosphor-icons/react/dist/csr/Microphone";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
 import { LinkButton } from "../components/Button";
 import { PageSkeleton } from "../components/AsyncState";
+import { CapturePromoBanner } from "../components/CapturePromoBanner";
 import { useAppUser } from "../components/AppUserContext";
 import {
   connectionAvatarUrl,
@@ -212,11 +212,12 @@ export default function HomeDashboard() {
             ) : null}
 
             <div className="home-quick-actions">
-              <LinkButton href="/app/encounters/new"><MicrophoneIcon size={17} weight="fill" />Capture context</LinkButton>
-              <LinkButton variant="secondary" href="/app/cards#share"><QrCodeIcon size={17} weight="bold" />Share my card</LinkButton>
+              <LinkButton href="/app/cards#share"><QrCodeIcon size={17} weight="bold" />Share my card</LinkButton>
               <LinkButton variant="secondary" href="/app/followups/new"><ListChecksIcon size={17} weight="bold" />Quick follow-up</LinkButton>
               <LinkButton variant="secondary" href="/app/scan"><ScanIcon size={17} weight="bold" />Quick scan</LinkButton>
             </div>
+
+            <CapturePromoBanner />
 
             <section className="home-section">
               <div className="home-section-head">
