@@ -4,10 +4,6 @@ import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View, type Style
 const ADD_LABEL = 'Add to Apple Wallet';
 const VIEW_LABEL = 'View in Apple Wallet';
 const OFFICIAL_BADGE = require('@/assets/images/add-to-apple-wallet-badge.png');
-// Badge's own intrinsic aspect ratio (110.095 x 34.016 in its source SVG) —
-// scaling it proportionally by width keeps it undistorted, unlike a fixed
-// box that leaves it looking small and adrift in a full-width touch target.
-const BADGE_ASPECT_RATIO = 110.095 / 34.016;
 
 type AppleWalletButtonProps = {
   onPress?: () => void | Promise<void>;
@@ -42,7 +38,7 @@ export function AppleWalletButton({ onPress, loading, disabled, mode = 'add', st
         unavailable && styles.disabledState,
         style,
       ]}>
-      <View style={[styles.assetFrame, viewing ? styles.pillFrame : styles.badgeFrame]}>
+      <View style={styles.assetFrame}>
         {viewing ? (
           <View style={styles.content}>
             <Wallet size={21} color="#FFFFFF" weight="fill" />
@@ -69,13 +65,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   assetFrame: {
+    width: '100%',
+    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     borderRadius: 25,
   },
-  pillFrame: { width: '100%', height: 50 },
-  badgeFrame: { width: '100%', aspectRatio: BADGE_ASPECT_RATIO, maxHeight: 64 },
   asset: { width: '100%', height: '100%' },
   content: {
     width: '100%',
