@@ -67,8 +67,29 @@ export async function loadSharp(): Promise<SharpModule> {
   // Node's CommonJS resolver honours the package's own entry points, so ask
   // it instead. copy-native-server-deps.mjs guarantees the package is on disk
   // by this point. Imported dynamically so workerd never evaluates node:module.
+  //
+  // Anchor matters more than it looks. import.meta.url survives bundling as
+  // the *build* path (/vercel/path0/lib/sharp-runtime.ts), a directory that
+  // does not exist at runtime and therefore has no node_modules to walk up
+  // into — so resolving from it fails with a bare "Cannot find module 'sharp'"
+  // even though the package is sitting in /var/task/node_modules. Try the
+  // function's working directory too, and the explicit CommonJS entry point
+  // that the resolver's own error message pointed at.
   const { createRequire } = await import("node:module");
-  const requireFromHere = createRequire(import.meta.url);
-  const mod = requireFromHere("sharp") as SharpModule & { default?: SharpModule };
-  return mod.default ?? mod;
+  const anchors = [import.meta.url, `file://${process.cwd()}/index.mjs`];
+  const specifiers = ["sharp", "sharp/dist/index.cjs", "sharp/lib/index.js"];
+
+  let lastError: unknown;
+  for (const anchor of anchors) {
+    for (const specifier of specifiers) {
+      try {
+        const mod = createRequire(anchor)(specifier) as SharpModule & { default?: SharpModule };
+        const resolved = mod.default ?? mod;
+        if (typeof resolved === "function") return resolved;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+  }
+  throw lastError ?? new Error("sharp could not be resolved from any known location.");
 }
