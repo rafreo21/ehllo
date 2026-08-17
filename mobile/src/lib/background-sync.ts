@@ -3,7 +3,9 @@ import { AppState } from 'react-native';
 
 import { onReconnect } from '@/lib/connectivity';
 
-const manualSyncListeners = new Set<() => void>();
+type ForegroundSyncListener = () => void | Promise<void>;
+
+const manualSyncListeners = new Set<ForegroundSyncListener>();
 let foregroundSyncTail = Promise.resolve();
 
 /**
@@ -16,9 +18,12 @@ export function runSerializedForegroundWork(run: () => void | Promise<void>) {
   return result;
 }
 
-/** Requests an immediate pass from every globally mounted foreground sync manager. */
-export function requestForegroundSync() {
-  for (const listener of manualSyncListeners) listener();
+/**
+ * Requests an immediate pass from every globally mounted foreground sync manager.
+ * Returns when all managers have accepted (or rejected) the request.
+ */
+export async function requestForegroundSync() {
+  await Promise.allSettled([...manualSyncListeners].map((listener) => Promise.resolve().then(() => listener())));
 }
 
 // Same trigger shape as card-context.tsx's sync effects (fire on mount,
@@ -29,7 +34,7 @@ export function useForegroundSync(enabled: boolean, run: () => void | Promise<vo
   const enabledRef = useRef(enabled);
   const runningRef = useRef(false);
   const rerunRequestedRef = useRef(false);
-  const triggerRef = useRef<() => void>(() => undefined);
+  const triggerRef = useRef<() => Promise<void>>(async () => undefined);
 
   useEffect(() => {
     runRef.current = run;
@@ -40,7 +45,7 @@ export function useForegroundSync(enabled: boolean, run: () => void | Promise<vo
   }, [enabled]);
 
   useEffect(() => {
-    triggerRef.current = () => {
+    triggerRef.current = async () => {
       if (!enabledRef.current) return;
       if (runningRef.current) {
         rerunRequestedRef.current = true;
@@ -48,15 +53,16 @@ export function useForegroundSync(enabled: boolean, run: () => void | Promise<vo
       }
 
       runningRef.current = true;
-      void runSerializedForegroundWork(() => runRef.current())
-        .catch(() => undefined)
-        .finally(() => {
-          runningRef.current = false;
-          if (rerunRequestedRef.current && enabledRef.current) {
-            rerunRequestedRef.current = false;
-            triggerRef.current();
-          }
-        });
+      try {
+        await runSerializedForegroundWork(() => runRef.current())
+          .catch(() => undefined);
+      } finally {
+        runningRef.current = false;
+        if (rerunRequestedRef.current && enabledRef.current) {
+          rerunRequestedRef.current = false;
+          void triggerRef.current();
+        }
+      }
     };
   }, []);
 

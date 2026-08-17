@@ -239,7 +239,7 @@ export function CardProvider({ children }: PropsWithChildren) {
         let reconciledCards = localCards;
         for (const local of localCards.filter((card) => card.id && dirtyCardIdsRef.current.has(card.id))) {
           try {
-            const saved = await saveRemoteCard(local);
+            const saved = await saveRemoteCard(local, { strictImages: true });
             reconciledCards = reconciledCards.map((card) => card.id === local.id ? saved : card);
             await setCardDirty(local.id!, false, saved.id);
             await clearSyncFailure(syncFailureKey.cardChange(local.id!));

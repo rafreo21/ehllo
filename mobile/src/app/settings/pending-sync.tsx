@@ -41,10 +41,12 @@ export default function PendingSyncScreen() {
 
   async function retryNow() {
     setRetrying(true);
-    requestForegroundSync();
-    setTimeout(() => {
-      void refresh().finally(() => setRetrying(false));
-    }, 1_500);
+    await requestForegroundSync();
+    try {
+      await refresh();
+    } finally {
+      setRetrying(false);
+    }
   }
 
   const rows = [
