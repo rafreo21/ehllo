@@ -4,8 +4,25 @@ type AuthOtpError = {
   status?: number;
 };
 
+function extractNestedMessage(message: string): string {
+  const trimmed = message.trim();
+  const firstBrace = trimmed.indexOf("{");
+  if (firstBrace < 0) return "";
+
+  try {
+    const parsed = JSON.parse(trimmed.slice(firstBrace)) as {
+      error?: { message?: string };
+      message?: string;
+    };
+    const nested = parsed.error?.message ?? parsed.message;
+    return typeof nested === "string" ? nested.trim() : "";
+  } catch {
+    return "";
+  }
+}
+
 export function describeOtpDeliveryError(error: AuthOtpError | null | undefined) {
-  const message = error?.message?.trim() || "";
+  const message = error?.message?.trim() || extractNestedMessage(error?.message || "");
   const lower = message.toLowerCase();
 
   if (
@@ -19,9 +36,15 @@ export function describeOtpDeliveryError(error: AuthOtpError | null | undefined)
   if (
     lower.includes("only send testing emails")
     || lower.includes("verify a domain")
+    || lower.includes("testing emails")
+    || lower.includes("send test")
+    || lower.includes("unverified domain")
+    || lower.includes("domain is not verified")
+    || (lower.includes("not verified") && lower.includes("from"))
+    || lower.includes("to your own email address")
     || lower.includes("validation_error")
   ) {
-    return "Sign-in codes can only be emailed after ehllo verifies its sender domain. Try again shortly, or use Continue with Google if available.";
+    return "Sign-in codes are in email test mode. Only verified sender addresses can receive code emails right now.";
   }
 
   if (

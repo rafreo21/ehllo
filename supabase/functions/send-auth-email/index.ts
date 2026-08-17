@@ -78,7 +78,16 @@ Deno.serve(async (req) => {
     return Response.json({}, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to send auth email";
-    const status = message.toLowerCase().includes("only send testing emails") ? 422 : 500;
+    const lower = message.toLowerCase();
+    const testModeIndicators =
+      lower.includes("only send testing emails") ||
+      lower.includes("only send test") ||
+      lower.includes("to your own email address") ||
+      lower.includes("unverified domain") ||
+      lower.includes("domain is not verified") ||
+      (lower.includes("not verified") && lower.includes("from"));
+
+    const status = testModeIndicators ? 422 : 500;
     return Response.json({ error: { message } }, { status });
   }
 });

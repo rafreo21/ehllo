@@ -2,7 +2,19 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 function describeOtpDeliveryError(error) {
-  const message = error?.message?.trim() || "";
+  function extractNestedMessage(message) {
+    const trimmed = message.trim();
+    const firstBrace = trimmed.indexOf("{");
+    if (firstBrace < 0) return "";
+    try {
+      const parsed = JSON.parse(trimmed.slice(firstBrace));
+      return parsed.error?.message || parsed.message || "";
+    } catch {
+      return "";
+    }
+  }
+
+  const message = error?.message?.trim() || extractNestedMessage(error?.message || "");
   const lower = message.toLowerCase();
 
   if (
@@ -15,10 +27,12 @@ function describeOtpDeliveryError(error) {
 
   if (
     lower.includes("only send testing emails")
+    || lower.includes("testing emails")
+    || lower.includes("to your own email address")
     || lower.includes("verify a domain")
     || lower.includes("validation_error")
   ) {
-    return "Sign-in codes can only be emailed after ehllo verifies its sender domain. Try again shortly, or use Continue with Google if available.";
+    return "Sign-in codes are in email test mode. Only verified sender addresses can receive code emails right now.";
   }
 
   if (message && message.length < 180 && !lower.includes("internal")) {
@@ -32,7 +46,7 @@ test("maps Resend sandbox errors to a helpful sign-in message", () => {
   const message = describeOtpDeliveryError({
     message: "You can only send testing emails to your own email address (rafreo21@gmail.com).",
   });
-  assert.match(message, /sender domain/i);
+  assert.match(message, /verified|test/i);
 });
 
 test("maps rate limit errors", () => {
@@ -42,4 +56,11 @@ test("maps rate limit errors", () => {
     message: "Email rate limit exceeded",
   });
   assert.match(message, /too many sign-in attempts/i);
+});
+
+test("extracts nested hook errors", () => {
+  const message = describeOtpDeliveryError({
+    message: `Error invoking edge function: {"error":{"message":"You can only send testing emails to your own email address."}}`,
+  });
+  assert.match(message, /sender/i);
 });
