@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check as CheckIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { Copy as CopyIcon } from "react-feather";
 import { Mail as EnvelopeSimpleIcon } from "react-feather";
@@ -505,7 +504,7 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
                   }));
                 }}
                 aria-label={action.status === "completed" ? "Mark open" : canToggle ? "Mark complete" : "Confirm review to activate this follow-up first"}
-              >{action.status === "completed" ? <CheckIcon size={16} strokeWidth={3} /> : <CheckCircleIcon size={22} />}</button>
+              ><CheckCircleIcon size={22} /></button>
               <div className="action-copy"><strong>{action.title}</strong><small>{actionOwnerLabel(action)}{action.dueAt ? ` · due ${action.dueAt}` : ""}</small></div>
               {editingActionId === action.id ? (
                 <div className="action-inline-editor">
