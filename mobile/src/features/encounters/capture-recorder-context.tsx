@@ -91,18 +91,32 @@ export function CaptureRecorderProvider({ children }: PropsWithChildren) {
         ? 'recording'
         : null;
 
+  // pauseOrResume/stopRecording aren't guaranteed stable across renders, and
+  // recorder.seconds changes every tick — so reading them directly here
+  // would re-run this effect (and re-register with a fresh seconds:0
+  // snapshot) on every single second, producing a visible flicker back to
+  // 00:00 before the real value from the effect below lands. Read them from
+  // a ref instead so this only re-registers on genuine status transitions;
+  // ongoing per-second updates flow through updateActiveCaptureSnapshot
+  // below, which never resets seconds.
+  const controlsRef = useRef({ pauseOrResume: recorder.pauseOrResume, finish: recorder.stopRecording });
+  useLayoutEffect(() => {
+    controlsRef.current = { pauseOrResume: recorder.pauseOrResume, finish: recorder.stopRecording };
+  }, [recorder.pauseOrResume, recorder.stopRecording]);
+
   useEffect(() => {
     const encounterId = handlersRef.current.encounterId;
     if (!activeStatus || !encounterId) return;
     return registerActiveCaptureController({
-      pauseOrResume: recorder.pauseOrResume,
-      finish: recorder.stopRecording,
+      pauseOrResume: () => controlsRef.current.pauseOrResume(),
+      finish: () => controlsRef.current.finish(),
     }, {
       encounterId,
       status: activeStatus,
-      seconds: 0,
+      seconds: recorder.seconds,
     });
-  }, [activeStatus, recorder.pauseOrResume, recorder.stopRecording]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeStatus]);
 
   const checkpointRef = useRef({ activeStatus, seconds: recorder.seconds });
   useLayoutEffect(() => {
