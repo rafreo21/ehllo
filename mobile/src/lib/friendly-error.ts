@@ -3,9 +3,26 @@ import { isNetworkError } from '@/lib/mobile-api';
 // Maps raw thrown errors (network exceptions, Supabase/Postgres errors, JS
 // runtime errors) to copy a non-technical user can act on. Deliberately
 // thrown app errors with already-friendly text pass through unchanged.
+// An error the app authored specifically to be read by a user. describeError
+// returns its text verbatim instead of running the heuristics below, which
+// would otherwise mangle any message that legitimately contains an HTTP status
+// ("... (wallet 503)") into a generic server-error sentence.
+export class FriendlyError extends Error {
+  readonly friendly = true;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'FriendlyError';
+  }
+}
+
 export function describeError(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
   const message = (error instanceof Error ? error.message : String(error ?? '')).trim();
   const lower = message.toLowerCase();
+
+  if (message && typeof error === 'object' && error !== null && (error as { friendly?: boolean }).friendly) {
+    return message;
+  }
 
   if (
     isNetworkError(error)

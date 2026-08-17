@@ -60,6 +60,14 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
       },
     });
   } catch (error) {
+    // Returning the reason only in the response body kept every pass-signing
+    // failure out of Vercel's runtime errors, so a broken deployment looked
+    // identical to a healthy one until someone tapped the button on a phone.
+    console.error("[apple-wallet] pass build failed", {
+      slug: normalized,
+      name: error instanceof Error ? error.name : typeof error,
+      message: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({
       error: error instanceof Error ? error.message : "We couldn’t sign this Wallet pass.",
     }, { status: 500 });

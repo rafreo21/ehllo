@@ -4,6 +4,16 @@
  * runs real Node.js and is unaffected.
  */
 export function sharpAvailable() {
+  // `VERCEL=1` only reaches the runtime when the project opts into Vercel's
+  // system environment variables, and `NITRO_PRESET` is build-time only. With
+  // neither present every image path silently downgraded in a deployed
+  // environment: branded QR codes dropped their logo without erroring, and
+  // Wallet passes threw a message claiming to be about a "local dev sandbox".
+  // EHLLO_SHARP is an explicit, deployment-controlled answer that does not
+  // depend on either.
+  const override = process.env.EHLLO_SHARP?.trim();
+  if (override === "1") return true;
+  if (override === "0") return false;
   return process.env.VERCEL === "1" || process.env.NITRO_PRESET === "vercel";
 }
 

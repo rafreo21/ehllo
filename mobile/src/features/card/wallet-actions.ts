@@ -3,6 +3,7 @@ import * as Sharing from 'expo-sharing';
 import * as WebBrowser from 'expo-web-browser';
 import { Linking, Platform } from 'react-native';
 
+import { FriendlyError } from '@/lib/friendly-error';
 import { mobileFetch } from '@/lib/mobile-api';
 
 type WalletJson = {
@@ -20,6 +21,17 @@ async function readWalletError(response: Response, fallback: string) {
   } catch {
     return fallback;
   }
+}
+
+// A wallet failure is almost always a server-side configuration problem, and
+// the server already says which one. Keep the HTTP status attached so a tester
+// screenshot distinguishes "not configured" (503) from "signing failed" (500)
+// from "publish your card first" (404) — previously every one of these
+// collapsed into the same unactionable sentence on the device.
+function walletFailure(status: number, message: string) {
+  const trimmed = message.trim();
+  const suffix = trimmed && !/\.$/.test(trimmed) ? "." : "";
+  return new FriendlyError(`${trimmed}${suffix} (wallet ${status})`);
 }
 
 export async function fetchWalletAvailability(slug: string, accessToken: string) {
@@ -51,9 +63,9 @@ export async function fetchWalletAvailability(slug: string, accessToken: string)
 
 export async function addGoogleWalletPass(slug: string, accessToken: string) {
   const response = await mobileFetch(`/api/mobile/wallet/google/${encodeURIComponent(slug)}`, accessToken);
-  const payload = await response.json() as WalletJson;
+  const payload = await response.json().catch(() => ({}) as WalletJson) as WalletJson;
   if (!response.ok || !payload.saveUrl) {
-    throw new Error(payload.error || 'Google Wallet is not available right now.');
+    throw walletFailure(response.status, payload.error || 'Google Wallet is not available right now');
   }
   if (Platform.OS === 'android') {
     // The save URL is a web handoff into Google Wallet. A browser/custom-tab
@@ -74,13 +86,13 @@ export async function addGoogleWalletPass(slug: string, accessToken: string) {
 
 export async function addAppleWalletPass(slug: string, accessToken: string) {
   if (Platform.OS !== 'ios') {
-    throw new Error('Apple Wallet passes are available on iPhone.');
+    throw new FriendlyError('Apple Wallet passes are available on iPhone.');
   }
 
   const { readEnv } = await import('@/lib/env');
   const env = readEnv();
   const base = env?.publicCardBaseUrl;
-  if (!base) throw new Error('ehllo API URL is not configured.');
+  if (!base) throw new FriendlyError('ehllo API URL is not configured.');
 
   const downloadUrl = `${base}/api/mobile/wallet/apple/${encodeURIComponent(slug)}`;
   const path = `${FileSystem.cacheDirectory}${slug}.pkpass`;
@@ -89,16 +101,33 @@ export async function addAppleWalletPass(slug: string, accessToken: string) {
   });
 
   if (result.status !== 200) {
-    const response = await mobileFetch(`/api/mobile/wallet/apple/${encodeURIComponent(slug)}`, accessToken);
-    throw new Error(await readWalletError(response, 'Apple Wallet is not available right now. Publish your card first.'));
+    // downloadAsync already wrote the error body to disk. Read that rather
+    // than issuing a second request, which could race a redeploy and report a
+    // different failure than the one that actually happened.
+    let message = '';
+    try {
+      const body = await FileSystem.readAsStringAsync(path);
+      message = (JSON.parse(body) as WalletJson).error ?? '';
+    } catch {
+      const response = await mobileFetch(`/api/mobile/wallet/apple/${encodeURIComponent(slug)}`, accessToken);
+      message = await readWalletError(response, '');
+    }
+    throw walletFailure(result.status, message || 'Apple Wallet is not available right now');
   }
 
   if (!(await Sharing.isAvailableAsync())) {
-    throw new Error('Sharing is not available on this device.');
+    throw new FriendlyError('Sharing is not available on this device.');
   }
 
-  await Sharing.shareAsync(path, {
-    UTI: 'com.apple.pkpass',
-    mimeType: 'application/vnd.apple.pkpass',
-  });
+  try {
+    await Sharing.shareAsync(path, {
+      UTI: 'com.apple.pkpass',
+      mimeType: 'application/vnd.apple.pkpass',
+    });
+  } catch (error) {
+    // The pass downloaded and signed correctly; only the hand-off to Wallet
+    // failed. Say so, because the fix is entirely different from a server one.
+    const detail = error instanceof Error ? error.message : String(error ?? '');
+    throw new FriendlyError(`The pass was created but iOS would not open it${detail ? `: ${detail}` : '.'}`);
+  }
 }
