@@ -38,6 +38,7 @@ import { formatDueLabel } from '@/lib/due-date';
 import { openEmailCompose } from '@/lib/email-compose';
 import { describeError } from '@/lib/friendly-error';
 import { readEnv } from '@/lib/env';
+import { normalizeTranscriptForExtraction } from '@/lib/transcript-cleanup';
 import { buildRecordingShareEmail, formatMeetingEmailDate } from '@/lib/recording-email';
 import {
   CLOUD_RECORDING_RETENTION_DAYS,
@@ -158,7 +159,15 @@ export default function CaptureDetailScreen() {
       try {
         const nextEncounter = await getEncounter(session.access_token!, id);
         if (cancelled) return;
-        setEncounter(nextEncounter);
+        // A recording too short to send for AI extraction (see
+        // handleTranscriptFinalized in capture/new.tsx) can reach this
+        // review screen with an empty sharedSummary and no explanation —
+        // seed it from the transcript itself rather than leaving the user
+        // stuck typing a summary from a blank field before they can confirm.
+        const seededSummary = !nextEncounter.sharedSummary.trim() && nextEncounter.transcript.trim()
+          ? normalizeTranscriptForExtraction(nextEncounter.transcript.trim())
+          : nextEncounter.sharedSummary;
+        setEncounter({ ...nextEncounter, sharedSummary: seededSummary });
 
         const uri = await resolveEncounterRecordingUri(id, nextEncounter.recording);
         if (cancelled) return;

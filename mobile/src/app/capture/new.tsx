@@ -429,12 +429,22 @@ export default function CaptureWizardScreen() {
 
   const handleTranscriptFinalized = useCallback((transcriptValue: string) => {
     const clean = normalizeTranscriptForExtraction(transcriptValue.trim());
-    if (clean.length < 20) return;
+    if (clean.length < 20) {
+      // Too short to send for AI extraction, but there's still something
+      // said — use it as the starting share summary instead of leaving the
+      // field silently blank (previously nothing populated it and nothing
+      // told the user why, so "confirm review" appeared to demand a summary
+      // out of nowhere for short recordings).
+      if (clean && !draftRef.current.sharedSummary.trim()) {
+        updateDraft({ sharedSummary: clean });
+      }
+      return;
+    }
     if (draftRef.current.step >= 1 && generationStatus !== 'generating') {
       generationKickoffRef.current = '';
       void generateMeetingContext(clean);
     }
-  }, [generateMeetingContext, generationStatus]);
+  }, [generateMeetingContext, generationStatus, updateDraft]);
 
   const transcribeFromServer = useCallback(async (uri: string, meta?: ImportRecordingMeta) => {
     if (!session?.access_token) {
