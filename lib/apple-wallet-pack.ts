@@ -1,8 +1,5 @@
 import { createHash } from "node:crypto";
-import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import forge from "node-forge";
 import JSZip from "jszip";
 
 import { buildApplePassJson, walletIconBuffers } from "./apple-wallet-pass";
@@ -24,42 +21,42 @@ async function fetchImageBuffer(url: string) {
   }
 }
 
+// Signs with a pure-JS PKCS#7/SMIME implementation instead of shelling out to
+// the system `openssl` CLI — that binary isn't guaranteed to exist in
+// Vercel's Node serverless runtime (it's a separate thing from the OpenSSL
+// library Node's own crypto module links against), which was causing this
+// to 500 on every request in production while working fine on a dev machine
+// that happens to have the CLI installed. `-nodetach` in the old openssl
+// command matches `detached: false` here — both produce an opaque signature
+// with the manifest content embedded.
 function signManifest(manifestContent: string, certs: AppleWalletCerts) {
-  const dir = mkdtempSync(join(tmpdir(), "aftermeet-pass-"));
-  try {
-    writeFileSync(join(dir, "manifest.json"), manifestContent);
-    writeFileSync(join(dir, "wwdr.pem"), certs.wwdr);
-    writeFileSync(join(dir, "signer.pem"), certs.signerCert);
-    writeFileSync(join(dir, "key.pem"), certs.signerKey);
-    const args = [
-      "smime",
-      "-binary",
-      "-sign",
-      "-certfile",
-      join(dir, "wwdr.pem"),
-      "-signer",
-      join(dir, "signer.pem"),
-      "-inkey",
-      join(dir, "key.pem"),
-      "-in",
-      join(dir, "manifest.json"),
-      "-out",
-      join(dir, "signature"),
-      "-outform",
-      "DER",
-      "-nodetach",
-    ];
-    if (certs.signerKeyPassphrase) {
-      args.push("-passin", `pass:${certs.signerKeyPassphrase}`);
-    }
-    const result = spawnSync("openssl", args, { encoding: "buffer" });
-    if (result.status !== 0) {
-      throw new Error(result.stderr?.toString() || "Apple Wallet signing failed.");
-    }
-    return readFileSync(join(dir, "signature"));
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
+  const signerCert = forge.pki.certificateFromPem(certs.signerCert);
+  const wwdrCert = forge.pki.certificateFromPem(certs.wwdr);
+  const privateKey = certs.signerKeyPassphrase
+    ? forge.pki.decryptRsaPrivateKey(certs.signerKey, certs.signerKeyPassphrase)
+    : forge.pki.privateKeyFromPem(certs.signerKey);
+  if (!privateKey) throw new Error("Could not read the Apple Wallet signer key.");
+
+  const p7 = forge.pkcs7.createSignedData();
+  p7.content = forge.util.createBuffer(manifestContent, "utf8");
+  p7.addCertificate(signerCert);
+  p7.addCertificate(wwdrCert);
+  p7.addSigner({
+    key: privateKey,
+    certificate: signerCert,
+    digestAlgorithm: forge.pki.oids.sha256,
+    authenticatedAttributes: [
+      { type: forge.pki.oids.contentType, value: forge.pki.oids.data },
+      { type: forge.pki.oids.messageDigest },
+      // @types/node-forge only declares `value` as string, but forge's own
+      // ASN.1 conversion for signingTime expects a real Date at runtime.
+      { type: forge.pki.oids.signingTime, value: new Date() as unknown as string },
+    ],
+  });
+  p7.sign({ detached: false });
+
+  const der = forge.asn1.toDer(p7.toAsn1()).getBytes();
+  return Buffer.from(der, "binary");
 }
 
 export async function buildAppleWalletPass(card: WalletCardPayload, certs: AppleWalletCerts) {

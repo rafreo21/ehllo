@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { ArrowRight as ArrowRightIcon } from "react-feather";
@@ -169,6 +169,7 @@ const steps = [
   { label: "Contact methods", Icon: PlusIcon },
   { label: "Review", Icon: CheckCircleIcon },
 ];
+const isPublishedCard = (card: CardDraft) => card.status === "published" || Boolean(card.publishedAt);
 
 function isCreateFlow(search: string) {
   const params = new URLSearchParams(search);
@@ -180,6 +181,7 @@ function loadDraft(search = "") {
   try {
     let cards = readCardLibrary(localStorage);
     const params = new URLSearchParams(search);
+    const requestedId = params.get("id");
     if (isCreateFlow(search) && cards.length < MAX_CARDS) {
       const created = createLibraryCard({
         ...initialDraft,
@@ -194,10 +196,11 @@ function loadDraft(search = "") {
       });
       cards = upsertLibraryCard(localStorage, created);
       window.history.replaceState(null, "", `/app/card/edit?id=${created.id}`);
+      setActiveCardId(localStorage, created.id);
       return created as CardDraft;
     }
-    const requestedId = params.get("id") || getActiveCardId(localStorage, cards);
-    const selected = cards.find((card) => card.id === requestedId) || cards[0];
+    const requestedIdOrActive = requestedId || getActiveCardId(localStorage, cards);
+    const selected = cards.find((card) => card.id === requestedIdOrActive) || cards[0];
     if (selected) {
       setActiveCardId(localStorage, selected.id);
       return { ...initialDraft, ...selected } as CardDraft;
@@ -220,54 +223,59 @@ function loadDraft(search = "") {
 export default function CardEditor() {
   const searchParams = useSearchParams();
   const searchString = searchParams.toString();
-  // The create flow replaces the URL to ?id=<new-id> right after the draft
-  // is created (so a refresh doesn't create yet another card). That replace
-  // re-triggers the hydration effect below with a searchString that no
-  // longer looks like a create flow, so isCreating is only ever allowed to
-  // flip true -> once a create flow is detected it stays "creating" for the
-  // rest of this page's lifetime, even once the id-based URL lands.
   const [isCreating, setIsCreating] = useState(false);
-  const setIsCreatingSticky = (value: boolean) => setIsCreating((current) => current || value);
   const [draft, setDraft] = useState<CardDraft>(initialDraft);
   const [hydrated, setHydrated] = useState(false);
   const [step, setStep] = useState(0);
   const [saved, setSaved] = useState(false);
   const [publishedFingerprint, setPublishedFingerprint] = useState("");
+  const [hasEditBaseline, setHasEditBaseline] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [showLeavePrompt, setShowLeavePrompt] = useState(false);
   const [editing, setEditing] = useState<ContactMethod | null>(null);
   const [methodError, setMethodError] = useState("");
   const photoInput = useRef<HTMLInputElement>(null);
   const logoInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
+  const hasUnpublishedRef = useRef(false);
+  const pendingNavigationRef = useRef<null | (() => void)>(null);
+  const suppressBeforeUnloadRef = useRef(false);
 
   useEffect(() => {
+    const requestedSearch = searchString;
     void hydrateCardLibraryFromServer().then(() => {
-      const loaded = loadDraft(searchString);
+      const loaded = loadDraft(requestedSearch);
+      const activeSearch = typeof window === "undefined" ? requestedSearch : window.location.search;
+      const requestedId = new URLSearchParams(activeSearch).get("id");
+      const creatingFlow = isCreateFlow(activeSearch);
       setDraft(loaded);
-      if (loaded.status === "published") {
-        setPublishedFingerprint(cardPublishFingerprint(loaded));
-        setSaved(true);
-      }
-      if (isCreateFlow(searchString)) {
+      setPublishedFingerprint(cardPublishFingerprint(loaded));
+      setHasEditBaseline(!creatingFlow);
+      setSaved(isPublishedCard(loaded));
+      if (creatingFlow || requestedId) {
         setStep(0);
-        setIsCreatingSticky(true);
+        setIsCreating(creatingFlow);
       } else {
+        setIsCreating(false);
         const storedStep = Number(localStorage.getItem("aftermeet-card-step-v2"));
         if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep <= 2) setStep(storedStep);
       }
       setHydrated(true);
     }).catch(() => {
-      const loaded = loadDraft(searchString);
+      const loaded = loadDraft(requestedSearch);
+      const activeSearch = typeof window === "undefined" ? requestedSearch : window.location.search;
+      const requestedId = new URLSearchParams(activeSearch).get("id");
+      const creatingFlow = isCreateFlow(activeSearch);
       setDraft(loaded);
-      if (loaded.status === "published") {
-        setPublishedFingerprint(cardPublishFingerprint(loaded));
-        setSaved(true);
-      }
-      if (isCreateFlow(searchString)) {
+      setPublishedFingerprint(cardPublishFingerprint(loaded));
+      setHasEditBaseline(!creatingFlow);
+      setSaved(isPublishedCard(loaded));
+      if (creatingFlow || requestedId) {
         setStep(0);
-        setIsCreatingSticky(true);
+        setIsCreating(creatingFlow);
       } else {
+        setIsCreating(false);
         const storedStep = Number(localStorage.getItem("aftermeet-card-step-v2"));
         if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep <= 2) setStep(storedStep);
       }
@@ -289,7 +297,10 @@ export default function CardEditor() {
     draft.methods.length > 0,
     saved,
   ];
-  const hasUnpublishedChanges = hydrated && cardPublishFingerprint(draft) !== publishedFingerprint;
+  const hasUnpublishedChanges = hydrated && (hasEditBaseline ? cardPublishFingerprint(draft) !== publishedFingerprint : isCreating);
+  useEffect(() => {
+    hasUnpublishedRef.current = hasUnpublishedChanges;
+  }, [hasUnpublishedChanges]);
   const publishLabel = publishing
     ? "Publishing…"
     : !hasUnpublishedChanges && saved
@@ -297,15 +308,7 @@ export default function CardEditor() {
       : saved
         ? "Publish changes"
         : "Save and publish";
-
-  useEffect(() => {
-    if (!hasUnpublishedChanges) return;
-    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-    };
-    window.addEventListener("beforeunload", warnBeforeLeaving);
-    return () => window.removeEventListener("beforeunload", warnBeforeLeaving);
-  }, [hasUnpublishedChanges]);
+  const shouldShowLeavePrompt = showLeavePrompt && hasUnpublishedChanges;
 
   function persistDraft(next: CardDraft) {
     if (!hydrated) return;
@@ -348,6 +351,8 @@ export default function CardEditor() {
       setDraft(published);
       persistDraft(published);
       setPublishedFingerprint(cardPublishFingerprint(published));
+      setHasEditBaseline(true);
+      setIsCreating(false);
       setSaved(true);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "We couldn’t publish this card.");
@@ -404,6 +409,15 @@ export default function CardEditor() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  const requestNavigation = useCallback((_href: string, proceed: () => void) => {
+    if (!hasUnpublishedRef.current) {
+      proceed();
+      return;
+    }
+    pendingNavigationRef.current = proceed;
+    setShowLeavePrompt(true);
+  }, []);
+
   function continueFlow() {
     if (step === 2) { void save(); return; }
     goToStep(step + 1);
@@ -411,24 +425,90 @@ export default function CardEditor() {
 
   useAppShellChrome({
     backHref: "/app/cards",
+    requestNavigation,
     actions: <Button size="small" loading={publishing} disabled={!hasUnpublishedChanges && saved} onClick={save}>{!hasUnpublishedChanges && saved ? <CheckCircleIcon /> : null}{publishLabel}</Button>,
   });
 
+  const cancelNavigation = useCallback(() => {
+    suppressBeforeUnloadRef.current = false;
+    setShowLeavePrompt(false);
+    pendingNavigationRef.current = null;
+  }, []);
+
+  function confirmNavigation() {
+    const next = pendingNavigationRef.current;
+    suppressBeforeUnloadRef.current = true;
+    setShowLeavePrompt(false);
+    pendingNavigationRef.current = null;
+    next?.();
+  }
+
+  useEffect(() => {
+    if (!hasUnpublishedChanges) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (suppressBeforeUnloadRef.current) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnpublishedChanges]);
+
+  useEffect(() => {
+    return () => {
+      suppressBeforeUnloadRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!shouldShowLeavePrompt) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        cancelNavigation();
+      }
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [shouldShowLeavePrompt, cancelNavigation]);
+
   return (
     <>
+      {shouldShowLeavePrompt && (
+        <div className="connections-modal-backdrop add-followup-modal-backdrop" role="presentation" onClick={cancelNavigation}>
+          <section className="connections-modal" role="dialog" aria-modal="true" aria-labelledby="leave-card-editor-title" onClick={(event) => event.stopPropagation()}>
+            <header>
+              <h2 id="leave-card-editor-title">Unsaved changes</h2>
+              <button type="button" aria-label="Close leave prompt" onClick={cancelNavigation}><XIcon /></button>
+            </header>
+            <p>Are you sure you want to leave this page? Your progress will be lost if you don&apos;t save.</p>
+            <div style={{ display: "grid", gap: "10px", gridTemplateColumns: "1fr 1fr" }}>
+              <Button size="small" variant="secondary" onClick={cancelNavigation}>Stay on page</Button>
+              <Button size="small" onClick={confirmNavigation}>Leave without saving</Button>
+            </div>
+          </section>
+        </div>
+      )}
       <section className="card-creator">
         {hydrated && (
           <div className={`creator-publish-state ${hasUnpublishedChanges ? "is-dirty" : "is-published"}`} role="status">
             {hasUnpublishedChanges ? (
               isCreating
-                ? <><span>New card</span><small>Saved as a draft on this device. Publish once it's ready so people can scan it.</small></>
+                ? <><span>New card</span><small>Saved as a draft on this device. Publish once it&apos;s ready so people can scan it.</small></>
                 : <><span>Unpublished changes</span><small>Your edits are saved as a draft on this device. Publish when they are ready to appear on your public card.</small></>
-            ) : <><CheckCircleIcon size={18} /><span>Card is published</span><small>Your public card matches this editor.</small></>}
+            ) : isPublishedCard(draft)
+              ? <><CheckCircleIcon size={18} /><span>Card is published</span><small>Your public card matches this editor.</small></>
+              : <><span>Draft loaded</span><small>Publish this card when you&apos;re ready to share it publicly.</small></>}
           </div>
         )}
         <nav className="creator-steps" aria-label="Card creation progress">
           {steps.map(({ label, Icon }, index) => (
-            <button key={label} aria-current={index === step ? "step" : undefined} className={index === step ? "active" : stepCompletion[index] ? "complete" : ""} onClick={() => goToStep(index)}>
+            <button
+              key={label}
+              type="button"
+              aria-current={index === step ? "step" : undefined}
+              className={index === step ? "active" : stepCompletion[index] ? "complete" : ""}
+              onClick={() => goToStep(index)}
+            >
               <span>{stepCompletion[index] && index !== step ? <CheckCircleIcon /> : <Icon />}</span>
               <small>Step {index + 1}</small><strong>{label}</strong>
             </button>
@@ -517,6 +597,7 @@ export default function CardEditor() {
                 <div className="theme-panel"><h2>Card colour</h2><p>Used for the cover and primary actions.</p>
                   <div className="theme-swatches">{themes.map((theme) => (
                     <button
+                      type="button"
                       key={theme}
                       aria-label={`Use ${theme}`}
                       className={draft.theme === theme ? "selected" : ""}
@@ -539,7 +620,7 @@ export default function CardEditor() {
                     const meta = methodMeta[method.type];
                     return <article className="method-row" key={method.id}>
                       <span>{PHOSPHOR_METHOD_TYPES.has(method.type) ? <meta.Icon size={21} weight="bold" /> : <meta.Icon size={21} />}</span>
-                      <button className="method-copy" onClick={() => { setMethodError(""); setEditing(method); }}><strong>{meta.name}</strong><p>{method.value}</p><small>{method.label}</small></button>
+                      <button type="button" className="method-copy" onClick={() => { setMethodError(""); setEditing(method); }}><strong>{meta.name}</strong><p>{method.value}</p><small>{method.label}</small></button>
                       <div><IconButton aria-label={`Move ${meta.name} up`} disabled={index === 0} onClick={() => moveMethod(index, -1)}><CaretUpIcon /></IconButton>
                         <IconButton aria-label={`Move ${meta.name} down`} disabled={index === draft.methods.length - 1} onClick={() => moveMethod(index, 1)}><CaretDownIcon /></IconButton>
                         <IconButton aria-label={`Remove ${meta.name}`} onClick={() => update("methods", draft.methods.filter((item) => item.id !== method.id))}><TrashIcon /></IconButton></div>
@@ -587,7 +668,7 @@ export default function CardEditor() {
                     <h3>{category}</h3><div>
                       {availableTypes.map((type) => {
                         const meta = methodMeta[type];
-                        return <button key={type} onClick={() => openMethod(type)}>{PHOSPHOR_METHOD_TYPES.has(type) ? <meta.Icon size={24} weight="bold" /> : <meta.Icon size={24} />}<span>{meta.name}</span><PlusIcon /></button>;
+                        return <button type="button" key={type} onClick={() => openMethod(type)}>{PHOSPHOR_METHOD_TYPES.has(type) ? <meta.Icon size={24} weight="bold" /> : <meta.Icon size={24} />}<span>{meta.name}</span><PlusIcon /></button>;
                       })}
                     </div>
                   </section>;
@@ -600,9 +681,9 @@ export default function CardEditor() {
               <div className="creator-section review-section">
                 <header><span>03 · Review</span><h1>{isCreating ? "Your new card is ready." : "Your card is ready to share."}</h1><p>{isCreating ? "Check the preview, then publish it so people can start scanning your QR." : "Check the preview, save it, then open the QR sharing screen."}</p></header>
                 <div className="review-list">
-                  <div><CheckCircleIcon /><span><strong>Identity</strong><small>{draft.name || "Name needed"} · {draft.role || "Job title needed"}{showCompanyDetails && draft.company ? ` · ${draft.company}` : ""}</small></span><button onClick={() => goToStep(0)}>Edit</button></div>
-                  <div><CheckCircleIcon /><span><strong>Images and style</strong><small>{[draft.photo && "profile", draft.companyLogo && "logo", draft.coverPhoto && "cover"].filter(Boolean).join(", ") || "No images"} · {draft.theme} · Focused layout</small></span><button onClick={() => goToStep(0)}>Edit</button></div>
-                  <div><CheckCircleIcon /><span><strong>Contact methods</strong><small>{draft.methods.length} added · {draft.methods.map((method) => methodMeta[method.type].name).join(", ") || "None"}</small></span><button onClick={() => goToStep(1)}>Edit</button></div>
+                  <div><CheckCircleIcon /><span><strong>Identity</strong><small>{draft.name || "Name needed"} · {draft.role || "Job title needed"}{showCompanyDetails && draft.company ? ` · ${draft.company}` : ""}</small></span><button type="button" onClick={() => goToStep(0)}>Edit</button></div>
+                  <div><CheckCircleIcon /><span><strong>Images and style</strong><small>{[draft.photo && "profile", draft.companyLogo && "logo", draft.coverPhoto && "cover"].filter(Boolean).join(", ") || "No images"} · {draft.theme} · Focused layout</small></span><button type="button" onClick={() => goToStep(0)}>Edit</button></div>
+                  <div><CheckCircleIcon /><span><strong>Contact methods</strong><small>{draft.methods.length} added · {draft.methods.map((method) => methodMeta[method.type].name).join(", ") || "None"}</small></span><button type="button" onClick={() => goToStep(1)}>Edit</button></div>
                 </div>
                 <div className="company-visibility-option">
                   <span>

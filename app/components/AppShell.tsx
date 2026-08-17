@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ComponentType, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ComponentType, type MouseEvent, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Home as HouseIcon } from "react-feather";
 import { CreditCard as IdentificationCardIcon } from "react-feather";
@@ -53,7 +53,7 @@ export function AppShell({ children }: AppShellProps) {
   const user = useAppUser();
   const pathname = usePathname();
   const active = deriveActive(pathname);
-  const { backHref, backLabel = "Back", actions } = useAppShellChromeValue();
+  const { backHref, backLabel = "Back", actions, requestNavigation } = useAppShellChromeValue();
   const [mobileNav, setMobileNav] = useState(false);
   const [actionableCount, setActionableCount] = useState(0);
   const updateActionableCount = useCallback((count: number) => setActionableCount(count), []);
@@ -70,8 +70,35 @@ export function AppShell({ children }: AppShellProps) {
   const label = user.displayName || user.email.split("@")[0] || "ehllo user";
   const initials = label.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
 
+  const navigateWithPrompt = useCallback((event: MouseEvent<HTMLAnchorElement>, href: string, action: () => void) => {
+    if (
+      event.defaultPrevented
+      || event.button !== 0
+      || event.altKey
+      || event.shiftKey
+      || event.metaKey
+      || event.ctrlKey
+    ) return;
+    event.preventDefault();
+    if (requestNavigation) {
+      requestNavigation(href, action);
+      return;
+    }
+    action();
+  }, [requestNavigation]);
+
   const renderNavItem = ([key, href, Icon, itemLabel]: (typeof consumerNav)[number]) => (
-    <a className={active === key ? "active" : ""} href={href} key={key} onClick={() => setMobileNav(false)}>
+    <a
+      className={active === key ? "active" : ""}
+      href={href}
+      key={key}
+      onClick={(event) => {
+        navigateWithPrompt(event, href, () => {
+          setMobileNav(false);
+          window.location.href = href;
+        });
+      }}
+    >
       {key === "scan" ? <Icon size={20} weight="bold" /> : <Icon size={20} />} <span>{itemLabel}</span>
       {key === "followups" && actionableCount ? <b className="nav-count" aria-label={`${actionableCount} due follow-ups`}>{actionableCount > 99 ? "99+" : actionableCount}</b> : null}
     </a>
@@ -80,7 +107,17 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <main className="product-shell">
       <aside className={`product-sidebar consumer-sidebar ${mobileNav ? "open" : ""}`}>
-        <a className="product-logo" href="/app"><BrandMark size={38} /><strong>ehllo</strong></a>
+        <a
+          className="product-logo"
+          href="/app"
+          onClick={(event) => {
+            navigateWithPrompt(event, "/app", () => {
+              window.location.href = "/app";
+            });
+          }}
+        >
+          <BrandMark size={38} /><strong>ehllo</strong>
+        </a>
         <nav aria-label="Consumer navigation">
           {consumerNav.map(renderNavItem)}
         </nav>
@@ -98,7 +135,18 @@ export function AppShell({ children }: AppShellProps) {
       <section className="product-main">
         <div className="consumer-topbar">
           <NotificationBell onActionableCountChange={updateActionableCount} />
-          <a className="consumer-topbar-avatar" href="/app/settings" aria-label="My account">{initials || "AM"}</a>
+          <a
+            className="consumer-topbar-avatar"
+            href="/app/settings"
+            aria-label="My account"
+            onClick={(event) => {
+              navigateWithPrompt(event, "/app/settings", () => {
+                window.location.href = "/app/settings";
+              });
+            }}
+          >
+            {initials || "AM"}
+          </a>
         </div>
         <header className="product-mobile-header">
           <IconButton className="menu-button" aria-label="Toggle navigation" onClick={() => setMobileNav(!mobileNav)}>
@@ -110,7 +158,17 @@ export function AppShell({ children }: AppShellProps) {
           {backHref || actions ? (
             <div className="product-page-toolbar">
               {backHref ? (
-                <LinkButton size="small" variant="ghost" href={backHref} className="product-page-back">
+                <LinkButton
+                  size="small"
+                  variant="ghost"
+                  href={backHref}
+                  className="product-page-back"
+                  onClick={(event) => {
+                    navigateWithPrompt(event, backHref, () => {
+                      window.location.href = backHref;
+                    });
+                  }}
+                >
                   <ArrowLeftIcon size={16} />{backLabel}
                 </LinkButton>
               ) : <span />}
