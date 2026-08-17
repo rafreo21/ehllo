@@ -1,0 +1,72 @@
+name: Publish OTA update
+
+# Pushing to staging already redeploys the web app; the mobile app was the one
+# surface that still needed a manual `eas update`, so testers on TestFlight and
+# Play internal testing could sit on older JS than the backend they were
+# talking to. This closes that gap.
+#
+# IMPORTANT: an OTA update reaches real testers within minutes. It carries
+# JavaScript and assets only. Anything native — a new Expo module, a permission,
+# a config-plugin change, or an app version bump — still needs a fresh
+# `staging-store` build, because runtimeVersion.policy is "appVersion" and an
+# update only reaches devices whose runtime version matches.
+
+on:
+  push:
+    branches: [staging]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/publish-ota.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Which channel to publish to
+        required: true
+        default: staging
+        type: choice
+        options: [staging, production]
+
+concurrency:
+  # Serialise publishes so two pushes can't race to the same channel.
+  group: ota-${{ github.event.inputs.environment || 'staging' }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Production is deliberately manual-only, matching docs/release-safeguards.md.
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: mobile
+        run: npm run typecheck
+
+      - name: Verify staging/production split
+        run: npm ci --ignore-scripts && npm run release:check
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish update
+        working-directory: mobile
+        env:
+          APP_VARIANT: ${{ github.event.inputs.environment || 'staging' }}
+        run: |
+          eas update \
+            --branch "${APP_VARIANT}" \
+            --message "${GITHUB_SHA::7} ${GITHUB_REF_NAME}: $(git log -1 --pretty=%s)" \
+            --non-interactive

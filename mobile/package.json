@@ -91,6 +91,8 @@
     "check:platform-parity": "node scripts/check-platform-parity.mjs",
     "postinstall": "node scripts/patch-react-native-hce.mjs",
     "export:web": "expo export --platform web",
+    "update:staging": "APP_VARIANT=staging eas update --branch staging --non-interactive",
+    "update:production": "APP_VARIANT=production eas update --branch production --non-interactive",
     "prebuild": "expo prebuild"
   },
   "expo": {
