@@ -308,7 +308,7 @@ export default function ConnectionsPage() {
       </div>
 
       {addOpen ? (
-        <div className="connections-modal-backdrop" role="presentation" onClick={() => setAddOpen(false)}>
+        <div className="connections-modal-backdrop add-followup-modal-backdrop" role="presentation" onClick={() => setAddOpen(false)}>
           <div className="connections-modal" role="dialog" aria-label="Add connection" onClick={(event) => event.stopPropagation()}>
             <header>
               <h2>Add connection</h2>

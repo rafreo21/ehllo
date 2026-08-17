@@ -99,6 +99,13 @@ function completedLabel(completedAt?: string) {
   return `Completed ${date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
 }
 
+function addedLabel(startedAt?: string) {
+  if (!startedAt) return "—";
+  const date = new Date(startedAt);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export default function FollowupsPage() {
   const searchParams = useSearchParams();
   const [contact, setContact] = useState<Contact | null>(null);
@@ -426,6 +433,7 @@ export default function FollowupsPage() {
                         <th scope="col">Follow-up</th>
                         <th scope="col">Person</th>
                         <th scope="col">Owner</th>
+                        <th scope="col">Date added</th>
                         <th scope="col">Due</th>
                         <th scope="col"><span className="sr-only">Actions</span></th>
                       </tr>
@@ -449,6 +457,7 @@ export default function FollowupsPage() {
                         <td data-label="Follow-up" className="followup-title-cell">{action.title}</td>
                         <td data-label="Person">{encounter.personName || "Meeting follow-ups"}</td>
                         <td data-label="Owner">{participantName(encounter, action)}{action.owner === "guest" ? <span className="owner-tag">Their turn</span> : null}</td>
+                        <td data-label="Date added"><span className="table-date"><ClockIcon size={14} />{addedLabel(encounter.startedAt)}</span></td>
                         <td data-label={isPast ? "Completed" : "Due"}><span className="table-date"><ClockIcon size={14} />{isPast ? completedLabel(action.completedAt) : action.dueAt || "No due date"}</span></td>
                         <td className="table-open-cell">
                           {isPast ? (
@@ -538,6 +547,7 @@ export default function FollowupsPage() {
         open={addFollowUpModalOpen}
         onClose={() => setAddFollowUpModalOpen(false)}
         onCreated={() => void loadEncounters(true)}
+        popup
       />
     </>
   );

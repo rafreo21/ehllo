@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { Calendar as CalendarBlankIcon } from "react-feather";
 import { ChevronDown as CaretDownIcon } from "react-feather";
 import { ChevronRight as CaretRightIcon } from "react-feather";
@@ -49,11 +50,15 @@ export function AddFollowUpModal({
   onClose,
   prefill,
   onCreated,
+  stacked = false,
+  popup,
 }: {
   open: boolean;
   onClose: () => void;
   prefill?: AddFollowUpPrefill;
   onCreated?: () => void;
+  stacked?: boolean;
+  popup?: boolean;
 }) {
   const [personName, setPersonName] = useState("");
   const [personEmail, setPersonEmail] = useState("");
@@ -69,6 +74,8 @@ export function AddFollowUpModal({
   const [saving, setSaving] = useState(false);
 
   const [addPersonOpen, setAddPersonOpen] = useState(false);
+  const [formHeight, setFormHeight] = useState<number | null>(null);
+  const formContentRef = useRef<HTMLDivElement>(null);
   const [personQuery, setPersonQuery] = useState("");
   const [connections, setConnections] = useState<ConnectionItem[]>([]);
   const [manualOpen, setManualOpen] = useState(false);
@@ -94,6 +101,7 @@ export function AddFollowUpModal({
     setDueAt(followUpDueDate(1));
     setDetailOpen(false);
     setError("");
+    setFormHeight(null);
     setAddPersonOpen(false);
     setPersonQuery("");
     setManualOpen(false);
@@ -106,6 +114,13 @@ export function AddFollowUpModal({
     if (!addPersonOpen) return;
     void fetchAllConnectionsMerged().then(setConnections).catch(() => setConnections([]));
   }, [addPersonOpen]);
+
+  useEffect(() => {
+    if (!open || addPersonOpen) return;
+    const node = formContentRef.current;
+    if (!node) return;
+    setFormHeight(node.offsetHeight);
+  }, [open, addPersonOpen, detailOpen, personName, channel]);
 
   useEffect(() => {
     if (!qrOpen) return;
@@ -254,42 +269,104 @@ export function AddFollowUpModal({
     }
   }
 
-  return (
-    <>
-      <div className="followup-drawer-backdrop" role="presentation" onClick={onClose}>
-        <div className="followup-drawer" role="dialog" aria-label="Add follow-up" onClick={(event) => event.stopPropagation()}>
-          <div className="followup-drawer-header">
-            <div>
-              <h2>What needs to happen next?</h2>
-              <p>It will appear in Follow-ups, notifications, history, and this person&rsquo;s timeline.</p>
-            </div>
-            <div className="followup-drawer-header-actions">
-              <button type="button" aria-label="Close" onClick={onClose}><XIcon size={18} /></button>
-            </div>
-          </div>
+  const compactMode = popup ?? Boolean(prefill?.personName);
 
-          <div className="followup-drawer-body">
-          {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
+  const personSearchContent = (
+    <>
+      <label className="connections-search">
+        <MagnifyingGlassIcon size={18} />
+        <input value={personQuery} onChange={(event) => setPersonQuery(event.target.value)} placeholder="Search your connections" />
+      </label>
+
+      {personQuery.trim() ? (
+        searchResults.length ? (
+          <div className="connections-list">
+            {searchResults.map((connection) => (
+              <button
+                key={connection.id}
+                type="button"
+                onClick={() => pickConnection(connection)}
+                className="connections-row connections-row-simple"
+              >
+                <div className="connections-copy">
+                  <strong>{connection.name}</strong>
+                  <span>{connection.email || connection.subtitle}</span>
+                </div>
+                <CaretRightIcon size={16} />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-[#6b7168]">No connections match &ldquo;{personQuery.trim()}&rdquo;.</p>
+        )
+      ) : (
+        <div className="connections-add-options" style={{ flexDirection: "column", alignItems: "stretch" }}>
+          <button
+            type="button"
+            onClick={() => setManualOpen(true)}
+            className="flex min-h-[64px] items-center gap-3 rounded-[10px] border border-[#e5e9e2] bg-[#fbfdf9] px-4 py-3 text-left"
+          >
+            <PencilSimpleLineIcon size={20} />
+            <span className="min-w-0 flex-1">
+              <strong className="block text-sm text-[#163300]">Add manually</strong>
+              <small className="block text-xs text-[#6b7168]">Enter their name and contact details</small>
+            </span>
+            <CaretRightIcon size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setQrOpen(true)}
+            className="flex min-h-[64px] items-center gap-3 rounded-[10px] border border-[#e5e9e2] bg-[#fbfdf9] px-4 py-3 text-left"
+          >
+            <QrCodeIcon size={20} weight="bold" />
+            <span className="min-w-0 flex-1">
+              <strong className="block text-sm text-[#163300]">Share QR code</strong>
+              <small className="block text-xs text-[#6b7168]">Let them scan your card and return their details</small>
+            </span>
+            <CaretRightIcon size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => void openScans()}
+            className="flex min-h-[64px] items-center gap-3 rounded-[10px] border border-[#e5e9e2] bg-[#fbfdf9] px-4 py-3 text-left"
+          >
+            <ScanIcon size={20} weight="bold" />
+            <span className="min-w-0 flex-1">
+              <strong className="block text-sm text-[#163300]">Recent scans</strong>
+              <small className="block text-xs text-[#6b7168]">Choose someone who recently scanned your card</small>
+            </span>
+            <CaretRightIcon size={16} />
+          </button>
+        </div>
+      )}
+    </>
+  );
+
+  const formContent = (
+    <>
+      {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
 
           <form className="contact-form-card quick-follow-up-form" onSubmit={save}>
-            <button
-              type="button"
-              onClick={() => setAddPersonOpen(true)}
-              className="flex min-h-[72px] w-full items-center gap-3 rounded-[12px] border border-[#e5e9e2] bg-[#fbfdf9] px-5 py-4 text-left"
-            >
-              <span className="min-w-0 flex-1">
-                <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">Person</small>
-                {personName.trim() ? (
-                  <>
-                    <strong className="block text-base text-[#163300]">{personName}</strong>
-                    {personEmail.trim() ? <span className="block text-xs text-[#6b7168]">{personEmail}</span> : null}
-                  </>
-                ) : (
-                  <span className="block text-sm text-[#6b7168]">Who is this follow-up for?</span>
-                )}
-              </span>
-              {personName.trim() ? <PencilSimpleIcon size={18} /> : <PlusIcon size={18} />}
-            </button>
+            {!prefill?.personName ? (
+              <button
+                type="button"
+                onClick={() => setAddPersonOpen(true)}
+                className="flex min-h-[72px] w-full items-center gap-3 rounded-[12px] border border-[#e5e9e2] bg-[#fbfdf9] px-5 py-4 text-left"
+              >
+                <span className="min-w-0 flex-1">
+                  <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">Person</small>
+                  {personName.trim() ? (
+                    <>
+                      <strong className="block text-base text-[#163300]">{personName}</strong>
+                      {personEmail.trim() ? <span className="block text-xs text-[#6b7168]">{personEmail}</span> : null}
+                    </>
+                  ) : (
+                    <span className="block text-sm text-[#6b7168]">Who is this follow-up for?</span>
+                  )}
+                </span>
+                {personName.trim() ? <PencilSimpleIcon size={18} /> : <PlusIcon size={18} />}
+              </button>
+            ) : null}
 
             <div className="quick-follow-up-owner">
               <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">Owner</small>
@@ -328,92 +405,60 @@ export function AddFollowUpModal({
               ) : null}
             </div>
 
+            <p className="quick-follow-up-note"><PaperPlaneTiltIcon size={16} />Nothing sends automatically.</p>
+
             <div className="quick-follow-up-actions">
               <Button type="button" size="small" variant="ghost" onClick={onClose}>Cancel</Button>
               <Button type="submit" size="small" loading={saving}><CheckCircleIcon size={16} />Add follow-up</Button>
             </div>
           </form>
+    </>
+  );
 
-          <p className="quick-follow-up-note"><PaperPlaneTiltIcon size={16} />Nothing is sent automatically. ehllo reminds you until you complete it.</p>
+  return (
+    <>
+      {compactMode ? (
+        <div className="connections-modal-backdrop add-followup-modal-backdrop" role="presentation" onClick={onClose}>
+          <div className="connections-modal" role="dialog" aria-label="Add follow-up" onClick={(event) => event.stopPropagation()}>
+            <header>
+              <div className="add-followup-modal-title">
+                {addPersonOpen ? (
+                  <button type="button" aria-label="Back" onClick={() => setAddPersonOpen(false)}><ArrowLeftIcon size={16} /></button>
+                ) : null}
+                <h2>{addPersonOpen ? "Add someone" : "What needs to happen next?"}</h2>
+              </div>
+              <button type="button" aria-label="Close" onClick={onClose}><XIcon size={18} /></button>
+            </header>
+            <div className="add-followup-modal-scroll" style={formHeight ? { height: formHeight } : undefined}>
+              {addPersonOpen ? personSearchContent : <div ref={formContentRef} className="grid gap-[14px]">{formContent}</div>}
+            </div>
           </div>
         </div>
-      </div>
-
-      {addPersonOpen ? (
-        <div className="connections-modal-backdrop" role="presentation" onClick={() => { setAddPersonOpen(false); setPersonQuery(""); }}>
-          <div className="connections-modal" role="dialog" aria-label="Add someone" onClick={(event) => event.stopPropagation()}>
-            <header>
-              <h2>Add someone</h2>
-              <button type="button" aria-label="Close" onClick={() => { setAddPersonOpen(false); setPersonQuery(""); }}><XIcon size={18} /></button>
-            </header>
-            <label className="connections-search">
-              <MagnifyingGlassIcon size={18} />
-              <input value={personQuery} onChange={(event) => setPersonQuery(event.target.value)} placeholder="Search your connections" />
-            </label>
-
-            {personQuery.trim() ? (
-              searchResults.length ? (
-                <div className="grid gap-2" style={{ marginTop: 12 }}>
-                  {searchResults.map((connection) => (
-                    <button
-                      key={connection.id}
-                      type="button"
-                      onClick={() => pickConnection(connection)}
-                      className="flex items-center justify-between gap-4 rounded-[10px] border border-[#e5e9e2] bg-[#fbfdf9] px-4 py-3 text-left"
-                    >
-                      <span className="min-w-0">
-                        <strong className="block truncate text-sm text-[#163300]">{connection.name}</strong>
-                        <small className="block truncate text-xs text-[#6b7168]">{connection.email || connection.subtitle}</small>
-                      </span>
-                    </button>
-                  ))}
+      ) : (
+        <div className={`followup-drawer-backdrop${stacked ? " followup-drawer-backdrop-stacked" : ""}`} role="presentation" onClick={onClose}>
+          <div className="followup-drawer" role="dialog" aria-label="Add follow-up" onClick={(event) => event.stopPropagation()}>
+            <div className="followup-drawer-header">
+              {addPersonOpen ? (
+                <div className="add-followup-modal-title">
+                  <button type="button" className="encounter-drawer-back-icon" aria-label="Back" onClick={() => setAddPersonOpen(false)}><ArrowLeftIcon size={16} /></button>
+                  <h2>Add someone</h2>
                 </div>
               ) : (
-                <p style={{ marginTop: 12 }}>No connections match &ldquo;{personQuery.trim()}&rdquo;.</p>
-              )
-            ) : (
-              <div className="connections-add-options" style={{ flexDirection: "column", alignItems: "stretch" }}>
-                <button
-                  type="button"
-                  onClick={() => setManualOpen(true)}
-                  className="flex min-h-[64px] items-center gap-3 rounded-[10px] border border-[#e5e9e2] bg-[#fbfdf9] px-4 py-3 text-left"
-                >
-                  <PencilSimpleLineIcon size={20} />
-                  <span className="min-w-0 flex-1">
-                    <strong className="block text-sm text-[#163300]">Add manually</strong>
-                    <small className="block text-xs text-[#6b7168]">Enter their name and contact details</small>
-                  </span>
-                  <CaretRightIcon size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setQrOpen(true)}
-                  className="flex min-h-[64px] items-center gap-3 rounded-[10px] border border-[#e5e9e2] bg-[#fbfdf9] px-4 py-3 text-left"
-                >
-                  <QrCodeIcon size={20} weight="bold" />
-                  <span className="min-w-0 flex-1">
-                    <strong className="block text-sm text-[#163300]">Share QR code</strong>
-                    <small className="block text-xs text-[#6b7168]">Let them scan your card and return their details</small>
-                  </span>
-                  <CaretRightIcon size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void openScans()}
-                  className="flex min-h-[64px] items-center gap-3 rounded-[10px] border border-[#e5e9e2] bg-[#fbfdf9] px-4 py-3 text-left"
-                >
-                  <ScanIcon size={20} weight="bold" />
-                  <span className="min-w-0 flex-1">
-                    <strong className="block text-sm text-[#163300]">Recent scans</strong>
-                    <small className="block text-xs text-[#6b7168]">Choose someone who recently scanned your card</small>
-                  </span>
-                  <CaretRightIcon size={16} />
-                </button>
+                <div>
+                  <h2>What needs to happen next?</h2>
+                  <p>It will appear in Follow-ups, notifications, history, and this person&rsquo;s timeline.</p>
+                </div>
+              )}
+              <div className="followup-drawer-header-actions">
+                <button type="button" aria-label="Close" onClick={onClose}><XIcon size={18} /></button>
               </div>
-            )}
+            </div>
+            <div className="followup-drawer-body">
+              {addPersonOpen ? personSearchContent : formContent}
+            </div>
           </div>
         </div>
-      ) : null}
+      )}
 
       {manualOpen ? (
         <div className="connections-modal-backdrop" role="presentation" onClick={() => setManualOpen(false)}>

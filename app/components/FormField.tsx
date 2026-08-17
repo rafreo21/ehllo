@@ -11,19 +11,20 @@ type SharedProps = {
 };
 
 const fieldLabelClass = "text-sm font-semibold text-[#454745]";
+const compactLabelClass = "text-xs font-semibold text-[#6b7168]";
 const fieldControlClass = [
   "block min-h-12 w-full rounded-md border bg-white px-3.5 py-2.5 text-base text-[#0e0f0c]",
   "outline-none transition",
   "focus:border-[#163300] focus:ring-4 focus:ring-[#aeb8aa]/45",
   "disabled:cursor-not-allowed disabled:bg-[#f2f5f0] disabled:text-[#858b82]",
-  "border-[#aeb8aa]",
+  "border-[var(--p-line)] shadow-[0_1px_2px_rgba(22,51,0,.04)]",
 ].join(" ");
 const compactControlClass = [
-  "block h-[42px] min-h-[42px] w-full rounded-[7px] border bg-white px-3 text-[13px] font-normal text-[#0e0f0c]",
+  "block h-9 min-h-9 w-full rounded-md border bg-white px-2.5 text-[13px] font-normal text-[#0e0f0c]",
   "outline-none transition",
   "focus:border-[#163300] focus:ring-4 focus:ring-[#aeb8aa]/45",
   "disabled:cursor-not-allowed disabled:bg-[#f2f5f0] disabled:text-[#858b82]",
-  "border-[#aeb8aa]",
+  "border-[var(--p-line)] shadow-[0_1px_2px_rgba(22,51,0,.04)]",
 ].join(" ");
 
 type FormSectionProps = FieldsetHTMLAttributes<HTMLFieldSetElement> & {
@@ -80,7 +81,7 @@ export const TextField = forwardRef<HTMLInputElement, SharedProps & InputHTMLAtt
   return (
     <div className={`grid ${compact ? "gap-1" : "gap-2"} ${className}`}>
       <div className="grid gap-0.5">
-        <label htmlFor={fieldId} className={fieldLabelClass}>{label}</label>
+        <label htmlFor={fieldId} className={compact ? compactLabelClass : fieldLabelClass}>{label}</label>
         {hint && !error && <span className="text-xs text-[#6b7168]">{hint}</span>}
       </div>
       <div className="relative">
@@ -126,9 +127,9 @@ export const SelectField = forwardRef<HTMLSelectElement, SharedProps & SelectHTM
   const descriptionId = hint || error ? `${fieldId}-description` : undefined;
 
   return (
-    <div className={`grid ${compact && hideLabel ? "gap-0" : "gap-2"} ${className}`}>
-      <div className={hideLabel ? "sr-only" : "flex items-center justify-between gap-4"}>
-        <label htmlFor={fieldId} className={fieldLabelClass}>{label}</label>
+    <div className={`grid ${compact && hideLabel ? "gap-0" : compact ? "gap-1" : "gap-2"} ${className}`}>
+      <div className={hideLabel ? "sr-only" : "grid gap-0.5"}>
+        <label htmlFor={fieldId} className={compact ? compactLabelClass : fieldLabelClass}>{label}</label>
         {hint && !error && !hideLabel && <span className="text-xs text-[#6b7168]">{hint}</span>}
       </div>
       <div className="relative">

@@ -10,6 +10,7 @@ import { Mic as MicrophoneIcon } from "react-feather";
 import { Plus as PlusIcon } from "react-feather";
 import { Trash2 as TrashIcon } from "react-feather";
 import { X as XIcon } from "react-feather";
+import { AddFollowUpModal } from "./AddFollowUpModal";
 import { Button, LinkButton } from "./Button";
 import { CaptureComingSoonModal } from "./CaptureComingSoonModal";
 import { CapturePromoBanner } from "./CapturePromoBanner";
@@ -66,6 +67,7 @@ export function ConnectionDrawer({
   const [captureModalOpen, setCaptureModalOpen] = useState(false);
   const [activeEncounterId, setActiveEncounterId] = useState("");
   const [activeFollowUp, setActiveFollowUp] = useState<{ encounterId: string; actionId: string } | null>(null);
+  const [addFollowUpModalOpen, setAddFollowUpModalOpen] = useState(false);
 
   const load = useCallback(async (target: ConnectionItem) => {
     setLoading(true);
@@ -113,7 +115,9 @@ export function ConnectionDrawer({
   }
 
   const openFollowUps = useMemo(
-    () => followUps.filter((item) => item.status !== "completed" && item.status !== "done"),
+    () => followUps
+      .filter((item) => item.status !== "completed" && item.status !== "done")
+      .sort((left, right) => (left.dueAt || "9999-99-99").localeCompare(right.dueAt || "9999-99-99")),
     [followUps],
   );
   const followUpPreview = useMemo(() => openFollowUps.slice(0, 2), [openFollowUps]);
@@ -149,7 +153,13 @@ export function ConnectionDrawer({
 
   if (!connection) return null;
 
-  const followUpHref = `/app/followups/new?personName=${encodeURIComponent(connection.name)}&sourceId=${encodeURIComponent(connection.sourceId)}${connection.email ? `&personEmail=${encodeURIComponent(connection.email)}` : ""}${connection.source === "contact" ? `&contactId=${encodeURIComponent(connection.sourceId)}` : ""}${connection.source === "inbound" ? `&exchangeId=${encodeURIComponent(connection.sourceId)}` : ""}`;
+  const followUpPrefill = {
+    personName: connection.name,
+    personEmail: connection.email || undefined,
+    sourceId: connection.sourceId,
+    contactId: connection.source === "contact" ? connection.sourceId : undefined,
+    exchangeId: connection.source === "inbound" ? connection.sourceId : undefined,
+  };
 
   return (
     <div className="followup-drawer-backdrop" role="presentation" onClick={onClose}>
@@ -168,7 +178,7 @@ export function ConnectionDrawer({
           <div className="followup-drawer-header-actions">
             {!activeEncounterId ? (
               <>
-                <LinkButton size="small" href={followUpHref} onClick={onClose}><PlusIcon size={15} />Follow-up</LinkButton>
+                <Button size="small" onClick={() => setAddFollowUpModalOpen(true)}><PlusIcon size={15} />Follow-up</Button>
                 <Button size="small" variant="ghost" onClick={() => void handleRemove()} disabled={deleting} aria-label="Remove connection">
                   <TrashIcon size={16} />
                 </Button>
@@ -297,6 +307,13 @@ export function ConnectionDrawer({
           stacked
         />
       ) : null}
+      <AddFollowUpModal
+        open={addFollowUpModalOpen}
+        onClose={() => setAddFollowUpModalOpen(false)}
+        prefill={followUpPrefill}
+        onCreated={() => { if (connection) void load(connection); }}
+        stacked
+      />
     </div>
   );
 }

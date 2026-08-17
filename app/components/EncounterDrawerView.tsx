@@ -1,18 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Calendar as CalendarBlankIcon } from "react-feather";
-import { ChevronDown as CaretDownIcon } from "react-feather";
-import { ChevronUp as CaretUpIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { Copy as CopyIcon } from "react-feather";
 import { Mail as EnvelopeSimpleIcon } from "react-feather";
 import { Eye as EyeIcon } from "react-feather";
 import { Lock as LockKeyIcon } from "react-feather";
 import { Edit3 as NotePencilIcon } from "react-feather";
-import { Plus as PlusIcon } from "react-feather";
 import { Edit2 as PencilSimpleIcon } from "react-feather";
-import { Share2 as ShareNetworkIcon } from "react-feather";
 import { X as XIcon } from "react-feather";
 import { ActionDoButton } from "./ActionDoButton";
 import { Button } from "./Button";
@@ -32,7 +27,6 @@ import {
 } from "../../lib/recording-metadata";
 import { formatMeetingEmailDate, recordingShareMailtoHref } from "../../lib/recording-email";
 import { renameSpeakerAssignees, renameTranscriptSpeakers, transcriptSpeakerLabels } from "../../lib/speaker-labels";
-import { displayFollowUpTitle } from "../../lib/follow-up-channels";
 import { applyFollowUpTransition, canTransitionFollowUp } from "../../lib/follow-up-lifecycle";
 
 type UploadStatus = "idle" | "uploading" | "uploaded" | "failed";
@@ -41,11 +35,8 @@ const ACTIONS_PREVIEW_SIZE = 3;
 export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
   const [encounter, setEncounter] = useState<Encounter | null>(null);
   const [loading, setLoading] = useState(true);
-  const [newAction, setNewAction] = useState({ title: "", owner: "me" as "me" | "guest", participantId: "", dueAt: "", channel: "email" as EncounterAction["channel"] });
-  const [newActionDetailOpen, setNewActionDetailOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [reviewTab, setReviewTab] = useState<"recap" | "transcript" | "notes">("recap");
-  const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingActionId, setEditingActionId] = useState("");
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
   const [uploadError, setUploadError] = useState("");
@@ -64,7 +55,6 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
     setEncounter(null);
     setReviewTab("recap");
     setEditingActionId("");
-    setAddModalOpen(false);
     setShowAllActions(false);
     void fetch(`/api/encounters/${encounterId}`)
       .then(async (response) => {
@@ -219,29 +209,6 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
     setEncounter(updated);
   }
 
-  function addAction() {
-    patch((current) => {
-      const participant = current.participants?.find((person) => person.id === newAction.participantId)
-        ?? current.participants?.[0];
-      return {
-        ...current,
-        actions: [...(current.actions ?? []), {
-        id: crypto.randomUUID(),
-        title: displayFollowUpTitle(newAction.title, newAction.channel),
-        owner: newAction.owner,
-        participantId: participant?.id,
-        assigneeName: participant?.name,
-        assigneeEmail: participant?.email,
-        dueAt: newAction.dueAt,
-        channel: newAction.channel,
-        status: current.status === "draft" ? "proposed" : "open",
-      }],
-      };
-    });
-    setNewAction({ title: "", owner: "me", participantId: "", dueAt: "", channel: "email" });
-    setAddModalOpen(false);
-  }
-
   function participantName(participantId?: string) {
     if (!participantId) return encounter?.personName || "Guest";
     return encounter?.participants?.find((person) => person.id === participantId)?.name
@@ -264,7 +231,7 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
   }
 
   function renderActionCta(action: EncounterAction, context: ActionLinkContext) {
-    if (action.owner !== "me" || action.status === "completed" || action.status === "proposed") return null;
+    const active = action.owner === "me" && action.status !== "completed" && action.status !== "proposed";
     const primary = resolveActionLink(action, context);
     if (action.channel === "email" || action.channel === "send") {
       return (
@@ -272,6 +239,7 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
           type="button"
           className="action-edit"
           aria-label={`Email ${action.title}`}
+          disabled={!active}
           onClick={() => window.open(primary.href, "_blank", "noreferrer")}
         ><EnvelopeSimpleIcon size={16} /></button>
       );
@@ -288,11 +256,17 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
           type="button"
           className="action-edit"
           aria-label={`Request ${label} via email for ${action.title}`}
+          disabled={!active}
           onClick={() => window.open(href, "_blank", "noreferrer")}
         ><EnvelopeSimpleIcon size={16} /></button>
       );
     }
-    return <ActionDoButton action={action} context={context} showSecondary />;
+    if (active) return <ActionDoButton action={action} context={context} showSecondary />;
+    return (
+      <button type="button" className="action-edit" aria-label={`${action.title} action`} disabled>
+        <EnvelopeSimpleIcon size={16} />
+      </button>
+    );
   }
 
   async function copyGuestLink() {
@@ -404,13 +378,13 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
       <section className="review-section">
         <div className="review-tabs" role="tablist" aria-label="Meeting recap, transcript, and private notes">
           <button type="button" role="tab" aria-selected={reviewTab === "recap"} className={reviewTab === "recap" ? "active" : ""} onClick={() => setReviewTab("recap")}>
-            <ShareNetworkIcon size={16} />Recap
+            Recap
           </button>
           <button type="button" role="tab" aria-selected={reviewTab === "transcript"} className={reviewTab === "transcript" ? "active" : ""} onClick={() => setReviewTab("transcript")}>
-            <LockKeyIcon size={16} />Transcript
+            Transcript
           </button>
           <button type="button" role="tab" aria-selected={reviewTab === "notes"} className={reviewTab === "notes" ? "active" : ""} onClick={() => setReviewTab("notes")}>
-            <LockKeyIcon size={16} />Private notes
+            Private notes
           </button>
         </div>
         {reviewTab === "recap" ? (
@@ -508,7 +482,6 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
       <section className="review-section">
         <div className="connections-section-head">
           <h2>Follow-up</h2>
-          <Button size="small" variant="secondary" onClick={() => setAddModalOpen(true)}><PlusIcon size={14} />Add follow-up</Button>
         </div>
         {guestCommitments.length ? (
           <div className="guest-response-list">
@@ -679,81 +652,6 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
         {message && <p className="share-message" role="status">{message}</p>}
       </section>
 
-      {addModalOpen ? (
-        <div className="connections-modal-backdrop add-followup-modal-backdrop" role="presentation" onClick={() => setAddModalOpen(false)}>
-          <div className="connections-modal" role="dialog" aria-label="Add follow-up" onClick={(event) => event.stopPropagation()}>
-            <header>
-              <h2>Add follow-up</h2>
-              <button type="button" aria-label="Close" onClick={() => setAddModalOpen(false)}><XIcon size={18} /></button>
-            </header>
-            <div className="quick-follow-up-owner">
-              <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">Owner</small>
-              <div className="flow-heading-actions" style={{ marginTop: 8 }}>
-                <Button type="button" size="small" variant={newAction.owner === "me" ? "primary" : "secondary"} onClick={() => setNewAction((current) => ({ ...current, owner: "me" }))}>Me</Button>
-                {participants.length > 1 ? (
-                  participants.map((person) => (
-                    <Button
-                      key={person.id}
-                      type="button"
-                      size="small"
-                      variant={newAction.owner === "guest" && newAction.participantId === person.id ? "primary" : "secondary"}
-                      onClick={() => setNewAction((current) => ({ ...current, owner: "guest", participantId: person.id }))}
-                    >{person.name || "Guest"}</Button>
-                  ))
-                ) : (
-                  <Button type="button" size="small" variant={newAction.owner === "guest" ? "primary" : "secondary"} onClick={() => setNewAction((current) => ({ ...current, owner: "guest", participantId: "" }))}>{encounter.personName || "Guest"}</Button>
-                )}
-              </div>
-            </div>
-            {newAction.owner === "me" && participants.length > 1 ? (
-              <SelectField
-                label="For person"
-                value={newAction.participantId || participants[0]?.id || ""}
-                onChange={(event) => setNewAction((current) => ({ ...current, participantId: event.target.value }))}
-              >
-                {participants.map((person) => (
-                  <option key={person.id} value={person.id}>{person.name || "Guest"}</option>
-                ))}
-              </SelectField>
-            ) : null}
-            <div className="quick-follow-up-meta">
-              <SelectField compact label="Channel" value={newAction.channel} onChange={(event) => setNewAction((current) => ({ ...current, channel: event.target.value as EncounterAction["channel"] }))}>
-                <option value="email">Email</option>
-                <option value="linkedin">LinkedIn</option>
-                <option value="call">Call</option>
-                <option value="meeting">Meeting</option>
-                <option value="send">Send something</option>
-              </SelectField>
-              <TextField compact label="Due date" type="date" leadingIcon={<CalendarBlankIcon size={14} />} value={newAction.dueAt} onChange={(event) => setNewAction((current) => ({ ...current, dueAt: event.target.value }))} />
-            </div>
-            <div className="quick-follow-up-detail">
-              <button
-                type="button"
-                aria-expanded={newActionDetailOpen}
-                onClick={() => setNewActionDetailOpen((value) => !value)}
-                className="quick-follow-up-detail-toggle"
-              >
-                <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">What do you need to do? (optional)</small>
-                {newActionDetailOpen ? <CaretUpIcon size={14} /> : <CaretDownIcon size={14} />}
-              </button>
-              {newActionDetailOpen ? (
-                <TextField
-                  compact
-                  label="Follow-up"
-                  hint="Shown in your reminders so you know what this one's about."
-                  value={newAction.title}
-                  onChange={(event) => setNewAction((current) => ({ ...current, title: event.target.value }))}
-                  placeholder="e.g. Send the introduction"
-                />
-              ) : null}
-            </div>
-            <div className="quick-follow-up-actions">
-              <Button size="small" variant="ghost" onClick={() => setAddModalOpen(false)}>Cancel</Button>
-              <Button size="small" onClick={addAction}><PlusIcon size={14} />Add</Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

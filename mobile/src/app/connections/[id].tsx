@@ -267,12 +267,12 @@ export default function ConnectionDetailScreen() {
     () => new Map(myEvents.map((event) => [event.id, event])),
     [myEvents],
   );
-  const timeline = useMemo(() => [
-    ...recordedMeetings.map((meeting) => {
+  const timeline = useMemo(() => recordedMeetings
+    .map((meeting) => {
       const event = meeting.eventId ? eventById.get(meeting.eventId) : undefined;
       return {
         id: `meeting-${meeting.id}`,
-        kind: 'meeting' as const,
+        kind: 'meeting' as 'meeting' | 'completed',
         occurredAt: meeting.startedAt,
         title: meeting.title.trim() || 'Meeting',
         copy: meeting.sharedSummary.trim(),
@@ -281,24 +281,8 @@ export default function ConnectionDetailScreen() {
         encounterId: meeting.id,
         meeting,
       };
-    }),
-    ...followUps
-      .filter((item) => item.status === 'completed' && item.completedAt)
-      .map((item) => ({
-        id: `follow-up-${item.encounterId}-${item.actionId}`,
-        kind: 'completed' as const,
-        occurredAt: item.completedAt || '',
-        title: item.title,
-        // No "From {meeting title}" caption here — the meeting itself
-        // already appears as its own History cell in this same list, so
-        // repeating its title read as duplicated text right next to it.
-        copy: '',
-        eventTitle: item.eventTitle || '',
-        eventLocation: item.eventId ? eventById.get(item.eventId)?.location || '' : '',
-        encounterId: item.encounterId,
-        meeting: meetings.find((meeting) => meeting.id === item.encounterId) || null,
-      })),
-  ].sort((left, right) => right.occurredAt.localeCompare(left.occurredAt)), [eventById, followUps, meetings, recordedMeetings]);
+    })
+    .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt)), [eventById, recordedMeetings]);
 
   async function confirmDelete() {
     if (!accessToken || !connection) return;
