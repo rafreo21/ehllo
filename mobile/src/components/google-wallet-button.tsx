@@ -1,3 +1,4 @@
+import { fonts } from '@/theme/tokens';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { GoogleWalletIcon } from '@/components/google-wallet-icon';
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: '#000000',
   },
-  label: { color: '#FFFFFF', fontSize: 15, lineHeight: 19, fontWeight: '600' },
+  label: { color: '#FFFFFF', fontSize: 15, lineHeight: 19, fontFamily: fonts.semibold, fontWeight: '600' },
   loadingOverlay: {
     position: 'absolute',
     top: 0,

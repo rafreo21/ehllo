@@ -39,7 +39,7 @@ import { useFollowUpActions } from '@/features/follow-ups/use-follow-up-actions'
 import { describeError } from '@/lib/friendly-error';
 import { isNetworkError } from '@/lib/mobile-api';
 import { useAppInsets } from '@/lib/safe-area';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, spacing, fonts } from '@/theme/tokens';
 
 export function FollowUpsScreen({ showBack = true, historyOnly = false }: { showBack?: boolean; historyOnly?: boolean }) {
   const { session, loading: authLoading } = useAuth();
@@ -340,12 +340,12 @@ const styles = StyleSheet.create({
   headerCopy: { gap: spacing.x2, marginTop: -spacing.x1, marginBottom: spacing.x1 },
   addButton: { alignSelf: 'flex-start' },
   addButtonPill: { paddingHorizontal: spacing.x5, paddingVertical: spacing.x3 },
-  addButtonPillText: { fontSize: 14 },
+  addButtonPillText: { fontFamily: fonts.regular, fontSize: 14 },
   title: {
     color: colors.ink,
     fontSize: 28,
     lineHeight: 30,
-    fontWeight: '700',
+    fontFamily: fonts.bold, fontWeight: '700',
     letterSpacing: -1.1,
   },
   scroll: { flex: 1, marginTop: spacing.x2 },

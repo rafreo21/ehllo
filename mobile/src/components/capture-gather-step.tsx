@@ -18,7 +18,7 @@ import {
   updateGatherPerson,
   type GatherPerson,
 } from '@/features/encounters/gather-people';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -361,11 +361,11 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   transcriptBannerCopy: { flex: 1, gap: 4 },
-  transcriptBannerTitle: { color: colors.ink, fontSize: 14, fontWeight: '800' },
-  transcriptBannerBody: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  transcriptBannerTitle: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  transcriptBannerBody: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   prompt: { gap: spacing.x2 },
   promptHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
-  promptTitle: { color: colors.ink, fontSize: 17, fontWeight: '800' },
+  promptTitle: { color: colors.ink, fontSize: 17, fontFamily: fonts.extrabold, fontWeight: '800' },
   promptCopy: { marginTop: -spacing.x1 },
   peopleList: { gap: spacing.x2 },
   optionList: {
@@ -393,8 +393,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   optionCopy: { flex: 1, gap: 2 },
-  optionTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
-  optionSubtitle: { color: colors.muted, fontSize: 12, lineHeight: 17 },
+  optionTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
+  optionSubtitle: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
   block: {
     gap: spacing.x3,
     padding: spacing.x5,
@@ -403,8 +403,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  blockTitle: { color: colors.ink, fontSize: 17, fontWeight: '800' },
-  label: { color: colors.muted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  blockTitle: { color: colors.ink, fontSize: 17, fontFamily: fonts.extrabold, fontWeight: '800' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
   input: {
     minHeight: 48,
     paddingHorizontal: spacing.x4,
@@ -415,8 +415,8 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 15,
   },
-  error: { color: colors.danger, fontSize: 12, lineHeight: 18 },
-  muted: { color: colors.muted, fontSize: 13, lineHeight: 20 },
+  error: { color: colors.danger, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
+  muted: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 20 },
   addedCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -428,13 +428,13 @@ const styles = StyleSheet.create({
     borderColor: '#CFE8C0',
   },
   addedCopy: { flex: 1, gap: 2 },
-  addedTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  addedMeta: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  addedTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  addedMeta: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   addedBadge: {
     marginTop: 4,
     color: colors.ink,
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold, fontWeight: '800',
     textTransform: 'uppercase',
   },
   addedActions: { flexDirection: 'row', gap: spacing.x2 },
@@ -456,8 +456,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium,
     backgroundColor: colors.canvas,
   },
-  qrHint: { color: colors.ink, fontSize: 16, fontWeight: '800', textAlign: 'center' },
-  qrSubhint: { color: colors.muted, fontSize: 13, textAlign: 'center' },
+  qrHint: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800', textAlign: 'center' },
+  qrSubhint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, textAlign: 'center' },
   exchangeList: { gap: spacing.x3 },
   exchangeCard: {
     gap: spacing.x1,
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   exchangeCardDisabled: { opacity: 0.55 },
-  exchangeName: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  exchangeMeta: { color: colors.muted, fontSize: 12, lineHeight: 18 },
-  exchangeSelected: { color: colors.ink, fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
+  exchangeName: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  exchangeMeta: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
+  exchangeSelected: { color: colors.ink, fontSize: 11, fontFamily: fonts.black, fontWeight: '900', textTransform: 'uppercase' },
 });

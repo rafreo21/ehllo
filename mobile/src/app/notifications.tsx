@@ -30,7 +30,7 @@ import {
   type NotificationType,
 } from '@/features/notifications/notification-center-api';
 import { describeError } from '@/lib/friendly-error';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 const FOLLOW_UP_NOTIFICATION_TYPES = new Set<NotificationType>(['follow_up_due', 'follow_up_overdue']);
 
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   markAllButtonPressed: { backgroundColor: colors.surfaceMuted },
-  markAllText: { color: colors.ink, fontSize: 12, fontWeight: '800' },
+  markAllText: { color: colors.ink, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800' },
   row: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -281,9 +281,9 @@ const styles = StyleSheet.create({
   },
   iconWrapUnread: { backgroundColor: colors.ink },
   rowCopy: { flex: 1, gap: 2 },
-  rowTitle: { color: colors.ink, fontSize: 14, fontWeight: '700' },
-  rowTitleUnread: { fontWeight: '900' },
-  rowBody: { color: colors.muted, fontSize: 13, lineHeight: 18 },
-  rowWhen: { color: colors.muted, fontSize: 11, fontWeight: '700', marginTop: 2 },
+  rowTitle: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '700' },
+  rowTitleUnread: { fontFamily: fonts.black, fontWeight: '900' },
+  rowBody: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
+  rowWhen: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '700', marginTop: 2 },
   unreadDot: { width: 8, height: 8, borderRadius: radius.round, backgroundColor: colors.accent, marginTop: 6 },
 });

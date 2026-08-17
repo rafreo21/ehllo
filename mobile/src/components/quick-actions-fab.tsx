@@ -11,7 +11,7 @@ import {
 import { createFreshCaptureDraft, writeCaptureDraft } from '@/features/encounters/capture-draft';
 import { useTabBarHeight } from '@/lib/safe-area';
 import { useDebouncedNavigate } from '@/lib/use-debounced-navigate';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export function QuickActionsFab() {
   const { card } = useCard();
@@ -152,5 +152,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.surfaceMuted,
   },
-  fabOptionLabel: { color: colors.ink, fontSize: 14, fontWeight: '800' },
+  fabOptionLabel: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
 });

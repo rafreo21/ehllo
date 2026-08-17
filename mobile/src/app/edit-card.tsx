@@ -22,7 +22,7 @@ import { setAuthReturnPath } from '@/features/encounters/capture-draft';
 import { CardThemeGradient, CardThemeGradientFill } from '@/components/card-theme-gradient';
 import { CARD_THEMES, normalizeThemeColor, themeForegroundColor, themeMatches } from '@/features/card/theme-colors';
 import type { MobileCard } from '@/features/card/types';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 const STEPS = ['Design', 'Methods', 'Review'] as const;
 
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.canvas },
   page: { flex: 1 },
   header: { paddingHorizontal: spacing.x5 },
-  title: { fontSize: 32, lineHeight: 34, letterSpacing: -1.1 },
+  title: { fontFamily: fonts.regular, fontSize: 32, lineHeight: 34, letterSpacing: -1.1 },
   stepperWrap: {
     marginTop: spacing.x5,
     paddingHorizontal: spacing.x5,
@@ -554,11 +554,11 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
     backgroundColor: colors.accent,
   },
-  stepperNum: { color: colors.muted, fontSize: 13, fontWeight: '900' },
+  stepperNum: { color: colors.muted, fontSize: 13, fontFamily: fonts.black, fontWeight: '900' },
   stepperNumActive: { color: colors.white },
   stepperLabels: { flexDirection: 'row' },
   stepperLabelCell: { flex: 1, alignItems: 'center' },
-  stepperLabel: { color: colors.muted, fontSize: 12, fontWeight: '800', textAlign: 'center' },
+  stepperLabel: { color: colors.muted, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800', textAlign: 'center' },
   stepperLabelActive: { color: colors.ink },
   scroll: { flex: 1, marginTop: spacing.x4 },
   scrollContent: {
@@ -582,8 +582,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   sectionCopy: { flex: 1, gap: 2 },
-  sectionTitle: { color: colors.ink, fontSize: 17, fontWeight: '800' },
-  sectionSubtitle: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  sectionTitle: { color: colors.ink, fontSize: 17, fontFamily: fonts.extrabold, fontWeight: '800' },
+  sectionSubtitle: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   coverWrap: { gap: spacing.x2 },
   coverSlot: {
     minHeight: 148,
@@ -611,10 +611,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(22, 51, 0, 0.28)',
   },
-  overlayText: { color: colors.white, fontSize: 14, fontWeight: '800' },
-  overlayTextSmall: { color: colors.white, fontSize: 12, fontWeight: '800' },
-  coverLabel: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  coverHint: { color: colors.muted, fontSize: 12 },
+  overlayText: { color: colors.white, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  overlayTextSmall: { color: colors.white, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800' },
+  coverLabel: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  coverHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
   removeBadge: { alignSelf: 'flex-start' },
   photoRow: { flexDirection: 'row', gap: spacing.x3 },
   photoWrap: { flex: 1, alignItems: 'center', gap: spacing.x2 },
@@ -647,11 +647,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.surfaceMuted,
   },
-  photoLabel: { color: colors.ink, fontSize: 13, fontWeight: '800', textAlign: 'center' },
-  photoHint: { color: colors.muted, fontSize: 11 },
-  removeImage: { color: colors.danger, fontSize: 11, fontWeight: '700' },
+  photoLabel: { color: colors.ink, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800', textAlign: 'center' },
+  photoHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 11 },
+  removeImage: { color: colors.danger, fontSize: 11, fontFamily: fonts.bold, fontWeight: '700' },
   field: { gap: spacing.x2 },
-  label: { color: colors.muted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.6 },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.6 },
   input: {
     minHeight: 52,
     paddingHorizontal: spacing.x4,
@@ -663,7 +663,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   textarea: { minHeight: 110, paddingTop: spacing.x4, textAlignVertical: 'top' },
-  hint: { color: colors.muted, fontSize: 11, textAlign: 'right' },
+  hint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 11, textAlign: 'right' },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x3 },
   swatch: {
     width: 48,
@@ -675,7 +675,7 @@ const styles = StyleSheet.create({
   },
   swatchSelected: { borderWidth: 2, borderColor: colors.ink },
   reviewIntro: { gap: spacing.x2, paddingHorizontal: spacing.x1 },
-  reviewTitle: { color: colors.ink, fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
+  reviewTitle: { color: colors.ink, fontSize: 22, fontFamily: fonts.extrabold, fontWeight: '800', letterSpacing: -0.5 },
   previewWrap: {
     paddingVertical: spacing.x2,
   },
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium,
     backgroundColor: colors.surface,
   },
-  statValue: { color: colors.ink, fontSize: 16, fontWeight: '900' },
+  statValue: { color: colors.ink, fontSize: 16, fontFamily: fonts.black, fontWeight: '900' },
   statSwatch: {
     width: 28,
     height: 28,
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  statLabel: { color: colors.muted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+  statLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '700', textTransform: 'uppercase' },
   reviewOption: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -711,9 +711,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   reviewOptionCopy: { flex: 1, gap: 4 },
-  reviewOptionTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  reviewOptionHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
-  error: { color: colors.danger, fontSize: 12, lineHeight: 18 },
+  reviewOptionTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  reviewOptionHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
+  error: { color: colors.danger, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
   footer: {
     flexDirection: 'row',
     gap: spacing.x2,

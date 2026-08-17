@@ -18,7 +18,7 @@ import { describeError } from '@/lib/friendly-error';
 import { usePendingSyncCount } from '@/features/sync/use-pending-sync-count';
 import { useAppInsets, useTabBarHeight } from '@/lib/safe-area';
 import { useDebouncedNavigate } from '@/lib/use-debounced-navigate';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export default function CardLibraryScreen() {
   const { session } = useAuth();
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     gap: spacing.x3,
   },
   headerCopy: { flex: 1, gap: spacing.x3 },
-  title: { fontSize: 32, lineHeight: 34, letterSpacing: -1.1 },
+  title: { fontFamily: fonts.regular, fontSize: 32, lineHeight: 34, letterSpacing: -1.1 },
   scroll: { flex: 1, marginTop: spacing.x2 },
   scrollContent: {
     paddingHorizontal: spacing.x5,
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   localNote: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold, fontWeight: '700',
     textAlign: 'center',
   },
   grid: { gap: spacing.x3 },
@@ -198,6 +198,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.surfaceMuted,
   },
-  addTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
-  addCopy: { color: colors.muted, fontSize: 12 },
+  addTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
+  addCopy: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
 });

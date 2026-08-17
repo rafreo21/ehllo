@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui';
 import { reportClientError } from '@/lib/client-error-reporting';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, spacing, fonts } from '@/theme/tokens';
 
 type Props = PropsWithChildren<{
   onReset?: () => void;
@@ -58,6 +58,6 @@ const styles = StyleSheet.create({
     padding: spacing.x5,
     backgroundColor: colors.canvas,
   },
-  title: { color: colors.ink, fontSize: 22, fontWeight: '800' },
-  message: { color: colors.danger, fontSize: 14, lineHeight: 20 },
+  title: { color: colors.ink, fontSize: 22, fontFamily: fonts.extrabold, fontWeight: '800' },
+  message: { color: colors.danger, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
 });

@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui';
 import { reportClientError } from '@/lib/client-error-reporting';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, spacing, fonts } from '@/theme/tokens';
 
 type State = {
   error: Error | null;
@@ -57,6 +57,6 @@ const styles = StyleSheet.create({
     padding: spacing.x5,
     backgroundColor: colors.canvas,
   },
-  title: { color: colors.ink, fontSize: 22, fontWeight: '800' },
-  message: { color: colors.muted, fontSize: 15, lineHeight: 22 },
+  title: { color: colors.ink, fontSize: 22, fontFamily: fonts.extrabold, fontWeight: '800' },
+  message: { color: colors.muted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 22 },
 });

@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 
 import { useAppInsets } from '@/lib/safe-area';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type BottomSheetProps = PropsWithChildren<{
   visible: boolean;
@@ -195,8 +195,8 @@ const styles = StyleSheet.create({
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2, flexShrink: 1 },
   backButton: { flexShrink: 0 },
-  title: { color: colors.ink, fontSize: 18, fontWeight: '800', flexShrink: 1 },
-  close: { color: colors.muted, fontSize: 14, fontWeight: '700' },
+  title: { color: colors.ink, fontSize: 18, fontFamily: fonts.extrabold, fontWeight: '800', flexShrink: 1 },
+  close: { color: colors.muted, fontSize: 14, fontFamily: fonts.bold, fontWeight: '700' },
   bodyWrap: {
     flexGrow: 1,
     flexShrink: 1,

@@ -10,7 +10,7 @@ import {
 import { formatDuration } from '@/features/encounters/local-recordings';
 import { useAppInsets } from '@/lib/safe-area';
 import { useDebouncedNavigate } from '@/lib/use-debounced-navigate';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export function ActiveCaptureBanner() {
   const pathname = usePathname();
@@ -142,8 +142,8 @@ const styles = StyleSheet.create({
   },
   pausedIcon: { backgroundColor: colors.inkSoft },
   copy: { minWidth: 0, flex: 1 },
-  label: { color: colors.ink, fontSize: 14, fontWeight: '800' },
-  duration: { color: colors.inkSoft, fontSize: 12, fontWeight: '700', marginTop: 2 },
+  label: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  duration: { color: colors.inkSoft, fontSize: 12, fontFamily: fonts.bold, fontWeight: '700', marginTop: 2 },
   control: {
     width: 44,
     height: 44,

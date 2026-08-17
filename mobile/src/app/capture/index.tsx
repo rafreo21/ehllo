@@ -50,7 +50,7 @@ import {
 import { describeError } from '@/lib/friendly-error';
 import { isNetworkError } from '@/lib/mobile-api';
 import { formatAbsoluteTime, formatRelativeTime } from '@/lib/relative-time';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type CaptureSort = 'recent' | 'oldest' | 'az';
 
@@ -660,7 +660,7 @@ export default function CaptureEntryScreen() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.canvas },
   header: { paddingHorizontal: spacing.x5, paddingBottom: spacing.x3 },
-  title: { fontSize: 30, lineHeight: 32 },
+  title: { fontFamily: fonts.regular, fontSize: 30, lineHeight: 32 },
   scroll: { flex: 1 },
   scrollContent: {
     paddingBottom: spacing.x6,
@@ -671,7 +671,7 @@ const styles = StyleSheet.create({
     gap: spacing.x2,
   },
   startActionPill: { paddingHorizontal: spacing.x5, paddingVertical: spacing.x3 },
-  startActionPillText: { fontSize: 14 },
+  startActionPillText: { fontFamily: fonts.regular, fontSize: 14 },
   offlineBanner: { marginTop: spacing.x2 },
   activeCard: {
     minHeight: 72,
@@ -699,8 +699,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   activeCopy: { minWidth: 0, flex: 1 },
-  activeTitle: { color: colors.white, fontSize: 15, fontWeight: '900' },
-  activeDuration: { color: '#CFE1C8', fontSize: 13, fontWeight: '800', marginTop: 2 },
+  activeTitle: { color: colors.white, fontSize: 15, fontFamily: fonts.black, fontWeight: '900' },
+  activeDuration: { color: '#CFE1C8', fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800', marginTop: 2 },
   activeControl: {
     width: 46,
     height: 46,
@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.x2,
   },
-  activeFinishText: { color: colors.white, fontSize: 13, fontWeight: '900' },
+  activeFinishText: { color: colors.white, fontSize: 13, fontFamily: fonts.black, fontWeight: '900' },
   heroBlock: {
     paddingHorizontal: spacing.x5,
     paddingTop: spacing.x2,
@@ -745,8 +745,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   quickContextCopy: { flex: 1, gap: 2 },
-  quickContextTitle: { color: colors.ink, fontSize: 16, lineHeight: 20, fontWeight: '900' },
-  quickContextHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  quickContextTitle: { color: colors.ink, fontSize: 16, lineHeight: 20, fontFamily: fonts.black, fontWeight: '900' },
+  quickContextHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   listBlock: {
     paddingHorizontal: spacing.x5,
     paddingTop: spacing.x3,
@@ -756,7 +756,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.x2,
     color: colors.muted,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.black, fontWeight: '900',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
@@ -769,7 +769,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'transparent',
   },
-  syncFooterText: { color: colors.muted, fontSize: 11, lineHeight: 15, fontWeight: '700', textAlign: 'center' },
+  syncFooterText: { color: colors.muted, fontSize: 11, lineHeight: 15, fontFamily: fonts.bold, fontWeight: '700', textAlign: 'center' },
   historyTools: {
     zIndex: 2,
     paddingHorizontal: spacing.x5,
@@ -804,11 +804,11 @@ const styles = StyleSheet.create({
   captureCardPressed: { opacity: 0.94 },
   captureTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.x3 },
   personRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2, flex: 1 },
-  personName: { color: colors.ink, fontSize: 14, fontWeight: '800' },
-  when: { color: colors.muted, fontSize: 12 },
-  draftMeta: { color: colors.muted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
+  personName: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  when: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
+  draftMeta: { color: colors.muted, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
   draftMetaInterrupted: { color: colors.warning },
-  captureTitle: { color: colors.ink, fontSize: 18, fontWeight: '800', lineHeight: 24 },
+  captureTitle: { color: colors.ink, fontSize: 18, fontFamily: fonts.extrabold, fontWeight: '800', lineHeight: 24 },
   summaryBlock: {
     gap: 4,
     padding: spacing.x4,
@@ -824,14 +824,14 @@ const styles = StyleSheet.create({
   blockLabel: {
     color: colors.muted,
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.black, fontWeight: '900',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
-  blockCopy: { color: colors.ink, fontSize: 14, lineHeight: 20 },
-  blockCopyMuted: { color: colors.muted, fontSize: 14, lineHeight: 20 },
+  blockCopy: { color: colors.ink, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
+  blockCopyMuted: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
   followUpRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  followUpText: { flex: 1, color: colors.ink, fontSize: 13, lineHeight: 18, fontWeight: '700' },
+  followUpText: { flex: 1, color: colors.ink, fontSize: 13, lineHeight: 18, fontFamily: fonts.bold, fontWeight: '700' },
   cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -841,13 +841,13 @@ const styles = StyleSheet.create({
   statusChip: {
     color: colors.muted,
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold, fontWeight: '800',
     textTransform: 'uppercase',
   },
   statusChipInterrupted: { color: colors.warning },
   draftActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.x4 },
   discardButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  discardText: { color: colors.danger, fontSize: 12, fontWeight: '800' },
+  discardText: { color: colors.danger, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800' },
   openRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  openText: { color: colors.ink, fontSize: 12, fontWeight: '800' },
+  openText: { color: colors.ink, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800' },
 });

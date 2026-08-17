@@ -14,7 +14,7 @@ import { cardDisplayLabel } from '@/features/card/card-display';
 import { useCard } from '@/features/card/card-context';
 import { describeError } from '@/lib/friendly-error';
 import { useAppInsets, useTabBarHeight } from '@/lib/safe-area';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export default function CardDetailScreen() {
   const navigation = useNavigation();
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 28,
     lineHeight: 30,
-    fontWeight: '700',
+    fontFamily: fonts.bold, fontWeight: '700',
     letterSpacing: -1.1,
   },
   scroll: { flex: 1, marginTop: spacing.x4 },
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     gap: spacing.x4,
   },
   badges: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
-  status: { color: colors.muted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
+  status: { color: colors.muted, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
   primaryBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.accent,
   },
-  primaryText: { color: colors.ink, fontSize: 12, fontWeight: '800' },
+  primaryText: { color: colors.ink, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800' },
   primaryToggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   primaryToggleCopy: { flex: 1, gap: 4 },
-  primaryToggleTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  primaryToggleHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  primaryToggleTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  primaryToggleHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   primaryToggleRowDisabled: { opacity: 0.72 },
 });

@@ -18,7 +18,7 @@ import type { FollowUpItem } from '@/features/follow-ups/follow-up-api';
 import { channelLabel } from '@/features/follow-ups/action-links';
 import { displayFollowUpTitle, isFollowUpChannel } from '@/features/follow-ups/follow-up-channels';
 import { dueTone, formatDueLabel } from '@/lib/due-date';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type FollowUpCellProps = {
   item: FollowUpItem;
@@ -146,11 +146,11 @@ const styles = StyleSheet.create({
   },
   copy: { flex: 1, gap: 2 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  title: { color: colors.ink, fontSize: 14, fontWeight: '800' },
+  title: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
   ownerTag: {
     color: colors.ink,
     fontSize: 9,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold, fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.3,
     paddingHorizontal: 6,
@@ -159,11 +159,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     overflow: 'hidden',
   },
-  subtitle: { color: colors.muted, fontSize: 13, lineHeight: 18 },
-  due: { color: colors.muted, fontSize: 11, fontWeight: '700' },
+  subtitle: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
+  due: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '700' },
   dueOverdue: { color: colors.danger },
   dueToday: { color: colors.warning },
-  dueCompleted: { color: colors.muted, fontSize: 11, fontWeight: '700' },
+  dueCompleted: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '700' },
   check: {
     width: 52,
     alignItems: 'center',

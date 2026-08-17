@@ -46,7 +46,7 @@ import {
 import { filterConnections, type ConnectionItem } from '@/features/connections/connections-api';
 import { fetchDeviceContacts, filterDeviceContacts, type DeviceContactMatch } from '@/features/connections/device-contacts';
 import type { CaptureRecorder } from '@/features/encounters/use-capture-recorder';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type CaptureInteractionStepProps = {
   draft: CaptureWizardDraft;
@@ -814,7 +814,7 @@ export function CaptureInteractionStep({
 const styles = StyleSheet.create({
   stack: { gap: spacing.x5 },
   destinationWrap: { gap: spacing.x3 },
-  destinationTitle: { color: colors.ink, fontSize: 14, fontWeight: '800' },
+  destinationTitle: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
   destinationList: { gap: spacing.x2 },
   destinationOption: {
     minHeight: 58,
@@ -829,8 +829,8 @@ const styles = StyleSheet.create({
   },
   destinationOptionActive: { borderColor: colors.ink, backgroundColor: colors.surfaceMuted },
   destinationCopy: { flex: 1, gap: 2 },
-  destinationLabel: { color: colors.ink, fontSize: 13, fontWeight: '800' },
-  destinationDetail: { color: colors.muted, fontSize: 11, lineHeight: 15 },
+  destinationLabel: { color: colors.ink, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
+  destinationDetail: { color: colors.muted, fontFamily: fonts.regular, fontSize: 11, lineHeight: 15 },
   radio: { width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: colors.line },
   radioActive: { borderColor: colors.ink, backgroundColor: colors.accent },
   consentChip: {
@@ -845,7 +845,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   consentChipConfirmed: { backgroundColor: colors.surfaceMuted },
-  consentChipText: { flex: 1, color: colors.ink, fontSize: 14, fontWeight: '700' },
+  consentChipText: { flex: 1, color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '700' },
   recorderCard: {
     gap: spacing.x4,
     padding: spacing.x5,
@@ -866,9 +866,9 @@ const styles = StyleSheet.create({
   },
   micOrbActive: { backgroundColor: colors.ink, borderColor: colors.ink },
   recorderMeta: { flex: 1, gap: 2 },
-  recorderTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
-  recorderHint: { color: colors.muted, fontSize: 12 },
-  recorderTime: { color: colors.ink, fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  recorderTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
+  recorderHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
+  recorderTime: { color: colors.ink, fontSize: 18, fontFamily: fonts.extrabold, fontWeight: '800', fontVariant: ['tabular-nums'] },
   audioMeter: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -890,7 +890,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  liveControlText: { color: colors.ink, fontSize: 15, fontWeight: '800' },
+  liveControlText: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
   liveEndButton: {
     minHeight: 52,
     flex: 1,
@@ -901,7 +901,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.ink,
   },
-  liveEndText: { color: colors.white, fontSize: 15, fontWeight: '800' },
+  liveEndText: { color: colors.white, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
   flexButton: { flex: 1 },
   addPersonButton: {
     width: '100%',
@@ -919,7 +919,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   addPersonButtonPressed: { backgroundColor: colors.surfaceMuted },
-  addPersonButtonText: { color: colors.ink, fontSize: 13, fontWeight: '800', textAlign: 'center' },
+  addPersonButtonText: { color: colors.ink, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800', textAlign: 'center' },
   addPersonBadge: {
     position: 'absolute',
     top: 8,
@@ -932,7 +932,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.accent,
   },
-  addPersonBadgeText: { color: colors.ink, fontSize: 10, fontWeight: '900' },
+  addPersonBadgeText: { color: colors.ink, fontSize: 10, fontFamily: fonts.black, fontWeight: '900' },
   liveTranscriptPanel: {
     gap: spacing.x3,
     padding: spacing.x4,
@@ -951,11 +951,11 @@ const styles = StyleSheet.create({
   liveTranscriptTitle: {
     color: colors.ink,
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold, fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
   },
-  liveTranscriptHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  liveTranscriptHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   liveTranscriptField: {
     minHeight: 140,
     maxHeight: 220,
@@ -969,12 +969,12 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   transcribeFailRow: { gap: spacing.x3 },
-  transcribeFailText: { color: colors.danger, fontSize: 13, lineHeight: 18 },
+  transcribeFailText: { color: colors.danger, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   peopleSection: { gap: spacing.x4 },
   sectionHead: { flexDirection: 'row', gap: spacing.x3, alignItems: 'flex-start' },
   sectionHeadCopy: { flex: 1, gap: 2 },
-  sectionTitle: { color: colors.ink, fontSize: 17, fontWeight: '800' },
-  sectionHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  sectionTitle: { color: colors.ink, fontSize: 17, fontFamily: fonts.extrabold, fontWeight: '800' },
+  sectionHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   peopleList: { gap: spacing.x2 },
   personCard: {
     flexDirection: 'row',
@@ -985,10 +985,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#EAF6E4',
   },
   personCopy: { flex: 1, gap: 2 },
-  personName: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  personMeta: { color: colors.muted, fontSize: 12, lineHeight: 17 },
-  personBadge: { marginTop: 2, color: colors.ink, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
-  personHistoryBadge: { marginTop: 2, color: colors.inkSoft, fontSize: 11, fontWeight: '800' },
+  personName: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  personMeta: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
+  personBadge: { marginTop: 2, color: colors.ink, fontSize: 10, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
+  personHistoryBadge: { marginTop: 2, color: colors.inkSoft, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800' },
   viewAllPeople: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1000,7 +1000,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  viewAllPeopleText: { color: colors.link, fontSize: 13, fontWeight: '800' },
+  viewAllPeopleText: { color: colors.link, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
   personActions: { flexDirection: 'row', gap: spacing.x2 },
   iconButton: {
     width: 34,
@@ -1019,7 +1019,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  emptyPeopleText: { color: colors.muted, fontSize: 13, textAlign: 'center' },
+  emptyPeopleText: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, textAlign: 'center' },
   personSearchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1032,13 +1032,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium,
     backgroundColor: colors.canvas,
   },
-  personSearchInput: { flex: 1, color: colors.ink, fontSize: 15 },
+  personSearchInput: { flex: 1, color: colors.ink, fontFamily: fonts.regular, fontSize: 15 },
   personSearchResults: { marginTop: spacing.x3 },
   personSearchSectionLabel: {
     marginTop: spacing.x2,
     color: colors.muted,
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold, fontWeight: '800',
     textTransform: 'uppercase',
   },
   personChoiceList: { gap: spacing.x2, marginTop: spacing.x3 },
@@ -1063,8 +1063,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   personChoiceCopy: { flex: 1, gap: 2 },
-  personChoiceTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  personChoiceHint: { color: colors.muted, fontSize: 12, lineHeight: 17 },
+  personChoiceTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  personChoiceHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
   choiceCount: {
     minWidth: 28,
     height: 28,
@@ -1074,8 +1074,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.accent,
   },
-  choiceCountText: { color: colors.ink, fontSize: 11, fontWeight: '900' },
-  label: { color: colors.muted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  choiceCountText: { color: colors.ink, fontSize: 11, fontFamily: fonts.black, fontWeight: '900' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
   input: {
     minHeight: 48,
     paddingHorizontal: spacing.x4,
@@ -1086,18 +1086,18 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 15,
   },
-  error: { color: colors.danger, fontSize: 12 },
+  error: { color: colors.danger, fontFamily: fonts.regular, fontSize: 12 },
   consentRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.x2,
   },
-  consentLabel: { color: colors.ink, fontSize: 15, fontWeight: '800' },
+  consentLabel: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
   methodHeading: {
     color: colors.muted,
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold, fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
@@ -1112,13 +1112,13 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   methodChipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
-  methodText: { color: colors.ink, fontSize: 13, fontWeight: '700' },
-  methodTextActive: { fontWeight: '900' },
+  methodText: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
+  methodTextActive: { fontFamily: fonts.black, fontWeight: '900' },
   centerCopy: { textAlign: 'center' },
   qrWrap: { alignItems: 'center', gap: spacing.x2, padding: spacing.x4, backgroundColor: colors.canvas, borderRadius: radius.medium },
-  qrHint: { color: colors.ink, fontSize: 16, fontWeight: '800' },
+  qrHint: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
   loadingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3, paddingVertical: spacing.x2 },
-  loadingText: { color: colors.muted, fontSize: 14 },
+  loadingText: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14 },
   exchangeList: { gap: spacing.x3 },
   exchangeCard: {
     gap: spacing.x1,
@@ -1130,10 +1130,10 @@ const styles = StyleSheet.create({
   },
   exchangeCardSelected: { borderColor: colors.ink, backgroundColor: colors.surfaceMuted },
   exchangeCardDisabled: { opacity: 0.55 },
-  exchangeName: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  exchangeMeta: { color: colors.muted, fontSize: 12, lineHeight: 18 },
-  exchangeSelected: { color: colors.ink, fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
-  transcriptSheetHint: { color: colors.muted, fontSize: 13 },
+  exchangeName: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  exchangeMeta: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
+  exchangeSelected: { color: colors.ink, fontSize: 11, fontFamily: fonts.black, fontWeight: '900', textTransform: 'uppercase' },
+  transcriptSheetHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13 },
   transcriptField: {
     minHeight: 220,
     maxHeight: 320,

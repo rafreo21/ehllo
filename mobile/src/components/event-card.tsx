@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 
 import { PillButton } from '@/components/ui';
 import type { EventItem } from '@/features/events/events-api';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 function formatEventWhen(startsAt: string) {
   const start = new Date(startsAt);
@@ -204,9 +204,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   copy: { flex: 1, minWidth: 0, gap: 2 },
-  title: { color: colors.ink, fontSize: 14, fontWeight: '800' },
+  title: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  meta: { flexShrink: 1, color: colors.muted, fontSize: 12 },
+  meta: { flexShrink: 1, color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
   statusTag: {
     flexShrink: 0,
     paddingHorizontal: spacing.x2,
@@ -214,8 +214,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.accent,
   },
-  statusText: { color: colors.ink, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
-  suggested: { flexShrink: 0, color: colors.muted, fontSize: 12 },
+  statusText: { color: colors.ink, fontSize: 10, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
+  suggested: { flexShrink: 0, color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.x2 },
-  checkedInNote: { color: colors.muted, fontSize: 13, fontWeight: '600' },
+  checkedInNote: { color: colors.muted, fontSize: 13, fontFamily: fonts.semibold, fontWeight: '600' },
 });

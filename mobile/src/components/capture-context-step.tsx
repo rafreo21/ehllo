@@ -1,6 +1,6 @@
 import type { CaptureWizardDraft } from '@/features/encounters/capture-draft';
 import { Body, Button } from '@/components/ui';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 import { CheckCircle, Sparkle, TextAlignLeft } from 'phosphor-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -182,8 +182,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  tabLabel: { color: colors.muted, fontSize: 13, fontWeight: '700' },
-  tabLabelActive: { color: colors.ink, fontWeight: '800' },
+  tabLabel: { color: colors.muted, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
+  tabLabelActive: { color: colors.ink, fontFamily: fonts.extrabold, fontWeight: '800' },
   tabDot: {
     width: 7,
     height: 7,
@@ -198,8 +198,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  label: { color: colors.muted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
-  fieldHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
+  fieldHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   peopleWrap: { gap: spacing.x2 },
   peopleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2 },
   personChip: {
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  personChipText: { color: colors.ink, fontSize: 13, fontWeight: '700' },
+  personChipText: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
   input: {
     minHeight: 48,
     paddingHorizontal: spacing.x4,
@@ -223,12 +223,12 @@ const styles = StyleSheet.create({
   },
   summaryField: { minHeight: 180, maxHeight: 260, paddingTop: spacing.x3, textAlignVertical: 'top' },
   transcriptField: { minHeight: 280, maxHeight: 400, paddingTop: spacing.x3, textAlignVertical: 'top' },
-  uncertain: { color: colors.danger, fontSize: 12, lineHeight: 18 },
+  uncertain: { color: colors.danger, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
   readyRow: { padding: spacing.x3, borderRadius: radius.medium, backgroundColor: colors.surfaceMuted },
   statusText: { flex: 1, gap: 2 },
-  statusTitle: { color: colors.ink, fontSize: 13, fontWeight: '800' },
-  statusCopy: { color: colors.muted, fontSize: 13 },
+  statusTitle: { color: colors.ink, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
+  statusCopy: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13 },
   errorBox: {
     gap: spacing.x1,
     padding: spacing.x4,
@@ -237,6 +237,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F3CACA',
   },
-  errorTitle: { color: colors.danger, fontSize: 13, fontWeight: '800' },
-  errorBody: { color: colors.danger, fontSize: 12, lineHeight: 18 },
+  errorTitle: { color: colors.danger, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
+  errorBody: { color: colors.danger, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
 });

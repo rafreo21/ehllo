@@ -16,7 +16,7 @@ import {
   writeRecordingStorageDestination,
   type RecordingStorageDestination,
 } from '@/lib/recording-storage-preference';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export default function SettingsScreen() {
   const { session, configured, signOut, loading } = useAuth();
@@ -305,11 +305,11 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   scrollContent: { paddingBottom: spacing.x3 + 56 + spacing.x4 },
   header: { gap: spacing.x3 },
-  title: { fontSize: 30, lineHeight: 32 },
-  label: { color: colors.muted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
-  rowTitle: { color: colors.ink, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
-  value: { marginTop: 8, color: colors.ink, fontSize: 17, fontWeight: '800' },
-  hint: { marginTop: 5, color: colors.muted, fontSize: 12, lineHeight: 18 },
+  title: { fontFamily: fonts.regular, fontSize: 30, lineHeight: 32 },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
+  rowTitle: { color: colors.ink, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
+  value: { marginTop: 8, color: colors.ink, fontSize: 17, fontFamily: fonts.extrabold, fontWeight: '800' },
+  hint: { marginTop: 5, color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
   linkPanel: {
     minHeight: 72,
     padding: spacing.x5,
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   linkPanelPressed: { opacity: 0.82 },
   linkCopy: { flex: 1, gap: 6 },
   linkTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  linkHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  linkHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   recordingOptions: { gap: spacing.x2, marginTop: spacing.x3 },
   recordingOption: {
     minHeight: 64,
@@ -339,8 +339,8 @@ const styles = StyleSheet.create({
   },
   recordingOptionActive: { borderColor: colors.ink, backgroundColor: colors.surfaceMuted },
   recordingOptionCopy: { flex: 1, minWidth: 0 },
-  recordingOptionLabel: { color: colors.ink, fontSize: 14, fontWeight: '800' },
-  recordingOptionDetail: { color: colors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  recordingOptionLabel: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  recordingOptionDetail: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
   recordingOptionRadio: {
     width: 20,
     height: 20,

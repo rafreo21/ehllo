@@ -4,7 +4,7 @@ import LottieView from 'lottie-react-native';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button, PillButton } from '@/components/ui';
 import { useDeferredMount } from '@/lib/use-deferred-mount';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, spacing, fonts } from '@/theme/tokens';
 
 type ConnectionSuccessSheetProps = {
   visible: boolean;
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   lottie: { width: '100%', height: '100%' },
-  title: { color: colors.ink, fontSize: 18, fontWeight: '800', textAlign: 'center' },
+  title: { color: colors.ink, fontSize: 18, fontFamily: fonts.extrabold, fontWeight: '800', textAlign: 'center' },
   copy: { textAlign: 'center' },
   viewCardButton: { alignSelf: 'center' },
 });

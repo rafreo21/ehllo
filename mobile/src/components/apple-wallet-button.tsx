@@ -1,3 +1,4 @@
+import { fonts } from '@/theme/tokens';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 const ADD_LABEL = 'Add to Apple Wallet';
@@ -78,7 +79,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   icon: { width: 21, height: 21 },
-  label: { color: '#FFFFFF', fontSize: 15, lineHeight: 19, fontWeight: '600' },
+  label: { color: '#FFFFFF', fontSize: 15, lineHeight: 19, fontFamily: fonts.semibold, fontWeight: '600' },
   loadingOverlay: {
     position: 'absolute',
     top: 0,

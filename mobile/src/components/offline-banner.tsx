@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 import { useIsOnline } from '@/lib/connectivity';
 import { useDeferredMount } from '@/lib/use-deferred-mount';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export function OfflineBanner({
   message = "You're offline. Changes save on this device and sync automatically.",
@@ -45,5 +45,5 @@ const styles = StyleSheet.create({
   },
   iconWrap: { width: 44, height: 44, borderRadius: radius.round, overflow: 'hidden' },
   lottie: { width: '100%', height: '100%' },
-  text: { flex: 1, color: colors.muted, fontSize: 12, fontWeight: '700' },
+  text: { flex: 1, color: colors.muted, fontSize: 12, fontFamily: fonts.bold, fontWeight: '700' },
 });

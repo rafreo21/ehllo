@@ -11,7 +11,7 @@ import {
   filterFollowUpGroups,
   sortFollowUpGroups,
 } from '@/features/follow-ups/follow-up-list';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type FollowUpsSheetProps = {
   visible: boolean;
@@ -157,5 +157,5 @@ const styles = StyleSheet.create({
   sortRow: { flexDirection: 'row', gap: spacing.x2 },
   sortButton: { flex: 1, alignSelf: 'stretch' },
   list: { gap: spacing.x3 },
-  empty: { color: colors.muted, fontSize: 14, lineHeight: 20 },
+  empty: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
 });

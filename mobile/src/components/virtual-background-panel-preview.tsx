@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import type { MobileCard } from '@/features/card/types';
 import { BrandedQrPreview } from '@/components/branded-qr-preview';
 import { showsCompanyDetails } from '@/features/card/company-display';
-import { colors } from '@/theme/tokens';
+import { colors, fonts } from '@/theme/tokens';
 
 type VirtualBackgroundPanelPreviewProps = {
   card: MobileCard;
@@ -31,16 +31,16 @@ export function VirtualBackgroundPanelPreview({
       <View style={styles.row}>
         <View style={[styles.copy, { minHeight: qrSize }]}>
           <View style={styles.heading}>
-            <Text style={[styles.name, { fontSize: nameFontSize }]} numberOfLines={2}>
+            <Text style={[styles.name, { fontFamily: fonts.regular, fontSize: nameFontSize }]} numberOfLines={2}>
               {card.name}
             </Text>
             {subtitle ? (
-              <Text style={[styles.subtitle, { fontSize: subtitleFontSize }]} numberOfLines={2}>
+              <Text style={[styles.subtitle, { fontFamily: fonts.regular, fontSize: subtitleFontSize }]} numberOfLines={2}>
                 {subtitle}
               </Text>
             ) : null}
           </View>
-          <Text style={[styles.scanLabel, { fontSize: scanFontSize }]}>
+          <Text style={[styles.scanLabel, { fontFamily: fonts.regular, fontSize: scanFontSize }]}>
             Scan to save my contact
           </Text>
         </View>
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.ink,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold, fontWeight: '800',
   },
   subtitle: {
     color: colors.muted,
@@ -83,6 +83,6 @@ const styles = StyleSheet.create({
   },
   scanLabel: {
     color: colors.muted,
-    fontWeight: '600',
+    fontFamily: fonts.semibold, fontWeight: '600',
   },
 });

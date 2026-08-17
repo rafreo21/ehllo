@@ -50,7 +50,7 @@ import { readAppleWalletSaved, writeAppleWalletSaved } from '@/lib/apple-wallet-
 import { readGoogleWalletSaved, writeGoogleWalletSaved } from '@/lib/google-wallet-state';
 import type { MobileCard } from '@/features/card/types';
 import type { SignatureProfile } from '@/lib/email-signature';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export type CardToolTheme = ReturnType<typeof themeSurfaceStyle>;
 
@@ -530,16 +530,16 @@ export function cardToolShowCompany(card: MobileCard) {
 
 const styles = StyleSheet.create({
   sheetBody: { gap: spacing.x3 },
-  note: { color: colors.muted, fontSize: 12, lineHeight: 18 },
+  note: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
   walletPreview: {
     padding: spacing.x4,
     gap: spacing.x3,
   },
-  walletHeader: { fontSize: 11, fontWeight: '800' },
+  walletHeader: { fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800' },
   walletFields: { gap: spacing.x3 },
   walletField: { gap: 2 },
-  walletLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.6 },
-  walletValue: { fontSize: 18, fontWeight: '800' },
+  walletLabel: { fontSize: 10, fontFamily: fonts.bold, fontWeight: '700', letterSpacing: 0.6 },
+  walletValue: { fontSize: 18, fontFamily: fonts.extrabold, fontWeight: '800' },
   walletQrPreview: {
     alignSelf: 'flex-start',
     padding: spacing.x2,
@@ -573,19 +573,19 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 10,
   },
-  signaturePhotoText: { color: colors.white, fontSize: 20, fontWeight: '800' },
+  signaturePhotoText: { color: colors.white, fontSize: 20, fontFamily: fonts.extrabold, fontWeight: '800' },
   signatureBody: { flex: 1, gap: 2 },
   signatureQr: {
     alignSelf: 'flex-start',
     borderRadius: 8,
     overflow: 'hidden',
   },
-  signatureName: { color: colors.ink, fontSize: 16, fontWeight: '800' },
-  signatureLine: { color: colors.muted, fontSize: 13 },
-  signatureContact: { color: colors.ink, fontSize: 13, marginTop: 4 },
-  signatureLink: { color: '#2F5711', fontSize: 12, fontWeight: '800', marginTop: 8 },
-  widgetQrLabel: { color: colors.muted, fontSize: 12, fontWeight: '800' },
-  widgetAvatarText: { color: colors.white, fontSize: 11, fontWeight: '800' },
+  signatureName: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
+  signatureLine: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13 },
+  signatureContact: { color: colors.ink, fontFamily: fonts.regular, fontSize: 13, marginTop: 4 },
+  signatureLink: { color: '#2F5711', fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800', marginTop: 8 },
+  widgetQrLabel: { color: colors.muted, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800' },
+  widgetAvatarText: { color: colors.white, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800' },
   widgetGallery: { gap: spacing.x3 },
   widgetOptionCard: {
     borderRadius: radius.medium,
@@ -600,10 +600,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  widgetOptionBrand: { color: colors.muted, fontSize: 11, fontWeight: '800' },
-  widgetOptionSize: { color: colors.muted, fontSize: 11, fontWeight: '700' },
-  widgetOptionTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  widgetOptionCopy: { color: colors.muted, fontSize: 12, lineHeight: 18 },
+  widgetOptionBrand: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800' },
+  widgetOptionSize: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '700' },
+  widgetOptionTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  widgetOptionCopy: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
   widgetQrOnlyPreview: {
     borderRadius: 18,
     backgroundColor: '#141814',
@@ -649,8 +649,8 @@ const styles = StyleSheet.create({
     padding: spacing.x4,
     gap: spacing.x3,
   },
-  widgetConnectionsEyebrow: { fontSize: 10, fontWeight: '800' },
-  widgetConnectionsEmpty: { color: '#B8C4B3', fontSize: 11, lineHeight: 16 },
+  widgetConnectionsEyebrow: { fontSize: 10, fontFamily: fonts.extrabold, fontWeight: '800' },
+  widgetConnectionsEmpty: { color: '#B8C4B3', fontFamily: fonts.regular, fontSize: 11, lineHeight: 16 },
   widgetConnectionRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
   widgetConnectionCopy: { flex: 1, gap: 1 },
   widgetActionChip: {
@@ -672,10 +672,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 4,
   },
-  widgetNameLight: { color: colors.white, fontSize: 13, fontWeight: '800' },
-  widgetRoleLight: { color: '#B8C4B3', fontSize: 10 },
-  widgetCompanyLight: { color: '#8FA088', fontSize: 10 },
-  widgetQrLabelLight: { color: colors.white, fontSize: 11, fontWeight: '800' },
+  widgetNameLight: { color: colors.white, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
+  widgetRoleLight: { color: '#B8C4B3', fontFamily: fonts.regular, fontSize: 10 },
+  widgetCompanyLight: { color: '#8FA088', fontFamily: fonts.regular, fontSize: 10 },
+  widgetQrLabelLight: { color: colors.white, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800' },
   watchPreview: {
     alignItems: 'center',
     padding: spacing.x4,
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#050505',
     gap: spacing.x3,
   },
-  watchLabel: { color: colors.white, fontSize: 13, fontWeight: '600' },
+  watchLabel: { color: colors.white, fontSize: 13, fontFamily: fonts.semibold, fontWeight: '600' },
   watchQr: {
     width: 120,
     height: 120,

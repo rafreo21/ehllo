@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Body, Button } from '@/components/ui';
 import { useDeferredMount } from '@/lib/use-deferred-mount';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type EmptyStateProps = {
   illustration?: AnimationObject;
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.88 },
   illustrationWrap: { width: 96, height: 96 },
   illustration: { width: '100%', height: '100%' },
-  title: { color: colors.ink, fontSize: 18, fontWeight: '800' },
+  title: { color: colors.ink, fontSize: 18, fontFamily: fonts.extrabold, fontWeight: '800' },
   copy: { lineHeight: 20 },
   buttonRow: { flexDirection: 'row', gap: spacing.x2, marginTop: spacing.x1, alignSelf: 'stretch' },
 });

@@ -51,7 +51,7 @@ import { useFollowUpActions } from '@/features/follow-ups/use-follow-up-actions'
 import { formatMeetingDate } from '@/lib/due-date';
 import { describeError } from '@/lib/friendly-error';
 import { useAppInsets } from '@/lib/safe-area';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export default function ConnectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -664,12 +664,12 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   headerCopy: { gap: spacing.x2 },
-  name: { fontSize: 32, lineHeight: 34 },
-  countLine: { color: colors.muted, fontSize: 13 },
-  eventContext: { color: colors.ink, fontSize: 13, lineHeight: 18, fontWeight: '700' },
+  name: { fontFamily: fonts.regular, fontSize: 32, lineHeight: 34 },
+  countLine: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13 },
+  eventContext: { color: colors.ink, fontSize: 13, lineHeight: 18, fontFamily: fonts.bold, fontWeight: '700' },
   relationshipActions: { flexDirection: 'row', gap: spacing.x2, marginTop: spacing.x1 },
   relationshipActionPill: { paddingHorizontal: spacing.x5, paddingVertical: spacing.x3 },
-  relationshipActionPillText: { fontSize: 14 },
+  relationshipActionPillText: { fontFamily: fonts.regular, fontSize: 14 },
   scroll: { flex: 1, marginTop: spacing.x5 },
   scrollContent: { paddingHorizontal: spacing.x5, gap: spacing.x3 },
   content: { gap: spacing.x5 },
@@ -679,8 +679,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  sectionTitle: { color: colors.ink, fontSize: 18, fontWeight: '800' },
-  viewAll: { color: colors.link, fontSize: 13, fontWeight: '800' },
+  sectionTitle: { color: colors.ink, fontSize: 18, fontFamily: fonts.extrabold, fontWeight: '800' },
+  viewAll: { color: colors.link, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
   list: { gap: spacing.x3 },
   meetingCell: {
     flexDirection: 'row',
@@ -708,10 +708,10 @@ const styles = StyleSheet.create({
   timelineMarkerCompleted: { backgroundColor: colors.accent },
   pressed: { opacity: 0.86 },
   meetingCopy: { flex: 1, gap: 2 },
-  meetingTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  meetingMeta: { color: colors.muted, fontSize: 12, fontWeight: '700' },
-  meetingPlace: { color: colors.inkSoft, fontSize: 12, lineHeight: 17, fontWeight: '700' },
-  meetingSummary: { color: colors.inkSoft, fontSize: 13, lineHeight: 18 },
+  meetingTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  meetingMeta: { color: colors.muted, fontSize: 12, fontFamily: fonts.bold, fontWeight: '700' },
+  meetingPlace: { color: colors.inkSoft, fontSize: 12, lineHeight: 17, fontFamily: fonts.bold, fontWeight: '700' },
+  meetingSummary: { color: colors.inkSoft, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   cardButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -721,6 +721,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ink,
   },
   cardButtonCopy: { flex: 1, gap: 2 },
-  cardButtonTitle: { color: colors.white, fontSize: 15, fontWeight: '800' },
-  cardButtonMeta: { color: '#C5D3BF', fontSize: 12, lineHeight: 16 },
+  cardButtonTitle: { color: colors.white, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  cardButtonMeta: { color: '#C5D3BF', fontFamily: fonts.regular, fontSize: 12, lineHeight: 16 },
 });

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View, type GestureResponderEvent } from 'react-n
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { useAppInsets } from '@/lib/safe-area';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 const ITEM_SIZE = 52;
 const BADGE_SIZE = 40;
@@ -132,5 +132,5 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   badgeActive: { backgroundColor: colors.accent },
-  label: { color: colors.white, fontSize: 14, fontWeight: '800', flexShrink: 1 },
+  label: { color: colors.white, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800', flexShrink: 1 },
 });

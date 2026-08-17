@@ -58,7 +58,7 @@ import {
 import { formatRelativeTime } from '@/lib/relative-time';
 import { useAppInsets, useTabBarHeight } from '@/lib/safe-area';
 import { useDebouncedNavigate } from '@/lib/use-debounced-navigate';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 function timeGreeting() {
   const hour = new Date().getHours();
@@ -677,8 +677,8 @@ const styles = StyleSheet.create({
   },
   greetingBlock: { flex: 1, minWidth: 0, gap: 2 },
   offlineBanner: { marginTop: spacing.x2 },
-  greetingTitle: { color: colors.ink, fontSize: 30, lineHeight: 32, fontWeight: '700', letterSpacing: -0.4 },
-  greetingSubtitle: { color: colors.muted, fontSize: 13 },
+  greetingTitle: { color: colors.ink, fontSize: 30, lineHeight: 32, fontFamily: fonts.bold, fontWeight: '700', letterSpacing: -0.4 },
+  greetingSubtitle: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13 },
   bellButton: {
     width: 42,
     height: 42,
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.canvas,
   },
-  bellBadgeText: { color: colors.ink, fontSize: 10, fontWeight: '900' },
+  bellBadgeText: { color: colors.ink, fontSize: 10, fontFamily: fonts.black, fontWeight: '900' },
   scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: spacing.x5,
@@ -776,9 +776,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   attentionCopy: { flex: 1, gap: 4 },
-  attentionHeadline: { color: colors.ink, fontSize: 19, fontWeight: '800', letterSpacing: -0.3 },
-  attentionSubline: { color: colors.muted, fontSize: 13, lineHeight: 18 },
-  attentionStat: { color: colors.ink, fontWeight: '800' },
+  attentionHeadline: { color: colors.ink, fontSize: 19, fontFamily: fonts.extrabold, fontWeight: '800', letterSpacing: -0.3 },
+  attentionSubline: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
+  attentionStat: { color: colors.ink, fontFamily: fonts.extrabold, fontWeight: '800' },
   activeWork: { gap: spacing.x2 },
   activeWorkRow: {
     flexDirection: 'row',
@@ -797,11 +797,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.surfaceMuted,
   },
-  activeWorkLabel: { flex: 1, color: colors.ink, fontSize: 13, fontWeight: '700' },
+  activeWorkLabel: { flex: 1, color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
   section: { gap: spacing.x3 },
   sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  viewAll: { color: colors.link, fontSize: 12, fontWeight: '800' },
+  sectionTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  viewAll: { color: colors.link, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800' },
   peopleList: { gap: spacing.x2 },
   personRow: {
     minHeight: 60,
@@ -816,15 +816,15 @@ const styles = StyleSheet.create({
   personRowPressed: { opacity: 0.9 },
   personAvatar: { width: 40, height: 40, borderRadius: radius.round, backgroundColor: colors.surfaceMuted },
   personCopy: { flex: 1, minWidth: 0, gap: 1 },
-  personName: { color: colors.ink, fontSize: 14, fontWeight: '800' },
-  personSubtitle: { color: colors.muted, fontSize: 11.5, lineHeight: 15 },
+  personName: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  personSubtitle: { color: colors.muted, fontFamily: fonts.regular, fontSize: 11.5, lineHeight: 15 },
   personTag: {
     paddingHorizontal: spacing.x2,
     paddingVertical: 3,
     borderRadius: radius.round,
     backgroundColor: colors.accent,
   },
-  personTagText: { color: colors.ink, fontSize: 10, fontWeight: '800' },
+  personTagText: { color: colors.ink, fontSize: 10, fontFamily: fonts.extrabold, fontWeight: '800' },
   myCardRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -844,9 +844,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   myCardCopy: { flex: 1, minWidth: 0, gap: 1 },
-  myCardLabel: { color: colors.ink, fontSize: 14, fontWeight: '800' },
-  myCardMeta: { color: colors.muted, fontSize: 12 },
-  myCardAction: { color: colors.link, fontSize: 12, fontWeight: '800' },
+  myCardLabel: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  myCardMeta: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
+  myCardAction: { color: colors.link, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800' },
   skeletonWrap: { gap: spacing.x4 },
   skeletonBanner: { height: 60, borderRadius: radius.medium },
   skeletonAttention: { height: 72, borderRadius: radius.medium },

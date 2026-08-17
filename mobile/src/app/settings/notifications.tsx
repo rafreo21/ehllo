@@ -28,7 +28,7 @@ import {
   type NotificationPreferences,
   type NotificationType,
 } from '@/features/notifications/notification-center-api';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 const NOTIFICATION_TYPE_ROWS: { type: NotificationType; icon: typeof Bell; label: string; hint: string }[] = [
   { type: 'review_ready', icon: CheckCircle, label: 'Transcript ready', hint: 'A capture is ready for your review' },
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   reminderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.x3 },
-  preferenceTitle: { color: colors.ink, fontSize: 14, fontWeight: '800' },
+  preferenceTitle: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
   reminderTimeOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2, marginBottom: spacing.x3 },
   reminderTimeOption: {
     minWidth: 68,
@@ -344,13 +344,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   reminderTimeOptionSelected: { backgroundColor: colors.accent, borderColor: colors.accent },
-  reminderTimeText: { color: colors.ink, fontSize: 14, fontWeight: '700' },
-  reminderTimeTextSelected: { fontWeight: '900' },
-  statusMessage: { color: colors.ink, fontSize: 12, lineHeight: 18 },
+  reminderTimeText: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '700' },
+  reminderTimeTextSelected: { fontFamily: fonts.black, fontWeight: '900' },
+  statusMessage: { color: colors.ink, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
   statusError: { color: colors.danger },
   statusRow: { gap: spacing.x2 },
-  settingsLink: { color: colors.ink, fontSize: 13, fontWeight: '800', textDecorationLine: 'underline' },
+  settingsLink: { color: colors.ink, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800', textDecorationLine: 'underline' },
   linkCopy: { flex: 1, gap: 6 },
   linkTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  linkHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  linkHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
 });

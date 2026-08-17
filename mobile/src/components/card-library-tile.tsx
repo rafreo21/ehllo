@@ -8,7 +8,7 @@ import {
   cardLeadDetail,
 } from '@/features/card/card-display';
 import type { MobileCard } from '@/features/card/types';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type CardLibraryTileProps = {
   card: MobileCard;
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   avatarText: {
     color: colors.white,
     fontSize: 16,
-    fontWeight: '900',
+    fontFamily: fonts.black, fontWeight: '900',
   },
   tileBody: {
     paddingHorizontal: spacing.x4,
@@ -118,14 +118,14 @@ const styles = StyleSheet.create({
   cardLabel: {
     color: colors.muted,
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.black, fontWeight: '900',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   cardName: {
     color: colors.ink,
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold, fontWeight: '800',
   },
   cardDetail: {
     color: colors.muted,
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   cardStatus: {
     color: colors.inkSoft,
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: fonts.bold, fontWeight: '700',
   },
   primaryBadge: {
     paddingHorizontal: 8,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     color: colors.ink,
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.black, fontWeight: '900',
     overflow: 'hidden',
   },
 });

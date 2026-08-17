@@ -1,6 +1,6 @@
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, spacing, fonts } from '@/theme/tokens';
 import { StyleSheet, Text, View } from 'react-native';
 
 type MakePrimarySheetProps = {
@@ -39,6 +39,6 @@ export function MakePrimarySheet({
 }
 
 const styles = StyleSheet.create({
-  emphasis: { color: colors.ink, fontWeight: '800' },
+  emphasis: { color: colors.ink, fontFamily: fonts.extrabold, fontWeight: '800' },
   actions: { gap: spacing.x2 },
 });

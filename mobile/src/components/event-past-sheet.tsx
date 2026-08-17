@@ -4,7 +4,7 @@ import { BottomSheet } from '@/components/bottom-sheet';
 import { Button } from '@/components/ui';
 import { canRejoinEvent } from '@/features/events/event-home-state';
 import type { EventItem } from '@/features/events/events-api';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 function whenLabel(event: EventItem) {
   const start = new Date(event.startsAt);
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   when: {
     color: colors.ink,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: fonts.semibold, fontWeight: '600',
   },
   location: {
     color: colors.muted,

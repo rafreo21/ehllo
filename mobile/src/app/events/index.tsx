@@ -49,7 +49,7 @@ import { fetchConnectedAccounts } from '@/features/integrations/integrations-api
 import { readEnv } from '@/lib/env';
 import { isOnline } from '@/lib/connectivity';
 import { describeError } from '@/lib/friendly-error';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 function formatSyncedAgo(syncedAt: string, now: Date): string {
   const synced = new Date(syncedAt);
@@ -1016,15 +1016,15 @@ const styles = StyleSheet.create({
   section: { gap: spacing.x4 },
   eventGroup: { gap: spacing.x2 },
   eventGroupHeading: { gap: spacing.x1 },
-  eventGroupTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  eventGroupCopy: { color: colors.muted, fontSize: 12, lineHeight: 17 },
+  eventGroupTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  eventGroupCopy: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
   pastGroup: {
     gap: spacing.x2,
   },
   pastGroupTitle: {
     color: colors.ink,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold, fontWeight: '700',
   },
   pastGroupCaption: {
     color: colors.muted,
@@ -1040,7 +1040,7 @@ const styles = StyleSheet.create({
   },
   tab: { flex: 1, alignItems: 'center', paddingVertical: spacing.x2, borderRadius: radius.medium },
   tabActive: { backgroundColor: colors.surface },
-  tabText: { color: colors.muted, fontSize: 13, fontWeight: '800' },
+  tabText: { color: colors.muted, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
   tabTextActive: { color: colors.ink },
   chooseList: { gap: spacing.x2 },
   chooseOption: {
@@ -1062,15 +1062,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   chooseCopy: { flex: 1, gap: 2 },
-  chooseTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  chooseHint: { color: colors.muted, fontSize: 12, lineHeight: 17 },
+  chooseTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  chooseHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
   loadingWrap: { alignItems: 'center', justifyContent: 'center', gap: spacing.x3, paddingVertical: spacing.x6 },
-  loadingText: { color: colors.muted, fontSize: 13, fontWeight: '700' },
+  loadingText: { color: colors.muted, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
   form: { gap: spacing.x4 },
   linkStatusRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  linkStatusText: { color: colors.muted, fontSize: 12, lineHeight: 17 },
+  linkStatusText: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
   fieldGroup: { gap: spacing.x2 },
-  label: { color: colors.muted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
   input: {
     borderWidth: 1,
     borderColor: colors.line,
@@ -1094,7 +1094,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.line,
   },
-  suggestionText: { color: colors.ink, fontSize: 13, fontWeight: '600' },
+  suggestionText: { color: colors.ink, fontSize: 13, fontFamily: fonts.semibold, fontWeight: '600' },
   dateButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1106,7 +1106,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.x3,
     backgroundColor: colors.surface,
   },
-  dateButtonText: { color: colors.ink, fontSize: 14, fontWeight: '700' },
-  errorText: { color: colors.danger, fontSize: 13 },
-  dateNotice: { color: colors.warning, fontSize: 12, lineHeight: 17 },
+  dateButtonText: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '700' },
+  errorText: { color: colors.danger, fontFamily: fonts.regular, fontSize: 13 },
+  dateNotice: { color: colors.warning, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
 });

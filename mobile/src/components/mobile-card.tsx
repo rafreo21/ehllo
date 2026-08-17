@@ -8,7 +8,7 @@ import { openContactMethod } from '@/features/card/contact-actions';
 import { cardWithCompanyVisibility, showsCompanyDetails } from '@/features/card/company-display';
 import type { MobileCard } from '@/features/card/types';
 import { themeCoverBadgeStyle, themeForegroundColor } from '@/features/card/theme-colors';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export function MobileCardPreview({ card, compact = false }: { card: MobileCard; compact?: boolean }) {
   const visible = cardWithCompanyVisibility(card);
@@ -60,20 +60,20 @@ const styles = StyleSheet.create({
   cover: { height: 138, overflow: 'hidden', padding: spacing.x5, justifyContent: 'flex-start' },
   companyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
   logo: { width: 34, height: 34, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', borderRadius: radius.round },
-  logoText: { fontWeight: '900' },
-  company: { fontWeight: '800' },
+  logoText: { fontFamily: fonts.black, fontWeight: '900' },
+  company: { fontFamily: fonts.extrabold, fontWeight: '800' },
   body: { padding: spacing.x5, paddingTop: 42 },
   avatar: { position: 'absolute', top: -34, left: spacing.x5, width: 68, height: 68, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: colors.surface, borderRadius: radius.round, backgroundColor: colors.ink },
-  avatarText: { color: colors.white, fontSize: 20, fontWeight: '900' },
+  avatarText: { color: colors.white, fontSize: 20, fontFamily: fonts.black, fontWeight: '900' },
   fill: { width: '100%', height: '100%' },
-  name: { color: colors.ink, fontSize: 26, fontWeight: '800', letterSpacing: -0.7 },
-  role: { marginTop: 3, color: colors.muted, fontSize: 13 },
-  bio: { marginTop: spacing.x4, color: colors.inkSoft, fontSize: 14, lineHeight: 21 },
+  name: { color: colors.ink, fontSize: 26, fontFamily: fonts.extrabold, fontWeight: '800', letterSpacing: -0.7 },
+  role: { marginTop: 3, color: colors.muted, fontFamily: fonts.regular, fontSize: 13 },
+  bio: { marginTop: spacing.x4, color: colors.inkSoft, fontFamily: fonts.regular, fontSize: 14, lineHeight: 21 },
   methods: { marginTop: spacing.x5, gap: spacing.x2 },
   method: { minHeight: 56, padding: spacing.x2, flexDirection: 'row', alignItems: 'center', gap: spacing.x3, borderRadius: radius.medium, backgroundColor: colors.surfaceMuted },
   methodIcon: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: radius.round },
   methodCopy: { flex: 1, minWidth: 0 },
-  methodLabel: { color: colors.ink, fontSize: 12, fontWeight: '800' },
-  methodValue: { marginTop: 2, color: colors.muted, fontSize: 12 },
+  methodLabel: { color: colors.ink, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800' },
+  methodValue: { marginTop: 2, color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
   pressed: { opacity: 0.7 },
 });

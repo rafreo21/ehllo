@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Button } from '@/components/ui';
 import type { EventInvitation, EventItem } from '@/features/events/events-api';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export function EventInviteSheet({
   event,
@@ -106,19 +106,19 @@ export function EventInviteSheet({
 
 const styles = StyleSheet.create({
   copy: { gap: spacing.x2 },
-  eventTitle: { color: colors.ink, fontSize: 18, fontWeight: '800' },
-  hint: { color: colors.muted, fontSize: 14, lineHeight: 20 },
+  eventTitle: { color: colors.ink, fontSize: 18, fontFamily: fonts.extrabold, fontWeight: '800' },
+  hint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
   input: { minHeight: 52, paddingHorizontal: spacing.x4, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, color: colors.ink, backgroundColor: colors.canvas },
-  error: { color: colors.danger, fontSize: 13, fontWeight: '700' },
-  privacy: { color: colors.muted, fontSize: 12, lineHeight: 18 },
+  error: { color: colors.danger, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
+  privacy: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
   divider: { height: 1, backgroundColor: colors.line },
   listHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  listTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
-  empty: { color: colors.muted, fontSize: 14 },
+  listTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
+  empty: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14 },
   invitationRow: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: spacing.x3, paddingVertical: spacing.x2, borderBottomWidth: 1, borderBottomColor: colors.line },
   invitationCopy: { flex: 1, gap: 2 },
-  email: { color: colors.ink, fontSize: 14, fontWeight: '700' },
-  status: { color: colors.muted, fontSize: 12, fontWeight: '600' },
+  email: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '700' },
+  status: { color: colors.muted, fontSize: 12, fontFamily: fonts.semibold, fontWeight: '600' },
   revokeButton: { minHeight: 44, minWidth: 68, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.x3 },
-  revokeText: { color: colors.danger, fontSize: 13, fontWeight: '800' },
+  revokeText: { color: colors.danger, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
 });

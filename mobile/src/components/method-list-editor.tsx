@@ -27,7 +27,7 @@ import {
   validateMethod,
 } from '@/features/card/method-meta';
 import type { ContactMethod, ContactMethodType } from '@/features/card/types';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 function createMethodId() {
   return `method-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -278,8 +278,8 @@ export function MethodListEditor({ methods, onChange }: MethodListEditorProps) {
 const styles = StyleSheet.create({
   wrap: { gap: spacing.x5 },
   list: { gap: spacing.x2 },
-  listHint: { color: colors.muted, fontSize: 12, lineHeight: 18 },
-  empty: { color: colors.muted, fontSize: 14, lineHeight: 20 },
+  listHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
+  empty: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
   row: {
     minHeight: 58,
     flexDirection: 'row',
@@ -306,10 +306,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.accent,
   },
-  rowBadgeText: { color: colors.ink, fontSize: 13, fontWeight: '900' },
+  rowBadgeText: { color: colors.ink, fontSize: 13, fontFamily: fonts.black, fontWeight: '900' },
   rowCopy: { flex: 1, minWidth: 0 },
-  rowTitle: { color: colors.ink, fontSize: 14, fontWeight: '800' },
-  rowValue: { marginTop: 2, color: colors.muted, fontSize: 12 },
+  rowTitle: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  rowValue: { marginTop: 2, color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
   removeBtn: {
     width: 34,
     height: 34,
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   categoryTitle: {
     color: colors.muted,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.black, fontWeight: '900',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
@@ -335,9 +335,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   chipAdded: { opacity: 0.4 },
-  chipText: { color: colors.ink, fontSize: 12, fontWeight: '700' },
+  chipText: { color: colors.ink, fontSize: 12, fontFamily: fonts.bold, fontWeight: '700' },
   sheetField: { gap: spacing.x2 },
-  sheetLabel: { color: colors.muted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  sheetLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
   sheetInput: {
     minHeight: 52,
     paddingHorizontal: spacing.x4,
@@ -355,6 +355,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.surfaceMuted,
   },
-  suggestionText: { color: colors.ink, fontSize: 12, fontWeight: '700' },
-  error: { color: colors.danger, fontSize: 12, lineHeight: 18 },
+  suggestionText: { color: colors.ink, fontSize: 12, fontFamily: fonts.bold, fontWeight: '700' },
+  error: { color: colors.danger, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
 });

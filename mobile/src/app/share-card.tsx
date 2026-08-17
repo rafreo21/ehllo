@@ -33,7 +33,7 @@ import { describeError } from '@/lib/friendly-error';
 import { readAppleWalletSaved, writeAppleWalletSaved } from '@/lib/apple-wallet-state';
 import { readGoogleWalletSaved, writeGoogleWalletSaved } from '@/lib/google-wallet-state';
 import { readQuickShareQrMode, writeQuickShareQrMode } from '@/lib/quick-share-preferences';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export default function ShareCardScreen() {
   const { id, slug } = useLocalSearchParams<{ id?: string; slug?: string }>();
@@ -374,12 +374,12 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   scanTopButtonPressed: { opacity: 0.82 },
-  scanTopLabel: { color: colors.ink, fontSize: 13, fontWeight: '800' },
+  scanTopLabel: { color: colors.ink, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
   title: {
     color: colors.ink,
     fontSize: 30,
     lineHeight: 32,
-    fontWeight: '700',
+    fontFamily: fonts.bold, fontWeight: '700',
     letterSpacing: -1.1,
   },
   cardLine: { marginTop: -spacing.x1, color: colors.muted, textAlign: 'left' },
@@ -418,8 +418,8 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   modeToggleCopy: { flex: 1, gap: 4 },
-  modeToggleTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  modeToggleHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  modeToggleTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  modeToggleHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   tapPanel: {
     width: '100%',
     padding: spacing.x4,
@@ -433,17 +433,17 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
     backgroundColor: '#eef8e8',
   },
-  tapTitle: { color: colors.ink, fontSize: 16, fontWeight: '800', textAlign: 'center' },
-  tapBody: { color: colors.muted, fontSize: 13, textAlign: 'center', lineHeight: 18 },
-  tapMessage: { color: colors.inkSoft, fontSize: 12, textAlign: 'center' },
-  helperInline: { marginTop: spacing.x3, color: colors.muted, fontSize: 12, textAlign: 'center' },
-  walletNote: { color: colors.muted, fontSize: 12, textAlign: 'center', lineHeight: 17 },
+  tapTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800', textAlign: 'center' },
+  tapBody: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, textAlign: 'center', lineHeight: 18 },
+  tapMessage: { color: colors.inkSoft, fontFamily: fonts.regular, fontSize: 12, textAlign: 'center' },
+  helperInline: { marginTop: spacing.x3, color: colors.muted, fontFamily: fonts.regular, fontSize: 12, textAlign: 'center' },
+  walletNote: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, textAlign: 'center', lineHeight: 17 },
   actions: { gap: spacing.x2 },
   shareActionRow: { flexDirection: 'row', gap: spacing.x2 },
   walletConfirmRow: { flexDirection: 'row', gap: spacing.x2 },
   walletConfirmButton: { flex: 1 },
   sharePill: { flex: 1, alignSelf: 'stretch', height: 50 },
-  sharePillText: { fontSize: 15, lineHeight: 19, fontWeight: '600' },
+  sharePillText: { fontSize: 15, lineHeight: 19, fontFamily: fonts.semibold, fontWeight: '600' },
   actionButton: { alignSelf: 'stretch' },
-  helper: { color: colors.muted, fontSize: 11, textAlign: 'center' },
+  helper: { color: colors.muted, fontFamily: fonts.regular, fontSize: 11, textAlign: 'center' },
 });

@@ -15,7 +15,7 @@ import { router } from 'expo-router';
 import { ArrowLeft } from 'phosphor-react-native';
 
 import { useAppInsets, useTabBarHeight } from '@/lib/safe-area';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type ScreenProps = PropsWithChildren<{
   scroll?: boolean;
@@ -344,17 +344,17 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.line,
   },
-  eyebrow: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
-  title: { color: colors.ink, fontSize: 40, lineHeight: 42, fontWeight: '700', letterSpacing: -1.5 },
-  body: { color: colors.muted, fontSize: 15, lineHeight: 22 },
-  pageHeaderCaption: { color: colors.muted, fontSize: 11, lineHeight: 15 },
+  eyebrow: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
+  title: { color: colors.ink, fontSize: 40, lineHeight: 42, fontFamily: fonts.bold, fontWeight: '700', letterSpacing: -1.5 },
+  body: { color: colors.muted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 22 },
+  pageHeaderCaption: { color: colors.muted, fontFamily: fonts.regular, fontSize: 11, lineHeight: 15 },
   panel: { padding: spacing.x5, borderRadius: radius.medium, backgroundColor: colors.surface },
   button: { minHeight: 48, paddingHorizontal: spacing.x5, alignItems: 'center', justifyContent: 'center', borderRadius: radius.round, backgroundColor: colors.ink },
   buttonSecondary: { backgroundColor: colors.surfaceMuted },
   buttonGhost: { backgroundColor: 'transparent' },
   buttonPressed: { opacity: 0.78, transform: [{ scale: 0.99 }] },
   buttonDisabled: { opacity: 0.45 },
-  buttonText: { fontSize: 15, fontWeight: '800' },
+  buttonText: { fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
   buttonTextPrimary: { color: colors.white },
   buttonTextSecondary: { color: colors.ink },
   pill: {
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   pillSolid: { backgroundColor: colors.ink },
   pillOutline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.line },
   pillContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.x2 },
-  pillText: { fontSize: 12, fontWeight: '800' },
+  pillText: { fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800' },
   pillTextSolid: { color: colors.white },
   pillTextOutline: { color: colors.muted },
   buttonContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.x2 },
@@ -414,5 +414,5 @@ const styles = StyleSheet.create({
   pageHeaderAction: { marginLeft: 'auto' },
   pageHeaderSpacer: { width: 42, height: 42 },
   pageHeaderCopy: { gap: spacing.x2 },
-  pageHeaderTitle: { fontSize: 32, lineHeight: 34, letterSpacing: -1.1 },
+  pageHeaderTitle: { fontFamily: fonts.regular, fontSize: 32, lineHeight: 34, letterSpacing: -1.1 },
 });

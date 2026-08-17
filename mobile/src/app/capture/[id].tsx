@@ -46,7 +46,7 @@ import {
   formatCloudAvailableUntil,
   isCloudRecordingExpired,
 } from '@/lib/recording-metadata';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type UploadStatus = 'idle' | 'uploading' | 'uploaded' | 'failed' | 'none';
 
@@ -1111,9 +1111,9 @@ export default function CaptureDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 30, lineHeight: 32 },
+  title: { fontFamily: fonts.regular, fontSize: 30, lineHeight: 32 },
   reviewStatusLine: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.x2 },
-  reviewStatusText: { color: colors.muted, fontSize: 12, lineHeight: 18, fontWeight: '600' },
+  reviewStatusText: { color: colors.muted, fontSize: 12, lineHeight: 18, fontFamily: fonts.semibold, fontWeight: '600' },
   reviewStatusDot: { width: 3, height: 3, borderRadius: radius.round, backgroundColor: colors.muted },
   eventChip: {
     flexDirection: 'row',
@@ -1128,7 +1128,7 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     backgroundColor: colors.surface,
   },
-  eventChipText: { color: colors.ink, fontSize: 12, fontWeight: '700', maxWidth: 220 },
+  eventChipText: { color: colors.ink, fontSize: 12, fontFamily: fonts.bold, fontWeight: '700', maxWidth: 220 },
   eventPickerList: { gap: spacing.x1 },
   eventPickerRow: {
     flexDirection: 'row',
@@ -1138,7 +1138,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.x3,
     paddingHorizontal: spacing.x2,
   },
-  eventPickerRowText: { flex: 1, color: colors.ink, fontSize: 15, fontWeight: '700' },
+  eventPickerRowText: { flex: 1, color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '700' },
   recorderCard: {
     gap: spacing.x5,
     padding: spacing.x6,
@@ -1150,7 +1150,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.x3,
   },
-  recordingMissing: { color: colors.muted, fontSize: 13, lineHeight: 20, flex: 1 },
+  recordingMissing: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 20, flex: 1 },
   notesToggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
   notesToggleCopy: { flex: 1, gap: 2 },
   tabRow: {
@@ -1167,24 +1167,24 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium - 2,
   },
   tabButtonActive: { backgroundColor: colors.surface },
-  tabButtonText: { color: colors.muted, fontSize: 13, fontWeight: '700' },
-  tabButtonTextActive: { color: colors.ink, fontWeight: '800' },
+  tabButtonText: { color: colors.muted, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
+  tabButtonTextActive: { color: colors.ink, fontFamily: fonts.extrabold, fontWeight: '800' },
   tabPane: { gap: spacing.x3 },
   section: { gap: spacing.x3 },
-  sectionTitle: { color: colors.ink, fontSize: 17, fontWeight: '800' },
+  sectionTitle: { color: colors.ink, fontSize: 17, fontFamily: fonts.extrabold, fontWeight: '800' },
   shareToggleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
   linkCopy: { flex: 1, gap: 3 },
-  linkHint: { color: colors.muted, fontSize: 13, lineHeight: 19 },
-  label: { color: colors.muted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  linkHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 19 },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
   fieldGroup: { gap: spacing.x3 },
   detailToggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  fieldHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  fieldHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   guestShareLabel: { marginTop: spacing.x4 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  helperCopy: { color: colors.muted, fontSize: 13, lineHeight: 20 },
-  approveHint: { color: colors.danger, fontSize: 13, lineHeight: 20 },
+  helperCopy: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 20 },
+  approveHint: { color: colors.danger, fontFamily: fonts.regular, fontSize: 13, lineHeight: 20 },
   uploadFailed: { gap: spacing.x2 },
-  uploadFailedText: { color: colors.danger, fontSize: 13, lineHeight: 20 },
+  uploadFailedText: { color: colors.danger, fontFamily: fonts.regular, fontSize: 13, lineHeight: 20 },
   secondaryActionsRow: { flexDirection: 'row', gap: spacing.x2 },
   secondaryActionsRowItem: { flex: 1 },
   input: {
@@ -1199,12 +1199,12 @@ const styles = StyleSheet.create({
   },
   notesField: { height: 140, maxHeight: 140, paddingTop: spacing.x3, textAlignVertical: 'top' },
   privateNotesField: { height: 110, maxHeight: 110, paddingTop: spacing.x3, textAlignVertical: 'top' },
-  summaryCopy: { color: colors.ink, fontSize: 15, lineHeight: 22, flex: 1 },
+  summaryCopy: { color: colors.ink, fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, flex: 1 },
   actionList: { gap: spacing.x2 },
   actionItem: { overflow: 'hidden', borderRadius: radius.medium, backgroundColor: colors.canvas },
   actionRow: { minHeight: 54, padding: spacing.x3, flexDirection: 'row', alignItems: 'center', gap: spacing.x3, borderRadius: radius.medium, backgroundColor: colors.canvas },
   actionCopy: { flex: 1, gap: 2 },
-  actionTitle: { color: colors.ink, fontSize: 14, fontWeight: '700' },
+  actionTitle: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '700' },
   actionTitleDone: { color: colors.muted, textDecorationLine: 'line-through' },
   actionComposerToggle: {
     minHeight: 46,
@@ -1217,10 +1217,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.canvas,
   },
   actionComposerToggleCopy: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  actionComposerToggleText: { color: colors.ink, fontSize: 13, fontWeight: '800' },
+  actionComposerToggleText: { color: colors.ink, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
   choiceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2 },
   choiceChip: { paddingHorizontal: spacing.x3, paddingVertical: spacing.x2, borderRadius: radius.round, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface },
   choiceChipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
-  choiceChipText: { color: colors.ink, fontSize: 13, fontWeight: '700' },
+  choiceChipText: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
   choiceChipTextActive: { color: colors.white },
 });

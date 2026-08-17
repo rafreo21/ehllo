@@ -5,7 +5,7 @@ import { Alert, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'r
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Button } from '@/components/ui';
 import type { EventItem } from '@/features/events/events-api';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 function dateLabel(value: Date) {
   return value.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -75,10 +75,10 @@ export function EventManageSheet({ event, loading, error, onClose, onSave, onCan
 
 const styles = StyleSheet.create({
   field: { gap: spacing.x2 },
-  label: { color: colors.ink, fontSize: 13, fontWeight: '800' },
+  label: { color: colors.ink, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
   input: { minHeight: 52, paddingHorizontal: spacing.x4, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, color: colors.ink, backgroundColor: colors.canvas },
   dateButton: { minHeight: 52, justifyContent: 'center', paddingHorizontal: spacing.x4, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, backgroundColor: colors.canvas },
-  dateText: { color: colors.ink, fontSize: 14, fontWeight: '700' },
-  error: { color: colors.danger, fontSize: 13, fontWeight: '700' },
-  hint: { color: colors.muted, fontSize: 12, lineHeight: 18 },
+  dateText: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '700' },
+  error: { color: colors.danger, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
+  hint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
 });

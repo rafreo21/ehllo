@@ -36,7 +36,7 @@ import type { QuickFollowUpItem } from '@/features/follow-ups/quick-follow-up-ty
 import { formatDueLabel } from '@/lib/due-date';
 import { isOnline } from '@/lib/connectivity';
 import { useAppInsets } from '@/lib/safe-area';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type QuickFollowUpDraft = QuickFollowUpItem;
 
@@ -731,8 +731,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.line,
   },
-  label: { color: colors.muted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
-  linkHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
+  linkHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   personTrigger: {
     minHeight: 72,
     padding: spacing.x5,
@@ -743,12 +743,12 @@ const styles = StyleSheet.create({
     gap: spacing.x3,
   },
   personTriggerCopy: { flex: 1, gap: 2 },
-  personTriggerName: { color: colors.ink, fontSize: 16, fontWeight: '800' },
+  personTriggerName: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
   actionList: { gap: spacing.x2 },
   actionItem: { overflow: 'hidden', borderRadius: radius.medium, backgroundColor: colors.surface },
   actionRow: { minHeight: 54, padding: spacing.x3, flexDirection: 'row', alignItems: 'center', gap: spacing.x3, borderRadius: radius.medium, backgroundColor: colors.surface },
   actionCopy: { flex: 1, gap: 2 },
-  actionTitle: { color: colors.ink, fontSize: 14, fontWeight: '700' },
+  actionTitle: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '700' },
   actionComposerToggle: {
     minHeight: 46,
     paddingHorizontal: spacing.x4,
@@ -760,7 +760,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   actionComposerToggleCopy: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  actionComposerToggleText: { color: colors.ink, fontSize: 13, fontWeight: '800' },
+  actionComposerToggleText: { color: colors.ink, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
   fieldGroup: { gap: spacing.x3 },
   detailToggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2 },
@@ -773,7 +773,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   chipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
-  chipText: { color: colors.ink, fontSize: 13, fontWeight: '700' },
+  chipText: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
   chipTextActive: { color: colors.white },
   input: {
     minHeight: 48,
@@ -792,9 +792,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEE4E2',
     color: colors.danger,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold, fontWeight: '700',
   },
-  eventContext: { color: colors.ink, fontSize: 13, lineHeight: 18, fontWeight: '700' },
+  eventContext: { color: colors.ink, fontSize: 13, lineHeight: 18, fontFamily: fonts.bold, fontWeight: '700' },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium,
     backgroundColor: colors.canvas,
   },
-  searchInput: { flex: 1, color: colors.ink, fontSize: 15, textAlign: 'left' },
+  searchInput: { flex: 1, color: colors.ink, fontFamily: fonts.regular, fontSize: 15, textAlign: 'left' },
   resultsList: { gap: spacing.x2, marginTop: spacing.x3 },
   resultCard: {
     gap: 2,
@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium,
     backgroundColor: colors.canvas,
   },
-  resultName: { color: colors.ink, fontSize: 15, fontWeight: '800' },
+  resultName: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
   personChoiceList: { gap: spacing.x2, marginTop: spacing.x3 },
   personChoice: {
     minHeight: 72,
@@ -834,9 +834,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   personChoiceCopy: { flex: 1, gap: 2 },
-  personChoiceTitle: { color: colors.ink, fontSize: 14, fontWeight: '800' },
+  personChoiceTitle: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
   centerCopy: { textAlign: 'center', marginTop: spacing.x3 },
   qrWrap: { alignItems: 'center', gap: spacing.x3, marginTop: spacing.x4 },
-  qrHint: { color: colors.ink, fontSize: 14, fontWeight: '700' },
+  qrHint: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '700' },
   loadingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2, marginTop: spacing.x3 },
 });

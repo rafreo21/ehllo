@@ -18,7 +18,7 @@ import {
   type ConnectedAccountStatus,
 } from '@/features/integrations/integrations-api';
 import { readEnv } from '@/lib/env';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, spacing, fonts } from '@/theme/tokens';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -323,14 +323,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   cardCopy: { flex: 1, gap: 4 },
-  cardTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
-  cardDescription: { color: colors.muted, fontSize: 13, lineHeight: 19 },
+  cardTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
+  cardDescription: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 19 },
   // Capability list styled like the event cell's dot-separated meta line.
-  capabilityLine: { color: colors.muted, fontSize: 12 },
+  capabilityLine: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
   capabilityOff: { opacity: 0.45 },
   // Align the action with the title/description text column: icon width (40) + header gap.
   actionRow: { marginLeft: 40 + spacing.x3 },
-  panelTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
-  panelCopy: { marginTop: 6, color: colors.muted, fontSize: 13, lineHeight: 19 },
-  soon: { color: colors.muted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
+  panelTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
+  panelCopy: { marginTop: 6, color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 19 },
+  soon: { color: colors.muted, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
 });

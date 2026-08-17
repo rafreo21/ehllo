@@ -40,7 +40,7 @@ import { buildHtmlSignature, buildPlainSignature } from '@/lib/email-signature';
 import { fetchBrandedQrDataUri } from '@/lib/branded-qr-client';
 import { describeError } from '@/lib/friendly-error';
 import { useAppInsets } from '@/lib/safe-area';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type ToolSheet = 'none' | 'wallet' | 'nfc' | 'widgets' | 'signature' | 'watch' | 'background';
 
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   themeCode: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold, fontWeight: '700',
     letterSpacing: 0.2,
   },
   editLink: {
@@ -496,12 +496,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  editLinkText: { color: colors.ink, fontSize: 13, fontWeight: '700' },
+  editLinkText: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
   title: {
     color: colors.ink,
     fontSize: 28,
     lineHeight: 30,
-    fontWeight: '700',
+    fontFamily: fonts.bold, fontWeight: '700',
     letterSpacing: -1.1,
   },
   subtitle: { marginTop: 2 },
@@ -510,11 +510,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.x5,
     gap: spacing.x4,
   },
-  panelTitle: { color: colors.ink, fontSize: 17, fontWeight: '800' },
+  panelTitle: { color: colors.ink, fontSize: 17, fontFamily: fonts.extrabold, fontWeight: '800' },
   sectionLabel: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold, fontWeight: '800',
     letterSpacing: 0.4,
     textTransform: 'uppercase',
     paddingHorizontal: spacing.x1,
@@ -545,6 +545,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   toolCopy: { flex: 1, gap: 2 },
-  toolTitle: { color: colors.ink, fontSize: 16, fontWeight: '800' },
-  toolSubtitle: { color: colors.muted, fontSize: 12, lineHeight: 17 },
+  toolTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
+  toolSubtitle: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
 });

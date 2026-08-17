@@ -7,7 +7,7 @@ import type { MobileCard } from '@/features/card/types';
 import { describeError } from '@/lib/friendly-error';
 import { buildOfflineQrPayload, tryBuildOfflineQrPayloadWithPhoto, type OfflineQrPayload } from '@/lib/offline-qr-payload';
 import { QR_LOGO } from '@/lib/widget-qr';
-import { colors } from '@/theme/tokens';
+import { colors, fonts } from '@/theme/tokens';
 
 export type QrShareMode = 'online' | 'offline';
 
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   placeholder: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: fonts.extrabold, fontWeight: '800',
   },
   errorFrame: {
     alignItems: 'center',
@@ -167,6 +167,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     textAlign: 'center',
-    fontWeight: '600',
+    fontFamily: fonts.semibold, fontWeight: '600',
   },
 });

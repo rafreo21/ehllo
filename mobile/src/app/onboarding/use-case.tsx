@@ -7,7 +7,7 @@ import { Button, Title } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { consumeAuthReturnPath } from '@/features/encounters/capture-draft';
 import { useAppInsets } from '@/lib/safe-area';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export default function OnboardingUseCaseScreen() {
   const { completeUseCaseSelection } = useAuth();
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.line,
   },
-  title: { fontSize: 32, lineHeight: 34, letterSpacing: -1.1 },
+  title: { fontFamily: fonts.regular, fontSize: 32, lineHeight: 34, letterSpacing: -1.1 },
   choices: { gap: spacing.x3, marginTop: spacing.x1 },
   choice: {
     flexDirection: 'row',
@@ -145,11 +145,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.accentPressed,
   },
-  choiceTitleSelected: { color: colors.ink, fontSize: 16, fontWeight: '800' },
+  choiceTitleSelected: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
   choiceTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  choiceTitleMuted: { color: colors.inkSoft, fontSize: 16, fontWeight: '800', flexShrink: 1 },
-  choiceBodySelected: { color: colors.inkSoft, fontSize: 13, lineHeight: 18 },
-  choiceBody: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  choiceTitleMuted: { color: colors.inkSoft, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800', flexShrink: 1 },
+  choiceBodySelected: { color: colors.inkSoft, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
+  choiceBody: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   badge: {
     flexShrink: 0,
     paddingHorizontal: spacing.x2,
@@ -159,6 +159,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  badgeText: { color: colors.inkSoft, fontSize: 10, fontWeight: '900', letterSpacing: 0.4 },
+  badgeText: { color: colors.inkSoft, fontSize: 10, fontFamily: fonts.black, fontWeight: '900', letterSpacing: 0.4 },
   continueButton: { width: '100%' },
 });

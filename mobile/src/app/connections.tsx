@@ -31,7 +31,7 @@ import {
 } from '@/features/connections/connections-api';
 import { describeError } from '@/lib/friendly-error';
 import { useAppInsets } from '@/lib/safe-area';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 function formatWhen(value?: string) {
   if (!value) return '';
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 28,
     lineHeight: 30,
-    fontWeight: '700',
+    fontFamily: fonts.bold, fontWeight: '700',
     letterSpacing: -1.1,
   },
   searchRow: {
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  searchInput: { flex: 1, color: colors.ink, fontSize: 15 },
+  searchInput: { flex: 1, color: colors.ink, fontFamily: fonts.regular, fontSize: 15 },
   sortButton: {
     width: 46,
     height: 46,
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1, marginTop: spacing.x2 },
   scrollContent: { paddingHorizontal: spacing.x5, gap: spacing.x3, paddingTop: spacing.x2 },
   list: { gap: spacing.x2 },
-  enrichingCopy: { color: colors.muted, fontSize: 12, textAlign: 'center', marginBottom: spacing.x1 },
+  enrichingCopy: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, textAlign: 'center', marginBottom: spacing.x1 },
   row: {
     minHeight: 68,
     flexDirection: 'row',
@@ -369,11 +369,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   copy: { flex: 1, minWidth: 0, gap: 1 },
-  name: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  subtitle: { color: colors.muted, fontSize: 12, lineHeight: 16 },
+  name: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  subtitle: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 16 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2, marginTop: 4 },
-  source: { color: colors.inkSoft, fontSize: 10, fontWeight: '700' },
-  when: { color: colors.muted, fontSize: 10 },
-  eventMeta: { marginTop: 2, color: colors.inkSoft, fontSize: 11, fontWeight: '700' },
+  source: { color: colors.inkSoft, fontSize: 10, fontFamily: fonts.bold, fontWeight: '700' },
+  when: { color: colors.muted, fontFamily: fonts.regular, fontSize: 10 },
+  eventMeta: { marginTop: 2, color: colors.inkSoft, fontSize: 11, fontFamily: fonts.bold, fontWeight: '700' },
   emptySearch: { textAlign: 'center', color: colors.muted },
 });

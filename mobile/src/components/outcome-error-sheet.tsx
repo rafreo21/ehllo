@@ -4,7 +4,7 @@ import LottieView, { type AnimationObject } from 'lottie-react-native';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
 import { useDeferredMount } from '@/lib/use-deferred-mount';
-import { colors } from '@/theme/tokens';
+import { colors, fonts } from '@/theme/tokens';
 
 type OutcomeErrorSheetProps = {
   visible: boolean;
@@ -58,5 +58,5 @@ const styles = StyleSheet.create({
   },
   lottie: { width: '100%', height: '100%' },
   message: { textAlign: 'center' },
-  hint: { color: colors.muted, fontSize: 13, lineHeight: 18, textAlign: 'center' },
+  hint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, textAlign: 'center' },
 });

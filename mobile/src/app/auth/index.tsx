@@ -9,7 +9,7 @@ import { GoogleIcon } from '@/components/provider-icons';
 import { BackButton, Body, Button, Eyebrow, Screen, Title } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { consumeAuthReturnPath } from '@/features/encounters/capture-draft';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -189,16 +189,16 @@ const styles = StyleSheet.create({
   screen: { justifyContent: 'center' },
   brandWrap: { alignItems: 'flex-start', marginBottom: spacing.x2 },
   authHeaderCopy: { gap: spacing.x2 },
-  authTitle: { fontSize: 34, lineHeight: 36, letterSpacing: -1.2 },
+  authTitle: { fontFamily: fonts.regular, fontSize: 34, lineHeight: 36, letterSpacing: -1.2 },
   divider: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
   dividerLine: { flex: 1, height: 1, backgroundColor: colors.line },
-  dividerText: { color: colors.muted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+  dividerText: { color: colors.muted, fontSize: 12, fontFamily: fonts.bold, fontWeight: '700', textTransform: 'uppercase' },
   field: { minHeight: 54, paddingHorizontal: spacing.x4, flexDirection: 'row', alignItems: 'center', gap: spacing.x3, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, backgroundColor: colors.surface },
-  input: { flex: 1, color: colors.ink, fontSize: 16 },
-  codeInput: { letterSpacing: 8, fontSize: 24, fontWeight: '700', textAlign: 'center' },
-  message: { color: colors.danger, fontSize: 13 },
+  input: { flex: 1, color: colors.ink, fontFamily: fonts.regular, fontSize: 16 },
+  codeInput: { letterSpacing: 8, fontSize: 24, fontFamily: fonts.bold, fontWeight: '700', textAlign: 'center' },
+  message: { color: colors.danger, fontFamily: fonts.regular, fontSize: 13 },
   success: { color: colors.ink },
-  expiry: { color: colors.muted, fontSize: 13, textAlign: 'center' },
-  expiryExpired: { color: colors.danger, fontWeight: '700' },
-  config: { color: colors.warning, fontSize: 12, lineHeight: 18 },
+  expiry: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, textAlign: 'center' },
+  expiryExpired: { color: colors.danger, fontFamily: fonts.bold, fontWeight: '700' },
+  config: { color: colors.warning, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
 });

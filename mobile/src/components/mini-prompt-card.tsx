@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CaretRight } from 'phosphor-react-native';
 
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type MiniPromptCardProps = {
   icon: ReactNode;
@@ -63,6 +63,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   copy: { flex: 1, gap: 2 },
-  title: { color: colors.ink, fontSize: 14, fontWeight: '800' },
-  body: { color: colors.muted, fontSize: 12, lineHeight: 17 },
+  title: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  body: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
 });

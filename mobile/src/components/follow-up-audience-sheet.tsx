@@ -11,7 +11,7 @@ import {
   type FollowUpParticipant,
 } from '@/features/follow-ups/follow-up-participants';
 import { isFollowUpChannel } from '@/features/follow-ups/follow-up-channels';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export type { FollowUpAudienceChoice } from '@/features/follow-ups/follow-up-participants';
 
@@ -156,8 +156,8 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.82 },
   personCopy: { flex: 1, gap: 2 },
-  personName: { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  personEmail: { color: colors.muted, fontSize: 12, fontWeight: '600' },
+  personName: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  personEmail: { color: colors.muted, fontSize: 12, fontFamily: fonts.semibold, fontWeight: '600' },
   radio: {
     width: 18,
     height: 18,

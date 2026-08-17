@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
 import { Stack } from 'expo-router';
 import { NavigationBar } from 'expo-navigation-bar';
+import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
@@ -24,6 +25,7 @@ import { CaptureTranscriptionSyncManager } from '@/features/encounters/capture-t
 import { EventActionSyncManager } from '@/features/events/event-action-sync-manager';
 import { installRouterDebounce } from '@/lib/router-debounce';
 import { WidgetQrRenderer } from '@/lib/widget-qr-renderer';
+import { FONT_ASSETS } from '@/theme/fonts';
 import { colors } from '@/theme/tokens';
 
 Sentry.init({
@@ -45,6 +47,12 @@ SplashScreen.setOptions({
 });
 
 function RootNavigator() {
+  // Loaded at runtime so a typeface change ships over OTA. Rendering is not
+  // blocked on it: every text style still carries its numeric fontWeight, so
+  // the first frame uses the system face and swaps once the files are ready
+  // rather than holding the splash screen on a font download.
+  useFonts(FONT_ASSETS);
+
   useEffect(() => {
     SplashScreen.hide();
   }, []);

@@ -1,7 +1,7 @@
 import { Check } from 'phosphor-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export const CAPTURE_STEPS = ['Interaction', 'Context', 'Follow-up'] as const;
 
@@ -89,10 +89,10 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
     backgroundColor: colors.accent,
   },
-  stepperNum: { color: colors.muted, fontSize: 13, fontWeight: '900' },
+  stepperNum: { color: colors.muted, fontSize: 13, fontFamily: fonts.black, fontWeight: '900' },
   stepperNumActive: { color: colors.white },
   stepperLabels: { flexDirection: 'row' },
   stepperLabelCell: { flex: 1, alignItems: 'center' },
-  stepperLabel: { color: colors.muted, fontSize: 11, fontWeight: '800', textAlign: 'center' },
+  stepperLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textAlign: 'center' },
   stepperLabelActive: { color: colors.ink },
 });

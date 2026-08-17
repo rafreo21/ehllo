@@ -10,7 +10,7 @@ import {
   phonePlaceholder,
   type PhoneParts,
 } from '@/lib/phone/format';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type PhoneInputProps = {
   label?: string;
@@ -121,7 +121,7 @@ export function PhoneInput({ label, value, onChange, placeholder }: PhoneInputPr
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing.x2 },
-  label: { color: colors.muted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
   row: {
     flexDirection: 'row',
     alignItems: 'stretch',
@@ -138,8 +138,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium,
     backgroundColor: colors.canvas,
   },
-  flag: { fontSize: 18 },
-  dialCode: { color: colors.ink, fontSize: 15, fontWeight: '800' },
+  flag: { fontFamily: fonts.regular, fontSize: 18 },
+  dialCode: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
   input: {
     flex: 1,
     minHeight: 52,
@@ -171,8 +171,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium,
   },
   countryRowActive: { backgroundColor: colors.surfaceMuted },
-  countryFlag: { fontSize: 22, width: 30, textAlign: 'center' },
+  countryFlag: { fontFamily: fonts.regular, fontSize: 22, width: 30, textAlign: 'center' },
   countryCopy: { flex: 1 },
-  countryName: { color: colors.ink, fontSize: 15, fontWeight: '700' },
-  countryMeta: { marginTop: 2, color: colors.muted, fontSize: 12 },
+  countryName: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '700' },
+  countryMeta: { marginTop: 2, color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
 });

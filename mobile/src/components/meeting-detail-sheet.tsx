@@ -10,7 +10,7 @@ import { Body } from '@/components/ui';
 import type { EncounterPayload } from '@/features/encounters/encounter-api';
 import type { FollowUpItem } from '@/features/follow-ups/follow-up-api';
 import { formatMeetingDate } from '@/lib/due-date';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type MeetingDetailSheetProps = {
   visible: boolean;
@@ -144,7 +144,7 @@ export function MeetingDetailSheet({
 
 const styles = StyleSheet.create({
   metaRow: { gap: spacing.x2 },
-  meta: { color: colors.muted, fontSize: 13, fontWeight: '700' },
+  meta: { color: colors.muted, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
   consentBadge: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
@@ -155,10 +155,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.surfaceMuted,
   },
-  consentText: { color: colors.ink, fontSize: 12, fontWeight: '700' },
+  consentText: { color: colors.ink, fontSize: 12, fontFamily: fonts.bold, fontWeight: '700' },
   block: { gap: spacing.x2 },
-  blockTitle: { color: colors.ink, fontSize: 14, fontWeight: '800' },
-  peopleLine: { color: colors.inkSoft, fontSize: 14, lineHeight: 20 },
+  blockTitle: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  peopleLine: { color: colors.inkSoft, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
   tabs: {
     flexDirection: 'row',
     gap: spacing.x2,
@@ -179,9 +179,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  tabLabel: { color: colors.muted, fontSize: 12, fontWeight: '800' },
+  tabLabel: { color: colors.muted, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800' },
   tabLabelActive: { color: colors.ink },
-  emptyTab: { color: colors.muted, fontSize: 14, lineHeight: 20 },
-  recordingMissing: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  emptyTab: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
+  recordingMissing: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   list: { gap: spacing.x3 },
 });
