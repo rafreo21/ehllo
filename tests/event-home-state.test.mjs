@@ -3,6 +3,8 @@ import { describe, it } from "node:test";
 
 import {
   bucketEvents,
+  canRejoinEvent,
+  groupEventsForList,
   compareEventsByStart,
   isEventCurrentlyHappening,
   isUpcomingEvent,
@@ -19,6 +21,8 @@ function event(overrides = {}) {
     source: "manual",
     sourceUrl: "",
     organizerEmail: "",
+    status: "scheduled",
+    attendanceStatus: "going",
     ...overrides,
   };
 }
@@ -140,5 +144,74 @@ describe("resolveHomeEventCardState", () => {
 
   it("returns none when there is nothing relevant", () => {
     assert.deepEqual(resolveHomeEventCardState([], [], now), { type: "none" });
+  });
+});
+
+
+describe("groupEventsForList", () => {
+  const now = new Date("2026-08-17T12:00:00.000Z");
+  const future = { startsAt: "2026-08-20T09:00:00.000Z", endsAt: "2026-08-20T17:00:00.000Z" };
+  const finished = { startsAt: "2026-08-10T09:00:00.000Z", endsAt: "2026-08-10T17:00:00.000Z" };
+
+  it("keeps Upcoming strictly to going events that have not finished", () => {
+    const groups = groupEventsForList([
+      event({ id: "a", attendanceStatus: "going", ...future }),
+      event({ id: "b", attendanceStatus: "going", ...finished }),
+      event({ id: "c", attendanceStatus: "not_going", ...future }),
+    ], now);
+
+    assert.deepEqual(groups.upcoming.map((e) => e.id), ["a"]);
+    assert.deepEqual(groups.past.attended.map((e) => e.id), ["b"]);
+    assert.deepEqual(groups.past.notGoing.map((e) => e.id), ["c"]);
+  });
+
+  it("keeps a declined future event visible instead of dropping it", () => {
+    // The defect this replaces: a not_going event was returned by nothing and
+    // rendered nowhere, so there was no row left to change your mind on.
+    const declined = event({ id: "declined", attendanceStatus: "not_going", ...future });
+    const groups = groupEventsForList([declined], now);
+
+    assert.equal(groups.past.notGoing.length, 1);
+    assert.equal(canRejoinEvent(declined, now), true);
+  });
+
+  it("separates a declined event that has since finished", () => {
+    const groups = groupEventsForList([
+      event({ id: "missed", attendanceStatus: "not_going", ...finished }),
+    ], now);
+
+    assert.deepEqual(groups.past.didNotAttend.map((e) => e.id), ["missed"]);
+    assert.deepEqual(groups.past.notGoing, []);
+  });
+
+  it("pulls cancelled events out of Upcoming even when the user said going", () => {
+    const groups = groupEventsForList([
+      event({ id: "off", attendanceStatus: "going", status: "cancelled", ...future }),
+    ], now);
+
+    assert.deepEqual(groups.upcoming, []);
+    assert.deepEqual(groups.past.cancelled.map((e) => e.id), ["off"]);
+  });
+
+  it("offers rejoining only while the event can still be attended", () => {
+    assert.equal(canRejoinEvent(event({ attendanceStatus: "not_going", ...future }), now), true);
+    assert.equal(canRejoinEvent(event({ attendanceStatus: "not_going", ...finished }), now), false);
+    assert.equal(canRejoinEvent(event({ attendanceStatus: "going", ...future }), now), false);
+    assert.equal(
+      canRejoinEvent(event({ attendanceStatus: "not_going", status: "cancelled", ...future }), now),
+      false,
+    );
+  });
+
+  it("orders not-going soonest-first and finished groups most-recent-first", () => {
+    const groups = groupEventsForList([
+      event({ id: "later", attendanceStatus: "not_going", startsAt: "2026-08-25T09:00:00.000Z", endsAt: null }),
+      event({ id: "sooner", attendanceStatus: "not_going", startsAt: "2026-08-19T09:00:00.000Z", endsAt: null }),
+      event({ id: "older", attendanceStatus: "going", startsAt: "2026-08-01T09:00:00.000Z", endsAt: "2026-08-01T10:00:00.000Z" }),
+      event({ id: "recent", attendanceStatus: "going", startsAt: "2026-08-12T09:00:00.000Z", endsAt: "2026-08-12T10:00:00.000Z" }),
+    ], now);
+
+    assert.deepEqual(groups.past.notGoing.map((e) => e.id), ["sooner", "later"]);
+    assert.deepEqual(groups.past.attended.map((e) => e.id), ["recent", "older"]);
   });
 });

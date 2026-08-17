@@ -11,6 +11,7 @@ import { EventCard } from '@/components/event-card';
 import { EventInviteSheet } from '@/components/event-invite-sheet';
 import { OfflineBanner } from '@/components/offline-banner';
 import { EventManageSheet } from '@/components/event-manage-sheet';
+import { EventPastSheet } from '@/components/event-past-sheet';
 import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
@@ -19,8 +20,8 @@ import { Button, HeaderActionButton, PageHeader, Screen } from '@/components/ui'
 import { useAuth } from '@/features/auth/auth-context';
 import { fetchAddressSuggestions, type AddressSuggestion } from '@/features/events/address-autocomplete';
 import {
-  bucketEvents,
   compareEventsByStart,
+  groupEventsForList,
   isEventCurrentlyHappening,
   isUpcomingEvent,
 } from '@/features/events/event-home-state';
@@ -32,6 +33,7 @@ import {
   fetchMyEvents,
   markEventLeft,
   inviteEventGuest,
+  removeEventFromMyList,
   revokeEventInvitation,
   setEventAttendance,
   updateEvent,
@@ -88,6 +90,8 @@ export default function EventsScreen() {
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState('');
   const [addOpen, setAddOpen] = useState(false);
+  const [addPrefill, setAddPrefill] = useState<{ title: string; location: string } | null>(null);
+  const [pastSheetEvent, setPastSheetEvent] = useState<EventItem | null>(null);
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [providerStatus, setProviderStatus] = useState<{ google: CalendarProviderStatus; microsoft: CalendarProviderStatus }>({
     google: 'not_connected',
@@ -119,7 +123,7 @@ export default function EventsScreen() {
     let candidateSyncFailed = false;
     try {
       const [mine, candidatesResult, accounts] = await Promise.all([
-        fetchMyEvents(accessToken, { allowCacheFallback: !isOnline() }),
+        fetchMyEvents(accessToken, { allowCacheFallback: !isOnline(), include: 'all' }),
         fetchEventCandidates(accessToken).catch(() => {
           candidateSyncFailed = true;
           return null;
@@ -182,7 +186,21 @@ export default function EventsScreen() {
       ? 'Microsoft'
       : null;
 
-  const { upcoming, past } = bucketEvents(events);
+  const { upcoming, past } = groupEventsForList(events);
+  // Named groups rather than one undifferentiated pile: a declined event that
+  // has not happened yet is a different thing from one that has, and only the
+  // first can be reversed. Empty groups render nothing at all.
+  const pastGroups = [
+    {
+      key: 'notGoing' as const,
+      title: 'Not going',
+      caption: "Still to come — tap to change your mind.",
+      events: past.notGoing,
+    },
+    { key: 'attended' as const, title: 'Attended', caption: '', events: past.attended },
+    { key: 'didNotAttend' as const, title: "Didn't attend", caption: '', events: past.didNotAttend },
+    { key: 'cancelled' as const, title: 'Cancelled', caption: '', events: past.cancelled },
+  ];
   const upcomingCandidates = candidates
     .filter((event) => isUpcomingEvent(event))
     .sort(compareEventsByStart);
@@ -195,11 +213,49 @@ export default function EventsScreen() {
       await setEventAttendance(accessToken, event.id, status);
       await cacheEventAttendance(event, status);
       setCandidates((current) => current.filter((item) => item.id !== event.id));
-      if (status === 'going') setEvents((current) => current.some((item) => item.id === event.id) ? current : [...current, event]);
-      else setEvents((current) => current.filter((item) => item.id !== event.id));
+      // Both answers keep the event on the list; only its attendanceStatus
+      // differs. Dropping the row on "not going" is what previously erased the
+      // decision and left nothing to reverse.
+      const decided = { ...event, attendanceStatus: status };
+      setEvents((current) => (
+        current.some((item) => item.id === event.id)
+          ? current.map((item) => (item.id === event.id ? { ...item, attendanceStatus: status } : item))
+          : [...current, decided]
+      ));
       if (isOnline()) await refresh();
     } catch (caught) {
       setError(describeError(caught, 'Could not update this event.'));
+    } finally {
+      setBusyId('');
+    }
+  }
+
+  async function rejoinEvent(event: EventItem) {
+    setPastSheetEvent(null);
+    await decide(event, 'going');
+    setActiveTab('upcoming');
+  }
+
+  function recreateEvent(event: EventItem) {
+    // Title and location carry over; the dates deliberately do not. Reusing a
+    // finished event's date would rewrite history that captures and follow-ups
+    // are already attached to, so this always creates a new record.
+    setPastSheetEvent(null);
+    setAddPrefill({ title: event.title, location: event.location });
+    setAddOpen(true);
+  }
+
+  async function removeEvent(event: EventItem) {
+    if (!accessToken) return;
+    setPastSheetEvent(null);
+    setBusyId(event.id);
+    setError('');
+    try {
+      await removeEventFromMyList(accessToken, event.id);
+      setEvents((current) => current.filter((item) => item.id !== event.id));
+      if (isOnline()) await refresh();
+    } catch (caught) {
+      setError(describeError(caught, 'Could not remove this event.'));
     } finally {
       setBusyId('');
     }
@@ -459,13 +515,22 @@ export default function EventsScreen() {
               />
             )
           ) : (
-            past.length ? past.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                variant="past"
-                busy={busyId === event.id}
-              />
+            pastGroups.some((group) => group.events.length) ? pastGroups.map((group) => (
+              group.events.length ? (
+                <View key={group.key} style={styles.pastGroup}>
+                  <Text style={styles.pastGroupTitle}>{group.title}</Text>
+                  {group.caption ? <Text style={styles.pastGroupCaption}>{group.caption}</Text> : null}
+                  {group.events.map((event) => (
+                    <EventCard
+                      key={event.id}
+                      event={event}
+                      variant="past"
+                      busy={busyId === event.id}
+                      onPress={() => setPastSheetEvent(event)}
+                    />
+                  ))}
+                </View>
+              ) : null
             )) : (
               <EmptyState
                 illustration={require('@/assets/animations/no-events.json')}
@@ -478,7 +543,8 @@ export default function EventsScreen() {
 
       <AddEventSheet
         visible={addOpen}
-        onClose={() => setAddOpen(false)}
+        prefill={addPrefill}
+        onClose={() => { setAddOpen(false); setAddPrefill(null); }}
         onSubmit={addEvent}
         accessToken={accessToken}
       />
@@ -493,6 +559,14 @@ export default function EventsScreen() {
         onClose={() => { setInviteEvent(null); setInviteError(''); setInvitations([]); }}
         onInvite={(email) => void sendInvite(email)}
         onRevoke={confirmRevoke}
+      />
+      <EventPastSheet
+        event={pastSheetEvent}
+        busy={Boolean(pastSheetEvent) && busyId === pastSheetEvent?.id}
+        onClose={() => setPastSheetEvent(null)}
+        onRejoin={(event) => void rejoinEvent(event)}
+        onRecreate={recreateEvent}
+        onRemove={(event) => void removeEvent(event)}
       />
       <EventManageSheet
         key={manageEvent?.id ?? 'closed-manage'}
@@ -540,11 +614,14 @@ type AddEventStep = 'choose' | 'link' | 'link-loading' | 'form';
 
 function AddEventSheet({
   visible,
+  prefill,
   onClose,
   onSubmit,
   accessToken,
 }: {
   visible: boolean;
+  /** Recreating a finished event: name and place carry over, dates never do. */
+  prefill?: { title: string; location: string } | null;
   onClose: () => void;
   onSubmit: (input: { title: string; location: string; startsAt: string; endsAt: string; sourceUrl: string }) => Promise<void>;
   accessToken: string | null;
@@ -562,16 +639,16 @@ function AddEventSheet({
   useEffect(() => {
     if (visible) {
       void Promise.resolve().then(() => {
-        setStep('choose');
+        setStep(prefill ? 'form' : 'choose');
         setCameFromLink(false);
-        setForm(defaultForm());
+        setForm(prefill ? { ...defaultForm(), title: prefill.title, location: prefill.location } : defaultForm());
         setLinkUrl('');
         setError('');
         setDateNotice('');
         setDateNeedsReview(false);
       });
     }
-  }, [visible]);
+  }, [visible, prefill]);
 
   // Seamless paste: the moment the link step opens with a URL already on
   // the clipboard (the common case — just copied from a browser or invite),
@@ -914,6 +991,19 @@ const styles = StyleSheet.create({
   eventGroupHeading: { gap: spacing.x1 },
   eventGroupTitle: { color: colors.ink, fontSize: 15, fontWeight: '800' },
   eventGroupCopy: { color: colors.muted, fontSize: 12, lineHeight: 17 },
+  pastGroup: {
+    gap: spacing.x2,
+  },
+  pastGroupTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  pastGroupCaption: {
+    color: colors.muted,
+    fontSize: 13,
+    marginTop: -spacing.x1,
+  },
   tabRow: {
     flexDirection: 'row',
     gap: spacing.x1,

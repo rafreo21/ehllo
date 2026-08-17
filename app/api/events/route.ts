@@ -12,23 +12,32 @@ export async function GET(request: Request) {
 
   const supabase = await createApiSupabaseClient(request);
 
-  // "My Events" only ever shows events this user is going to — candidates
-  // awaiting a decision come from GET /api/events/candidates instead, so a
-  // calendar entry never appears here until the user has actually said yes.
+  // Every event this user has decided on, going or not, plus cancelled ones.
+  // Filtering to status = "going" here meant declining an event erased it from
+  // the product: the decision was still stored, and still used to suppress the
+  // calendar candidate, but the user was left with no row to see or undo. The
+  // client decides what to show where; attendanceStatus is what lets it.
+  // Candidates awaiting a first decision still come from
+  // GET /api/events/candidates, so a calendar entry never appears here until
+  // the user has actually answered.
   const { data, error } = await supabase
     .from("event_attendance")
-    .select("left_at, events!inner(*)")
+    .select("left_at, status, events!inner(*)")
     .eq("user_id", user.id)
-    .eq("status", "going")
-    .eq("events.status", "scheduled")
     .order("starts_at", { referencedTable: "events", ascending: true });
 
   if (error) {
     return NextResponse.json({ error: "We couldn’t load your events." }, { status: 500 });
   }
 
-  const events = ((data ?? []) as unknown as Array<{ left_at: string | null; events: EventRow | null }>)
-    .flatMap((row) => (row.events ? [{ ...eventFromRow(row.events), leftAt: row.left_at }] : []));
+  const events = ((data ?? []) as unknown as Array<{ left_at: string | null; status: string; events: EventRow | null }>)
+    .flatMap((row) => (row.events
+      ? [{
+          ...eventFromRow(row.events),
+          leftAt: row.left_at,
+          attendanceStatus: row.status === "not_going" ? "not_going" : "going",
+        }]
+      : []));
 
   return NextResponse.json({ events }, { headers: { "Cache-Control": "private, no-store" } });
 }
