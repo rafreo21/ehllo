@@ -101,13 +101,16 @@ function outlookNativeCalendarLink(
   return `ms-outlook://events/new?${params.toString()}`;
 }
 
-function googleCalendarAppLink(title: string, details: string, start: Date, end: Date) {
+function googleCalendarAppLink(title: string, details: string, start: Date, end: Date, attendeeEmails: string[] = []) {
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: title,
     details,
     dates: formatGoogleCalendarDates(start, end),
   });
+  for (const email of attendeeEmails) {
+    if (email.includes('@')) params.append('add', email.trim());
+  }
   return `comgooglecalendar://create?${params.toString()}`;
 }
 
@@ -122,12 +125,17 @@ export function meetingActionCandidates(
   const webGoogle = googleCalendarLink(title, details, dueAt, attendeeEmails);
   const webOutlook = outlookCalendarLink(title, details, dueAt, attendeeEmails);
   const outlookNative = outlookNativeCalendarLink(title, details, start, end, attendeeEmails);
-  const googleNative = googleCalendarAppLink(title, details, start, end);
+  const googleNative = googleCalendarAppLink(title, details, start, end, attendeeEmails);
+  const hasAttendees = attendeeEmails.some((email) => email.includes('@'));
 
   const native: string[] = [];
   const web: string[] = [];
 
-  if (Platform.OS === 'android') {
+  // Android's generic "insert event" intent has no documented extra for
+  // guests, so it can never carry attendee emails. Keep it as the first,
+  // fastest candidate when there's nobody to prefill, but deprioritize it
+  // below the attendee-aware candidates whenever there are guests to add.
+  if (Platform.OS === 'android' && !hasAttendees) {
     native.push(androidCalendarInsertIntent(title, details, start, end));
   }
 
@@ -154,6 +162,10 @@ export function meetingActionCandidates(
     web.push(webGoogle, webOutlook);
   }
 
+  if (Platform.OS === 'android' && hasAttendees) {
+    native.push(androidCalendarInsertIntent(title, details, start, end));
+  }
+
   return [...new Set([...native, ...web].filter(Boolean))];
 }
 
@@ -168,28 +180,17 @@ export async function openMeetingCompose(
     : compose.attendeeEmail?.includes('@')
       ? [compose.attendeeEmail.trim()]
       : [];
-  const primaryEmail = attendeeEmails[0];
 
-  if (Platform.OS === 'android') {
+  // The system's generic "insert event" intent can't carry attendee emails,
+  // so only take this fast path when there's nobody to prefill as a guest —
+  // otherwise fall through to meetingActionCandidates, which knows how to
+  // reach attendee-aware candidates first.
+  if (Platform.OS === 'android' && attendeeEmails.length === 0) {
     try {
       await Linking.openURL(androidCalendarInsertIntent(compose.title, compose.details, start, end));
       return true;
     } catch {
-      try {
-        const extras = [
-          { key: 'title', value: compose.title },
-          { key: 'description', value: compose.details },
-          { key: 'beginTime', value: start.getTime() },
-          { key: 'endTime', value: end.getTime() },
-        ];
-        if (primaryEmail?.includes('@')) {
-          extras.push({ key: 'email', value: primaryEmail.trim() });
-        }
-        await Linking.sendIntent('android.intent.action.INSERT', extras);
-        return true;
-      } catch {
-        // Fall through to URL candidates.
-      }
+      // Fall through to URL candidates.
     }
   }
 
