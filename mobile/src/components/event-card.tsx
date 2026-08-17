@@ -52,7 +52,10 @@ export function EventCard({
   // confirmed the card says so, because the useful information at that point
   // is which event your scans are being filed under, not that a button exists.
   const checkedIn = Boolean(event.checkedInAt);
-  const showCheckInAction = Boolean(onCheckIn) && !checkedIn;
+  // Never on a candidate: you cannot be at something you have not said you
+  // are going to, and offering "I'm here" beside "Going / Not going" asks two
+  // different questions in one row.
+  const showCheckInAction = Boolean(onCheckIn) && !checkedIn && variant !== 'candidate';
   const showGoingNotGoingAction = (variant === 'going' || variant === 'current') && Boolean(onNotGoing);
   // Independent of the action row below — this is Home's "tap the card to
   // see it in My Events" affordance. Events itself never passes onPress, so

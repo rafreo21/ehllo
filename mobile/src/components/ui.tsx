@@ -108,6 +108,40 @@ export function ScreenFrame({
   );
 }
 
+/**
+ * The selectable pill used for a small set of mutually exclusive choices —
+ * the Owner selector in Add follow-up, and the Events filter. Same shape and
+ * states in both so a pill always means "pick one of these".
+ */
+export function ChoicePill({
+  label,
+  selected,
+  onPress,
+  accessibilityLabel,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  accessibilityLabel?: string;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      accessibilityLabel={accessibilityLabel ?? label}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.choicePill,
+        selected && styles.choicePillSelected,
+        pressed && styles.choicePillPressed,
+      ]}>
+      <Text style={[styles.choicePillText, selected && styles.choicePillTextSelected]} numberOfLines={1}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 export function Eyebrow({ children }: PropsWithChildren) {
   return <Text style={styles.eyebrow}>{children}</Text>;
 }
@@ -344,6 +378,18 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.line,
   },
+  choicePill: {
+    paddingHorizontal: spacing.x3,
+    paddingVertical: spacing.x2,
+    borderRadius: radius.round,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+  },
+  choicePillSelected: { backgroundColor: colors.ink, borderColor: colors.ink },
+  choicePillPressed: { opacity: 0.7 },
+  choicePillText: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
+  choicePillTextSelected: { color: colors.white },
   eyebrow: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
   title: { color: colors.ink, fontSize: 40, lineHeight: 42, fontFamily: fonts.medium, fontWeight: '700', letterSpacing: -1.5 },
   body: { color: colors.muted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 22 },

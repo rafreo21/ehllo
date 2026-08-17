@@ -3,7 +3,7 @@ import * as Clipboard from 'expo-clipboard';
 import { router, useFocusEffect } from 'expo-router';
 import { ArrowsClockwise, CalendarBlank, CaretRight, LinkSimple, NotePencil, Plus, WarningCircle } from 'phosphor-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { EmptyState } from '@/components/empty-state';
@@ -16,7 +16,7 @@ import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { SettingsSkeleton } from '@/components/skeleton';
-import { Button, HeaderActionButton, PageHeader, Screen } from '@/components/ui';
+import { Button, ChoicePill, HeaderActionButton, PageHeader, Screen } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { fetchAddressSuggestions, type AddressSuggestion } from '@/features/events/address-autocomplete';
 import {
@@ -76,6 +76,19 @@ function formatEventWhen(event: Pick<EventItem, 'startsAt'>) {
   return `${datePart} · ${timePart}`;
 }
 
+type EventFilterKey = 'upcoming' | 'attended' | 'notGoing' | 'didNotAttend' | 'cancelled';
+
+// Each filter explains its own emptiness. A shared "nothing here" would be
+// technically true and useless — not having declined anything is a different
+// situation from not having attended anything yet.
+const emptyFilterCopy: Record<EventFilterKey, { title: string; copy: string }> = {
+  upcoming: { title: 'Nothing coming up', copy: 'Add an event, or connect your calendar in Settings.' },
+  attended: { title: 'No events attended yet', copy: 'Events you went to show up here once they have finished.' },
+  notGoing: { title: 'Nothing declined', copy: "Events you say you're not going to stay here in case you change your mind." },
+  didNotAttend: { title: 'Nothing missed', copy: 'Events you declined appear here after they have finished.' },
+  cancelled: { title: 'Nothing cancelled', copy: 'Events cancelled by you or the organiser appear here.' },
+};
+
 export default function EventsScreen() {
   const { session } = useAuth();
   const accessToken = session?.access_token ?? null;
@@ -100,7 +113,7 @@ export default function EventsScreen() {
     microsoft: 'not_connected',
   });
   const [syncedAt, setSyncedAt] = useState('');
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [activeFilter, setActiveFilter] = useState<EventFilterKey>('upcoming');
   const [inviteEvent, setInviteEvent] = useState<EventItem | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [invitationsLoading, setInvitationsLoading] = useState(false);
@@ -192,20 +205,23 @@ export default function EventsScreen() {
   // Named groups rather than one undifferentiated pile: a declined event that
   // has not happened yet is a different thing from one that has, and only the
   // first can be reversed. Empty groups render nothing at all.
-  const pastGroups = [
-    {
-      key: 'notGoing' as const,
-      title: 'Not going',
-      caption: "Still to come — tap to change your mind.",
-      events: past.notGoing,
-    },
-    { key: 'attended' as const, title: 'Attended', caption: '', events: past.attended },
-    { key: 'didNotAttend' as const, title: "Didn't attend", caption: '', events: past.didNotAttend },
-    { key: 'cancelled' as const, title: 'Cancelled', caption: '', events: past.cancelled },
-  ];
   const upcomingCandidates = candidates
     .filter((event) => isUpcomingEvent(event))
     .sort(compareEventsByStart);
+
+  // One pill per state rather than two tabs plus in-page headings: the
+  // headings were doing the work of a filter without being tappable, and
+  // "Past" had to hold three unrelated things. Upcoming keeps confirmed
+  // events and undecided suggestions together because both are answers to
+  // "what is ahead of me".
+  const eventFilters = [
+    { key: 'upcoming' as const, label: 'Upcoming', events: upcoming, count: upcoming.length + upcomingCandidates.length },
+    { key: 'attended' as const, label: 'Attended', events: past.attended, count: past.attended.length },
+    { key: 'notGoing' as const, label: 'Not going', events: past.notGoing, count: past.notGoing.length },
+    { key: 'didNotAttend' as const, label: "Didn't attend", events: past.didNotAttend, count: past.didNotAttend.length },
+    { key: 'cancelled' as const, label: 'Cancelled', events: past.cancelled, count: past.cancelled.length },
+  ];
+  const activeEvents = eventFilters.find((filter) => filter.key === activeFilter)?.events ?? [];
 
   async function decide(event: EventItem, status: 'going' | 'not_going') {
     if (!accessToken) return;
@@ -235,7 +251,7 @@ export default function EventsScreen() {
   async function rejoinEvent(event: EventItem) {
     setPastSheetEvent(null);
     await decide(event, 'going');
-    setActiveTab('upcoming');
+    setActiveFilter('upcoming');
   }
 
   function recreateEvent(event: EventItem) {
@@ -313,7 +329,7 @@ export default function EventsScreen() {
       sourceUrl: input.sourceUrl || undefined,
     });
     setCandidates((current) => [...current, created]);
-    setActiveTab(isUpcomingEvent(created) ? 'upcoming' : 'past');
+    setActiveFilter(isUpcomingEvent(created) ? 'upcoming' : 'attended');
     setAddOpen(false);
     setRefreshTitle('Event added');
     setRefreshMessage('Choose Going or Not going on the event card. If you choose Going while the event is happening, I\'ve left will become available.');
@@ -447,22 +463,21 @@ export default function EventsScreen() {
         ) : undefined}
       />
       {!loading && accessToken ? (
-        <View style={styles.tabRow}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ selected: activeTab === 'upcoming' }}
-            onPress={() => setActiveTab('upcoming')}
-            style={[styles.tab, activeTab === 'upcoming' && styles.tabActive]}>
-            <Text style={[styles.tabText, activeTab === 'upcoming' && styles.tabTextActive]}>Upcoming</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ selected: activeTab === 'past' }}
-            onPress={() => setActiveTab('past')}
-            style={[styles.tab, activeTab === 'past' && styles.tabActive]}>
-            <Text style={[styles.tabText, activeTab === 'past' && styles.tabTextActive]}>Past</Text>
-          </Pressable>
-        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+          keyboardShouldPersistTaps="handled">
+          {eventFilters.map((filter) => (
+            <ChoicePill
+              key={filter.key}
+              label={filter.count ? `${filter.label} ${filter.count}` : filter.label}
+              accessibilityLabel={`${filter.label}, ${filter.count} event${filter.count === 1 ? '' : 's'}`}
+              selected={activeFilter === filter.key}
+              onPress={() => setActiveFilter(filter.key)}
+            />
+          ))}
+        </ScrollView>
       ) : null}
     </View>
   );
@@ -493,27 +508,22 @@ export default function EventsScreen() {
             />
           ) : null}
 
-          {activeTab === 'upcoming' ? (
+          {activeFilter === 'upcoming' ? (
             upcomingCandidates.length || upcoming.length ? (
               <>
-                {upcoming.length ? (
-                  <View style={styles.eventGroup}>
-                    <Text style={styles.eventGroupTitle}>You’re going</Text>
-                    {upcoming.map((event) => (
-                      <EventCard
-                        key={event.id}
-                        event={event}
-                        variant={isEventCurrentlyHappening(event) ? 'current' : 'going'}
-                        busy={busyId === event.id}
-                        onNotGoing={(item) => void decide(item, 'not_going')}
-                        onLeave={isEventCurrentlyHappening(event) ? (item) => void leaveEvent(item) : undefined}
-                        onCheckIn={canCheckInToEvent(event) ? (item) => void checkInToEvent(item) : undefined}
-                        onInvite={(item) => void openInvitations(item)}
-                        onManage={event.source !== 'calendar' ? (item) => { setManageError(''); setManageEvent(item); } : undefined}
-                      />
-                    ))}
-                  </View>
-                ) : null}
+                {upcoming.map((event) => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    variant={isEventCurrentlyHappening(event) ? 'current' : 'going'}
+                    busy={busyId === event.id}
+                    onNotGoing={(item) => void decide(item, 'not_going')}
+                    onLeave={isEventCurrentlyHappening(event) ? (item) => void leaveEvent(item) : undefined}
+                    onCheckIn={canCheckInToEvent(event) ? (item) => void checkInToEvent(item) : undefined}
+                    onInvite={(item) => void openInvitations(item)}
+                    onManage={event.source !== 'calendar' ? (item) => { setManageError(''); setManageEvent(item); } : undefined}
+                  />
+                ))}
                 {upcomingCandidates.length ? (
                   <View style={styles.eventGroup}>
                     <View style={styles.eventGroupHeading}>
@@ -542,29 +552,22 @@ export default function EventsScreen() {
                   : 'Add an event, or connect your calendar in Settings.'}
               />
             )
-          ) : (
-            pastGroups.some((group) => group.events.length) ? pastGroups.map((group) => (
-              group.events.length ? (
-                <View key={group.key} style={styles.pastGroup}>
-                  <Text style={styles.pastGroupTitle}>{group.title}</Text>
-                  {group.caption ? <Text style={styles.pastGroupCaption}>{group.caption}</Text> : null}
-                  {group.events.map((event) => (
-                    <EventCard
-                      key={event.id}
-                      event={event}
-                      variant="past"
-                      busy={busyId === event.id}
-                      onPress={() => setPastSheetEvent(event)}
-                    />
-                  ))}
-                </View>
-              ) : null
-            )) : (
-              <EmptyState
-                illustration={require('@/assets/animations/no-events.json')}
-                title="No past events yet"
+          ) : activeEvents.length ? (
+            activeEvents.map((event) => (
+              <EventCard
+                key={event.id}
+                event={event}
+                variant="past"
+                busy={busyId === event.id}
+                onPress={() => setPastSheetEvent(event)}
               />
-            )
+            ))
+          ) : (
+            <EmptyState
+              illustration={require('@/assets/animations/no-events.json')}
+              title={emptyFilterCopy[activeFilter].title}
+              copy={emptyFilterCopy[activeFilter].copy}
+            />
           )}
         </View>
       ) : null}
@@ -1032,17 +1035,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: -spacing.x1,
   },
-  tabRow: {
-    flexDirection: 'row',
-    gap: spacing.x1,
-    padding: spacing.x1,
-    borderRadius: radius.medium,
-    backgroundColor: colors.surfaceMuted,
-  },
-  tab: { flex: 1, alignItems: 'center', paddingVertical: spacing.x2, borderRadius: radius.medium },
-  tabActive: { backgroundColor: colors.surface },
-  tabText: { color: colors.muted, fontSize: 13, fontFamily: fonts.bold, fontWeight: '800' },
-  tabTextActive: { color: colors.ink },
+  filterRow: { flexDirection: 'row', gap: spacing.x2, paddingVertical: spacing.x1, paddingRight: spacing.x4 },
   chooseList: { gap: spacing.x2 },
   chooseOption: {
     flexDirection: 'row',
