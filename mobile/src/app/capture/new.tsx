@@ -935,15 +935,22 @@ export default function CaptureWizardScreen() {
       showCaptureError('Confirm that everyone agreed before continuing.');
       return;
     }
-    const people = draft.people ?? [];
-    if (!hasValidGatherPeople(people)) {
-      showCaptureError('Add at least one person you met.');
-      return;
-    }
+    // Stop the recorder before gating on people, not after. Recording must
+    // actually stop the moment the user asks to finish, regardless of
+    // whether the people list is valid yet — otherwise the mic keeps
+    // running in the background while they add someone, activeRecording
+    // stays true, and the "Recording in progress" leave-guard keeps firing
+    // even though the user already asked to stop and is just filling in
+    // the pending-review step.
     if (draft.captureMode === 'recording' && !skipRecording && (recorder.recordingState === 'recording' || recorder.recordingState === 'paused')) {
       await recorder.stopRecording();
     } else if (draft.captureMode !== 'recording') {
       await recorder.awaitPendingFinish();
+    }
+    const people = draft.people ?? [];
+    if (!hasValidGatherPeople(people)) {
+      showCaptureError('Add at least one person you met.');
+      return;
     }
     updateDraft({ step: draft.captureMode === 'recording' ? 2 : 1 });
   }

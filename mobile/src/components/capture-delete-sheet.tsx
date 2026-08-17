@@ -11,6 +11,15 @@ type CaptureDeleteSheetProps = {
   onCancel: () => void;
   onConfirm: () => void;
   loading?: boolean;
+  // Everything below defaults to the original "delete a saved capture"
+  // wording so the existing call site is unaffected. The discard-draft
+  // confirmation (capture/index.tsx) overrides these to reuse this same
+  // sheet — same warning animation, same Keep/Confirm button pair — with
+  // copy that fits discarding an in-progress, unsaved draft instead.
+  heading?: string;
+  cancelLabel?: string;
+  confirmLabel?: string;
+  body?: string;
 };
 
 export function CaptureDeleteSheet({
@@ -19,17 +28,21 @@ export function CaptureDeleteSheet({
   onCancel,
   onConfirm,
   loading,
+  heading = 'Are you sure you want to delete?',
+  cancelLabel = 'Keep capture',
+  confirmLabel = 'Yes, delete everything',
+  body,
 }: CaptureDeleteSheetProps) {
   const showLottie = useDeferredMount(visible);
   return (
     <BottomSheet
       visible={visible}
-      title="Are you sure you want to delete?"
+      title={heading}
       onClose={onCancel}
       footer={
         <>
-          <Button variant="secondary" onPress={onCancel} disabled={loading}>Keep capture</Button>
-          <Button onPress={onConfirm} loading={loading}>Yes, delete everything</Button>
+          <Button variant="secondary" onPress={onCancel} disabled={loading}>{cancelLabel}</Button>
+          <Button onPress={onConfirm} loading={loading}>{confirmLabel}</Button>
         </>
       }>
       <View style={styles.iconWrap}>
@@ -43,7 +56,7 @@ export function CaptureDeleteSheet({
         ) : null}
       </View>
       <Body>
-        {title ? `Delete "${title}"?` : 'Delete this capture?'} You will lose access to the summary, notes, transcript, and voice recording in the app. This cannot be undone.
+        {body ?? `${title ? `Delete "${title}"?` : 'Delete this capture?'} You will lose access to the summary, notes, transcript, and voice recording in the app. This cannot be undone.`}
       </Body>
     </BottomSheet>
   );

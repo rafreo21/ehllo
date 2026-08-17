@@ -104,6 +104,8 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
   const [deleteTarget, setDeleteTarget] = useState<EncounterSummary | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteSuccessOpen, setDeleteSuccessOpen] = useState(false);
+  const [discardTarget, setDiscardTarget] = useState<CaptureDraftSummary | null>(null);
+  const [discarding, setDiscarding] = useState(false);
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<CaptureSort>('recent');
   const [sortOpen, setSortOpen] = useState(false);
@@ -280,6 +282,17 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
     setDrafts((current) => current.filter((item) => item.encounterId !== encounterId));
   }
 
+  async function confirmDiscardDraft() {
+    if (!discardTarget) return;
+    setDiscarding(true);
+    try {
+      await discardDraft(discardTarget.encounterId);
+      setDiscardTarget(null);
+    } finally {
+      setDiscarding(false);
+    }
+  }
+
   async function confirmDeleteEncounter() {
     if (!deleteTarget || !session?.access_token) return;
     setDeleting(true);
@@ -436,7 +449,7 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
                         hitSlop={8}
                         onPress={(event) => {
                           event.stopPropagation();
-                          void discardDraft(draft.encounterId);
+                          setDiscardTarget(draft);
                         }}
                         style={styles.discardButton}>
                         <Trash size={14} color={colors.danger} weight="bold" />
@@ -571,6 +584,18 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
         loading={deleting}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={() => void confirmDeleteEncounter()}
+      />
+
+      <CaptureDeleteSheet
+        visible={Boolean(discardTarget)}
+        title={discardTarget ? draftTitle(discardTarget) : 'this draft'}
+        heading="Are you sure you want to discard?"
+        cancelLabel="Keep draft"
+        confirmLabel="Yes, discard"
+        loading={discarding}
+        body={`Discard "${discardTarget ? draftTitle(discardTarget) : 'this draft'}"? This clears the recording, transcript, people, and notes gathered so far. This cannot be undone.`}
+        onCancel={() => setDiscardTarget(null)}
+        onConfirm={() => void confirmDiscardDraft()}
       />
 
       <OutcomeSuccessSheet
