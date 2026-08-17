@@ -53,6 +53,40 @@ release split. CI runs the same command for every pull request and push to `main
 This check is intentionally static: it prevents configuration regressions without
 connecting to either Supabase project or mutating external services.
 
+## Crash symbolication
+
+`staging-store` and `production` previously set `SENTRY_DISABLE_AUTO_UPLOAD=true`
+— the two profiles testers actually run — so no dSYMs or source maps ever
+reached Sentry. Native crashes and app hangs arrived with every first-party
+frame redacted, which made the most widespread issue in the app impossible to
+attribute to any call site.
+
+Upload is now enabled on both profiles. It requires a Sentry auth token with
+`project:releases` scope, stored as an EAS secret **before the next build**:
+
+```sh
+cd mobile
+eas secret:create --scope project --name SENTRY_AUTH_TOKEN --value <token> --type string
+```
+
+Create the token at https://ehllo.sentry.io/settings/auth-tokens/. The Sentry
+organization and project are already set in `app.config.js` (`ehllo` /
+`ehllo-mobile`); only the token is environment-supplied. A build started
+without the secret present will fail at the upload step rather than silently
+shipping unsymbolicated.
+
+## OTA updates
+
+`.github/workflows/publish-ota.yml` publishes an `eas update` to the staging
+channel on every push to `staging` that touches `mobile/**`. It requires an
+`EXPO_TOKEN` repository secret. Production publishes are `workflow_dispatch`
+only.
+
+An OTA update carries JavaScript and assets only. `runtimeVersion.policy` is
+`appVersion`, so a native change or an app version bump still needs a fresh
+`staging-store` build — and devices left on the previous version stop receiving
+updates until they take it.
+
 ## External and hardware work still required
 
 These items cannot be made complete by repository checks alone:
