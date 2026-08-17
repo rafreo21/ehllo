@@ -21,7 +21,7 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
 .home-stat-label { color: var(--p-muted); font-size: 13px; font-weight: 600; }
 
 .home-active-work { display: grid; gap: 8px; }
-.home-active-work-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: white; color: var(--p-navy); text-decoration: none; box-shadow: 0 1px 2px rgba(22,51,0,.04), 0 6px 16px rgba(22,51,0,.03); transition: box-shadow .16s ease; }
+.home-active-work-row { width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 12px 16px; border: 0; border-radius: 12px; background: white; color: var(--p-navy); text-decoration: none; text-align: left; font: inherit; cursor: pointer; box-shadow: 0 1px 2px rgba(22,51,0,.04), 0 6px 16px rgba(22,51,0,.03); transition: box-shadow .16s ease; }
 .home-active-work-row:hover { box-shadow: 0 1px 2px rgba(22,51,0,.04), 0 12px 26px rgba(22,51,0,.07); }
 .home-active-work-row > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--p-sky); color: #2F5711; }
 .home-active-work-row strong { font-size: 13px; }

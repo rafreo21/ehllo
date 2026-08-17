@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { ExternalLink as ArrowSquareOutIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { Copy as CopyIcon } from "react-feather";
-import { Zap as MagicWandIcon } from "react-feather";
 import { Send as PaperPlaneTiltIcon } from "react-feather";
 import { XCircle as XCircleIcon } from "react-feather";
 import type { ActionLinkContext } from "../../lib/action-links";
@@ -38,7 +37,6 @@ export function OutboundDraftPanel({
   onActionChange,
   compact = false,
 }: OutboundDraftPanelProps) {
-  const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState<"" | "google" | "microsoft">("");
   const [message, setMessage] = useState("");
   const [integrations, setIntegrations] = useState<ConnectedAccountStatus>(emptyConnectedAccountStatus());
@@ -63,44 +61,6 @@ export function OutboundDraftPanel({
     || !supportsOutboundDraft(action.channel)
   ) {
     return null;
-  }
-
-  async function generateDraft() {
-    setLoading(true);
-    setMessage("");
-    try {
-      const response = await fetch("/api/encounters/outbound-draft", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ encounter, action, contact }),
-      });
-      const payload = await response.json() as {
-        draft?: { subject: string; body: string };
-        source?: OutboundDraft["source"];
-        generatedAt?: string;
-        fallback?: boolean;
-        error?: string;
-      };
-      if (!response.ok || !payload.draft) {
-        setMessage(payload.error || "We couldn’t draft this message.");
-        return;
-      }
-      onActionChange({
-        ...action,
-        outboundDraft: {
-          subject: payload.draft.subject,
-          body: payload.draft.body,
-          status: "proposed",
-          source: payload.source || "heuristic",
-          generatedAt: payload.generatedAt || nowIso(),
-        },
-      });
-      setMessage(payload.fallback ? "Draft ready (template fallback)." : "Draft ready for your review.");
-    } catch {
-      setMessage("We couldn’t draft this message.");
-    } finally {
-      setLoading(false);
-    }
   }
 
   function patchDraft(patch: Partial<OutboundDraft>) {

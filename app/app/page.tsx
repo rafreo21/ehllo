@@ -8,9 +8,12 @@ import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
 import { TrendingUp as TrendUpIcon } from "react-feather";
 import { Users as UsersThreeIcon } from "react-feather";
-import { LinkButton } from "../components/Button";
+import { X as XIcon } from "react-feather";
+import { AddFollowUpModal } from "../components/AddFollowUpModal";
+import { Button, LinkButton } from "../components/Button";
 import { PageSkeleton } from "../components/AsyncState";
 import { CapturePromoBanner } from "../components/CapturePromoBanner";
+import { EncounterDrawerView } from "../components/EncounterDrawerView";
 import { useAppUser } from "../components/AppUserContext";
 import {
   connectionAvatarUrl,
@@ -80,6 +83,8 @@ export default function HomeDashboard() {
   const [connectionsFailed, setConnectionsFailed] = useState(false);
   const [card, setCard] = useState<LibraryCard | null>(null);
   const [hasCards, setHasCards] = useState(false);
+  const [activeEncounterId, setActiveEncounterId] = useState("");
+  const [addFollowUpModalOpen, setAddFollowUpModalOpen] = useState(false);
 
   function loadFollowUps() {
     return fetch("/api/follow-ups", { cache: "no-store" }).then(async (response) => {
@@ -151,13 +156,13 @@ export default function HomeDashboard() {
     : "Open follow-ups";
 
   const activeWork = useMemo(() => {
-    const items: Array<{ key: string; icon: typeof ListChecksIcon; label: string; href: string }> = [];
+    const items: Array<{ key: string; icon: typeof ListChecksIcon; label: string; onSelect: () => void }> = [];
     if (reviewCount > 0 && latestDraftId) {
       items.push({
         key: "review",
         icon: ListChecksIcon,
         label: reviewCount === 1 ? "Ready to review" : `${reviewCount} ready to review`,
-        href: `/app/encounters/${latestDraftId}`,
+        onSelect: () => setActiveEncounterId(latestDraftId),
       });
     }
     return items;
@@ -211,18 +216,18 @@ export default function HomeDashboard() {
             {activeWork.length ? (
               <div className="home-active-work">
                 {activeWork.map((item) => (
-                  <a className="home-active-work-row" href={item.href} key={item.key}>
+                  <button type="button" className="home-active-work-row" onClick={item.onSelect} key={item.key}>
                     <span><item.icon size={17} /></span>
                     <strong>{item.label}</strong>
                     <ArrowRightIcon size={15} />
-                  </a>
+                  </button>
                 ))}
               </div>
             ) : null}
 
             <div className="home-quick-actions">
               <LinkButton href="/app/cards#share"><QrCodeIcon size={17} weight="bold" />Share my card</LinkButton>
-              <LinkButton variant="secondary" href="/app/followups/new"><ListChecksIcon size={17} />Quick follow-up</LinkButton>
+              <Button variant="secondary" onClick={() => setAddFollowUpModalOpen(true)}><ListChecksIcon size={17} />Quick follow-up</Button>
               <LinkButton variant="secondary" href="/app/scan"><ScanIcon size={17} weight="bold" />Quick scan</LinkButton>
             </div>
 
@@ -302,6 +307,24 @@ export default function HomeDashboard() {
           </>
         )}
       </div>
+      {activeEncounterId ? (
+        <div className="followup-drawer-backdrop" role="presentation" onClick={() => setActiveEncounterId("")}>
+          <div className="followup-drawer" role="dialog" aria-label="Review" onClick={(event) => event.stopPropagation()}>
+            <div className="followup-drawer-header">
+              <h2>Review</h2>
+              <div className="followup-drawer-header-actions">
+                <button type="button" aria-label="Close" onClick={() => setActiveEncounterId("")}><XIcon size={18} /></button>
+              </div>
+            </div>
+            <EncounterDrawerView encounterId={activeEncounterId} />
+          </div>
+        </div>
+      ) : null}
+      <AddFollowUpModal
+        open={addFollowUpModalOpen}
+        onClose={() => setAddFollowUpModalOpen(false)}
+        popup
+      />
     </>
   );
 }
