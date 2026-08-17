@@ -32,6 +32,12 @@ export type EventItem = {
   sourceUrl: string;
   organizerEmail: string;
   status: 'scheduled' | 'cancelled';
+  /**
+   * This user's own answer for this event. Present on everything /api/events
+   * returns; defaults to 'going' when reading a cache written before the
+   * field existed, which matches the old endpoint's going-only contract.
+   */
+  attendanceStatus: EventAttendanceStatus;
   updatedAt: string;
 };
 
@@ -47,6 +53,7 @@ function mapEvent(row: Record<string, unknown>): EventItem {
     sourceUrl: String(row.sourceUrl ?? ''),
     organizerEmail: String(row.organizerEmail ?? ''),
     status: row.status === 'cancelled' ? 'cancelled' : 'scheduled',
+    attendanceStatus: row.attendanceStatus === 'not_going' ? 'not_going' : 'going',
     updatedAt: String(row.updatedAt ?? ''),
   };
 }
@@ -86,10 +93,20 @@ export async function updateEvent(
 }
 
 /** Events the user is going to — see GET /api/events. Candidates awaiting a decision are separate, see fetchEventCandidates. */
+/**
+ * `include` defaults to 'going' so every existing caller — Home's event card,
+ * capture tagging, the connection timeline — keeps the going-only set it was
+ * written against. Only the Events list asks for 'all', because it is the one
+ * surface that has somewhere to put a declined event.
+ */
 export async function fetchMyEvents(
   accessToken: string,
-  options: { allowCacheFallback?: boolean } = {},
+  options: { allowCacheFallback?: boolean; include?: 'going' | 'all' } = {},
 ): Promise<EventItem[]> {
+  const select = (events: EventItem[]) => (
+    options.include === 'all' ? events : events.filter((event) => event.attendanceStatus === 'going')
+  );
+
   try {
     const response = await mobileFetch('/api/events', accessToken);
     const payload = await readMobileApiJson<{ events?: Record<string, unknown>[]; error?: string }>(
@@ -98,11 +115,13 @@ export async function fetchMyEvents(
     );
     if (!response.ok) throw new Error(payload.error || 'Could not load your events.');
     const events = (payload.events ?? []).map(mapEvent);
+    // Cache the unfiltered set so a going-only read never evicts the rows the
+    // Events list needs while offline.
     await writeCachedEvents(events);
-    return events;
+    return select(events);
   } catch (error) {
     if (options.allowCacheFallback !== false) {
-      const cached = await readCachedEvents();
+      const cached = select(await readCachedEvents());
       if (cached.length) return cached;
     }
     throw error;
@@ -225,6 +244,17 @@ export async function setEventAttendance(accessToken: string, eventId: string, s
 }
 
 /** "I've left" — caps this event's effective end at now for passive-attach, without changing its real end time. Pass left: false to undo. */
+export async function removeEventFromMyList(accessToken: string, eventId: string) {
+  const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}/attendance`, accessToken, {
+    method: 'DELETE',
+  });
+  const payload = await readMobileApiJson<{ ok?: boolean; error?: string }>(
+    response,
+    'Could not read the response.',
+  );
+  if (!response.ok || !payload.ok) throw new Error(payload.error || 'Could not remove this event.');
+}
+
 export async function sendEventLeft(accessToken: string, eventId: string, left = true) {
   const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}/leave`, accessToken, {
     method: 'POST',

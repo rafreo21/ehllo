@@ -56,6 +56,72 @@ export function bucketEvents(events: EventItem[], now = new Date()): { upcoming:
   return { upcoming, past };
 }
 
+export type PastEventGroupKey = 'notGoing' | 'attended' | 'didNotAttend' | 'cancelled';
+
+export type EventListGroups = {
+  upcoming: EventItem[];
+  past: Record<PastEventGroupKey, EventItem[]>;
+};
+
+/**
+ * Whether this row's action sheet can still offer "I'm going after all".
+ * Reversal is a statement about time, not about which group the row is
+ * filed under: an event that has not finished can still be attended, and one
+ * that has finished can only be recreated. Deriving it here keeps the sheet
+ * and the list from ever disagreeing.
+ */
+export function canRejoinEvent(event: EventItem, now = new Date()): boolean {
+  return event.status !== 'cancelled'
+    && event.attendanceStatus === 'not_going'
+    && isUpcomingEvent(event, now);
+}
+
+/**
+ * Splits every decided event into the list's sections.
+ *
+ * Upcoming stays strictly "going, not finished". Past holds the rest, but as
+ * named groups rather than one undifferentiated pile, because a declined
+ * event next Thursday has not happened — filing it under a flat "Past" would
+ * make the product state something untrue, and it is exactly the row a user
+ * needs to find when they change their mind.
+ *
+ * Cancelled events leave Upcoming whatever the user answered; an event that
+ * is not happening should never sit in the list of things they are going to.
+ */
+export function groupEventsForList(events: EventItem[], now = new Date()): EventListGroups {
+  const upcoming: EventItem[] = [];
+  const past: Record<PastEventGroupKey, EventItem[]> = {
+    notGoing: [],
+    attended: [],
+    didNotAttend: [],
+    cancelled: [],
+  };
+
+  for (const event of events) {
+    if (event.status === 'cancelled') {
+      past.cancelled.push(event);
+      continue;
+    }
+    const stillToCome = isUpcomingEvent(event, now);
+    if (event.attendanceStatus === 'going') {
+      (stillToCome ? upcoming : past.attended).push(event);
+      continue;
+    }
+    (stillToCome ? past.notGoing : past.didNotAttend).push(event);
+  }
+
+  upcoming.sort(compareEventsByStart);
+  // "Not going" holds events that are still ahead, so soonest-first matches
+  // how a user reads them. Everything else has already happened and reads
+  // most-recent-first.
+  past.notGoing.sort(compareEventsByStart);
+  for (const key of ['attended', 'didNotAttend', 'cancelled'] as const) {
+    past[key].sort((left, right) => compareEventsByStart(right, left));
+  }
+
+  return { upcoming, past };
+}
+
 export type HomeEventCardState =
   | { type: 'none' }
   | { type: 'current'; event: EventItem }
