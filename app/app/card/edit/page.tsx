@@ -220,6 +220,11 @@ function loadDraft(search = "") {
 export default function CardEditor() {
   const searchParams = useSearchParams();
   const searchString = searchParams.toString();
+  // Captured once at mount, not derived reactively from searchString — the
+  // create flow replaces the URL to ?id=<new-id> right after the draft is
+  // created (so a refresh doesn't create yet another card), which would
+  // otherwise flip this back to "editing" framing mid-flow.
+  const [isCreating] = useState(() => isCreateFlow(typeof window !== "undefined" ? window.location.search : ""));
   const [draft, setDraft] = useState<CardDraft>(initialDraft);
   const [hydrated, setHydrated] = useState(false);
   const [step, setStep] = useState(0);
@@ -409,7 +414,11 @@ export default function CardEditor() {
       <section className="card-creator">
         {hydrated && (
           <div className={`creator-publish-state ${hasUnpublishedChanges ? "is-dirty" : "is-published"}`} role="status">
-            {hasUnpublishedChanges ? <><span>Unpublished changes</span><small>Your edits are saved as a draft on this device. Publish when they are ready to appear on your public card.</small></> : <><CheckCircleIcon size={18} /><span>Card is published</span><small>Your public card matches this editor.</small></>}
+            {hasUnpublishedChanges ? (
+              isCreating
+                ? <><span>New card</span><small>Saved as a draft on this device. Publish once it's ready so people can scan it.</small></>
+                : <><span>Unpublished changes</span><small>Your edits are saved as a draft on this device. Publish when they are ready to appear on your public card.</small></>
+            ) : <><CheckCircleIcon size={18} /><span>Card is published</span><small>Your public card matches this editor.</small></>}
           </div>
         )}
         <nav className="creator-steps" aria-label="Card creation progress">
@@ -463,7 +472,7 @@ export default function CardEditor() {
           <section className="creator-workspace">
             {step === 0 && (
               <div className="creator-section">
-                <header><span>01 · Design card</span><h1>Make your card recognisable and ready to share.</h1><p>Add your identity, images and visual style in one place.</p></header>
+                <header><span>01 · Design card</span><h1>{isCreating ? "Let's create your card." : "Make your card recognisable and ready to share."}</h1><p>{isCreating ? "Start with your identity, images and visual style — you can fill in the rest later." : "Add your identity, images and visual style in one place."}</p></header>
                 <div className="image-panel">
                   <div className="image-panel-heading"><div><h2>Card images</h2><p>Add a company logo, profile picture and cover photo.</p></div></div>
                   <input ref={photoInput} className="sr-only" type="file" accept="image/*" onChange={selectPhoto} />
@@ -584,7 +593,7 @@ export default function CardEditor() {
 
             {step === 2 && (
               <div className="creator-section review-section">
-                <header><span>03 · Review</span><h1>Your card is ready to share.</h1><p>Check the preview, save it, then open the QR sharing screen.</p></header>
+                <header><span>03 · Review</span><h1>{isCreating ? "Your new card is ready." : "Your card is ready to share."}</h1><p>{isCreating ? "Check the preview, then publish it so people can start scanning your QR." : "Check the preview, save it, then open the QR sharing screen."}</p></header>
                 <div className="review-list">
                   <div><CheckCircleIcon /><span><strong>Identity</strong><small>{draft.name || "Name needed"} · {draft.role || "Job title needed"}{showCompanyDetails && draft.company ? ` · ${draft.company}` : ""}</small></span><button onClick={() => goToStep(0)}>Edit</button></div>
                   <div><CheckCircleIcon /><span><strong>Images and style</strong><small>{[draft.photo && "profile", draft.companyLogo && "logo", draft.coverPhoto && "cover"].filter(Boolean).join(", ") || "No images"} · {draft.theme} · Focused layout</small></span><button onClick={() => goToStep(0)}>Edit</button></div>
