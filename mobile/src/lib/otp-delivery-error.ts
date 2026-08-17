@@ -47,6 +47,14 @@ export function describeOtpDeliveryError(error: AuthOtpError | null | undefined)
     return 'Sign-in codes are in email test mode. Only verified sender addresses can receive code emails right now.';
   }
 
+  // Supabase relays a failing Send Email Hook as a generic 500 whose only detail
+  // is the status the hook chose. The hook answers 422 exactly when the sender
+  // address is not verified with the email provider, so preserve that meaning
+  // rather than reporting a permanent configuration fault as a transient one.
+  if (/hook:\s*422/.test(lower)) {
+    return 'Sign-in codes are in email test mode. Only verified sender addresses can receive code emails right now.';
+  }
+
   if (
     lower.includes('email delivery is not configured')
     || lower.includes('missing resend')

@@ -7,10 +7,12 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+const ENV_FILE = process.argv.includes("--production") ? ".env.production.local" : ".env.staging.local";
+
 function readEnv(name) {
   if (process.env[name]?.trim()) return process.env[name].trim();
   try {
-    const env = readFileSync(resolve(process.cwd(), ".env.local"), "utf8");
+    const env = readFileSync(resolve(process.cwd(), ENV_FILE), "utf8");
     const match = env.match(new RegExp(`^${name}=(.+)$`, "m"));
     if (match) return match[1].trim().replace(/^["']|["']$/g, "");
   } catch {
@@ -25,7 +27,7 @@ async function main() {
   const probeTo = process.argv[2] || "visitor@example.com";
 
   if (!resendApiKey) {
-    console.error("Missing RESEND_API_KEY in env or .env.local");
+    console.error(`Missing RESEND_API_KEY in env or ${ENV_FILE}`);
     process.exit(1);
   }
 
@@ -60,7 +62,7 @@ async function main() {
   console.error("");
   console.error("Fix:");
   console.error("  1. Verify ehllo.io at https://resend.com/domains");
-  console.error("  2. Set RESEND_FROM_EMAIL=ehllo <product@ehllo.io> in .env.local");
+  console.error(`  2. Set RESEND_FROM_EMAIL=ehllo <product@ehllo.io> in ${ENV_FILE}`);
   console.error("  3. Run npm run configure:supabase-auth");
   console.error("");
   console.error("Temporary beta workaround:");
