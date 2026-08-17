@@ -172,6 +172,7 @@ export async function extractEncounterDraft(
   }
 
   if (!(await isAiExtractionConfigured())) {
+    console.warn("[encounter-extraction] falling back to heuristic: no AI provider configured (checked OPENAI_API_KEY and AI Gateway credentials)");
     return {
       draft: heuristic,
       source: "heuristic",
@@ -215,7 +216,8 @@ export async function extractEncounterDraft(
       source: "ai",
       uncertainFields: output.uncertainFields ?? [],
     };
-  } catch {
+  } catch (error) {
+    console.error("[encounter-extraction] AI call failed, falling back to heuristic:", error);
     return {
       draft: heuristic,
       source: "heuristic",
