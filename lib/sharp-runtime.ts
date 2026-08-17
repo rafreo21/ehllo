@@ -14,7 +14,23 @@ export function sharpAvailable() {
   const override = process.env.EHLLO_SHARP?.trim();
   if (override === "1") return true;
   if (override === "0") return false;
-  return process.env.VERCEL === "1" || process.env.NITRO_PRESET === "vercel";
+  if (process.env.VERCEL === "1" || process.env.NITRO_PRESET === "vercel") return true;
+
+  // Neither of those fires on Vercel unless the project opts into exposing
+  // system environment variables, and this project does not — so the checks
+  // above were answering "no sharp" in production. Asking an operator to set
+  // one more variable just moves the same fragility somewhere else.
+  //
+  // Invert it instead. Exactly one runtime has to be excluded: Cloudflare's
+  // workerd sandbox behind `npm run dev`, where loading sharp's bindings takes
+  // the sandbox down uncatchably. Detect that directly. workerd defines
+  // WebSocketPair and identifies itself in navigator.userAgent; Node defines
+  // neither, so anything reaching the end of this function is real Node.
+  const runtime = globalThis as { WebSocketPair?: unknown; navigator?: { userAgent?: string } };
+  if (typeof runtime.WebSocketPair !== "undefined") return false;
+  if (runtime.navigator?.userAgent?.includes("Cloudflare-Workers")) return false;
+
+  return Boolean(process.versions?.node);
 }
 
 type SharpInstance = {
