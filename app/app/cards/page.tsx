@@ -188,7 +188,8 @@ export default function CardsPage() {
         .then(async (response) => {
           if (!response.ok) return null;
           const payload = await response.json() as { dataUri?: string };
-          return payload.dataUri || null;
+          const dataUri = payload.dataUri?.trim();
+          return dataUri ? dataUri : null;
         })
         .catch(() => null),
       qrMode === "online" ? QRCode.toString(shareUrl, { ...options, type: "svg" }) : Promise.resolve(""),
@@ -431,7 +432,7 @@ export default function CardsPage() {
             </div>
           </article>
           <section className="inline-qr-panel">
-            <div className="card-tools-tabs" role="tablist" aria-label="Card sharing tools">
+            <div className="card-tools-tabs review-tabs" role="tablist" aria-label="Card sharing tools">
               {([
                 ["qr", "QR code"],
                 ["signature", "Email signature"],
@@ -452,8 +453,8 @@ export default function CardsPage() {
                 </button>
               ))}
             </div>
-            <div className="card-tool-content" role="tabpanel">
-            {shareTool === "qr" ? <>
+            <div className="card-tool-content review-tab-panel" role="tabpanel">
+            {shareTool === "qr" ? <section className="card-tool-section card-tool-qr-section">
             <div className="inline-qr-head"><span><QrCodeIcon size={22} weight="bold" /></span><div><h2>Let someone scan this card</h2><p>{qrMode === "online" ? "They only need their phone camera. No app or account required." : "Works with no internet — this scans straight into their contacts app."}</p></div></div>
             <div className="flow-heading-actions" style={{ marginBottom: 12 }}>
               <Button size="small" variant={qrMode === "online" ? "primary" : "secondary"} onClick={() => setQrMode("online")}>Online</Button>
@@ -466,7 +467,11 @@ export default function CardsPage() {
             </ol>
             {qr ? (
               <div className="inline-qr-frame">
-                <img className="inline-qr-image" src={qr} alt={`QR code for ${profile.name}'s card`} />
+                <img
+                  className="inline-qr-image"
+                  src={qr}
+                  alt={`QR code for ${profile.name}'s card`}
+                />
               </div>
             ) : !qrError && (
               <div className="inline-qr-frame" aria-label="Generating QR code" aria-busy="true">
@@ -479,7 +484,7 @@ export default function CardsPage() {
               {qr && <LinkButton variant="secondary" href={qr} download={qr.startsWith("data:image/svg+xml") ? "ehllo-qr.svg" : "ehllo-qr.png"}><DownloadSimpleIcon size={18} />Download QR</LinkButton>}
             </div>
             <Button fullWidth size="small" variant="ghost" disabled={!qrSvg} onClick={copySvg}><CopyIcon size={16} />{svgCopied ? "SVG copied" : qrSvg ? "Copy QR as SVG" : "Generating QR…"}</Button>
-            </> : null}
+            </section> : null}
             {shareTool === "signature" ? <section className="signature-panel card-tool-section">
               <div className="inline-qr-head"><span><EnvelopeSimpleIcon size={22} /></span><div><h2>Email signature</h2><p>Square photo, name, title, and contact details. Ready for Gmail or Outlook.</p></div></div>
               <div className="signature-preview-card">
@@ -580,7 +585,7 @@ export default function CardsPage() {
                 <small>Refresh widgets from Card Tools in the app after publishing changes or receiving new connections.</small>
               </div>}
             </section> : null}
-            {shareTool === "wallet" ? <div className="card-tool-section wallet-tool-section"><WalletSharePanel slug={profile.slug} shareUrl={shareUrl} /></div> : null}
+            {shareTool === "wallet" ? <section className="card-tool-section wallet-tool-section"><WalletSharePanel slug={profile.slug} shareUrl={shareUrl} /></section> : null}
             </div>
           </section>
             </div>
