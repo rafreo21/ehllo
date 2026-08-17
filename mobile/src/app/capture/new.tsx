@@ -3,7 +3,6 @@ import { CaretDown, CaretUp, CloudArrowUp, DeviceMobile, PaperPlaneTilt, PencilS
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   BackHandler,
   Pressable,
   ScrollView,
@@ -565,20 +564,15 @@ export default function CaptureWizardScreen() {
     else router.replace('/capture');
   }, [captureHasProgress, recorder]);
 
+  // Recording keeps going in the background once you navigate away — the
+  // persistent notification (Android) and the floating ActiveCaptureBanner
+  // (both platforms) already track it and let you stop from anywhere or
+  // come back here later. Leaving this screen must not stop the recording
+  // or ask for confirmation; that would defeat the point of having that
+  // background-recording infrastructure at all.
   const requestLeave = useCallback(() => {
-    if (activeRecording) {
-      Alert.alert(
-        'Recording in progress',
-        'Leaving now stops the recording. You can resume reviewing it from Capture afterwards.',
-        [
-          { text: 'Keep recording', style: 'cancel' },
-          { text: 'Stop and leave', style: 'destructive', onPress: () => void leaveNow(true) },
-        ],
-      );
-      return;
-    }
     void leaveNow(false);
-  }, [activeRecording, leaveNow]);
+  }, [leaveNow]);
 
   useFocusEffect(
     useCallback(() => {
