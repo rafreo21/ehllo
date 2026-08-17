@@ -44,8 +44,8 @@ import {
   type ConnectionItem,
 } from '@/features/connections/connections-api';
 import { resolveHomeEventCardState, type HomeEventCardState } from '@/features/events/event-home-state';
-import { fetchEventCandidates, fetchMyEvents, markEventLeft, setEventAttendance, type EventItem } from '@/features/events/events-api';
-import { cacheEventAttendance, cacheEventLeftAt } from '@/features/events/event-cache';
+import { fetchEventCandidates, fetchMyEvents, markEventLeft, setEventAttendance, setEventCheckIn, type EventItem } from '@/features/events/events-api';
+import { cacheEventAttendance, cacheEventCheckIn, cacheEventLeftAt } from '@/features/events/event-cache';
 import { fetchFollowUps, type FollowUpItem } from '@/features/follow-ups/follow-up-api';
 import { summarizeFollowUpNudges } from '@/features/follow-ups/follow-up-nudges';
 import { resolveFollowUpUserName } from '@/features/follow-ups/follow-up-participants';
@@ -233,6 +233,27 @@ export default function HomeScreen() {
       // The event stays in the candidate list, but the user needs to know the
       // tap didn't actually do anything — this used to fail silently.
       setEventActionError('Could not update this event. Check your connection and try again.');
+    } finally {
+      setEventCardBusy(false);
+    }
+  }
+
+  async function checkInHere(event: EventItem) {
+    if (!session?.access_token) return;
+    setEventCardBusy(true);
+    try {
+      const checkedInAt = new Date().toISOString();
+      // Local state first — see the same handler in the Events screen. A venue
+      // with no signal is the normal case for this action, not the edge one.
+      await cacheEventCheckIn(event.id, checkedInAt);
+      setGoingEvents((current) => current.map((item) => (
+        item.id === event.id
+          ? { ...item, checkedInAt, leftAt: null }
+          : item.checkedInAt ? { ...item, checkedInAt: null } : item
+      )));
+      await setEventCheckIn(session.access_token, event.id, true);
+    } catch {
+      setEventActionError('Could not update where you are. Check your connection and try again.');
     } finally {
       setEventCardBusy(false);
     }
@@ -446,6 +467,7 @@ export default function HomeScreen() {
                 onGoing={(event) => void decideEventCandidate(event, 'going')}
                 onNotGoing={(event) => void decideEventCandidate(event, 'not_going')}
                 onLeave={(event) => void leaveEvent(event)}
+                onCheckIn={(event) => void checkInHere(event)}
               />
             ) : null}
 
@@ -556,12 +578,14 @@ function HomeEventCard({
   onGoing,
   onNotGoing,
   onLeave,
+  onCheckIn,
 }: {
   state: HomeEventCardState;
   busy: boolean;
   onGoing: (event: EventItem) => void;
   onNotGoing: (event: EventItem) => void;
   onLeave: (event: EventItem) => void;
+  onCheckIn: (event: EventItem) => void;
 }) {
   const navigate = useDebouncedNavigate();
   if (state.type === 'none') return null;
@@ -576,6 +600,7 @@ function HomeEventCard({
       onGoing={onGoing}
       onNotGoing={onNotGoing}
       onLeave={onLeave}
+      onCheckIn={onCheckIn}
     />
   );
 }

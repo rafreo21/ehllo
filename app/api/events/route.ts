@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   // the user has actually answered.
   const { data, error } = await supabase
     .from("event_attendance")
-    .select("left_at, status, events!inner(*)")
+    .select("left_at, checked_in_at, status, events!inner(*)")
     .eq("user_id", user.id)
     .order("starts_at", { referencedTable: "events", ascending: true });
 
@@ -30,11 +30,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "We couldn’t load your events." }, { status: 500 });
   }
 
-  const events = ((data ?? []) as unknown as Array<{ left_at: string | null; status: string; events: EventRow | null }>)
+  const events = ((data ?? []) as unknown as Array<{ left_at: string | null; checked_in_at: string | null; status: string; events: EventRow | null }>)
     .flatMap((row) => (row.events
       ? [{
           ...eventFromRow(row.events),
           leftAt: row.left_at,
+          checkedInAt: row.checked_in_at,
           attendanceStatus: row.status === "not_going" ? "not_going" : "going",
         }]
       : []));

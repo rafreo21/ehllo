@@ -187,3 +187,51 @@ describe("candidateSuppressionKey", () => {
     );
   });
 });
+
+
+describe("resolveCurrentEvent with check-in", () => {
+  const now = new Date("2026-09-04T14:00:00.000Z");
+  // Two events overlapping the same afternoon — the case the clock cannot decide.
+  const conference = { id: "conference", startsAt: "2026-09-04T09:00:00.000Z", endsAt: "2026-09-04T18:00:00.000Z", leftAt: null, checkedInAt: null };
+  const meetup = { id: "meetup", startsAt: "2026-09-04T13:00:00.000Z", endsAt: "2026-09-04T17:00:00.000Z", leftAt: null, checkedInAt: null };
+
+  it("falls back to the most recently started event when nobody has checked in", () => {
+    assert.equal(resolveCurrentEvent([conference, meetup], now), "meetup");
+  });
+
+  it("lets an explicit check-in beat the later start time", () => {
+    // Without check-in this returns "meetup"; the user says they are at the
+    // conference, so scans and encounters must attribute there instead.
+    const checkedIn = { ...conference, checkedInAt: "2026-09-04T09:15:00.000Z" };
+    assert.equal(resolveCurrentEvent([checkedIn, meetup], now), "conference");
+  });
+
+  it("prefers the most recent check-in when the user moved between events", () => {
+    const first = { ...conference, checkedInAt: "2026-09-04T09:15:00.000Z" };
+    const second = { ...meetup, checkedInAt: "2026-09-04T13:30:00.000Z" };
+    assert.equal(resolveCurrentEvent([first, second], now), "meetup");
+  });
+
+  it("ignores a check-in on an event whose window has already closed", () => {
+    // A forgotten check-in must expire with its event rather than capturing
+    // every later scan for the rest of the week.
+    const yesterday = {
+      id: "yesterday",
+      startsAt: "2026-09-03T09:00:00.000Z",
+      endsAt: "2026-09-03T18:00:00.000Z",
+      leftAt: null,
+      checkedInAt: "2026-09-03T09:10:00.000Z",
+    };
+    assert.equal(resolveCurrentEvent([yesterday, meetup], now), "meetup");
+  });
+
+  it("respects leaving an event you had checked into", () => {
+    const left = { ...conference, checkedInAt: "2026-09-04T09:15:00.000Z", leftAt: "2026-09-04T12:00:00.000Z" };
+    assert.equal(resolveCurrentEvent([left, meetup], now), "meetup");
+  });
+
+  it("ignores a check-in timestamped in the future", () => {
+    const skewed = { ...conference, checkedInAt: "2026-09-04T16:00:00.000Z" };
+    assert.equal(resolveCurrentEvent([skewed, meetup], now), "meetup");
+  });
+});

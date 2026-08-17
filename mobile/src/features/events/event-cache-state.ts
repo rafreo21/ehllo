@@ -12,6 +12,20 @@ export function applyCachedAttendance(
     : [...events, fresh];
 }
 
+/**
+ * Mirrors the server's one-place-at-a-time rule: checking in anywhere clears
+ * every other open check-in, so the offline snapshot can never be ambiguous
+ * either.
+ */
+export function applyCachedCheckIn(events: EventItem[], eventId: string, checkedInAt: string | null): EventItem[] {
+  return events.map((event) => {
+    if (event.id === eventId) {
+      return { ...event, checkedInAt, ...(checkedInAt ? { leftAt: null } : {}) };
+    }
+    return checkedInAt && event.checkedInAt ? { ...event, checkedInAt: null } : event;
+  });
+}
+
 export function applyCachedLeftAt(events: EventItem[], eventId: string, leftAt: string | null): EventItem[] {
   return events.map((event) => event.id === eventId ? { ...event, leftAt } : event);
 }

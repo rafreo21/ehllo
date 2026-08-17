@@ -36,6 +36,7 @@ import {
   removeEventFromMyList,
   revokeEventInvitation,
   setEventAttendance,
+  setEventCheckIn,
   updateEvent,
   EventUpdateConflictError,
   type CalendarProviderStatus,
@@ -43,7 +44,7 @@ import {
   type EventInvitation,
 } from '@/features/events/events-api';
 import { applyEventDateChange, resolveExtractedEventDates } from '@/features/events/event-form-state';
-import { cacheEventAttendance, cacheEventLeftAt } from '@/features/events/event-cache';
+import { cacheEventAttendance, cacheEventCheckIn, cacheEventLeftAt } from '@/features/events/event-cache';
 import { fetchConnectedAccounts } from '@/features/integrations/integrations-api';
 import { readEnv } from '@/lib/env';
 import { isOnline } from '@/lib/connectivity';
@@ -256,6 +257,31 @@ export default function EventsScreen() {
       if (isOnline()) await refresh();
     } catch (caught) {
       setError(describeError(caught, 'Could not remove this event.'));
+    } finally {
+      setBusyId('');
+    }
+  }
+
+  async function checkInToEvent(event: EventItem) {
+    if (!accessToken) return;
+    setBusyId(event.id);
+    setError('');
+    const checkedInAt = new Date().toISOString();
+    try {
+      // Update locally first. Checking in happens at the door of a venue,
+      // which is exactly where reception is worst, and the point of the whole
+      // feature is that scans made there file correctly — so the local answer
+      // must be right immediately, whether or not the write lands now.
+      await cacheEventCheckIn(event.id, checkedInAt);
+      setEvents((current) => current.map((item) => (
+        item.id === event.id
+          ? { ...item, checkedInAt, leftAt: null }
+          : item.checkedInAt ? { ...item, checkedInAt: null } : item
+      )));
+      await setEventCheckIn(accessToken, event.id, true);
+      if (isOnline()) await refresh();
+    } catch (caught) {
+      setError(describeError(caught, 'Could not update where you are.'));
     } finally {
       setBusyId('');
     }
@@ -480,6 +506,7 @@ export default function EventsScreen() {
                         busy={busyId === event.id}
                         onNotGoing={(item) => void decide(item, 'not_going')}
                         onLeave={isEventCurrentlyHappening(event) ? (item) => void leaveEvent(item) : undefined}
+                        onCheckIn={isEventCurrentlyHappening(event) ? (item) => void checkInToEvent(item) : undefined}
                         onInvite={(item) => void openInvitations(item)}
                         onManage={event.source !== 'calendar' ? (item) => { setManageError(''); setManageEvent(item); } : undefined}
                       />

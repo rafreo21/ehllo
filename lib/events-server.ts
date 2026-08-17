@@ -246,18 +246,18 @@ async function notifyCalendarEventGuests(
   }
 }
 
-export type GoingEventWindow = { id: string; startsAt: string; endsAt: string | null; leftAt: string | null };
+export type GoingEventWindow = { id: string; startsAt: string; endsAt: string | null; leftAt: string | null; checkedInAt: string | null };
 
 export async function fetchGoingEventWindows(supabase: SupabaseClient, userId: string): Promise<GoingEventWindow[]> {
   const { data } = await supabase
     .from("event_attendance")
-    .select("left_at, events!inner(id, starts_at, ends_at)")
+    .select("left_at, checked_in_at, events!inner(id, starts_at, ends_at)")
     .eq("user_id", userId)
     .eq("status", "going");
 
-  return ((data ?? []) as unknown as Array<{ left_at: string | null; events: { id: string; starts_at: string; ends_at: string | null } | null }>)
+  return ((data ?? []) as unknown as Array<{ left_at: string | null; checked_in_at: string | null; events: { id: string; starts_at: string; ends_at: string | null } | null }>)
     .flatMap((row) => (row.events
-      ? [{ id: row.events.id, startsAt: row.events.starts_at, endsAt: row.events.ends_at, leftAt: row.left_at }]
+      ? [{ id: row.events.id, startsAt: row.events.starts_at, endsAt: row.events.ends_at, leftAt: row.left_at, checkedInAt: row.checked_in_at }]
       : []));
 }
 

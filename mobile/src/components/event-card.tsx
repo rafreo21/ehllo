@@ -28,6 +28,7 @@ export function EventCard({
   onGoing,
   onNotGoing,
   onLeave,
+  onCheckIn,
   onInvite,
   onManage,
 }: {
@@ -38,12 +39,20 @@ export function EventCard({
   onGoing?: (event: EventItem) => void;
   onNotGoing?: (event: EventItem) => void;
   onLeave?: (event: EventItem) => void;
+  onCheckIn?: (event: EventItem) => void;
   onInvite?: (event: EventItem) => void;
   onManage?: (event: EventItem) => void;
 }) {
   const when = formatEventWhen(event.startsAt);
   const showCandidateActions = variant === 'candidate';
   const showLeaveAction = variant === 'current' && Boolean(onLeave);
+  // "I'm here" is offered on an event that is actually running and not yet
+  // confirmed. Until someone confirms, which of two overlapping events owns a
+  // scanned card is decided by whichever started later — a guess. Once
+  // confirmed the card says so, because the useful information at that point
+  // is which event your scans are being filed under, not that a button exists.
+  const checkedIn = Boolean(event.checkedInAt);
+  const showCheckInAction = variant === 'current' && Boolean(onCheckIn) && !checkedIn;
   const showGoingNotGoingAction = (variant === 'going' || variant === 'current') && Boolean(onNotGoing);
   // Independent of the action row below — this is Home's "tap the card to
   // see it in My Events" affordance. Events itself never passes onPress, so
@@ -115,6 +124,19 @@ export function EventCard({
             <ActivityIndicator color={colors.ink} />
           ) : (
             <View style={styles.actions}>
+              {showCheckInAction ? (
+                <PillButton
+                  tone="solid"
+                  accessibilityLabel="I'm here at this event"
+                  onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onCheckIn?.(event); }}>
+                  I&apos;m here
+                </PillButton>
+              ) : null}
+              {checkedIn ? (
+                <Text style={styles.checkedInNote} accessibilityRole="text">
+                  You&apos;re here · scans file to this event
+                </Text>
+              ) : null}
               <PillButton
                 tone="outline"
                 accessibilityLabel="I've left this event"
@@ -194,5 +216,6 @@ const styles = StyleSheet.create({
   },
   statusText: { color: colors.ink, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
   suggested: { flexShrink: 0, color: colors.muted, fontSize: 12 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.x2 },
+  checkedInNote: { color: colors.muted, fontSize: 13, fontWeight: '600' },
 });

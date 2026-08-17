@@ -28,6 +28,8 @@ export type EventItem = {
   startsAt: string;
   endsAt: string | null;
   leftAt?: string | null;
+  /** Set when the user confirmed they are physically at this event. */
+  checkedInAt?: string | null;
   source: EventSource;
   sourceUrl: string;
   organizerEmail: string;
@@ -49,6 +51,7 @@ function mapEvent(row: Record<string, unknown>): EventItem {
     startsAt: String(row.startsAt ?? ''),
     endsAt: typeof row.endsAt === 'string' ? row.endsAt : null,
     leftAt: typeof row.leftAt === 'string' ? row.leftAt : null,
+    checkedInAt: typeof row.checkedInAt === 'string' ? row.checkedInAt : null,
     source: (row.source as EventSource) ?? 'manual',
     sourceUrl: String(row.sourceUrl ?? ''),
     organizerEmail: String(row.organizerEmail ?? ''),
@@ -253,6 +256,39 @@ export async function removeEventFromMyList(accessToken: string, eventId: string
     'Could not read the response.',
   );
   if (!response.ok || !payload.ok) throw new Error(payload.error || 'Could not remove this event.');
+}
+
+export async function sendEventCheckIn(accessToken: string, eventId: string, checkedIn = true) {
+  const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}/check-in`, accessToken, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ checkedIn }),
+  });
+  const payload = await readMobileApiJson<{ ok?: boolean; checkedInAt?: string | null; error?: string }>(
+    response,
+    'Could not read the check-in response.',
+  );
+  if (!response.ok || !payload.ok) throw new Error(payload.error || 'Could not update where you are.');
+  return payload.checkedInAt ?? null;
+}
+
+/**
+ * Queues when offline. Being at an event is exactly the moment connectivity is
+ * worst — a venue basement with no signal is the normal case, not the edge one
+ * — and the whole point of checking in is that scans made there attribute
+ * correctly, so this must not depend on the network.
+ */
+export async function setEventCheckIn(accessToken: string, eventId: string, checkedIn = true) {
+  if (!isOnline()) {
+    await enqueueEventAction({ eventId, action: 'check_in', checkedIn });
+    return;
+  }
+  try {
+    await sendEventCheckIn(accessToken, eventId, checkedIn);
+  } catch (error) {
+    if (!isNetworkError(error)) throw error;
+    await enqueueEventAction({ eventId, action: 'check_in', checkedIn });
+  }
 }
 
 export async function sendEventLeft(accessToken: string, eventId: string, left = true) {

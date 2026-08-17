@@ -75,6 +75,8 @@ export type GoingEventWindow = {
   // Set when the user tapped "I've left" — caps this event's effective end
   // for presence purposes without touching its real scheduled end time.
   leftAt?: string | null;
+  /** When the user confirmed they are physically here. Outranks the time window. */
+  checkedInAt?: string | null;
 };
 
 // Events synced without an explicit end (some calendar entries, and every
@@ -86,12 +88,16 @@ const DEFAULT_EVENT_WINDOW_MS = 4 * 60 * 60 * 1000;
  * The passive-presence decision: given the events a user is "going" to,
  * which one (if any) is the current context right now. An event whose
  * window contains `now` is a match; "I've left" (leftAt) caps that window
- * early. When more than one going-event matches — genuinely overlapping
- * RSVPs — the one that started most recently wins, on the theory that
- * whichever event you checked into last is the one you're most likely
- * still at. A wrong guess here costs one tap to correct on the encounter
- * (the event chip is editable); asking the user to disambiguate up front
- * on every capture would cost more than it saves.
+ * early.
+ *
+ * Among matches, an explicit check-in wins. Only when nobody has said where
+ * they are does this fall back to the old heuristic — the most recently
+ * started event — on the theory that the one you arrived at last is the one
+ * you are most likely still at. That heuristic is fine for a single event and
+ * a coin toss for two overlapping ones, which is exactly why check-in exists.
+ * A wrong guess costs one tap to correct on the encounter (the event chip is
+ * editable); asking the user to disambiguate on every capture would cost more
+ * than it saves.
  */
 export function resolveCurrentEvent(goingEvents: GoingEventWindow[], now: Date = new Date()): string | null {
   const nowMs = now.getTime();
@@ -107,6 +113,25 @@ export function resolveCurrentEvent(goingEvents: GoingEventWindow[], now: Date =
     return start <= nowMs && nowMs <= end;
   });
   if (!matches.length) return null;
+
+  // An explicit check-in outranks the clock. Two events overlapping on the same
+  // afternoon are otherwise decided by whichever started most recently — a
+  // guess that silently attributes scanned cards, exchanges, encounters and
+  // their follow-ups to the wrong event. If the user has said where they are,
+  // that answer wins, and the most recent check-in wins among several.
+  //
+  // A check-in still has to fall inside the matched window above, so one the
+  // user forgets to close expires with the event instead of capturing every
+  // scan they make for the rest of the week.
+  const checkedIn = matches
+    .filter((event) => {
+      if (!event.checkedInAt) return false;
+      const at = Date.parse(event.checkedInAt);
+      return !Number.isNaN(at) && at <= nowMs;
+    })
+    .sort((left, right) => Date.parse(right.checkedInAt!) - Date.parse(left.checkedInAt!));
+  if (checkedIn.length) return checkedIn[0].id;
+
   return matches.reduce((latest, event) => (
     Date.parse(event.startsAt) > Date.parse(latest.startsAt) ? event : latest
   )).id;
