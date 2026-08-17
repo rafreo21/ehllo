@@ -53,10 +53,19 @@ export async function buildBrandedQrPngBuffer(payload: string, size = 1024) {
   let sharp;
   try {
     sharp = await loadSharp();
-  } catch {
+  } catch (error) {
     // A readable QR is more important than the centre badge. Some server
     // bundlers deliberately externalize native modules; never turn sharing
     // into a 500 merely because the optional compositor is unavailable.
+    //
+    // Log it though. Swallowing this silently meant a deployed environment
+    // could ship logo-less QR codes indefinitely and look completely healthy,
+    // and it made a plain QR indistinguishable from sharp being switched off
+    // by the availability guard — two very different faults.
+    console.error("[branded-qr] sharp unavailable, falling back to a plain QR", {
+      name: error instanceof Error ? error.name : typeof error,
+      message: error instanceof Error ? error.message : String(error),
+    });
     return qrBuffer;
   }
 
