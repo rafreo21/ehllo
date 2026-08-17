@@ -220,11 +220,12 @@ function loadDraft(search = "") {
 export default function CardEditor() {
   const searchParams = useSearchParams();
   const searchString = searchParams.toString();
-  // Captured once at mount, not derived reactively from searchString — the
-  // create flow replaces the URL to ?id=<new-id> right after the draft is
-  // created (so a refresh doesn't create yet another card), which would
-  // otherwise flip this back to "editing" framing mid-flow.
-  const [isCreating] = useState(() => isCreateFlow(typeof window !== "undefined" ? window.location.search : ""));
+  // Set once per hydration pass (below), not derived reactively from the
+  // live searchString on every render — the create flow replaces the URL
+  // to ?id=<new-id> right after the draft is created (so a refresh doesn't
+  // create yet another card), which would otherwise flip this back to
+  // "editing" framing mid-flow the instant that replace happens.
+  const [isCreating, setIsCreating] = useState(false);
   const [draft, setDraft] = useState<CardDraft>(initialDraft);
   const [hydrated, setHydrated] = useState(false);
   const [step, setStep] = useState(0);
@@ -248,9 +249,11 @@ export default function CardEditor() {
       }
       if (isCreateFlow(searchString)) {
         setStep(0);
+        setIsCreating(true);
       } else {
         const storedStep = Number(localStorage.getItem("aftermeet-card-step-v2"));
         if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep <= 2) setStep(storedStep);
+        setIsCreating(false);
       }
       setHydrated(true);
     }).catch(() => {
@@ -262,9 +265,11 @@ export default function CardEditor() {
       }
       if (isCreateFlow(searchString)) {
         setStep(0);
+        setIsCreating(true);
       } else {
         const storedStep = Number(localStorage.getItem("aftermeet-card-step-v2"));
         if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep <= 2) setStep(storedStep);
+        setIsCreating(false);
       }
       setHydrated(true);
     });
