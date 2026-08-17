@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { Copy as CopyIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { Download as DownloadSimpleIcon } from "react-feather";
 import { Monitor as MonitorIcon } from "react-feather";
 import { Watch as WatchIcon } from "react-feather";
@@ -20,11 +21,12 @@ import { ChevronUp as CaretUpIcon } from "react-feather";
 import { ShareCardModal } from "../../components/ShareCardModal";
 import { Upload as UploadSimpleIcon } from "react-feather";
 import { useAppUser } from "../../components/AppUserContext";
-import { PageSkeleton, StatusMessage } from "../../components/AsyncState";
+import { PageSkeleton } from "../../components/AsyncState";
 import { Button, LinkButton } from "../../components/Button";
 import { contactMethodHref, contactMethodOpensNewTab } from "../../../lib/contact-methods";
 import { buildHtmlSignature, buildPlainSignature } from "../../../lib/email-signature";
 import { WalletSharePanel } from "../../components/WalletSharePanel";
+import { useToast } from "../../components/ToastContext";
 import {
   cardDisplayLabel,
   cardInitials,
@@ -38,14 +40,49 @@ import {
   setActiveCardId,
   upsertLibraryCard,
 } from "../../../lib/card-library";
-import { themeCoverBadgeStyle, themeForegroundColor, themeSurfaceStyle } from "../../../lib/theme-contrast";
+import { themeCoverBadgeStyle, themeSurfaceStyle } from "../../../lib/theme-contrast";
 import { hydrateCardLibraryFromServer, queueCardSync } from "../../../lib/card-library-sync";
 import { applyCardTemplate } from "../../../lib/card-templates";
 import type { CardTemplate } from "../../../lib/workspace/types";
+import {
+  enrichConnectionPhotos,
+  fetchAllConnectionsMerged,
+  sortConnections,
+  type ConnectionItem,
+} from "../../../lib/connections";
 
-type Method = { id: string; type: string; value: string; label: string };
 type Profile = LibraryCard & { email: string; website: string };
 type ShareTool = "qr" | "signature" | "background" | "watch" | "widgets" | "wallet";
+type QrSource = "branded" | "fallback" | "none";
+
+function normalizeImageSource(value?: string) {
+  return value?.trim() || "";
+}
+
+function parseDownloadFilename(contentDisposition: string | null) {
+  if (!contentDisposition) return null;
+
+  const utf8Match = /filename\*=(?:UTF-8''|utf-8'')([^;]+)/i.exec(contentDisposition);
+  if (utf8Match?.[1]) {
+    return decodeURIComponent(utf8Match[1].trim().replace(/\"/g, ""));
+  }
+
+  const quotedMatch = /filename="([^"]+)"/i.exec(contentDisposition);
+  if (quotedMatch?.[1]) return quotedMatch[1];
+
+  const unquotedMatch = /filename=([^;\s]+)/i.exec(contentDisposition);
+  return unquotedMatch?.[1] ?? null;
+}
+
+function isRenderableQrSource(value: string) {
+  if (!value) return false;
+  return value.startsWith("data:")
+    || value.startsWith("http://")
+    || value.startsWith("https://")
+    || value.startsWith("blob:")
+    || value.startsWith("/");
+}
+
 const fallback: Profile = {
   id: "primary-card", slug: "alex-morgan", label: "My primary card",
   name: "Alex Morgan", role: "Independent Consultant", company: "Northstar Advisory",
@@ -68,7 +105,9 @@ export default function CardsPage() {
   const [activeId, setActiveId] = useState(fallback.id);
   const [photo, setPhoto] = useState("");
   const [qr, setQr] = useState("");
+  const [qrFallback, setQrFallback] = useState("");
   const [qrSvg, setQrSvg] = useState("");
+  const [qrSource, setQrSource] = useState<QrSource>("none");
   const [qrMode, setQrMode] = useState<"online" | "offline">("online");
   const [copied, setCopied] = useState(false);
   const [svgCopied, setSvgCopied] = useState(false);
@@ -80,6 +119,8 @@ export default function CardsPage() {
   const [shareUrl, setShareUrl] = useState("http://localhost:3000/c/alex-morgan");
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareTool, setShareTool] = useState<ShareTool>("qr");
+  const [recentConnection, setRecentConnection] = useState<ConnectionItem | null>(null);
+  const { showToast } = useToast();
   const cardTheme = useMemo(() => themeSurfaceStyle(profile.theme), [profile.theme]);
 
   function toProfile(card: LibraryCard): Profile {
@@ -111,6 +152,95 @@ export default function CardsPage() {
     }
   }
 
+  const loadRecentConnection = useCallback(async () => {
+    try {
+      const merged = await fetchAllConnectionsMerged();
+      const sorted = sortConnections(merged, "date");
+      const latest = sorted[0];
+      if (!latest) {
+        setRecentConnection(null);
+        return;
+      }
+
+      const enriched = await enrichConnectionPhotos([latest]);
+      setRecentConnection(enriched[0] || latest);
+    } catch {
+      setRecentConnection(null);
+    }
+  }, []);
+
+  function showQrError(message: string, action?: { label: string; onClick: () => void }) {
+    showToast({
+      tone: "error",
+      message,
+      action,
+      durationMs: 6000,
+    });
+  }
+
+  async function buildQrAssets() {
+    if (!profile.slug) {
+      setQr("");
+      setQrSvg("");
+      setQrFallback("");
+      setQrSource("none");
+      setQrError("");
+      return;
+    }
+
+    const options = {
+      width: 900,
+      margin: 2,
+      errorCorrectionLevel: "H",
+      color: { dark: "#163300", light: "#ffffff" },
+    } as const;
+
+    setQr("");
+    setQrSvg("");
+    setQrFallback("");
+    setQrSource("none");
+    setQrError("");
+
+    try {
+      const [image, svg] = await Promise.all([
+      fetch(`/api/cards/share-assets/${encodeURIComponent(profile.slug)}?type=branded-qr&size=900&mode=${qrMode}`)
+        .then(async (response) => {
+          if (!response.ok) return null;
+          const payload = await response.json() as { dataUri?: string };
+          const dataUri = normalizeImageSource(payload.dataUri);
+          return isRenderableQrSource(dataUri) ? dataUri : null;
+        })
+        .catch(() => null),
+      QRCode.toString(shareUrl, { ...options, type: "svg" }),
+    ]);
+
+      const svgDataUri = svg ? `data:image/svg+xml;utf8,${encodeURIComponent(svg)}` : "";
+      setQrFallback(svgDataUri);
+      if (image) {
+        setQr(image);
+        setQrSource("branded");
+      } else if (svgDataUri) {
+        setQr(svgDataUri);
+        setQrSource("fallback");
+      } else {
+        setQr("");
+        setQrSource("none");
+      }
+      setQrSvg(svg);
+    } catch (caught) {
+      const message = caught instanceof Error
+        ? caught.message
+        : "We couldn’t generate this QR code. Check the card link and try again.";
+      setQrError(message);
+      showQrError(message, {
+        label: "Try again",
+        onClick: () => {
+          void buildQrAssets();
+        },
+      });
+    }
+  }
+
   useEffect(() => {
     void fetch("/api/workspace")
       .then(async (response) => {
@@ -134,7 +264,14 @@ export default function CardsPage() {
       applyLibrary(library);
       setHydrated(true);
     }).catch(() => {
-      setQrError("We couldn’t load your saved cards. Refresh the page to try again.");
+      const message = "We couldn’t load your saved cards. Refresh the page to try again.";
+      setQrError(message);
+      showQrError(message, {
+        label: "Reload",
+        onClick: () => {
+          window.location.reload();
+        },
+      });
       setHydrated(true);
     });
   }, []);
@@ -151,54 +288,34 @@ export default function CardsPage() {
             // Keep the current view if neither server nor cache can be read.
           }
         });
+      void loadRecentConnection();
     }
 
     window.addEventListener("focus", refreshFromServer);
     document.addEventListener("visibilitychange", refreshFromServer);
+    void refreshFromServer();
     const interval = window.setInterval(refreshFromServer, 30_000);
     return () => {
       window.removeEventListener("focus", refreshFromServer);
       document.removeEventListener("visibilitychange", refreshFromServer);
       window.clearInterval(interval);
     };
-  }, [activeId]);
+  }, [activeId, loadRecentConnection]);
 
   useEffect(() => {
-    if (!profile.slug) {
-      void Promise.resolve().then(() => {
-        setQr("");
-        setQrSvg("");
-      });
+    void buildQrAssets();
+  }, [profile.slug, shareUrl, qrMode]);
+
+  function handleQrImageError() {
+    if (qrSource === "branded" && qrFallback && qr !== qrFallback) {
+      setQrSource("fallback");
+      setQr(qrFallback);
+      setQrError("");
       return;
     }
-
-    const options = {
-      width: 900,
-      margin: 2,
-      errorCorrectionLevel: "H",
-      color: { dark: "#163300", light: "#ffffff" },
-    } as const;
-    void Promise.resolve().then(() => {
-      setQr("");
-      setQrSvg("");
-      setQrError("");
-    });
-    Promise.all([
-      fetch(`/api/cards/share-assets/${encodeURIComponent(profile.slug)}?type=branded-qr&size=900&mode=${qrMode}`)
-        .then(async (response) => {
-          if (!response.ok) return null;
-          const payload = await response.json() as { dataUri?: string };
-          const dataUri = payload.dataUri?.trim();
-          return dataUri ? dataUri : null;
-        })
-        .catch(() => null),
-      qrMode === "online" ? QRCode.toString(shareUrl, { ...options, type: "svg" }) : Promise.resolve(""),
-    ]).then(([image, svg]) => {
-      const svgDataUri = svg ? `data:image/svg+xml;utf8,${encodeURIComponent(svg)}` : "";
-      setQr(image || svgDataUri);
-      setQrSvg(svg);
-    }).catch(() => setQrError("We couldn’t generate this QR code. Check the card link and try again."));
-  }, [profile.slug, shareUrl, qrMode]);
+    setQrSource("none");
+    setQr("");
+  }
 
   function selectCard(card: LibraryCard) {
     setActiveCardId(localStorage, card.id);
@@ -222,20 +339,30 @@ export default function CardsPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function createCard(seed: Partial<LibraryCard> = {}) {
-    if (cards.length >= MAX_CARDS) return;
-    const card = createLibraryCard({
-      label: `Card ${cards.length + 1}`,
-      theme: ["#9fe870", "#2495e8", "#ff9f43", "#a83df0", "#14b8a6"][cards.length],
-      ...seed,
-    });
-    upsertLibraryCard(localStorage, card);
-    queueCardSync(card);
-    router.push(`/app/card/edit?id=${card.id}`);
+function createCard(seed: Partial<LibraryCard> = {}) {
+    if (cards.length >= MAX_CARDS) {
+      showToast({ tone: "error", message: "You’ve reached the card limit. Delete a card first, then create a new one." });
+      return;
+    }
+  if (Object.keys(seed).length > 0) {
+      const card = createLibraryCard({
+        label: `Card ${cards.length + 1}`,
+        theme: ["#9fe870", "#2495e8", "#ff9f43", "#a83df0", "#14b8a6"][cards.length],
+        ...seed,
+      });
+      upsertLibraryCard(localStorage, card);
+      queueCardSync(card);
+      router.push(`/app/card/edit?id=${card.id}`);
+      return;
+    }
+    router.push(`/app/card/edit?mode=create&new=1`);
   }
 
   function createCardFromTemplate(template: CardTemplate) {
-    if (cards.length >= MAX_CARDS) return;
+    if (cards.length >= MAX_CARDS) {
+      showToast({ tone: "error", message: "You’ve reached the card limit. Delete a card first, then create a new one." });
+      return;
+    }
     const card = applyCardTemplate(template, {
       memberName: user.displayName || "",
       memberEmail: user.email,
@@ -252,73 +379,104 @@ export default function CardsPage() {
     setCards(next);
     setViewingCard(false);
     window.history.replaceState(null, "", "/app/cards");
+    showToast({ tone: "success", message: `"${profile.label}" removed from card library.` });
     if (next[0]) selectCard(next[0]);
   }
 
   async function downloadShareAsset(type: "virtual-background" | "watch-face") {
-    const response = await fetch(`/api/cards/share-assets/${encodeURIComponent(profile.slug)}?type=${type}`);
-    if (!response.ok) {
-      const payload = await response.json().catch(() => null) as { error?: string } | null;
-      throw new Error(payload?.error || "We couldn’t download this asset.");
+    try {
+      const response = await fetch(`/api/cards/share-assets/${encodeURIComponent(profile.slug)}?type=${type}`);
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(payload?.error || "We couldn’t download this asset.");
+      }
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.startsWith("image/")) {
+        throw new Error("The server returned an invalid image file.");
+      }
+      const blob = await response.blob();
+      const href = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = href;
+      const contentDisposition = response.headers.get("content-disposition");
+      link.download = parseDownloadFilename(contentDisposition) || `ehllo-${type}-${profile.slug}` + (type === "virtual-background" ? ".jpg" : ".png");
+      document.body.appendChild(link);
+      link.click();
+      window.setTimeout(() => {
+        link.remove();
+        URL.revokeObjectURL(href);
+      }, 1500);
+      showToast({ tone: "success", message: `${type === "virtual-background" ? "Background" : "Watch QR"} downloaded.` });
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : "We couldn’t download this asset.";
+      showQrError(message, {
+        label: "Try again",
+        onClick: () => {
+          void downloadShareAsset(type);
+        },
+      });
     }
-    const contentType = response.headers.get("content-type") || "";
-    if (!contentType.startsWith("image/")) {
-      throw new Error("The server returned an invalid image file.");
-    }
-    const blob = await response.blob();
-    const extension = type === "virtual-background" ? "jpg" : "png";
-    const href = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = href;
-    link.download = `ehllo-${type}-${profile.slug}.${extension}`;
-    link.click();
-    URL.revokeObjectURL(href);
   }
 
   async function copyLink() {
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1400);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      showToast({ tone: "success", message: "Card link copied." });
+      window.setTimeout(() => setCopied(false), 1400);
+    } catch {
+      showToast({ tone: "error", message: "Could not copy the card link." });
+    }
   }
 
   async function copySvg() {
-    await navigator.clipboard.writeText(qrSvg);
-    setSvgCopied(true);
-    window.setTimeout(() => setSvgCopied(false), 1400);
+    try {
+      await navigator.clipboard.writeText(qrSvg);
+      setSvgCopied(true);
+      showToast({ tone: "success", message: "QR SVG copied to clipboard." });
+      window.setTimeout(() => setSvgCopied(false), 1400);
+    } catch {
+      showToast({ tone: "error", message: "Could not copy the QR SVG." });
+    }
   }
 
   async function copySignature(format: "plain" | "html") {
-    const email = profile.methods.find((method) => method.type === "email")?.value || profile.email;
-    const phone = profile.methods.find((method) => method.type === "phone")?.value;
-    const signatureProfile = {
-      name: profile.name,
-      role: profile.role,
-      company: profile.company,
-      cardUrl: shareUrl,
-      showCompany: profile.showCompanyDetails !== false,
-      photoUrl: profile.photo,
-      email,
-      phone,
-      themeColor: profile.theme,
-    };
-    let qrDataUri: string | undefined;
-    if (format === "html" && profile.slug) {
-      try {
-        const response = await fetch(`/api/cards/share-assets/${encodeURIComponent(profile.slug)}?type=branded-qr&size=512`);
-        if (response.ok) {
-          const payload = await response.json() as { dataUri?: string };
-          qrDataUri = payload.dataUri;
+    try {
+      const email = profile.methods.find((method) => method.type === "email")?.value || profile.email;
+      const phone = profile.methods.find((method) => method.type === "phone")?.value;
+      const signatureProfile = {
+        name: profile.name,
+        role: profile.role,
+        company: profile.company,
+        cardUrl: shareUrl,
+        showCompany: profile.showCompanyDetails !== false,
+        photoUrl: profile.photo,
+        email,
+        phone,
+        themeColor: profile.theme,
+      };
+      let qrDataUri: string | undefined;
+      if (format === "html" && profile.slug) {
+        try {
+          const response = await fetch(`/api/cards/share-assets/${encodeURIComponent(profile.slug)}?type=branded-qr&size=512`);
+          if (response.ok) {
+            const payload = await response.json() as { dataUri?: string };
+            qrDataUri = payload.dataUri;
+          }
+        } catch {
+          qrDataUri = undefined;
         }
-      } catch {
-        qrDataUri = undefined;
       }
+      const payload = format === "plain"
+        ? buildPlainSignature(signatureProfile)
+        : buildHtmlSignature({ ...signatureProfile, qrDataUri });
+      await navigator.clipboard.writeText(payload);
+      setSignatureCopied(format);
+      showToast({ tone: "success", message: `${format === "plain" ? "Plain" : "HTML"} signature copied.` });
+      window.setTimeout(() => setSignatureCopied(""), 1400);
+    } catch {
+      showToast({ tone: "error", message: "Could not copy the email signature." });
     }
-    const payload = format === "plain"
-      ? buildPlainSignature(signatureProfile)
-      : buildHtmlSignature({ ...signatureProfile, qrDataUri });
-    await navigator.clipboard.writeText(payload);
-    setSignatureCopied(format);
-    window.setTimeout(() => setSignatureCopied(""), 1400);
   }
 
   function openInApp() {
@@ -336,7 +494,6 @@ export default function CardsPage() {
   return (
     <>
       <div className="flow-page">
-        {qrError && <StatusMessage tone="error">{qrError}</StatusMessage>}
         {!hydrated ? <PageSkeleton rows={3} /> : !cards.length ? (
           <section className="cards-empty-state">
             <div className="cards-empty-visual"><div><QrCodeIcon size={42} weight="bold" /></div><span><PlusIcon size={22} /></span></div>
@@ -433,10 +590,10 @@ export default function CardsPage() {
           </article>
           <section className="inline-qr-panel">
             <div className="card-tools-tabs review-tabs" role="tablist" aria-label="Card sharing tools">
-              {([
+            {([
                 ["qr", "QR code"],
                 ["signature", "Email signature"],
-                ["background", "Background"],
+                ["background", "Virtual background"],
                 ["watch", "Watch"],
                 ["widgets", "Widgets"],
                 ["wallet", "Wallet & NFC"],
@@ -455,22 +612,23 @@ export default function CardsPage() {
             </div>
             <div className="card-tool-content review-tab-panel" role="tabpanel">
             {shareTool === "qr" ? <section className="card-tool-section card-tool-qr-section">
-            <div className="inline-qr-head"><span><QrCodeIcon size={22} weight="bold" /></span><div><h2>Let someone scan this card</h2><p>{qrMode === "online" ? "They only need their phone camera. No app or account required." : "Works with no internet — this scans straight into their contacts app."}</p></div></div>
-            <div className="flow-heading-actions" style={{ marginBottom: 12 }}>
-              <Button size="small" variant={qrMode === "online" ? "primary" : "secondary"} onClick={() => setQrMode("online")}>Online</Button>
-              <Button size="small" variant={qrMode === "offline" ? "primary" : "secondary"} onClick={() => setQrMode("offline")}>Offline</Button>
-            </div>
+            <div className="inline-qr-head"><span><QrCodeIcon size={22} weight="bold" /></span><div><h2 className="qr-scan-title">Let someone scan this card</h2><p>{qrMode === "online" ? "They only need their phone camera. No app or account required." : "Works with no internet — this scans straight into their contacts app."}</p></div></div>
             <ol className="scan-steps">
               <li><span>1</span>Open the camera</li>
               <li><span>2</span>Point at the QR</li>
               <li><span>3</span>{qrMode === "online" ? "Open your card" : "Save to contacts"}</li>
             </ol>
+            <div className="flow-heading-actions qr-mode-pill">
+              <Button size="small" variant={qrMode === "online" ? "primary" : "secondary"} onClick={() => setQrMode("online")}>Online</Button>
+              <Button size="small" variant={qrMode === "offline" ? "primary" : "secondary"} onClick={() => setQrMode("offline")}>Offline</Button>
+            </div>
             {qr ? (
               <div className="inline-qr-frame">
                 <img
                   className="inline-qr-image"
                   src={qr}
                   alt={`QR code for ${profile.name}'s card`}
+                  onError={handleQrImageError}
                 />
               </div>
             ) : !qrError && (
@@ -478,15 +636,25 @@ export default function CardsPage() {
                 <span className="skeleton qr-skeleton" />
               </div>
             )}
-            <div className="inline-qr-url"><span>Public card link</span><strong>{shareUrl}</strong></div>
-            <div className="inline-qr-actions">
-              <Button onClick={copyLink}><CopyIcon size={18} />{copied ? "Link copied" : "Copy link"}</Button>
-              {qr && <LinkButton variant="secondary" href={qr} download={qr.startsWith("data:image/svg+xml") ? "ehllo-qr.svg" : "ehllo-qr.png"}><DownloadSimpleIcon size={18} />Download QR</LinkButton>}
+            <div className="inline-qr-url">
+              <span>Public card link</span>
+              <strong title={shareUrl}>{shareUrl}</strong>
+              <button
+                type="button"
+                className="review-textfield-copy inline-qr-copy"
+                onClick={copyLink}
+                aria-label="Copy card link"
+              >
+                {copied ? <CheckCircleIcon size={14} /> : <CopyIcon size={14} />}
+              </button>
             </div>
-            <Button fullWidth size="small" variant="ghost" disabled={!qrSvg} onClick={copySvg}><CopyIcon size={16} />{svgCopied ? "SVG copied" : qrSvg ? "Copy QR as SVG" : "Generating QR…"}</Button>
+            <div className="inline-qr-actions">
+              {qr && <LinkButton size="small" variant="secondary" href={qr} download={qr.startsWith("data:image/svg+xml") ? "ehllo-qr.svg" : "ehllo-qr.png"}><DownloadSimpleIcon size={16} />Download QR</LinkButton>}
+              <Button size="small" variant="ghost" disabled={!qrSvg} onClick={copySvg}><CopyIcon size={16} />{svgCopied ? "SVG copied" : qrSvg ? "Copy QR as SVG" : "Generating QR…"}</Button>
+            </div>
             </section> : null}
             {shareTool === "signature" ? <section className="signature-panel card-tool-section">
-              <div className="inline-qr-head"><span><EnvelopeSimpleIcon size={22} /></span><div><h2>Email signature</h2><p>Square photo, name, title, and contact details. Ready for Gmail or Outlook.</p></div></div>
+              <div className="inline-qr-head"><span><EnvelopeSimpleIcon size={22} /></span><div><h2 className="signature-title">Email signature</h2><p>Square photo, name, title, and contact details. Ready for Gmail or Outlook.</p></div></div>
               <div className="signature-preview-card">
                 <div className="signature-preview-photo">{photo ? <img src={photo} alt="" /> : initials}</div>
                 <div className="signature-preview-copy">
@@ -502,43 +670,47 @@ export default function CardsPage() {
                   <em>View my card</em>
                 </div>
               </div>
-              <div className="inline-qr-actions">
-                <Button variant="secondary" onClick={() => void copySignature("plain")}><CopyIcon size={18} />{signatureCopied === "plain" ? "Plain copied" : "Copy plain text"}</Button>
-                <Button variant="secondary" onClick={() => void copySignature("html")}><CopyIcon size={18} />{signatureCopied === "html" ? "HTML copied" : "Copy HTML"}</Button>
+              <div className="signature-actions">
+                <Button size="small" variant="secondary" onClick={() => void copySignature("plain")}><CopyIcon size={14} />{signatureCopied === "plain" ? "Plain copied" : "Copy plain text"}</Button>
+                <Button size="small" variant="secondary" onClick={() => void copySignature("html")}><CopyIcon size={14} />{signatureCopied === "html" ? "HTML copied" : "Copy HTML"}</Button>
               </div>
               <small className="signature-note">Use plain text for most clients. HTML keeps phone, email, and card link clickable.</small>
             </section> : null}
             {shareTool === "background" ? <section className="share-surface-panel card-tool-section">
-              <div className="inline-qr-head"><span><MonitorIcon size={22} /></span><div><h2>Virtual background</h2><p>Meeting background with your name and a scannable QR in the corner.</p></div></div>
+              <div className="inline-qr-head"><span><MonitorIcon size={22} /></span><div><h2 className="virtual-background-title">Virtual background</h2><p>Meeting background with your name and a scannable QR in the corner.</p></div></div>
               <div className="share-surface-preview virtual-background-preview" style={{ background: cardTheme.backgroundGradient }}>
                 <div className="share-surface-overlay">
                   <strong>{profile.name}</strong>
                   <span>{profile.role}{profile.company ? ` · ${profile.company}` : ""}</span>
                   <div className="share-surface-qr">
-                    {qr ? <img src={qr} alt="" /> : <QrCodeIcon size={18} weight="bold" aria-hidden="true" />}
+                    {qr ? <img src={qr} alt="" onError={handleQrImageError} /> : <QrCodeIcon size={18} weight="bold" aria-hidden="true" />}
                   </div>
                 </div>
               </div>
-              <Button variant="secondary" onClick={() => void downloadShareAsset("virtual-background")}><DownloadSimpleIcon size={18} />Download background</Button>
+              <div className="inline-qr-actions">
+                <Button size="small" variant="secondary" onClick={() => void downloadShareAsset("virtual-background")}><DownloadSimpleIcon size={16} />Download background</Button>
+              </div>
             </section> : null}
             {shareTool === "watch" ? <section className="share-surface-panel card-tool-section">
-              <div className="inline-qr-head"><span><WatchIcon size={22} /></span><div><h2>Smart watch</h2><p>High-contrast QR for Apple Watch or Wear OS watch faces.</p></div></div>
+              <div className="inline-qr-head"><span><WatchIcon size={22} /></span><div><h2 className="watch-title">Smart watch</h2><p>High-contrast QR for Apple Watch or Wear OS watch faces.</p></div></div>
               <div className="share-surface-preview watch-preview">
                 <span>Personal card</span>
                 <div className="watch-qr">
-                  {qr ? <img src={qr} alt={`QR code for ${profile.name}'s card`} /> : <QrCodeIcon size={30} weight="bold" aria-hidden="true" />}
+                  {qr ? <img src={qr} alt={`QR code for ${profile.name}'s card`} onError={handleQrImageError} /> : <QrCodeIcon size={30} weight="bold" aria-hidden="true" />}
                 </div>
               </div>
-              <Button variant="secondary" onClick={() => void downloadShareAsset("watch-face")}><DownloadSimpleIcon size={18} />Download watch QR</Button>
+              <div className="inline-qr-actions">
+                <Button size="small" variant="secondary" onClick={() => void downloadShareAsset("watch-face")}><DownloadSimpleIcon size={16} />Download watch QR</Button>
+              </div>
             </section> : null}
             {shareTool === "widgets" ? <section className="phone-widget-panel card-tool-section">
-              <div className="phone-widget-head"><span><DeviceMobileIcon size={22} /></span><div><h3>Home-screen widgets</h3><p>Choose QR Scan, Business Card, or Recent Connections when adding a widget.</p></div></div>
+              <div className="inline-qr-head"><span><DeviceMobileIcon size={22} /></span><div><h2 className="qr-scan-title">Home-screen widgets</h2><p>Choose QR Scan, Business Card, or Recent Connections when adding a widget.</p></div></div>
               <div className="widget-gallery">
                 <article className="widget-gallery-card">
                   <header><span>ehllo</span><strong>2 × 2</strong></header>
-                  <div className="widget-gallery-preview widget-gallery-qr">
+                  <div className="widget-gallery-preview widget-gallery-qr widget-gallery-card-text-gap">
                     <div className="widget-gallery-qr-frame">
-                      {qr ? <img src={qr} alt={`QR code for ${profile.name}'s card`} /> : <QrCodeIcon size={24} weight="bold" aria-hidden="true" />}
+                      {qr ? <img src={qr} alt={`QR code for ${profile.name}'s card`} onError={handleQrImageError} /> : <QrCodeIcon size={24} weight="bold" aria-hidden="true" />}
                     </div>
                   </div>
                   <h4>QR Scan</h4>
@@ -546,12 +718,14 @@ export default function CardsPage() {
                 </article>
                 <article className="widget-gallery-card">
                   <header><span>ehllo</span><strong>4 × 2</strong></header>
-                  <div className="widget-gallery-preview widget-gallery-card-layout">
+                  <div className="widget-gallery-preview widget-gallery-card-layout widget-gallery-card-text-gap">
                     <div className="widget-gallery-card-qr">
-                      {qr ? <img src={qr} alt="" /> : <QrCodeIcon size={22} weight="bold" aria-hidden="true" />}
+                      {qr ? <img src={qr} alt="" onError={handleQrImageError} /> : <QrCodeIcon size={22} weight="bold" aria-hidden="true" />}
                     </div>
                     <div>
-                      <div className="widget-layout-avatar">{initials}</div>
+                      <div className="widget-layout-avatar">
+                        {profile.photo ? <img src={profile.photo} alt="" /> : <span>{initials}</span>}
+                      </div>
                       <strong>{profile.name}</strong>
                       {profile.role ? <span>{profile.role}</span> : null}
                       {profile.company ? <small>{profile.company}</small> : null}
@@ -562,11 +736,16 @@ export default function CardsPage() {
                 </article>
                 <article className="widget-gallery-card">
                   <header><span>ehllo</span><strong>4 × 2</strong></header>
-                  <div className="widget-gallery-preview widget-gallery-connections">
+                  <div className="widget-gallery-preview widget-gallery-connections widget-gallery-card-text-gap">
                     <small>RECENT CONNECTIONS</small>
                     <div className="widget-gallery-connection-row">
-                      <div className="widget-layout-avatar">C</div>
-                      <div><strong>Recent connection</strong><span>Shared via your card</span></div>
+                      <div className="widget-layout-avatar">
+                        {recentConnection?.photoUrl ? <img src={recentConnection.photoUrl} alt="" /> : <span>{recentConnection ? cardInitials(recentConnection.name) : "C"}</span>}
+                      </div>
+                      <div>
+                        <strong>{recentConnection?.name || "Recent connection"}</strong>
+                        <span>{recentConnection?.subtitle || "Shared via your card"}</span>
+                      </div>
                       <span className="widget-gallery-action">☎</span>
                       <span className="widget-gallery-action">✉</span>
                     </div>
@@ -576,8 +755,10 @@ export default function CardsPage() {
                 </article>
               </div>
               <div className="phone-widget-actions">
-                <Button onClick={openInApp}><DeviceMobileIcon size={17} /> Open in app</Button>
-                <Button variant="secondary" aria-expanded={showWidgetHelp} onClick={() => setShowWidgetHelp((current) => !current)}>Add a widget {showWidgetHelp ? <CaretUpIcon /> : <CaretDownIcon />}</Button>
+                <Button size="small" onClick={openInApp}><DeviceMobileIcon size={15} /> Open in app</Button>
+                <Button size="small" variant="secondary" aria-expanded={showWidgetHelp} onClick={() => setShowWidgetHelp((current) => !current)}>
+                  Add a widget {showWidgetHelp ? <CaretUpIcon size={14} /> : <CaretDownIcon size={14} />}
+                </Button>
               </div>
               {showWidgetHelp && <div className="widget-instructions">
                 <article><strong>iPhone or iPad</strong><p>Install and open ehllo once. Touch and hold the Home Screen, tap <b>Edit</b>, then <b>Add Widget</b>. Search for ehllo and pick QR Scan, Business Card, or Recent Connections.</p></article>
@@ -585,7 +766,7 @@ export default function CardsPage() {
                 <small>Refresh widgets from Card Tools in the app after publishing changes or receiving new connections.</small>
               </div>}
             </section> : null}
-            {shareTool === "wallet" ? <section className="card-tool-section wallet-tool-section"><WalletSharePanel slug={profile.slug} shareUrl={shareUrl} /></section> : null}
+            {shareTool === "wallet" ? <section className="card-tool-section card-tool-qr-section wallet-tool-section"><WalletSharePanel slug={profile.slug} shareUrl={shareUrl} /></section> : null}
             </div>
           </section>
             </div>

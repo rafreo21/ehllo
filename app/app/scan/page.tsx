@@ -11,6 +11,7 @@ import { StatusMessage } from "../../components/AsyncState";
 import { Button, LinkButton } from "../../components/Button";
 import { CaptureComingSoonModal } from "../../components/CaptureComingSoonModal";
 import { TextField } from "../../components/FormField";
+import { useToast } from "../../components/ToastContext";
 import {
   contactFromPublicCard,
   type Contact,
@@ -94,6 +95,7 @@ function contactFromScanTarget(target: ScanTarget, card?: PublicCard | null): Co
 }
 
 export default function ScanPage() {
+  const { showToast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -232,6 +234,7 @@ export default function ScanPage() {
     };
     const saved = resolveAndSaveContact(withCampaign);
     setSavedContactId(saved.id);
+    showToast({ tone: "success", message: "Saved to your contacts." });
     void fetch("/api/people/connections", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

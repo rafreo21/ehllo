@@ -127,7 +127,7 @@ function PublicCardView({
                     className="public-card-method-icon"
                     style={{ background: theme.backgroundGradient, color: theme.color }}
                   >
-                    <ContactMethodIcon type={method.method_type} color={theme.color} />
+                    <ContactMethodIcon type={method.method_type} color={theme.color} size={18} />
                   </span>
                   <span>
                     <strong>{method.label || method.method_type}</strong>

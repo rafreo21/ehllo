@@ -18,6 +18,7 @@ import { X as XIcon } from "react-feather";
 import QRCode from "qrcode";
 import { StatusMessage } from "./AsyncState";
 import { Button } from "./Button";
+import { useToast } from "./ToastContext";
 import { SelectField, TextField } from "./FormField";
 import { getActiveCardId, readCardLibrary } from "../../lib/card-library";
 import { fetchAllConnectionsMerged, filterConnections, type ConnectionItem } from "../../lib/connections";
@@ -60,6 +61,8 @@ export function AddFollowUpModal({
   stacked?: boolean;
   popup?: boolean;
 }) {
+  const { showToast } = useToast();
+
   const [personName, setPersonName] = useState("");
   const [personEmail, setPersonEmail] = useState("");
   const [sourceId, setSourceId] = useState("");
@@ -90,6 +93,7 @@ export function AddFollowUpModal({
 
   useEffect(() => {
     if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPersonName(prefill?.personName ?? "");
     setPersonEmail(prefill?.personEmail ?? "");
     setSourceId(prefill?.sourceId ?? "");
@@ -260,11 +264,13 @@ export function AddFollowUpModal({
         const payload = await response.json().catch(() => ({})) as { error?: string };
         throw new Error(payload.error || "Could not sync this follow-up.");
       }
+      showToast({ tone: "success", message: "Follow-up draft created." });
       setSaving(false);
       onCreated?.();
       onClose();
     } catch (caught) {
       setError(`${caught instanceof Error ? caught.message : "Could not sync this follow-up."} It is saved on this browser and can be retried later.`);
+      showToast({ tone: "error", message: caught instanceof Error ? caught.message : "Could not sync this follow-up." });
       setSaving(false);
     }
   }

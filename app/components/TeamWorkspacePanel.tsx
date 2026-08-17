@@ -9,6 +9,7 @@ import { Button } from "./Button";
 import { StatusMessage } from "./AsyncState";
 import { TextField } from "./FormField";
 import type { CardTemplate, WorkspaceSummary } from "../../lib/workspace/types";
+import { useToast } from "./ToastContext";
 
 type WorkspacePayload = {
   active?: WorkspaceSummary | null;
@@ -18,6 +19,7 @@ type WorkspacePayload = {
 };
 
 export function TeamWorkspacePanel() {
+  const { showToast } = useToast();
   const [active, setActive] = useState<WorkspaceSummary | null>(null);
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [templates, setTemplates] = useState<CardTemplate[]>([]);
@@ -51,12 +53,16 @@ export function TeamWorkspacePanel() {
     });
     const payload = await response.json() as { error?: string };
     if (!response.ok) {
-      setError(payload.error || "We couldn’t create that team workspace.");
+      const message = payload.error || "We couldn’t create that team workspace.";
+      setError(message);
+      showToast({ tone: "error", message });
       setLoading("");
       return;
     }
     setTeamName("");
-    setMessage("Team workspace created. Reloading your workspace context…");
+    const message = "Team workspace created. Reloading your workspace context…";
+    setMessage(message);
+    showToast({ tone: "success", message });
     window.setTimeout(() => window.location.reload(), 600);
   }
 
@@ -71,11 +77,15 @@ export function TeamWorkspacePanel() {
     });
     const payload = await response.json() as { error?: string };
     if (!response.ok) {
-      setError(payload.error || "We couldn’t switch workspaces.");
+      const message = payload.error || "We couldn’t switch workspaces.";
+      setError(message);
+      showToast({ tone: "error", message });
       setLoading("");
       return;
     }
-    setMessage("Workspace switched. Reloading cards and contacts…");
+    const message = "Workspace switched. Reloading cards and contacts…";
+    setMessage(message);
+    showToast({ tone: "success", message });
     window.setTimeout(() => window.location.reload(), 600);
   }
 
@@ -90,12 +100,16 @@ export function TeamWorkspacePanel() {
     });
     const payload = await response.json() as { error?: string; template?: CardTemplate };
     if (!response.ok) {
-      setError(payload.error || "We couldn’t create that template.");
+      const message = payload.error || "We couldn’t create that template.";
+      setError(message);
+      showToast({ tone: "error", message });
       setLoading("");
       return;
     }
     setTemplateCompany("");
-    setMessage("Org card template saved for this workspace.");
+    const message = "Org card template saved for this workspace.";
+    setMessage(message);
+    showToast({ tone: "success", message });
     await refresh();
     setLoading("");
   }

@@ -91,7 +91,7 @@
 }
 .public-card-content h1 {
   margin: 20px 0 0;
-  font-size: clamp(36px, 10vw, 52px);
+  font-size: clamp(30px, 8vw, 44px);
   line-height: .96;
   letter-spacing: -.05em;
 }
@@ -245,8 +245,8 @@
 }
 .public-card-method-link:hover { background: #eef2ea; }
 .public-card-method-icon {
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -616,4 +616,3 @@
   border-color: #163300;
   box-shadow: 0 0 0 4px rgba(174, 184, 170, 0.45);
 }
-

@@ -12,6 +12,7 @@ import { PageSkeleton, StatusMessage } from "../../components/AsyncState";
 import { Button, LinkButton } from "../../components/Button";
 import { ConnectionDrawer } from "../../components/ConnectionDrawer";
 import { TextField } from "../../components/FormField";
+import { useToast } from "../../components/ToastContext";
 import {
   connectionAvatarUrl,
   connectionSourceLabel,
@@ -45,6 +46,7 @@ export default function ConnectionsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [activeConnection, setActiveConnection] = useState<ConnectionItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const { showToast } = useToast();
 
   const load = useCallback(async (background = false) => {
     if (!background) setLoading(true);
@@ -131,9 +133,12 @@ export default function ConnectionsPage() {
       await Promise.all(targets.map((connection) => deleteConnection(connection)));
       setSelectedIds(new Set());
       setSuccess(`${targets.length} connection${targets.length === 1 ? "" : "s"} removed.`);
+      showToast({ tone: "success", message: `${targets.length} connection${targets.length === 1 ? "" : "s"} removed.` });
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not remove the selected connections.");
+      const message = caught instanceof Error ? caught.message : "Could not remove the selected connections.";
+      setError(message);
+      showToast({ tone: "error", message });
     } finally {
       setDeleting(false);
     }
@@ -149,9 +154,12 @@ export default function ConnectionsPage() {
       setAddOpen(false);
       setManual({ name: "", email: "", role: "", company: "" });
       setSuccess(`${manual.name.trim()} was added to your connections.`);
+      showToast({ tone: "success", message: `${manual.name.trim()} was added to your connections.` });
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not save this connection.");
+      const message = caught instanceof Error ? caught.message : "Could not save this connection.";
+      setError(message);
+      showToast({ tone: "error", message });
     } finally {
       setSavingManual(false);
     }

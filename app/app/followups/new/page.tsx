@@ -19,6 +19,7 @@ import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import { StatusMessage } from "../../../components/AsyncState";
 import { Button } from "../../../components/Button";
 import { SelectField, TextField } from "../../../components/FormField";
+import { useToast } from "../../../components/ToastContext";
 import { getActiveCardId, readCardLibrary } from "../../../../lib/card-library";
 import { fetchAllConnectionsMerged, filterConnections, type ConnectionItem } from "../../../../lib/connections";
 import { encounterToApiBody, writeEncounter, type Encounter } from "../../../../lib/encounters";
@@ -38,6 +39,7 @@ function createId() {
 }
 
 export default function NewFollowUpPage() {
+  const { showToast } = useToast();
   const router = useRouter();
   const params = useSearchParams();
   const initialName = params.get("personName")?.trim() ?? "";
@@ -209,9 +211,11 @@ export default function NewFollowUpPage() {
         const payload = await response.json().catch(() => ({})) as { error?: string };
         throw new Error(payload.error || "Could not sync this follow-up.");
       }
+      showToast({ tone: "success", message: "Follow-up created." });
       router.push("/app/followups");
     } catch (caught) {
       setError(`${caught instanceof Error ? caught.message : "Could not sync this follow-up."} It is saved on this browser and can be retried later.`);
+      showToast({ tone: "error", message: caught instanceof Error ? caught.message : "Could not sync this follow-up." });
       setSaving(false);
     }
   }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ComponentType } from "react";
+import { useEffect, useState } from "react";
+import type { JSX } from "react";
 import { Bell as BellIcon } from "react-feather";
 import { Calendar as CalendarCheckIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
@@ -9,7 +10,7 @@ import { Mail as EnvelopeSimpleIcon } from "react-feather";
 import { Share2 as ShareNetworkIcon } from "react-feather";
 import { Users as UsersThreeIcon } from "react-feather";
 import { HandWavingIcon } from "@phosphor-icons/react/dist/csr/HandWaving";
-import { StatusMessage } from "./AsyncState";
+import { useToast } from "./ToastContext";
 
 export const BROWSER_NOTIFICATION_KEY = "aftermeet-browser-notifications-v1";
 export const BROWSER_NOTIFICATION_CHANGE_EVENT = "aftermeet-browser-notifications-change";
@@ -30,7 +31,13 @@ const DEFAULT_TYPE_PREFERENCES: NotificationPreferenceMap = {
 
 // "keep_in_touch" alone still renders a Phosphor icon (HandWaving has no
 // react-feather equivalent), so it alone keeps the `weight="bold"` prop below.
-const NOTIFICATION_TYPE_ROWS: Array<{ type: NotificationType; icon: ComponentType<any>; label: string; hint: string }> = [
+type NotificationTypeRow = {
+  type: NotificationType;
+  icon: (props: { size?: number; weight?: string }) => JSX.Element;
+  label: string;
+  hint: string;
+};
+const NOTIFICATION_TYPE_ROWS: NotificationTypeRow[] = [
   { type: "review_ready", icon: CheckCircleIcon, label: "Transcript ready", hint: "A capture is ready for your review." },
   { type: "follow_up_due", icon: CalendarCheckIcon, label: "Follow-up due", hint: "A reviewed follow-up is due today." },
   { type: "follow_up_overdue", icon: ClockCounterClockwiseIcon, label: "Follow-up overdue", hint: "A reviewed follow-up is overdue." },
@@ -58,6 +65,7 @@ function PreferenceSwitch({ checked, disabled, label, onChange }: { checked: boo
 }
 
 export function NotificationPreferences() {
+  const { showToast } = useToast();
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [emailSaving, setEmailSaving] = useState(false);
   const [browserEnabled, setBrowserEnabled] = useState(false);
@@ -65,7 +73,6 @@ export function NotificationPreferences() {
   const [typePreferences, setTypePreferences] = useState<NotificationPreferenceMap>(DEFAULT_TYPE_PREFERENCES);
   const [typeSaving, setTypeSaving] = useState<NotificationType | null>(null);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
     const permission: BrowserPermission = "Notification" in window ? Notification.permission : "unsupported";
@@ -84,16 +91,15 @@ export function NotificationPreferences() {
         setEmailEnabled(payload.emailRemindersEnabled !== false);
         if (payload.notificationPreferences) setTypePreferences(payload.notificationPreferences);
       })
-      .catch((error) => setMessage({ tone: "error", text: error instanceof Error ? error.message : "Could not load notification preferences." }))
+      .catch((error) => showToast({ tone: "error", message: error instanceof Error ? error.message : "Could not load notification preferences." }))
       .finally(() => setLoading(false));
-  }, []);
+  }, [showToast]);
 
   async function toggleType(type: NotificationType, next: boolean) {
     const previous = typePreferences;
     const updated = { ...typePreferences, [type]: next };
     setTypePreferences(updated);
     setTypeSaving(type);
-    setMessage(null);
     try {
       const response = await fetch("/api/settings/notifications", {
         method: "PATCH",
@@ -102,9 +108,12 @@ export function NotificationPreferences() {
       });
       const payload = await response.json() as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Could not update this preference.");
+      const text = "Notification preference saved.";
+      showToast({ tone: "success", message: text });
     } catch (error) {
       setTypePreferences(previous);
-      setMessage({ tone: "error", text: error instanceof Error ? error.message : "Could not update this preference." });
+      const text = error instanceof Error ? error.message : "Could not update this preference.";
+      showToast({ tone: "error", message: text });
     } finally {
       setTypeSaving(null);
     }
@@ -114,7 +123,6 @@ export function NotificationPreferences() {
     const previous = emailEnabled;
     setEmailEnabled(next);
     setEmailSaving(true);
-    setMessage(null);
     try {
       const response = await fetch("/api/settings/notifications", {
         method: "PATCH",
@@ -123,26 +131,29 @@ export function NotificationPreferences() {
       });
       const payload = await response.json() as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Could not update email reminders.");
-      setMessage({ tone: "success", text: next ? "Email reminders are on across ehllo." : "Email reminders are off across ehllo." });
+      const text = next ? "Email reminders are on across ehllo." : "Email reminders are off across ehllo.";
+      showToast({ tone: "success", message: text });
     } catch (error) {
       setEmailEnabled(previous);
-      setMessage({ tone: "error", text: error instanceof Error ? error.message : "Could not update email reminders." });
+      const text = error instanceof Error ? error.message : "Could not update email reminders.";
+      showToast({ tone: "error", message: text });
     } finally {
       setEmailSaving(false);
     }
   }
 
   async function toggleBrowser(next: boolean) {
-    setMessage(null);
     if (!next) {
       localStorage.removeItem(BROWSER_NOTIFICATION_KEY);
       setBrowserEnabled(false);
       window.dispatchEvent(new Event(BROWSER_NOTIFICATION_CHANGE_EVENT));
-      setMessage({ tone: "success", text: "Browser notifications are off in this browser." });
+      const text = "Browser notifications are off in this browser.";
+      showToast({ tone: "success", message: text });
       return;
     }
     if (!("Notification" in window)) {
-      setMessage({ tone: "error", text: "This browser does not support browser notifications." });
+      const text = "This browser does not support browser notifications.";
+      showToast({ tone: "error", message: text });
       return;
     }
     const permission = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
@@ -150,19 +161,20 @@ export function NotificationPreferences() {
     if (permission !== "granted") {
       localStorage.removeItem(BROWSER_NOTIFICATION_KEY);
       setBrowserEnabled(false);
-      setMessage({ tone: "error", text: permission === "denied" ? "Notifications are blocked. Allow them in your browser’s site settings." : "Permission was not granted, so browser notifications remain off." });
+      const text = permission === "denied" ? "Notifications are blocked. Allow them in your browser’s site settings." : "Permission was not granted, so browser notifications remain off.";
+      showToast({ tone: "error", message: text });
       return;
     }
     localStorage.setItem(BROWSER_NOTIFICATION_KEY, "enabled");
     setBrowserEnabled(true);
     window.dispatchEvent(new Event(BROWSER_NOTIFICATION_CHANGE_EVENT));
-    setMessage({ tone: "success", text: "Browser notifications are on for this browser." });
+    const text = "Browser notifications are on for this browser.";
+    showToast({ tone: "success", message: text });
   }
 
   return (
     <section className="settings-panel notification-preferences" aria-labelledby="notification-preferences-heading">
       <header><div><h2 id="notification-preferences-heading">Notification preferences</h2><p>Choose how ehllo reminds you about follow-ups.</p></div></header>
-      {message ? <StatusMessage tone={message.tone}>{message.text}</StatusMessage> : null}
       <div className="preference-row">
         <span className="preference-icon"><EnvelopeSimpleIcon size={22} /></span>
         <div><h3>Email reminders</h3><p>Email me when a follow-up becomes overdue. This preference is shared with iOS and Android.</p></div>

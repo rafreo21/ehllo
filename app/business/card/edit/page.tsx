@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { ArrowRight as ArrowRightIcon } from "react-feather";
 import { Calendar as CalendarBlankIcon } from "react-feather";
@@ -168,12 +169,17 @@ const steps = [
   { label: "Review", Icon: CheckCircleIcon },
 ];
 
-function loadDraft() {
+function isCreateFlow(search = "") {
+  const params = new URLSearchParams(search);
+  return params.get("new") === "1" || params.get("mode") === "create";
+}
+
+function loadDraft(search = "") {
   if (typeof window === "undefined") return initialDraft;
   try {
     let cards = readCardLibrary(localStorage);
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("new") === "1" && cards.length < MAX_CARDS) {
+    const params = new URLSearchParams(search);
+    if (isCreateFlow(search) && cards.length < MAX_CARDS) {
       const created = createLibraryCard({
         ...initialDraft,
         id: undefined,
@@ -211,6 +217,8 @@ function loadDraft() {
 }
 
 export default function CardEditor() {
+  const searchParams = useSearchParams();
+  const searchString = searchParams.toString();
   const [draft, setDraft] = useState<CardDraft>(initialDraft);
   const [hydrated, setHydrated] = useState(false);
   const [step, setStep] = useState(0);
@@ -226,25 +234,35 @@ export default function CardEditor() {
 
   useEffect(() => {
     void hydrateCardLibraryFromServer().then(() => {
-      const loaded = loadDraft();
+      const loaded = loadDraft(searchString);
       setDraft(loaded);
       if (loaded.status === "published") {
         setPublishedFingerprint(cardPublishFingerprint(loaded));
         setSaved(true);
       }
-      const storedStep = Number(localStorage.getItem("aftermeet-card-step-v2"));
-      if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep <= 2) setStep(storedStep);
+      if (isCreateFlow(searchString)) {
+        setStep(0);
+      } else {
+        const storedStep = Number(localStorage.getItem("aftermeet-card-step-v2"));
+        if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep <= 2) setStep(storedStep);
+      }
       setHydrated(true);
     }).catch(() => {
-      const loaded = loadDraft();
+      const loaded = loadDraft(searchString);
       setDraft(loaded);
       if (loaded.status === "published") {
         setPublishedFingerprint(cardPublishFingerprint(loaded));
         setSaved(true);
+      }
+      if (isCreateFlow(searchString)) {
+        setStep(0);
+      } else {
+        const storedStep = Number(localStorage.getItem("aftermeet-card-step-v2"));
+        if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep <= 2) setStep(storedStep);
       }
       setHydrated(true);
     });
-  }, []);
+  }, [searchString]);
 
   const initials = draft.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
   const previewTheme = useMemo(() => themeSurfaceStyle(draft.theme), [draft.theme]);
@@ -395,6 +413,42 @@ export default function CardEditor() {
         </nav>
 
         <div className="creator-layout">
+          <aside className="creator-preview">
+            <div className="creator-preview-head"><span>Live preview</span><small>Updates instantly</small></div>
+            <article className="public-card">
+              <div
+                className={`card-cover ${draft.coverPhoto ? "has-cover-photo" : ""}`}
+                style={draft.coverPhoto
+                  ? { backgroundImage: `linear-gradient(rgba(22,51,0,.18), rgba(22,51,0,.18)), url(${draft.coverPhoto})`, color: "#FFFFFF" }
+                  : { background: previewTheme.backgroundGradient, color: previewTheme.color }}>
+                <div className="card-logo" style={draft.coverPhoto ? undefined : coverBadgeStyle}>
+                  {draft.companyLogo ? <img src={draft.companyLogo} alt="" /> : draft.company[0] || "A"}
+                </div>
+                <span style={draft.coverPhoto ? undefined : { color: previewTheme.color }}>{draft.company || "Your company"}</span>
+              </div>
+              <div className="card-body">
+                <div className="card-avatar">{draft.photo ? <img src={draft.photo} alt="" /> : initials}</div>
+                <h2>{draft.name || "Your name"}</h2><p className="card-role">{draft.role || "Your role"}{draft.company && ` · ${draft.company}`}</p>
+                <p className="card-bio">{draft.bio || "Your introduction will appear here."}</p>
+                <div className="card-actions"><Button fullWidth style={{ background: previewTheme.backgroundGradient }}>Save contact</Button><Button fullWidth variant="secondary">Share details</Button></div>
+                <div className="preview-methods">{draft.methods.map((method) => {
+                  const meta = methodMeta[method.type];
+                  const href = contactMethodHref(method);
+                  const content = (
+                    <>
+                      <span style={{ background: previewTheme.backgroundGradient, color: previewTheme.color }}>
+                        {PHOSPHOR_METHOD_TYPES.has(method.type) ? <meta.Icon weight="bold" color={previewTheme.color} /> : <meta.Icon color={previewTheme.color} />}
+                      </span>
+                      <p><strong>{method.label}</strong><small>{method.value}</small></p>
+                    </>
+                  );
+                  return href
+                    ? <a key={method.id} href={href} target={contactMethodOpensNewTab(href) ? "_blank" : undefined} rel={contactMethodOpensNewTab(href) ? "noreferrer" : undefined} aria-label={`${method.label}: ${meta.name}`}>{content}</a>
+                    : <div key={method.id}>{content}</div>;
+                })}</div>
+              </div>
+            </article>
+          </aside>
           <section className="creator-workspace">
             {step === 0 && (
               <div className="creator-section">
@@ -536,42 +590,6 @@ export default function CardEditor() {
             </footer>
           </section>
 
-          <aside className="creator-preview">
-            <div className="creator-preview-head"><span>Live preview</span><small>Updates instantly</small></div>
-            <article className="public-card">
-              <div
-                className={`card-cover ${draft.coverPhoto ? "has-cover-photo" : ""}`}
-                style={draft.coverPhoto
-                  ? { backgroundImage: `linear-gradient(rgba(22,51,0,.18), rgba(22,51,0,.18)), url(${draft.coverPhoto})`, color: "#FFFFFF" }
-                  : { background: previewTheme.backgroundGradient, color: previewTheme.color }}>
-                <div className="card-logo" style={draft.coverPhoto ? undefined : coverBadgeStyle}>
-                  {draft.companyLogo ? <img src={draft.companyLogo} alt="" /> : draft.company[0] || "A"}
-                </div>
-                <span style={draft.coverPhoto ? undefined : { color: previewTheme.color }}>{draft.company || "Your company"}</span>
-              </div>
-              <div className="card-body">
-                <div className="card-avatar">{draft.photo ? <img src={draft.photo} alt="" /> : initials}</div>
-                <h2>{draft.name || "Your name"}</h2><p className="card-role">{draft.role || "Your role"}{draft.company && ` · ${draft.company}`}</p>
-                <p className="card-bio">{draft.bio || "Your introduction will appear here."}</p>
-                <div className="card-actions"><Button fullWidth style={{ background: previewTheme.backgroundGradient }}>Save contact</Button><Button fullWidth variant="secondary">Share details</Button></div>
-                <div className="preview-methods">{draft.methods.map((method) => {
-                  const meta = methodMeta[method.type];
-                  const href = contactMethodHref(method);
-                  const content = (
-                    <>
-                      <span style={{ background: previewTheme.backgroundGradient, color: previewTheme.color }}>
-                        {PHOSPHOR_METHOD_TYPES.has(method.type) ? <meta.Icon weight="bold" color={previewTheme.color} /> : <meta.Icon color={previewTheme.color} />}
-                      </span>
-                      <p><strong>{method.label}</strong><small>{method.value}</small></p>
-                    </>
-                  );
-                  return href
-                    ? <a key={method.id} href={href} target={contactMethodOpensNewTab(href) ? "_blank" : undefined} rel={contactMethodOpensNewTab(href) ? "noreferrer" : undefined} aria-label={`${method.label}: ${meta.name}`}>{content}</a>
-                    : <div key={method.id}>{content}</div>;
-                })}</div>
-              </div>
-            </article>
-          </aside>
         </div>
       </section>
 

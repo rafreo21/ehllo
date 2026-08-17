@@ -7,6 +7,7 @@ import { Button } from "./Button";
 import type { Contact } from "../../lib/contacts";
 import { crmSyncRecordForContact, writeCrmSyncRecord } from "../../lib/crm/sync-state";
 import type { Encounter } from "../../lib/encounters";
+import { useToast } from "./ToastContext";
 
 type CrmSyncButtonProps = {
   contact: Contact;
@@ -23,6 +24,7 @@ export function CrmSyncButton({
   variant = "secondary",
   onSynced,
 }: CrmSyncButtonProps) {
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -46,9 +48,13 @@ export function CrmSyncButton({
       };
       if (!response.ok) {
         if (payload.configured === false) {
-          setError(payload.error || "HubSpot is not configured yet.");
+          const errorMessage = payload.error || "HubSpot is not configured yet.";
+          setError(errorMessage);
+          showToast({ tone: "error", message: errorMessage });
         } else {
-          setError(payload.error || "We couldn’t sync this contact to HubSpot.");
+          const errorMessage = payload.error || "We couldn’t sync this contact to HubSpot.";
+          setError(errorMessage);
+          showToast({ tone: "error", message: errorMessage });
         }
         return;
       }
@@ -60,9 +66,13 @@ export function CrmSyncButton({
         });
         onSynced?.(payload.externalId);
       }
-      setMessage("Synced to HubSpot with meeting notes.");
+      const success = "Synced to HubSpot with meeting notes.";
+      setMessage(success);
+      showToast({ tone: "success", message: success });
     } catch {
-      setError("We couldn’t reach HubSpot. Try again in a moment.");
+      const message = "We couldn’t reach HubSpot. Try again in a moment.";
+      setError(message);
+      showToast({ tone: "error", message });
     } finally {
       setLoading(false);
     }

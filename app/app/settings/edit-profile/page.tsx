@@ -9,6 +9,7 @@ import { Button } from "../../../components/Button";
 import { FormSection, TextField } from "../../../components/FormField";
 import { PhoneField } from "../../../components/PhoneField";
 import { PageSkeleton, StatusMessage } from "../../../components/AsyncState";
+import { useToast } from "../../../components/ToastContext";
 
 type AccountProfile = {
   displayName: string;
@@ -19,6 +20,7 @@ type AccountProfile = {
 };
 
 export default function EditProfilePage() {
+  const { showToast } = useToast();
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [phone, setPhone] = useState("");
@@ -66,9 +68,13 @@ export default function EditProfilePage() {
         phone: payload.phone,
         phoneVerified: payload.phoneVerified,
       });
-      setSuccess("Your account details are saved.");
+      const text = "Your account details are saved.";
+      setSuccess(text);
+      showToast({ tone: "success", message: text });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not save your account details.");
+      const text = caught instanceof Error ? caught.message : "Could not save your account details.";
+      setError(text);
+      showToast({ tone: "error", message: text });
     } finally {
       setSaving(false);
     }

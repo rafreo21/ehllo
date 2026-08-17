@@ -16,6 +16,7 @@ import { PageSkeleton, StatusMessage } from "../../components/AsyncState";
 import { Button, LinkButton } from "../../components/Button";
 import { CaptureComingSoonModal } from "../../components/CaptureComingSoonModal";
 import { FollowUpDetailDrawer } from "../../components/FollowUpDetailDrawer";
+import { useToast } from "../../components/ToastContext";
 import { channelLabel } from "../../../lib/action-links";
 import { hydrateContactsFromServer } from "../../../lib/contacts-sync";
 import { readEncounters, updateEncounter, type Encounter, type EncounterAction } from "../../../lib/encounters";
@@ -128,6 +129,7 @@ export default function FollowupsPage() {
   const [activeEncounterId, setActiveEncounterId] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const { showToast } = useToast();
 
   async function loadEncounters(isRetry = false) {
     if (isRetry) setRetrying(true);
@@ -278,6 +280,7 @@ export default function FollowupsPage() {
     recordCompletedAction();
     setEncounters(readEncounters());
     setMessage("Follow-up marked complete.");
+    showToast({ tone: "success", message: "Follow-up marked complete." });
   }
 
   function reopenAction(encounterId: string, actionId: string) {
@@ -291,6 +294,7 @@ export default function FollowupsPage() {
     if (action) void patchAction(encounterId, action);
     setEncounters(readEncounters());
     setMessage("Follow-up moved back to Current.");
+    showToast({ tone: "success", message: "Follow-up moved back to Current." });
   }
 
   function snoozeAction(encounterId: string, actionId: string) {
@@ -307,6 +311,7 @@ export default function FollowupsPage() {
     if (action) void patchAction(encounterId, action);
     setEncounters(readEncounters());
     setMessage("Follow-up snoozed until tomorrow.");
+    showToast({ tone: "success", message: "Follow-up snoozed until tomorrow." });
   }
 
   function dismissAction(encounterId: string, actionId: string) {
@@ -321,6 +326,7 @@ export default function FollowupsPage() {
     if (action) void patchAction(encounterId, action);
     setEncounters(readEncounters());
     setMessage("Follow-up dismissed. You can reopen it from Past.");
+    showToast({ tone: "success", message: "Follow-up dismissed. You can reopen it from Past." });
   }
 
   async function patchAction(encounterId: string, action: EncounterAction) {
@@ -330,7 +336,9 @@ export default function FollowupsPage() {
       body: JSON.stringify({ action }),
     });
     if (!response.ok) {
-      setMessage("This change is saved locally but could not sync. Try again when you’re online.");
+      const message = "This change is saved locally but could not sync. Try again when you’re online.";
+      setMessage(message);
+      showToast({ tone: "error", message });
     }
   }
 
@@ -505,7 +513,7 @@ export default function FollowupsPage() {
                 </div>
             </div>
           </section>
-        ) : scope === "current" && contact ? <div className="follow-list"><article className="follow-card"><div><h2>{contact.firstName} {contact.lastName}{contact.company ? ` · ${contact.company}` : ""}</h2><p>{contact.nextAction || "Send a thoughtful follow-up based on the meeting context."}</p>{contact.context && <p><strong>Context:</strong> {contact.context}</p>}</div>{done ? <CheckCircleIcon size={42} /> : <Button onClick={() => { setDone(true); setMessage("Follow-up marked complete."); }}><PaperPlaneTiltIcon size={18} />Mark complete</Button>}</article></div> : error ? (
+            ) : scope === "current" && contact ? <div className="follow-list"><article className="follow-card"><div><h2>{contact.firstName} {contact.lastName}{contact.company ? ` · ${contact.company}` : ""}</h2><p>{contact.nextAction || "Send a thoughtful follow-up based on the meeting context."}</p>{contact.context && <p><strong>Context:</strong> {contact.context}</p>}</div>{done ? <CheckCircleIcon size={42} /> : <Button onClick={() => { setDone(true); setMessage("Follow-up marked complete."); showToast({ tone: "success", message: "Follow-up marked complete." }); }}><PaperPlaneTiltIcon size={18} />Mark complete</Button>}</article></div> : error ? (
           <div className="empty-state">
             <div>
               <span className="empty-icon"><PaperPlaneTiltIcon size={32} /></span>

@@ -4,6 +4,7 @@ import { requireAppUser } from "../../lib/auth/context";
 import { AppUserProvider } from "../components/AppUserContext";
 import { AppShell } from "../components/AppShell";
 import { AppShellChromeProvider } from "../components/AppShellChromeContext";
+import { ToastProvider } from "../components/ToastContext";
 import "./product.css";
 import "./flow.css";
 
@@ -13,7 +14,9 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
   return (
     <AppUserProvider user={user}>
       <AppShellChromeProvider>
-        <AppShell>{children}</AppShell>
+        <ToastProvider>
+          <AppShell>{children}</AppShell>
+        </ToastProvider>
       </AppShellChromeProvider>
     </AppUserProvider>
   );

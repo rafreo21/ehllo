@@ -8,6 +8,7 @@ import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import { Button } from "../../../components/Button";
 import { PageSkeleton, StatusMessage } from "../../../components/AsyncState";
 import { normalizeEmailForMatching, normalizePhoneForMatching } from "../../../../lib/contact-identity";
+import { useToast } from "../../../components/ToastContext";
 
 type InboundExchange = {
   id: string;
@@ -95,6 +96,7 @@ export default function RecentScansPage() {
   const [loading, setLoading] = useState(true);
   const [busyKey, setBusyKey] = useState("");
   const [error, setError] = useState("");
+  const { showToast } = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -151,8 +153,12 @@ export default function RecentScansPage() {
       const duplicates = group.scans.filter((item) => item.id !== exchange.id);
       await Promise.all(duplicates.map((item) => patchExchange(item.id, "dismissed").catch(() => {})));
       await load();
+      const name = `${firstName} ${rest.join(" ")}`.trim();
+      showToast({ tone: "success", message: `${name} added to your directory.` });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not save this person to your directory.");
+      const message = caught instanceof Error ? caught.message : "Could not save this person to your directory.";
+      setError(message);
+      showToast({ tone: "error", message });
     } finally {
       setBusyKey("");
     }
@@ -164,8 +170,11 @@ export default function RecentScansPage() {
     try {
       await Promise.all(group.scans.map((item) => patchExchange(item.id, "dismissed")));
       setExchanges((current) => current.filter((item) => !group.scans.some((scan) => scan.id === item.id)));
+      showToast({ tone: "success", message: "Scan group dismissed." });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not update this scan.");
+      const message = caught instanceof Error ? caught.message : "Could not update this scan.";
+      setError(message);
+      showToast({ tone: "error", message });
     } finally {
       setBusyKey("");
     }

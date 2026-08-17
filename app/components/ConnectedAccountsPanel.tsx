@@ -7,11 +7,13 @@ import { UploadCloud as CloudArrowUpIcon } from "react-feather";
 import { AlertCircle as WarningCircleIcon } from "react-feather";
 import { LinkButton } from "./Button";
 import { StatusMessage } from "./AsyncState";
+import { useToast } from "./ToastContext";
 import { GoogleProviderIcon, MicrosoftProviderIcon } from "./ProviderIcons";
 import type { ConnectedAccountStatus } from "../../lib/integrations/types";
 import { emptyConnectedAccountStatus } from "../../lib/integrations/types";
 
 export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: { stacked?: boolean; returnTo?: string } = {}) {
+  const { showToast } = useToast();
   const [status, setStatus] = useState<ConnectedAccountStatus>(emptyConnectedAccountStatus());
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -28,15 +30,32 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
       void refresh();
       const params = new URLSearchParams(window.location.search);
       const integration = params.get("integration");
-      if (integration === "google-connected") setMessage("Google connected. Gmail, Calendar, and Drive are now available wherever you choose to use them.");
-      if (integration === "microsoft-connected") setMessage("Microsoft connected. Outlook, Calendar, and OneDrive are now available wherever you choose to use them.");
-      if (integration === "google-error" || integration === "microsoft-error") setError("We couldn’t connect that account. Reconnect and approve the requested permissions.");
-      if (integration === "preview") setError("Connected accounts need a signed-in Supabase user; local preview mode cannot complete Google OAuth.");
+      if (integration === "google-connected") {
+        const text = "Google connected. Gmail, Calendar, and Drive are now available wherever you choose to use them.";
+        setMessage(text);
+        showToast({ tone: "success", message: text });
+      }
+      if (integration === "microsoft-connected") {
+        const text = "Microsoft connected. Outlook, Calendar, and OneDrive are now available wherever you choose to use them.";
+        setMessage(text);
+        showToast({ tone: "success", message: text });
+      }
+      if (integration === "google-error" || integration === "microsoft-error") {
+        const text = "We couldn’t connect that account. Reconnect and approve the requested permissions.";
+        setError(text);
+        showToast({ tone: "error", message: text });
+      }
+      if (integration === "preview") {
+        const text = "Connected accounts need a signed-in Supabase user; local preview mode cannot complete Google OAuth.";
+        setError(text);
+        showToast({ tone: "error", message: text });
+      }
       if (integration === "google-unconfigured" || integration === "microsoft-unconfigured") {
         setError("This connection has not been enabled by the ehllo workspace administrator yet.");
+        showToast({ tone: "error", message: "This connection has not been enabled by the ehllo workspace administrator yet." });
       }
     });
-  }, []);
+  }, [showToast]);
 
   async function disconnect(provider: "google" | "microsoft") {
     setError("");
@@ -44,9 +63,12 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
     const response = await fetch(`/api/integrations/${provider}`, { method: "DELETE" });
     if (!response.ok) {
       setError("We couldn’t disconnect that account.");
+      showToast({ tone: "error", message: "We couldn’t disconnect that account." });
       return;
     }
-    setMessage(`${provider === "google" ? "Google" : "Microsoft"} disconnected.`);
+    const text = `${provider === "google" ? "Google" : "Microsoft"} disconnected.`;
+    setMessage(text);
+    showToast({ tone: "success", message: text });
     await refresh();
   }
 
