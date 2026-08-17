@@ -121,7 +121,7 @@ export function PhoneInput({ label, value, onChange, placeholder }: PhoneInputPr
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing.x2 },
-  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
   row: {
     flexDirection: 'row',
     alignItems: 'stretch',
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.canvas,
   },
   flag: { fontFamily: fonts.regular, fontSize: 18 },
-  dialCode: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  dialCode: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
   input: {
     flex: 1,
     minHeight: 52,
@@ -173,6 +173,6 @@ const styles = StyleSheet.create({
   countryRowActive: { backgroundColor: colors.surfaceMuted },
   countryFlag: { fontFamily: fonts.regular, fontSize: 22, width: 30, textAlign: 'center' },
   countryCopy: { flex: 1 },
-  countryName: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '700' },
+  countryName: { color: colors.ink, fontSize: 15, fontFamily: fonts.medium, fontWeight: '700' },
   countryMeta: { marginTop: 2, color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
 });

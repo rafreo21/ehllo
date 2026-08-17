@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   copy: { flex: 1, minWidth: 0, gap: 2 },
-  title: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  title: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '800' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
   meta: { flexShrink: 1, color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
   statusTag: {
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.accent,
   },
-  statusText: { color: colors.ink, fontSize: 10, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
+  statusText: { color: colors.ink, fontSize: 10, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
   suggested: { flexShrink: 0, color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.x2 },
   checkedInNote: { color: colors.muted, fontSize: 13, fontFamily: fonts.semibold, fontWeight: '600' },

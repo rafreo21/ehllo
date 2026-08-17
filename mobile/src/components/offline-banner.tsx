@@ -45,5 +45,5 @@ const styles = StyleSheet.create({
   },
   iconWrap: { width: 44, height: 44, borderRadius: radius.round, overflow: 'hidden' },
   lottie: { width: '100%', height: '100%' },
-  text: { flex: 1, color: colors.muted, fontSize: 12, fontFamily: fonts.bold, fontWeight: '700' },
+  text: { flex: 1, color: colors.muted, fontSize: 12, fontFamily: fonts.medium, fontWeight: '700' },
 });

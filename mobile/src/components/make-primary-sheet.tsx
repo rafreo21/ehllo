@@ -39,6 +39,6 @@ export function MakePrimarySheet({
 }
 
 const styles = StyleSheet.create({
-  emphasis: { color: colors.ink, fontFamily: fonts.extrabold, fontWeight: '800' },
+  emphasis: { color: colors.ink, fontFamily: fonts.bold, fontWeight: '800' },
   actions: { gap: spacing.x2 },
 });

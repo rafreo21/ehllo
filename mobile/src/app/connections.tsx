@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 28,
     lineHeight: 30,
-    fontFamily: fonts.bold, fontWeight: '700',
+    fontFamily: fonts.medium, fontWeight: '700',
     letterSpacing: -1.1,
   },
   searchRow: {
@@ -369,11 +369,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   copy: { flex: 1, minWidth: 0, gap: 1 },
-  name: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  name: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
   subtitle: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 16 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2, marginTop: 4 },
-  source: { color: colors.inkSoft, fontSize: 10, fontFamily: fonts.bold, fontWeight: '700' },
+  source: { color: colors.inkSoft, fontSize: 10, fontFamily: fonts.medium, fontWeight: '700' },
   when: { color: colors.muted, fontFamily: fonts.regular, fontSize: 10 },
-  eventMeta: { marginTop: 2, color: colors.inkSoft, fontSize: 11, fontFamily: fonts.bold, fontWeight: '700' },
+  eventMeta: { marginTop: 2, color: colors.inkSoft, fontSize: 11, fontFamily: fonts.medium, fontWeight: '700' },
   emptySearch: { textAlign: 'center', color: colors.muted },
 });

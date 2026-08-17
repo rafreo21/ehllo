@@ -152,5 +152,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.surfaceMuted,
   },
-  fabOptionLabel: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  fabOptionLabel: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '800' },
 });

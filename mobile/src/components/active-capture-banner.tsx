@@ -142,8 +142,8 @@ const styles = StyleSheet.create({
   },
   pausedIcon: { backgroundColor: colors.inkSoft },
   copy: { minWidth: 0, flex: 1 },
-  label: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
-  duration: { color: colors.inkSoft, fontSize: 12, fontFamily: fonts.bold, fontWeight: '700', marginTop: 2 },
+  label: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '800' },
+  duration: { color: colors.inkSoft, fontSize: 12, fontFamily: fonts.medium, fontWeight: '700', marginTop: 2 },
   control: {
     width: 44,
     height: 44,

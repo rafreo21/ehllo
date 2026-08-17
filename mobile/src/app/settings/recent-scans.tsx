@@ -302,7 +302,7 @@ export default function RecentScansScreen() {
 }
 
 const styles = StyleSheet.create({
-  panelTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
+  panelTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.bold, fontWeight: '800' },
   panelCopy: { marginTop: 6, color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 19 },
   list: { gap: spacing.x2 },
   card: {
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   },
   cardCopy: { flex: 1, gap: 2 },
   cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  cardTitle: { flexShrink: 1, color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  cardTitle: { flexShrink: 1, color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
   cardDescription: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   cardDate: { color: colors.muted, fontFamily: fonts.regular, fontSize: 11 },
   cardActions: { gap: spacing.x2 },
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: colors.canvas,
   },
-  historyTimestamp: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
+  historyTimestamp: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
   savedTag: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -338,5 +338,5 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: colors.accent,
   },
-  savedTagText: { color: colors.ink, fontSize: 10, fontFamily: fonts.extrabold, fontWeight: '800' },
+  savedTagText: { color: colors.ink, fontSize: 10, fontFamily: fonts.bold, fontWeight: '800' },
 });

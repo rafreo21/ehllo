@@ -183,11 +183,11 @@ const styles = StyleSheet.create({
   label: {
     color: colors.muted,
     fontSize: 11,
-    fontFamily: fonts.extrabold, fontWeight: '800',
+    fontFamily: fonts.bold, fontWeight: '800',
     textTransform: 'uppercase',
   },
   status: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
-  statusActive: { color: colors.ink, fontFamily: fonts.bold, fontWeight: '700' },
+  statusActive: { color: colors.ink, fontFamily: fonts.medium, fontWeight: '700' },
   playButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   playButtonPressed: { opacity: 0.86 },
-  playLabel: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  playLabel: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
   progressTrack: {
     height: 6,
     borderRadius: radius.round,
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.accent,
   },
-  duration: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
+  duration: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
   compactRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -63,6 +63,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   copy: { flex: 1, gap: 2 },
-  title: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
-  body: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
+  title: { color: colors.ink, fontSize: 16, fontFamily: fonts.bold, fontWeight: '800', letterSpacing: -0.2 },
+  body: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
 });

@@ -92,10 +92,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
   },
   headingCopy: { flex: 1, gap: 2 },
-  title: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  title: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
   hint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
   row: { gap: spacing.x2 },
-  label: { color: colors.ink, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '800' },
+  label: { color: colors.ink, fontSize: 12, fontFamily: fonts.bold, fontWeight: '800' },
   choices: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2 },
   chip: {
     minHeight: 34,
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   chipSelected: { borderColor: colors.ink, backgroundColor: colors.accent },
-  chipText: { color: colors.ink, fontSize: 12, fontFamily: fonts.bold, fontWeight: '700' },
+  chipText: { color: colors.ink, fontSize: 12, fontFamily: fonts.medium, fontWeight: '700' },
   apply: {
     minHeight: 42,
     alignItems: 'center',
@@ -118,5 +118,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
   },
   applyDisabled: { opacity: 0.45 },
-  applyText: { color: colors.ink, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
+  applyText: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '800' },
 });

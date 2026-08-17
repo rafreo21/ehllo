@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   localNote: {
     color: colors.muted,
     fontSize: 12,
-    fontFamily: fonts.bold, fontWeight: '700',
+    fontFamily: fonts.medium, fontWeight: '700',
     textAlign: 'center',
   },
   grid: { gap: spacing.x3 },
@@ -198,6 +198,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.surfaceMuted,
   },
-  addTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
+  addTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.bold, fontWeight: '800' },
   addCopy: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
 });

@@ -132,5 +132,5 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   badgeActive: { backgroundColor: colors.accent },
-  label: { color: colors.white, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800', flexShrink: 1 },
+  label: { color: colors.white, fontSize: 14, fontFamily: fonts.bold, fontWeight: '800', flexShrink: 1 },
 });

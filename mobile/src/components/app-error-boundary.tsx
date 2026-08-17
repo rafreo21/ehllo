@@ -57,6 +57,6 @@ const styles = StyleSheet.create({
     padding: spacing.x5,
     backgroundColor: colors.canvas,
   },
-  title: { color: colors.ink, fontSize: 22, fontFamily: fonts.extrabold, fontWeight: '800' },
+  title: { color: colors.ink, fontSize: 22, fontFamily: fonts.bold, fontWeight: '800' },
   message: { color: colors.muted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 22 },
 });

@@ -145,9 +145,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.accentPressed,
   },
-  choiceTitleSelected: { color: colors.ink, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800' },
+  choiceTitleSelected: { color: colors.ink, fontSize: 16, fontFamily: fonts.bold, fontWeight: '800' },
   choiceTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
-  choiceTitleMuted: { color: colors.inkSoft, fontSize: 16, fontFamily: fonts.extrabold, fontWeight: '800', flexShrink: 1 },
+  choiceTitleMuted: { color: colors.inkSoft, fontSize: 16, fontFamily: fonts.bold, fontWeight: '800', flexShrink: 1 },
   choiceBodySelected: { color: colors.inkSoft, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   choiceBody: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   badge: {
@@ -159,6 +159,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  badgeText: { color: colors.inkSoft, fontSize: 10, fontFamily: fonts.black, fontWeight: '900', letterSpacing: 0.4 },
+  badgeText: { color: colors.inkSoft, fontSize: 10, fontFamily: fonts.extrabold, fontWeight: '900', letterSpacing: 0.4 },
   continueButton: { width: '100%' },
 });

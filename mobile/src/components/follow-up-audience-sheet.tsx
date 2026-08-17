@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.82 },
   personCopy: { flex: 1, gap: 2 },
-  personName: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  personName: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
   personEmail: { color: colors.muted, fontSize: 12, fontFamily: fonts.semibold, fontWeight: '600' },
   radio: {
     width: 18,

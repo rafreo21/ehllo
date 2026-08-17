@@ -306,9 +306,9 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: spacing.x3 + 56 + spacing.x4 },
   header: { gap: spacing.x3 },
   title: { fontFamily: fonts.regular, fontSize: 30, lineHeight: 32 },
-  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
-  rowTitle: { color: colors.ink, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
-  value: { marginTop: 8, color: colors.ink, fontSize: 17, fontFamily: fonts.extrabold, fontWeight: '800' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  rowTitle: { color: colors.ink, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  value: { marginTop: 8, color: colors.ink, fontSize: 17, fontFamily: fonts.bold, fontWeight: '800' },
   hint: { marginTop: 5, color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
   linkPanel: {
     minHeight: 72,
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   recordingOptionActive: { borderColor: colors.ink, backgroundColor: colors.surfaceMuted },
   recordingOptionCopy: { flex: 1, minWidth: 0 },
-  recordingOptionLabel: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  recordingOptionLabel: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '800' },
   recordingOptionDetail: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
   recordingOptionRadio: {
     width: 20,

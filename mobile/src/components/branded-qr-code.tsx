@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   placeholder: {
     color: colors.muted,
     fontSize: 12,
-    fontFamily: fonts.extrabold, fontWeight: '800',
+    fontFamily: fonts.bold, fontWeight: '800',
   },
   errorFrame: {
     alignItems: 'center',

@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     gap: spacing.x3,
   },
   toggleCopy: { flex: 1, gap: 2 },
-  title: { color: colors.ink, fontSize: 15, fontFamily: fonts.extrabold, fontWeight: '800' },
+  title: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
   hint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
   input: {
     minHeight: 48,

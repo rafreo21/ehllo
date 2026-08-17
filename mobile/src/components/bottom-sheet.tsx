@@ -195,8 +195,8 @@ const styles = StyleSheet.create({
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2, flexShrink: 1 },
   backButton: { flexShrink: 0 },
-  title: { color: colors.ink, fontSize: 18, fontFamily: fonts.extrabold, fontWeight: '800', flexShrink: 1 },
-  close: { color: colors.muted, fontSize: 14, fontFamily: fonts.bold, fontWeight: '700' },
+  title: { color: colors.ink, fontSize: 18, fontFamily: fonts.bold, fontWeight: '800', flexShrink: 1 },
+  close: { color: colors.muted, fontSize: 14, fontFamily: fonts.medium, fontWeight: '700' },
   bodyWrap: {
     flexGrow: 1,
     flexShrink: 1,

@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 28,
     lineHeight: 30,
-    fontFamily: fonts.bold, fontWeight: '700',
+    fontFamily: fonts.medium, fontWeight: '700',
     letterSpacing: -1.1,
   },
   container: { flex: 1, backgroundColor: '#000' },
@@ -259,5 +259,5 @@ const styles = StyleSheet.create({
   queuedText: { color: colors.white, textAlign: 'center', fontFamily: fonts.semibold, fontWeight: '600' },
   permission: { flex: 1, paddingHorizontal: spacing.x6, backgroundColor: colors.canvas },
   permissionContent: { flex: 1, justifyContent: 'center', gap: spacing.x4 },
-  permissionTitle: { color: colors.ink, fontSize: 28, lineHeight: 34, fontFamily: fonts.extrabold, fontWeight: '800' },
+  permissionTitle: { color: colors.ink, fontSize: 28, lineHeight: 34, fontFamily: fonts.bold, fontWeight: '800' },
 });

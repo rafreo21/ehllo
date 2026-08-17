@@ -182,8 +182,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  tabLabel: { color: colors.muted, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
-  tabLabelActive: { color: colors.ink, fontFamily: fonts.extrabold, fontWeight: '800' },
+  tabLabel: { color: colors.muted, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
+  tabLabelActive: { color: colors.ink, fontFamily: fonts.bold, fontWeight: '800' },
   tabDot: {
     width: 7,
     height: 7,
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
   fieldHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   peopleWrap: { gap: spacing.x2 },
   peopleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2 },
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  personChipText: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
+  personChipText: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
   input: {
     minHeight: 48,
     paddingHorizontal: spacing.x4,
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
   readyRow: { padding: spacing.x3, borderRadius: radius.medium, backgroundColor: colors.surfaceMuted },
   statusText: { flex: 1, gap: 2 },
-  statusTitle: { color: colors.ink, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
+  statusTitle: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '800' },
   statusCopy: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13 },
   errorBox: {
     gap: spacing.x1,
@@ -237,6 +237,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F3CACA',
   },
-  errorTitle: { color: colors.danger, fontSize: 13, fontFamily: fonts.extrabold, fontWeight: '800' },
+  errorTitle: { color: colors.danger, fontSize: 13, fontFamily: fonts.bold, fontWeight: '800' },
   errorBody: { color: colors.danger, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
 });

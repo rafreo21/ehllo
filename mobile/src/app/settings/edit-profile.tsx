@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   content: { gap: spacing.x4 },
   panel: { gap: spacing.x4 },
   field: { gap: spacing.x2 },
-  fieldLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', letterSpacing: 0.4, textTransform: 'uppercase' },
+  fieldLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', letterSpacing: 0.4, textTransform: 'uppercase' },
   fieldHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 16 },
   inputRow: {
     minHeight: 48,
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.accent,
   },
-  verifiedTagText: { color: colors.ink, fontSize: 10, fontFamily: fonts.extrabold, fontWeight: '800' },
+  verifiedTagText: { color: colors.ink, fontSize: 10, fontFamily: fonts.bold, fontWeight: '800' },
   verifyButton: {
     minHeight: 48,
     flexDirection: 'row',
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  verifyButtonText: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  verifyButtonText: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '800' },
   verifyButtonPressed: { opacity: 0.8 },
   verifyButtonDone: { backgroundColor: colors.accent, borderColor: colors.accent },
 });

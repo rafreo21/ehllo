@@ -134,7 +134,7 @@ export function FollowUpDuePicker({ dueAt, onChange, label = 'When should you do
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing.x3 },
-  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '800', textTransform: 'uppercase' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2 },
   chip: {
     paddingHorizontal: spacing.x3,
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   chipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
-  chipText: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '700' },
+  chipText: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
   chipTextActive: { color: colors.white },
   customRow: {
     flexDirection: 'row',
@@ -169,5 +169,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.x2,
   },
-  customDate: { color: colors.ink, fontSize: 14, fontFamily: fonts.extrabold, fontWeight: '800' },
+  customDate: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '800' },
 });

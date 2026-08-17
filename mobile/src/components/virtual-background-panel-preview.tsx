@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.ink,
-    fontFamily: fonts.extrabold, fontWeight: '800',
+    fontFamily: fonts.bold, fontWeight: '800',
   },
   subtitle: {
     color: colors.muted,

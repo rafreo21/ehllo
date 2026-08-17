@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 28,
     lineHeight: 30,
-    fontFamily: fonts.bold, fontWeight: '700',
+    fontFamily: fonts.medium, fontWeight: '700',
     letterSpacing: -1.1,
   },
   scroll: { flex: 1, marginTop: spacing.x2 },

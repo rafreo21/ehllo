@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   lottie: { width: '100%', height: '100%' },
-  title: { color: colors.ink, fontSize: 18, fontFamily: fonts.extrabold, fontWeight: '800', textAlign: 'center' },
+  title: { color: colors.ink, fontSize: 18, fontFamily: fonts.bold, fontWeight: '800', textAlign: 'center' },
   copy: { textAlign: 'center' },
   viewCardButton: { alignSelf: 'center' },
 });
