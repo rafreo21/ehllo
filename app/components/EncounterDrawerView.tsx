@@ -504,7 +504,7 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
                   }));
                 }}
                 aria-label={action.status === "completed" ? "Mark open" : canToggle ? "Mark complete" : "Confirm review to activate this follow-up first"}
-              ><CheckCircleIcon size={22} /></button>
+              ><CheckCircleIcon size={16} /></button>
               <div className="action-copy"><strong>{action.title}</strong><small>{actionOwnerLabel(action)}{action.dueAt ? ` · due ${action.dueAt}` : ""}</small></div>
               {editingActionId === action.id ? (
                 <div className="action-inline-editor">
