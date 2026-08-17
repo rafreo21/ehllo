@@ -20,6 +20,8 @@ import {
 } from '@/features/encounters/gather-people';
 import { colors, radius, spacing } from '@/theme/tokens';
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 type CaptureGatherStepProps = {
   draft: CaptureWizardDraft;
   onDraftChange: (changes: Partial<CaptureWizardDraft>) => void;
@@ -162,13 +164,15 @@ export function CaptureGatherStep({
       setPersonError('Enter their full name.');
       return false;
     }
-    if (!person.email.trim().includes('@')) {
-      setPersonError('Email is required.');
+    if (!EMAIL_PATTERN.test(person.email.trim())) {
+      setPersonError('Enter a valid email.');
       return false;
     }
     setPersonError('');
     return true;
   }
+
+  const canSavePerson = formPerson.name.trim().length >= 2 && EMAIL_PATTERN.test(formPerson.email.trim());
 
   function savePerson() {
     if (!validatePerson(formPerson)) return;
@@ -306,7 +310,7 @@ export function CaptureGatherStep({
         visible={manualOpen}
         title={editingPersonId ? 'Edit person' : 'Enter manually'}
         onClose={() => setManualOpen(false)}
-        footer={<Button onPress={savePerson}>{editingPersonId ? 'Save changes' : 'Add person'}</Button>}>
+        footer={<Button onPress={savePerson} disabled={!canSavePerson}>{editingPersonId ? 'Save changes' : 'Add person'}</Button>}>
         <Body>Add contact details for someone in this meeting.</Body>
         <PersonFields
           person={formPerson}
