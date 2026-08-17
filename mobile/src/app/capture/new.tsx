@@ -343,7 +343,7 @@ export default function CaptureWizardScreen() {
 
   const generateMeetingContext = useCallback(async (transcript: string, requestId?: number) => {
     const clean = normalizeTranscriptForExtraction(transcript.trim());
-    if (clean.length < 20) {
+    if (!clean) {
       setUncertainFields([]);
       setGenerationStatus('idle');
       return;
@@ -422,6 +422,10 @@ export default function CaptureWizardScreen() {
       setGenerationStatus('error');
       setGenerationError(message);
       showCaptureError(message);
+      // AI summarization genuinely failed (network/API error) — fall back to
+      // the raw transcript rather than leaving the summary blank, but only
+      // as a last resort here, not as the default path for short transcripts.
+      setDraft((current) => current.sharedSummary.trim() ? current : { ...current, sharedSummary: clean });
     } finally {
       if (activeRequest === requestRef.current) setExtracting(false);
     }
@@ -429,22 +433,17 @@ export default function CaptureWizardScreen() {
 
   const handleTranscriptFinalized = useCallback((transcriptValue: string) => {
     const clean = normalizeTranscriptForExtraction(transcriptValue.trim());
-    if (clean.length < 20) {
-      // Too short to send for AI extraction, but there's still something
-      // said — use it as the starting share summary instead of leaving the
-      // field silently blank (previously nothing populated it and nothing
-      // told the user why, so "confirm review" appeared to demand a summary
-      // out of nowhere for short recordings).
-      if (clean && !draftRef.current.sharedSummary.trim()) {
-        updateDraft({ sharedSummary: clean });
-      }
-      return;
-    }
+    if (!clean) return;
+    // Any real transcript content — even a short one — goes through actual
+    // AI summarization rather than a raw-text passthrough, so the share
+    // summary reads like a real summary instead of a transcript dump.
+    // generateMeetingContext only falls back to the raw transcript itself
+    // if that call genuinely fails.
     if (draftRef.current.step >= 1 && generationStatus !== 'generating') {
       generationKickoffRef.current = '';
       void generateMeetingContext(clean);
     }
-  }, [generateMeetingContext, generationStatus, updateDraft]);
+  }, [generateMeetingContext, generationStatus]);
 
   const transcribeFromServer = useCallback(async (uri: string, meta?: ImportRecordingMeta) => {
     if (!session?.access_token) {
@@ -971,7 +970,15 @@ export default function CaptureWizardScreen() {
     if (!draftReady || autoFinishRef.current) return;
     if (params.autoFinish !== '1') return;
     autoFinishRef.current = true;
-    void continueFromInteraction();
+    // continueFromInteraction can call setState synchronously in its first
+    // branch (showCaptureError) before its first await — deferring outside
+    // this effect's commit phase avoids the cascading-render lint error and
+    // matches React's guidance for effects that trigger state updates.
+    const timer = setTimeout(() => {
+      void continueFromInteraction();
+    }, 0);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftReady, params.autoFinish]);
 
   function continueFromContext() {

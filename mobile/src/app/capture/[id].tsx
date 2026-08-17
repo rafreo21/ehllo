@@ -22,6 +22,7 @@ import {
 } from '@/features/encounters/local-recordings';
 import {
   EncounterConflictError,
+  extractEncounterDraft,
   getEncounter,
   saveEncounter,
   uploadEncounterRecording,
@@ -159,15 +160,32 @@ export default function CaptureDetailScreen() {
       try {
         const nextEncounter = await getEncounter(session.access_token!, id);
         if (cancelled) return;
-        // A recording too short to send for AI extraction (see
-        // handleTranscriptFinalized in capture/new.tsx) can reach this
-        // review screen with an empty sharedSummary and no explanation —
-        // seed it from the transcript itself rather than leaving the user
-        // stuck typing a summary from a blank field before they can confirm.
-        const seededSummary = !nextEncounter.sharedSummary.trim() && nextEncounter.transcript.trim()
-          ? normalizeTranscriptForExtraction(nextEncounter.transcript.trim())
-          : nextEncounter.sharedSummary;
-        setEncounter({ ...nextEncounter, sharedSummary: seededSummary });
+        setEncounter(nextEncounter);
+
+        // A recording that skipped AI summarization earlier (see
+        // capture/new.tsx) can reach this review screen with an empty
+        // sharedSummary and no explanation. Generate a real summary from the
+        // saved transcript rather than leaving the field blank — raw
+        // transcript text is only used as a last resort if this call fails.
+        const cleanTranscript = normalizeTranscriptForExtraction(nextEncounter.transcript.trim());
+        if (!nextEncounter.sharedSummary.trim() && cleanTranscript) {
+          void extractEncounterDraft(session.access_token!, cleanTranscript, {
+            personName: nextEncounter.personName,
+            personEmail: nextEncounter.personEmail,
+          })
+            .then((result) => {
+              if (cancelled || !result.draft?.sharedSummary) return;
+              setEncounter((current) => current && !current.sharedSummary.trim()
+                ? { ...current, sharedSummary: result.draft!.sharedSummary }
+                : current);
+            })
+            .catch(() => {
+              if (cancelled) return;
+              setEncounter((current) => current && !current.sharedSummary.trim()
+                ? { ...current, sharedSummary: cleanTranscript }
+                : current);
+            });
+        }
 
         const uri = await resolveEncounterRecordingUri(id, nextEncounter.recording);
         if (cancelled) return;
