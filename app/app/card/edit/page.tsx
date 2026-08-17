@@ -220,12 +220,14 @@ function loadDraft(search = "") {
 export default function CardEditor() {
   const searchParams = useSearchParams();
   const searchString = searchParams.toString();
-  // Set once per hydration pass (below), not derived reactively from the
-  // live searchString on every render — the create flow replaces the URL
-  // to ?id=<new-id> right after the draft is created (so a refresh doesn't
-  // create yet another card), which would otherwise flip this back to
-  // "editing" framing mid-flow the instant that replace happens.
+  // The create flow replaces the URL to ?id=<new-id> right after the draft
+  // is created (so a refresh doesn't create yet another card). That replace
+  // re-triggers the hydration effect below with a searchString that no
+  // longer looks like a create flow, so isCreating is only ever allowed to
+  // flip true -> once a create flow is detected it stays "creating" for the
+  // rest of this page's lifetime, even once the id-based URL lands.
   const [isCreating, setIsCreating] = useState(false);
+  const setIsCreatingSticky = (value: boolean) => setIsCreating((current) => current || value);
   const [draft, setDraft] = useState<CardDraft>(initialDraft);
   const [hydrated, setHydrated] = useState(false);
   const [step, setStep] = useState(0);
@@ -249,11 +251,10 @@ export default function CardEditor() {
       }
       if (isCreateFlow(searchString)) {
         setStep(0);
-        setIsCreating(true);
+        setIsCreatingSticky(true);
       } else {
         const storedStep = Number(localStorage.getItem("aftermeet-card-step-v2"));
         if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep <= 2) setStep(storedStep);
-        setIsCreating(false);
       }
       setHydrated(true);
     }).catch(() => {
@@ -265,11 +266,10 @@ export default function CardEditor() {
       }
       if (isCreateFlow(searchString)) {
         setStep(0);
-        setIsCreating(true);
+        setIsCreatingSticky(true);
       } else {
         const storedStep = Number(localStorage.getItem("aftermeet-card-step-v2"));
         if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep <= 2) setStep(storedStep);
-        setIsCreating(false);
       }
       setHydrated(true);
     });

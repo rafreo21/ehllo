@@ -355,7 +355,12 @@ function createCard(seed: Partial<LibraryCard> = {}) {
       router.push(`/app/card/edit?id=${card.id}`);
       return;
     }
-    router.push(`/app/card/edit?mode=create&new=1`);
+    // Hard navigation: this route can be reached from an existing
+    // /app/card/edit?id=... visit without a full unmount (same page
+    // component, only the query string changes), which was letting stale
+    // "editing" state leak into the first paint of the create flow. A full
+    // page load guarantees CardEditor mounts fresh with no prior state.
+    window.location.href = `/app/card/edit?mode=create&new=1`;
   }
 
   function createCardFromTemplate(template: CardTemplate) {
