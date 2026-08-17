@@ -6,38 +6,22 @@
  *
  * 1. Create a free Resend account: https://resend.com/signup
  * 2. Create an API key: https://resend.com/api-keys
- * 3. Add to .env.local:
+ * 3. Add to .env.staging.local (or .env.production.local):
  *      SUPABASE_ACCESS_TOKEN=sbp_...
  *      RESEND_API_KEY=re_...
  *      RESEND_FROM_EMAIL=ehllo <onboarding@resend.dev>
  *    (Use a verified domain sender for production, e.g. auth@yourdomain.com)
  * 4. Run: npm run configure:supabase-auth
+ *    Targets staging by default; add `-- --production` with
+ *    EHLLO_ALLOW_PRODUCTION=1 to configure production.
  */
 
 import { randomBytes } from "node:crypto";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 
-const PROJECT_REF = process.env.SUPABASE_PROJECT_REF ?? "tgpzxgrvdmmwnodxrooh";
-const PRODUCTION_URL = "https://ehllo.io";
-const SITE_URL = (process.env.EHLLO_SITE_URL ?? process.env.AFTERMEET_SITE_URL ?? PRODUCTION_URL).replace(/\/+$/, "");
+import { selectSupabaseTarget } from "./supabase-target.mjs";
+
+const { environment, projectRef: PROJECT_REF, siteUrl: SITE_URL, read: readEnv } = selectSupabaseTarget();
 const HOOK_FUNCTION = "send-auth-email";
-
-function loadEnvFile() {
-  try {
-    return readFileSync(resolve(process.cwd(), ".env.local"), "utf8");
-  } catch {
-    return "";
-  }
-}
-
-function readEnv(name) {
-  if (process.env[name]?.trim()) return process.env[name].trim();
-  const env = loadEnvFile();
-  const match = env.match(new RegExp(`^${name}=(.+)$`, "m"));
-  if (!match) return "";
-  return match[1].trim().replace(/^["']|["']$/g, "");
-}
 
 const REDIRECT_URLS = [
   `${SITE_URL}/auth/callback`,
@@ -125,7 +109,7 @@ async function main() {
     console.error("Skip Vercel — set this up directly on Resend:");
     console.error("  1. Sign up: https://resend.com/signup");
     console.error("  2. Create API key: https://resend.com/api-keys");
-    console.error("  3. Add to .env.local: RESEND_API_KEY=re_...");
+    console.error(`  3. Add to .env.${environment}.local: RESEND_API_KEY=re_...`);
     console.error("  4. Rerun: npm run configure:supabase-auth");
     console.error("");
     console.error("For testing, RESEND_FROM_EMAIL=ehllo <onboarding@resend.dev> only delivers");
@@ -142,7 +126,8 @@ async function main() {
     console.warn("Verify a domain in Resend, update RESEND_FROM_EMAIL, or rerun with --supabase-email.\n");
   }
 
-  console.log(`Configuring Supabase Auth (${PROJECT_REF})...`);
+  console.log(`Configuring Supabase Auth for ${environment} (${PROJECT_REF})...`);
+  console.log("  site_url:", SITE_URL);
   if (useSupabaseEmail) {
     console.log("  delivery: Supabase default email (temporary beta fallback)");
   } else if (useResendSmtp) {
@@ -225,7 +210,7 @@ async function main() {
     console.log("Next: deploy the edge function if you haven't yet:");
     console.log("  npm run deploy:send-auth-email");
     console.log("");
-    console.log("Save this hook secret in .env.local if you generated a new one:");
+    console.log(`Save this hook secret in .env.${environment}.local if you generated a new one:`);
     console.log(`  SEND_EMAIL_HOOK_SECRET=${hookSecret}`);
   }
 }
