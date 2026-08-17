@@ -262,6 +262,19 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
     });
   }
 
+  // Same rationale as the floating banner: routing into the wizard with
+  // autoFinish=1 (rather than calling activeCapture.finish()/stopRecording
+  // directly) runs the same validate-then-advance path as tapping "End
+  // recording" inside the wizard, so this card's Finish button lands the
+  // user in review instead of stranding them on a stopped-but-unadvanced
+  // draft.
+  function finishCapture(encounterId: string) {
+    router.navigate({
+      pathname: '/capture/new',
+      params: { draftId: encounterId, autoFinish: '1' },
+    });
+  }
+
   async function discardDraft(encounterId: string) {
     await deleteCaptureDraft(encounterId);
     setDrafts((current) => current.filter((item) => item.encounterId !== encounterId));
@@ -384,7 +397,7 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel="Finish recording"
-                      onPress={() => void activeCapture.finish()}
+                      onPress={() => finishCapture(activeCapture.snapshot.encounterId)}
                       style={styles.activeFinish}>
                       <Stop size={16} color={colors.white} weight="fill" />
                       <Text style={styles.activeFinishText}>End</Text>

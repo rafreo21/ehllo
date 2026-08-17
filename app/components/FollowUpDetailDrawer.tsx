@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { Clock as ClockIcon } from "react-feather";
+import { Mail as MailIcon } from "react-feather";
 import { X as XIcon } from "react-feather";
 import { ActionDoButton } from "./ActionDoButton";
-import { Button, LinkButton } from "./Button";
+import { Button } from "./Button";
+import { EncounterDrawerView } from "./EncounterDrawerView";
 import { OutboundDraftPanel } from "./OutboundDraftPanel";
-import { buildActionLinkContext, channelLabel } from "../../lib/action-links";
+import { buildActionLinkContext, buildRequestEmailLink, channelLabel, resolveActionLink } from "../../lib/action-links";
 import { findContactById } from "../../lib/contacts";
 import { readEncounters, updateEncounter, writeEncounter, type Encounter, type EncounterAction } from "../../lib/encounters";
 import { supportsOutboundDraft } from "../../lib/outbound-habit";
@@ -34,6 +37,7 @@ export function FollowUpDetailDrawer({
   stacked?: boolean;
 }) {
   const [encounter, setEncounter] = useState<Encounter | null>(null);
+  const [activeEncounterId, setActiveEncounterId] = useState("");
 
   useEffect(() => {
     const cached = readEncounters().find((item) => item.id === encounterId);
@@ -85,41 +89,61 @@ export function FollowUpDetailDrawer({
     <div className={`followup-drawer-backdrop${stacked ? " followup-drawer-backdrop-stacked" : ""}`} role="presentation" onClick={onClose}>
       <div className="followup-drawer" role="dialog" aria-label="Follow-up details" onClick={(event) => event.stopPropagation()}>
         <div className="followup-drawer-header">
-          <div>
-            <h2>{action?.title ?? "Follow-up"}</h2>
-            <p>{encounter?.personName || "Meeting follow-ups"}</p>
+          {activeEncounterId ? (
+            <button type="button" className="encounter-drawer-back" onClick={() => setActiveEncounterId("")}>
+              <ArrowLeftIcon size={15} />Back
+            </button>
+          ) : (
+            <div>
+              <h2>{action?.title ?? "Follow-up"}</h2>
+              <p>{encounter?.personName || "Meeting follow-ups"}</p>
+            </div>
+          )}
+          <div className="followup-drawer-header-actions">
+            <button type="button" aria-label="Close" onClick={onClose}><XIcon size={18} /></button>
           </div>
-          <button type="button" aria-label="Close" onClick={onClose}><XIcon size={18} /></button>
         </div>
-        {encounter && action ? (
-          <div className="followup-drawer-body">
-            <div className="followup-drawer-meta">
-              <span className="inbox-channel">{channelLabel(action.channel)}</span>
-              <span className="table-date"><ClockIcon size={14} />{action.dueAt || "No due date"}</span>
+        {activeEncounterId ? (
+          <EncounterDrawerView encounterId={activeEncounterId} />
+        ) : encounter && action ? (() => {
+          const contact = encounter.contactId ? findContactById(encounter.contactId) : null;
+          const context = buildActionLinkContext(encounter, contact, action);
+          const primary = resolveActionLink(action, context);
+          const canRequest = primary.unavailableReason && context.personEmail;
+          return (
+            <div className="followup-drawer-body">
+              <div className="followup-drawer-meta">
+                <span className="inbox-channel">{channelLabel(action.channel)}</span>
+                <span className="table-date"><ClockIcon size={14} />{action.dueAt || "No due date"}</span>
+              </div>
+              <div className="followup-drawer-actions">
+                {canRequest ? (
+                  <Button
+                    size="small"
+                    variant="secondary"
+                    onClick={() => window.open(buildRequestEmailLink(context, action.channel), "_blank", "noreferrer")}
+                  ><MailIcon size={16} />Request {channelLabel(action.channel)}</Button>
+                ) : (
+                  <ActionDoButton action={action} context={context} showSecondary />
+                )}
+                <Button size="small" variant="secondary" onClick={snooze}><ClockIcon size={16} />Snooze</Button>
+                <Button size="small" variant="secondary" onClick={complete}><CheckCircleIcon size={16} />Done</Button>
+                <Button size="small" variant="secondary" onClick={dismiss}>Dismiss</Button>
+                <Button size="small" variant="secondary" onClick={() => setActiveEncounterId(encounter.id)}>View full context</Button>
+              </div>
+              {supportsOutboundDraft(action.channel) ? (
+                <OutboundDraftPanel
+                  compact
+                  encounter={encounter}
+                  action={action}
+                  context={context}
+                  contact={contact}
+                  onActionChange={(next) => applyUpdate(() => next)}
+                />
+              ) : null}
             </div>
-            <div className="followup-drawer-actions">
-              <ActionDoButton
-                action={action}
-                context={buildActionLinkContext(encounter, encounter.contactId ? findContactById(encounter.contactId) : null, action)}
-                showSecondary
-              />
-              <Button size="small" variant="secondary" onClick={snooze}><ClockIcon size={16} />Snooze</Button>
-              <Button size="small" variant="secondary" onClick={complete}><CheckCircleIcon size={16} />Done</Button>
-              <Button size="small" variant="secondary" onClick={dismiss}>Dismiss</Button>
-              <LinkButton size="small" variant="secondary" href={`/app/encounters/${encounter.id}`}>View full context</LinkButton>
-            </div>
-            {supportsOutboundDraft(action.channel) ? (
-              <OutboundDraftPanel
-                compact
-                encounter={encounter}
-                action={action}
-                context={buildActionLinkContext(encounter, encounter.contactId ? findContactById(encounter.contactId) : null, action)}
-                contact={encounter.contactId ? findContactById(encounter.contactId) : null}
-                onActionChange={(next) => applyUpdate(() => next)}
-              />
-            ) : null}
-          </div>
-        ) : null}
+          );
+        })() : null}
       </div>
     </div>
   );

@@ -143,6 +143,7 @@ export default function CaptureWizardScreen() {
     sourceId?: string;
     contactId?: string;
     openConsent?: string;
+    autoFinish?: string;
   }>();
   const { session } = useAuth();
   const insets = useAppInsets();
@@ -172,6 +173,7 @@ export default function CaptureWizardScreen() {
   const draftWriteDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dismissedErrorRef = useRef('');
   const hydratedRef = useRef(false);
+  const autoFinishRef = useRef(false);
   const [connections, setConnections] = useState<ConnectionItem[]>([]);
   const [priorMeetingCounts, setPriorMeetingCounts] = useState<Record<string, number>>({});
   const [draftReady, setDraftReady] = useState(false);
@@ -945,6 +947,21 @@ export default function CaptureWizardScreen() {
     }
     updateDraft({ step: draft.captureMode === 'recording' ? 2 : 1 });
   }
+
+  // Stopping from the floating banner (or the capture list's active-capture
+  // card) navigates here with autoFinish=1 instead of calling
+  // recorder.stopRecording directly — this makes "stop from anywhere" run
+  // the exact same validate-then-advance path as tapping "End recording" in
+  // the wizard, so the user lands in review instead of a stranded step-0
+  // draft. If people haven't been gathered yet, continueFromInteraction
+  // already surfaces "Add at least one person you met" and leaves the
+  // wizard on this step, which is exactly where they can add one.
+  useEffect(() => {
+    if (!draftReady || autoFinishRef.current) return;
+    if (params.autoFinish !== '1') return;
+    autoFinishRef.current = true;
+    void continueFromInteraction();
+  }, [draftReady, params.autoFinish]);
 
   function continueFromContext() {
     if (!draft.title.trim() && !draft.sharedSummary.trim()) {

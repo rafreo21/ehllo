@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Check as CheckIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { Copy as CopyIcon } from "react-feather";
 import { Mail as EnvelopeSimpleIcon } from "react-feather";
@@ -13,7 +14,7 @@ import { ActionDoButton } from "./ActionDoButton";
 import { Button } from "./Button";
 import { PageSkeleton } from "./AsyncState";
 import { TextAreaField, SelectField, TextField } from "./FormField";
-import { buildActionLinkContext, channelLabel, resolveActionLink, type ActionLinkContext } from "../../lib/action-links";
+import { buildActionLinkContext, buildRequestEmailLink, channelLabel, resolveActionLink, type ActionLinkContext } from "../../lib/action-links";
 import { findContactById } from "../../lib/contacts";
 import { encounterToApiBody, formatDuration, readEncounters, updateEncounter, writeEncounter, type Encounter, type EncounterAction } from "../../lib/encounters";
 import { supportsOutboundDraft } from "../../lib/outbound-habit";
@@ -222,14 +223,6 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
     return person || action.assigneeName || encounter?.personName || "Guest";
   }
 
-  function gmailComposeHref(to: string, subject: string, body: string) {
-    const params = new URLSearchParams({ view: "cm", fs: "1" });
-    if (to) params.set("to", to);
-    if (subject) params.set("su", subject);
-    if (body) params.set("body", body);
-    return `https://mail.google.com/mail/?${params.toString()}`;
-  }
-
   function renderActionCta(action: EncounterAction, context: ActionLinkContext) {
     const active = action.owner === "me" && action.status !== "completed" && action.status !== "proposed";
     const primary = resolveActionLink(action, context);
@@ -246,11 +239,7 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
     }
     if (primary.unavailableReason && context.personEmail) {
       const label = channelLabel(action.channel);
-      const href = gmailComposeHref(
-        context.personEmail,
-        `Quick ask — your ${label}`,
-        `Hi ${context.personName || "there"},\n\nCould you share your ${label} so I can follow up there?\n\nThanks!`,
-      );
+      const href = buildRequestEmailLink(context, action.channel);
       return (
         <button
           type="button"
@@ -516,7 +505,7 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
                   }));
                 }}
                 aria-label={action.status === "completed" ? "Mark open" : canToggle ? "Mark complete" : "Confirm review to activate this follow-up first"}
-              ><CheckCircleIcon size={22} /></button>
+              >{action.status === "completed" ? <CheckIcon size={16} strokeWidth={3} /> : <CheckCircleIcon size={22} />}</button>
               <div className="action-copy"><strong>{action.title}</strong><small>{actionOwnerLabel(action)}{action.dueAt ? ` · due ${action.dueAt}` : ""}</small></div>
               {editingActionId === action.id ? (
                 <div className="action-inline-editor">

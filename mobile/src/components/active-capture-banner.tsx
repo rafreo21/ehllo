@@ -42,6 +42,19 @@ export function ActiveCaptureBanner() {
     });
   }
 
+  // Stopping from here must land the user in the same review flow as
+  // tapping "End recording" inside the wizard, not just silently stop the
+  // recorder and strand them wherever they were. Routing into the wizard
+  // with autoFinish=1 (instead of calling active.finish()/stopRecording
+  // directly) lets capture/new.tsx run the exact same validate-then-advance
+  // path the in-wizard button uses.
+  function finishCapture() {
+    navigate({
+      pathname: '/capture/new',
+      params: { draftId: snapshot.encounterId, autoFinish: '1' },
+    });
+  }
+
   return (
     <View
       pointerEvents="box-none"
@@ -80,7 +93,7 @@ export function ActiveCaptureBanner() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Finish recording"
-            onPress={() => void active.finish()}
+            onPress={finishCapture}
             style={({ pressed }) => [styles.finish, pressed && styles.pressed]}>
             <Stop size={17} color={colors.accent} weight="fill" />
           </Pressable>

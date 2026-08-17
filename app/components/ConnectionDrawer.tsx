@@ -179,7 +179,7 @@ export function ConnectionDrawer({
             {!activeEncounterId ? (
               <>
                 <Button size="small" onClick={() => setAddFollowUpModalOpen(true)}><PlusIcon size={15} />Follow-up</Button>
-                <Button size="small" variant="ghost" onClick={() => void handleRemove()} disabled={deleting} aria-label="Remove connection">
+                <Button className="connections-remove-btn" size="small" variant="ghost" onClick={() => void handleRemove()} disabled={deleting} aria-label="Remove connection">
                   <TrashIcon size={16} />
                 </Button>
               </>
