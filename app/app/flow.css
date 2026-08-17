@@ -885,22 +885,48 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
 .guest-recording-actions p { max-width:460px; color:var(--p-muted); font-size:11px; line-height:1.5; text-align:right; }
 .guest-recording-expired { border:1px solid var(--p-line); background:white; }
 .guest-content-grid { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr); gap:16px; }
+.guest-content-grid { display:grid; grid-template-columns:minmax(0, 1fr); gap:16px; }
 .guest-summary { padding: 24px; border-radius: 10px; background: var(--p-sky); }
 .guest-summary span { font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .guest-summary p { margin: 10px 0 0; font-size: 18px; line-height: 1.55; }
+.guest-summary-text {
+  margin: 14px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.guest-summary-transcript {
+  margin: 14px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--p-muted);
+}
+.guest-summary-tab-content {
+  position: relative;
+  min-height: 122px;
+  display: grid;
+  gap: 8px;
+}
+.guest-summary-tab-content .guest-summary-text,
+.guest-summary-tab-content .guest-summary-transcript {
+  margin: 6px 0 0;
+}
 .guest-panel .guest-summary { padding:22px; border-radius:10px; background:var(--p-sky); }
 .guest-panel .guest-summary h2,.guest-actions h2,.guest-follow-up h2 { margin:8px 0 0; font-size:22px; letter-spacing:-.035em; }
 .guest-panel .guest-summary p { margin:12px 0 0; font-size:15px; line-height:1.6; }
+.guest-summary .review-tabs { margin-top: 4px; }
 .guest-actions { padding:22px; display:grid; align-content:start; gap:9px; border-radius:10px; background:var(--p-ice); }
 .guest-actions article { padding: 14px; display: flex; gap: 11px; align-items: center; border-radius: 8px; background: var(--p-ice); }
 .guest-actions article div { display: grid; gap: 3px; }
 .guest-actions small { color: var(--p-muted); }
 .guest-actions-empty { margin-top:12px; display:flex; align-items:center; gap:8px; color:var(--p-muted); }
 .guest-actions-empty p { margin:0; font-size:13px; }
-.guest-follow-up { padding:22px; display:grid; gap:12px; border:1px solid var(--p-line); border-radius:10px; }
+.guest-follow-up { padding:22px; display:grid; gap:10px; border:1px solid var(--p-line); border-radius:10px; }
 .guest-follow-up > p { margin:0; color:var(--p-muted); font-size:13px; }
 .guest-follow-up textarea { width:100%; min-height:86px; padding:12px; border:1px solid var(--p-line); border-radius:7px; color:var(--p-navy); background:white; font:inherit; resize:vertical; }
 .guest-follow-up textarea:focus { outline:3px solid rgba(159,232,112,.42); border-color:var(--p-navy); }
+.guest-follow-up > .guest-actions-empty { margin: 0; }
 .guest-follow-up > button { justify-self:start; }
 .guest-follow-up-label { margin-bottom:-5px; display:flex; justify-content:space-between; gap:12px; font-size:12px; font-weight:800; }
 .guest-follow-up-label span { color:var(--p-muted); font-size:11px; font-weight:500; }
@@ -909,6 +935,9 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
 .guest-follow-up-fields label { display:grid; gap:6px; color:var(--p-navy); font-size:12px; font-weight:800; }
 .guest-follow-up-fields label span { color:var(--p-muted); font-weight:500; }
 .guest-follow-up-fields select,.guest-follow-up-fields input { width:100%; min-height:42px; padding:8px 10px; border:1px solid var(--p-line); border-radius:7px; background:white; color:var(--p-navy); font:inherit; }
+.guest-follow-up-select-wrap { position:relative; display:block; }
+.guest-follow-up-select-wrap select { padding-right:32px; appearance:none; }
+.guest-follow-up-chevron { position:absolute; right:10px; top:50%; transform:translateY(-50%); color:var(--p-muted); pointer-events:none; }
 .guest-follow-up article { padding:14px; display:flex; align-items:center; gap:10px; border-radius:8px; background:var(--p-sky); }
 .guest-follow-up article div { display:grid; gap:4px; }
 .guest-commitments { display:grid; gap:14px; }
