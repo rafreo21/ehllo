@@ -122,7 +122,14 @@ export function CardProvider({ children }: PropsWithChildren) {
       setActiveCardIdState(getActiveCardId(nextCards, storedActiveId));
       try {
         const dirtyIds = JSON.parse(storedDirtyIds || '[]');
-        dirtyCardIdsRef.current = new Set(Array.isArray(dirtyIds) ? dirtyIds.filter((id): id is string => typeof id === 'string') : []);
+        const cardIds = new Set(nextCards.flatMap((card) => card.id ? [card.id] : []));
+        const validDirtyIds = Array.isArray(dirtyIds)
+          ? dirtyIds.filter((id): id is string => typeof id === 'string' && cardIds.has(id))
+          : [];
+        dirtyCardIdsRef.current = new Set(validDirtyIds);
+        if (!Array.isArray(dirtyIds) || validDirtyIds.length !== dirtyIds.length) {
+          void AsyncStorage.setItem(DIRTY_CARDS_STORAGE_KEY, JSON.stringify(validDirtyIds));
+        }
       } catch {
         dirtyCardIdsRef.current = new Set();
       }
@@ -319,7 +326,11 @@ export function CardProvider({ children }: PropsWithChildren) {
     }
   }, [persistCards, saveRemoteCard, session, setCardDirty]);
 
-  useForegroundSync(Boolean(session), sync);
+  // Wait for the local card library and its dirty-id queue to hydrate before
+  // the first sync pass. Starting earlier can fetch remote cards while the
+  // refs are still empty, then leave locally queued work untouched until a
+  // later interval (or overwrite the just-hydrated in-memory snapshot).
+  useForegroundSync(Boolean(session) && !loading, sync);
 
   const setPrimaryCard = useCallback(async (id: string) => {
     const currentCards = cardsRef.current;

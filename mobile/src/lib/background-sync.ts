@@ -32,7 +32,7 @@ export async function requestForegroundSync() {
 export function useForegroundSync(enabled: boolean, run: () => void | Promise<void>, intervalMs = 30_000) {
   const runRef = useRef(run);
   const enabledRef = useRef(enabled);
-  const runningRef = useRef(false);
+  const runningPromiseRef = useRef<Promise<void> | null>(null);
   const rerunRequestedRef = useRef(false);
   const triggerRef = useRef<() => Promise<void>>(async () => undefined);
 
@@ -45,24 +45,28 @@ export function useForegroundSync(enabled: boolean, run: () => void | Promise<vo
   }, [enabled]);
 
   useEffect(() => {
-    triggerRef.current = async () => {
-      if (!enabledRef.current) return;
-      if (runningRef.current) {
+    triggerRef.current = () => {
+      if (!enabledRef.current) return Promise.resolve();
+      if (runningPromiseRef.current) {
         rerunRequestedRef.current = true;
-        return;
+        return runningPromiseRef.current;
       }
 
-      runningRef.current = true;
-      try {
-        await runSerializedForegroundWork(() => runRef.current())
-          .catch(() => undefined);
-      } finally {
-        runningRef.current = false;
-        if (rerunRequestedRef.current && enabledRef.current) {
+      const pass = (async () => {
+        do {
           rerunRequestedRef.current = false;
-          void triggerRef.current();
+          await runSerializedForegroundWork(() => runRef.current())
+            .catch(() => undefined);
+        } while (rerunRequestedRef.current && enabledRef.current);
+      })();
+
+      const trackedPass = pass.finally(() => {
+        if (runningPromiseRef.current === trackedPass) {
+          runningPromiseRef.current = null;
         }
-      }
+      });
+      runningPromiseRef.current = trackedPass;
+      return trackedPass;
     };
   }, []);
 

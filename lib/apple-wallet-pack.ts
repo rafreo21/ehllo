@@ -26,9 +26,9 @@ async function fetchImageBuffer(url: string) {
 // Vercel's Node serverless runtime (it's a separate thing from the OpenSSL
 // library Node's own crypto module links against), which was causing this
 // to 500 on every request in production while working fine on a dev machine
-// that happens to have the CLI installed. `-nodetach` in the old openssl
-// command matches `detached: false` here — both produce an opaque signature
-// with the manifest content embedded.
+// that happens to have the CLI installed. Apple Wallet requires a detached
+// signature: manifest.json stays a separate file in the pass bundle and the
+// signature authenticates it.
 function signManifest(manifestContent: string, certs: AppleWalletCerts) {
   const signerCert = forge.pki.certificateFromPem(certs.signerCert);
   const wwdrCert = forge.pki.certificateFromPem(certs.wwdr);
@@ -53,7 +53,7 @@ function signManifest(manifestContent: string, certs: AppleWalletCerts) {
       { type: forge.pki.oids.signingTime, value: new Date() as unknown as string },
     ],
   });
-  p7.sign({ detached: false });
+  p7.sign({ detached: true });
 
   const der = forge.asn1.toDer(p7.toAsn1()).getBytes();
   return Buffer.from(der, "binary");

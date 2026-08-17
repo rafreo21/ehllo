@@ -22,8 +22,12 @@ export async function readDirtyCards(): Promise<DirtyCardEntry[]> {
     if (!Array.isArray(dirtyIds) || !dirtyIds.length) return [];
     const cards = JSON.parse(cardsRaw || '[]');
     const byId = new Map((Array.isArray(cards) ? cards as MobileCard[] : []).map((card) => [card.id, card]));
-    return dirtyIds
-      .filter((id): id is string => typeof id === 'string')
+    const validIds = dirtyIds
+      .filter((id): id is string => typeof id === 'string' && byId.has(id));
+    if (validIds.length !== dirtyIds.length) {
+      await AsyncStorage.setItem(DIRTY_CARDS_STORAGE_KEY, JSON.stringify(validIds));
+    }
+    return validIds
       .map((id) => {
         const card = byId.get(id);
         return { id, label: card?.label || card?.name || 'Untitled card' };
