@@ -58,7 +58,14 @@ jobs:
         run: npm run typecheck
 
       - name: Verify staging/production split
-        run: npm ci --ignore-scripts && npm run release:check
+        # Both checks import only Node built-ins, so they need no install. That
+        # also keeps publishing an update independent of the web app's
+        # lockfile — which is currently out of sync with its package.json
+        # (`npm ci` fails on a missing lru-cache entry) and would otherwise
+        # block every mobile release for an unrelated reason.
+        run: |
+          node scripts/check-committed-secrets.mjs
+          node scripts/check-release-readiness.mjs
 
       - uses: expo/expo-github-action@v8
         with:
