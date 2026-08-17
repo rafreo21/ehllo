@@ -741,7 +741,7 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
 .action-do-confirm-button-primary { background: var(--p-lime); }
 .action-do-confirm-button-ghost { background: transparent; color: var(--p-muted); }
 .action-list small, .muted-copy { color: var(--p-muted); }
-.action-check { width: 34px; height: 34px; flex: 0 0 34px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 999px; background: transparent; color: var(--p-muted); cursor: pointer; }
+.action-check { width: 34px; height: 34px; flex: 0 0 34px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 999px; background: var(--p-ice); color: var(--p-navy); cursor: pointer; }
 .action-check.complete { background: #4d8a2f; color: white; }
 .new-action { display: grid; gap: 16px; padding: 16px; border-radius: 10px; background: var(--p-ice); }
 .review-add-action-toggle { width: 100%; min-height: 44px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 0; border-radius: 8px; background: var(--p-ice); color: var(--p-navy); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
