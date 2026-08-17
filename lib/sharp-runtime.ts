@@ -51,6 +51,24 @@ type SharpModule = ((input?: unknown) => SharpInstance) & {
 export async function loadSharp(): Promise<SharpModule> {
   // Keep this lazy so workerd never evaluates sharp, but leave the module
   // specifier static so Vinext/Vite can include it in Vercel's server bundle.
-  const mod = (await import("sharp")) as unknown as { default: SharpModule };
-  return mod.default;
+  try {
+    const mod = (await import("sharp")) as unknown as { default?: SharpModule };
+    if (mod?.default) return mod.default;
+  } catch {
+    // Fall through to the CommonJS resolver below.
+  }
+
+  // In the deployed bundle that ESM import resolves to
+  // sharp/dist/index.mjs — a file sharp does not publish; it ships
+  // dist/index.cjs. The failure surfaced as "Cannot find module ... Did you
+  // mean to import sharp/dist/index.cjs?" and was swallowed by the caller,
+  // so every server-rendered QR quietly lost its logo and Wallet passes 500'd.
+  //
+  // Node's CommonJS resolver honours the package's own entry points, so ask
+  // it instead. copy-native-server-deps.mjs guarantees the package is on disk
+  // by this point. Imported dynamically so workerd never evaluates node:module.
+  const { createRequire } = await import("node:module");
+  const requireFromHere = createRequire(import.meta.url);
+  const mod = requireFromHere("sharp") as SharpModule & { default?: SharpModule };
+  return mod.default ?? mod;
 }
