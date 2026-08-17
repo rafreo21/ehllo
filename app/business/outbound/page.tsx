@@ -5,6 +5,7 @@ import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { Clock as ClockIcon } from "react-feather";
 import { Zap as MagicWandIcon } from "react-feather";
 import { Send as PaperPlaneTiltIcon } from "react-feather";
+import { EncounterDrawerView } from "../../components/EncounterDrawerView";
 import { BusinessShell } from "../../components/BusinessShell";
 import { OutboundDraftPanel } from "../../components/OutboundDraftPanel";
 import { PageSkeleton, StatusMessage } from "../../components/AsyncState";
@@ -32,6 +33,7 @@ export default function OutboundPage() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [habit, setHabit] = useState(readOutboundHabit());
+  const [activeEncounterId, setActiveEncounterId] = useState("");
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -157,7 +159,7 @@ export default function OutboundPage() {
                       <p>{encounter.personName || encounter.title}</p>
                       <small><ClockIcon size={14} />{action.dueAt ? `Due ${action.dueAt}` : "No due date"}</small>
                     </div>
-                    <LinkButton size="small" variant="secondary" href={`/app/encounters/${encounter.id}`}>Review context</LinkButton>
+                    <Button size="small" variant="secondary" onClick={() => setActiveEncounterId(encounter.id)}>Review context</Button>
                   </header>
                   <OutboundDraftPanel
                     encounter={encounter}
@@ -181,6 +183,17 @@ export default function OutboundPage() {
           </div>
         )}
       </div>
+
+      {activeEncounterId ? (
+        <div className="followup-drawer-backdrop" role="presentation" onClick={() => setActiveEncounterId("") }>
+          <div className="followup-drawer" role="dialog" aria-label="Review context" onClick={(event) => event.stopPropagation()}>
+            <div className="followup-drawer-header">
+              <h2>Review context</h2>
+            </div>
+            <EncounterDrawerView encounterId={activeEncounterId} />
+          </div>
+        </div>
+      ) : null}
     </BusinessShell>
   );
 }

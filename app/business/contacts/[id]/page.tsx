@@ -10,6 +10,7 @@ import { Mic as MicrophoneIcon } from "react-feather";
 import { Phone as PhoneIcon } from "react-feather";
 import { BusinessShell } from "../../../components/BusinessShell";
 import { LinkButton } from "../../../components/Button";
+import { EncounterDrawerView } from "../../../components/EncounterDrawerView";
 import { contactDisplayName, findContactById, type Contact } from "../../../../lib/contacts";
 import { CrmSyncButton } from "../../../components/CrmSyncButton";
 import { encountersForContact } from "../../../../lib/person-links";
@@ -28,6 +29,7 @@ export default function ContactDetailPage() {
   const [contactId, setContactId] = useState("");
   const [contact, setContact] = useState<Contact | null | undefined>(undefined);
   const [encounters, setEncounters] = useState<Encounter[]>([]);
+  const [activeEncounterId, setActiveEncounterId] = useState("");
 
   useEffect(() => {
     const id = window.location.pathname.split("/").filter(Boolean).at(-1) || "";
@@ -124,13 +126,19 @@ export default function ContactDetailPage() {
           {encounters.length ? (
             <div className="contact-encounter-list">
               {encounters.map((encounter) => (
-                <LinkButton key={encounter.id} variant="secondary" href={`/app/encounters/${encounter.id}`} className="contact-encounter-row">
+                <button
+                  type="button"
+                  className="contact-encounter-row"
+                  key={encounter.id}
+                  onClick={() => setActiveEncounterId(encounter.id)}
+                  style={{ border: 0, background: "transparent", width: "100%", textAlign: "left", cursor: "pointer" }}
+                >
                   <div>
                     <strong>{encounter.title || displayName}</strong>
                     <small>{formatDuration(encounter.durationSeconds)} · {encounter.status}{encounter.startedAt ? ` · ${new Date(encounter.startedAt).toLocaleDateString()}` : ""}</small>
                   </div>
                   <CalendarBlankIcon size={18} />
-                </LinkButton>
+                </button>
               ))}
             </div>
           ) : (
@@ -140,6 +148,17 @@ export default function ContactDetailPage() {
             </div>
           )}
         </section>
+
+        {activeEncounterId ? (
+          <div className="followup-drawer-backdrop" role="presentation" onClick={() => setActiveEncounterId("") }>
+            <div className="followup-drawer" role="dialog" aria-label="Review context" onClick={(event) => event.stopPropagation()}>
+              <div className="followup-drawer-header">
+                <h2>Review context</h2>
+              </div>
+              <EncounterDrawerView encounterId={activeEncounterId} />
+            </div>
+          </div>
+        ) : null}
       </div>
     </BusinessShell>
   );

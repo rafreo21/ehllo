@@ -5,6 +5,7 @@ import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { BusinessShell } from "../../../../components/BusinessShell";
 import { Button, LinkButton } from "../../../../components/Button";
+import { EncounterDrawerView } from "../../../../components/EncounterDrawerView";
 import {
   buildCampaignAttribution,
   contactsForCampaign,
@@ -27,6 +28,7 @@ import "../../../../app/flow.css";
 export default function CampaignDetailPage() {
   const [campaign, setCampaign] = useState<Campaign | null | undefined>(undefined);
   const [activeCampaignId, setActiveCampaignId] = useState("");
+  const [activeEncounterId, setActiveEncounterId] = useState("");
 
   useEffect(() => {
     const id = window.location.pathname.split("/").filter(Boolean).at(-1) || "";
@@ -134,17 +136,33 @@ export default function CampaignDetailPage() {
         <section className="activate-panel">
           <header><h2>Captured moments</h2><p>{campaignEncounters.length} encounters linked to this campaign.</p></header>
           {campaignEncounters.length ? (
-            <div className="campaign-people-list">
-              {campaignEncounters.slice(0, 8).map((encounter) => (
-                <LinkButton key={encounter.id} variant="ghost" href={`/app/encounters/${encounter.id}`}>
+                <div className="campaign-people-list">
+                  {campaignEncounters.slice(0, 8).map((encounter) => (
+                <button
+                  type="button"
+                  className="contact-encounter-row"
+                  style={{ border: 0, background: "transparent", cursor: "pointer", padding: "8px 12px", textAlign: "left", width: "auto", borderRadius: "12px" }}
+                  key={encounter.id}
+                  onClick={() => setActiveEncounterId(encounter.id)}
+                >
                   {encounter.title || encounter.personName}
-                </LinkButton>
+                </button>
               ))}
             </div>
           ) : (
             <p className="contact-detail-context">Start a capture with this campaign active to attribute the moment.</p>
           )}
         </section>
+        {activeEncounterId ? (
+          <div className="followup-drawer-backdrop" role="presentation" onClick={() => setActiveEncounterId("") }>
+            <div className="followup-drawer" role="dialog" aria-label="Review context" onClick={(event) => event.stopPropagation()}>
+              <div className="followup-drawer-header">
+                <h2>Review context</h2>
+              </div>
+              <EncounterDrawerView encounterId={activeEncounterId} />
+            </div>
+          </div>
+        ) : null}
       </div>
     </BusinessShell>
   );

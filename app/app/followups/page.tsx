@@ -11,6 +11,7 @@ import { Plus as PlusIcon } from "react-feather";
 import { SortAscendingIcon } from "@phosphor-icons/react/dist/csr/SortAscending";
 import { X as XIcon } from "react-feather";
 import { AddFollowUpModal } from "../../components/AddFollowUpModal";
+import { EncounterDrawerView } from "../../components/EncounterDrawerView";
 import { PageSkeleton, StatusMessage } from "../../components/AsyncState";
 import { Button, LinkButton } from "../../components/Button";
 import { CaptureComingSoonModal } from "../../components/CaptureComingSoonModal";
@@ -124,6 +125,7 @@ export default function FollowupsPage() {
   const [activeAction, setActiveAction] = useState<{ encounter: Encounter; action: EncounterAction } | null>(null);
   const [captureModalOpen, setCaptureModalOpen] = useState(false);
   const [addFollowUpModalOpen, setAddFollowUpModalOpen] = useState(false);
+  const [activeEncounterId, setActiveEncounterId] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
 
@@ -371,7 +373,7 @@ export default function FollowupsPage() {
                     <p>{commitment.guestName || encounter.personName || "Meeting participant"} <span className="owner-tag">Confirmed</span>{" · "}{encounter.title}</p>
                     <small>{commitment.channel ? `${commitment.channel} · ` : ""}{commitment.dueAt ? `Due ${commitment.dueAt} · ` : ""}Shared {new Date(commitment.committedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</small>
                   </div>
-                  <div className="inbox-actions"><LinkButton size="small" variant="secondary" href={`/app/encounters/${encounter.id}`}>Review context</LinkButton></div>
+                  <div className="inbox-actions"><Button size="small" variant="secondary" onClick={() => setActiveEncounterId(encounter.id)}>Review context</Button></div>
                 </article>
               ))}
             </div>
@@ -540,6 +542,17 @@ export default function FollowupsPage() {
           onClose={() => setActiveAction(null)}
           onChanged={() => setEncounters(readEncounters())}
         />
+      ) : null}
+
+      {activeEncounterId ? (
+        <div className="followup-drawer-backdrop" role="presentation" onClick={() => setActiveEncounterId("") }>
+          <div className="followup-drawer" role="dialog" aria-label="Review context" onClick={(event) => event.stopPropagation()}>
+            <div className="followup-drawer-header">
+              <h2>Review context</h2>
+            </div>
+            <EncounterDrawerView encounterId={activeEncounterId} />
+          </div>
+        </div>
       ) : null}
 
       <CaptureComingSoonModal open={captureModalOpen} onClose={() => setCaptureModalOpen(false)} />
