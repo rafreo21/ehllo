@@ -20,6 +20,7 @@ import { Button, HeaderActionButton, PageHeader, Screen } from '@/components/ui'
 import { useAuth } from '@/features/auth/auth-context';
 import { fetchAddressSuggestions, type AddressSuggestion } from '@/features/events/address-autocomplete';
 import {
+  canCheckInToEvent,
   compareEventsByStart,
   groupEventsForList,
   isEventCurrentlyHappening,
@@ -506,7 +507,7 @@ export default function EventsScreen() {
                         busy={busyId === event.id}
                         onNotGoing={(item) => void decide(item, 'not_going')}
                         onLeave={isEventCurrentlyHappening(event) ? (item) => void leaveEvent(item) : undefined}
-                        onCheckIn={isEventCurrentlyHappening(event) ? (item) => void checkInToEvent(item) : undefined}
+                        onCheckIn={canCheckInToEvent(event) ? (item) => void checkInToEvent(item) : undefined}
                         onInvite={(item) => void openInvitations(item)}
                         onManage={event.source !== 'calendar' ? (item) => { setManageError(''); setManageEvent(item); } : undefined}
                       />

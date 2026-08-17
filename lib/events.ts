@@ -84,6 +84,11 @@ export type GoingEventWindow = {
 // for the purpose of deciding whether "now" falls inside their window.
 const DEFAULT_EVENT_WINDOW_MS = 4 * 60 * 60 * 1000;
 
+// How early an explicit check-in starts counting for attribution. Long enough
+// to cover arriving before doors, short enough that it cannot reach back into
+// a different event earlier the same day.
+export const EARLY_CHECK_IN_GRACE_MS = 60 * 60 * 1000;
+
 /**
  * The passive-presence decision: given the events a user is "going" to,
  * which one (if any) is the current context right now. An event whose
@@ -110,7 +115,13 @@ export function resolveCurrentEvent(goingEvents: GoingEventWindow[], now: Date =
       const leftAt = Date.parse(event.leftAt);
       if (!Number.isNaN(leftAt)) end = Math.min(end, leftAt);
     }
-    return start <= nowMs && nowMs <= end;
+    // Checking in opens the window early. People arrive before the scheduled
+    // start and meet the most interesting person of the day in the queue, so
+    // scans made then belong to the event they are standing at — but only for
+    // an event they explicitly said they are at. Inferring the same grace for
+    // every RSVP would let a lunch invite claim the morning.
+    const windowStart = event.checkedInAt ? start - EARLY_CHECK_IN_GRACE_MS : start;
+    return windowStart <= nowMs && nowMs <= end;
   });
   if (!matches.length) return null;
 

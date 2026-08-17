@@ -52,7 +52,7 @@ export function EventCard({
   // confirmed the card says so, because the useful information at that point
   // is which event your scans are being filed under, not that a button exists.
   const checkedIn = Boolean(event.checkedInAt);
-  const showCheckInAction = variant === 'current' && Boolean(onCheckIn) && !checkedIn;
+  const showCheckInAction = Boolean(onCheckIn) && !checkedIn;
   const showGoingNotGoingAction = (variant === 'going' || variant === 'current') && Boolean(onNotGoing);
   // Independent of the action row below — this is Home's "tap the card to
   // see it in My Events" affordance. Events itself never passes onPress, so
@@ -96,6 +96,14 @@ export function EventCard({
             <ActivityIndicator color={colors.ink} />
           ) : (
             <View style={styles.actions}>
+              {showCheckInAction ? (
+                <PillButton
+                  tone="solid"
+                  accessibilityLabel="I'm here at this event"
+                  onPress={(nativeEvent) => { nativeEvent.stopPropagation(); onCheckIn?.(event); }}>
+                  I&apos;m here
+                </PillButton>
+              ) : null}
               {onInvite ? (
                 <PillButton
                   tone="outline"

@@ -235,3 +235,27 @@ describe("resolveCurrentEvent with check-in", () => {
     assert.equal(resolveCurrentEvent([skewed, meetup], now), "meetup");
   });
 });
+
+
+describe("early check-in grace", () => {
+  const start = "2026-09-04T09:00:00.000Z";
+  const end = "2026-09-04T18:00:00.000Z";
+  const base = { id: "conference", startsAt: start, endsAt: end, leftAt: null, checkedInAt: null };
+
+  it("does not treat an RSVP as presence before the event starts", () => {
+    // Doors open at 09:00; at 08:30 an un-checked-in RSVP is still just an RSVP.
+    assert.equal(resolveCurrentEvent([base], new Date("2026-09-04T08:30:00.000Z")), null);
+  });
+
+  it("counts an explicit check-in made before the scheduled start", () => {
+    // Arriving early and meeting someone in the queue should file to the event
+    // you are standing at.
+    const early = { ...base, checkedInAt: "2026-09-04T08:20:00.000Z" };
+    assert.equal(resolveCurrentEvent([early], new Date("2026-09-04T08:30:00.000Z")), "conference");
+  });
+
+  it("does not let the grace reach back further than an hour", () => {
+    const early = { ...base, checkedInAt: "2026-09-04T07:00:00.000Z" };
+    assert.equal(resolveCurrentEvent([early], new Date("2026-09-04T07:30:00.000Z")), null);
+  });
+});

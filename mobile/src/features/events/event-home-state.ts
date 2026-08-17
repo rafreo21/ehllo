@@ -39,6 +39,24 @@ export function isEventCurrentlyHappening(event: EventItem, now = new Date()): b
   return start <= now.getTime() && now.getTime() <= end;
 }
 
+/** Mirrors EARLY_CHECK_IN_GRACE_MS in lib/events.ts. */
+const EARLY_CHECK_IN_GRACE_MS = 60 * 60 * 1000;
+
+/**
+ * Whether "I'm here" should be offered yet. Deliberately wider than
+ * isEventCurrentlyHappening: arriving before the scheduled start is normal at
+ * a conference, and the button has to exist before you can press it. Checking
+ * in is what then opens the attribution window early — see resolveCurrentEvent.
+ */
+export function canCheckInToEvent(event: EventItem, now = new Date()): boolean {
+  if (event.status === 'cancelled' || event.attendanceStatus === 'not_going') return false;
+  const start = Date.parse(event.startsAt);
+  if (Number.isNaN(start)) return false;
+  const end = eventEndsAtMs(event);
+  if (Number.isNaN(end)) return false;
+  return start - EARLY_CHECK_IN_GRACE_MS <= now.getTime() && now.getTime() <= end;
+}
+
 export function isUpcomingEvent(event: EventItem, now = new Date()): boolean {
   const end = eventEndsAtMs(event);
   return !Number.isNaN(end) && end > now.getTime();
