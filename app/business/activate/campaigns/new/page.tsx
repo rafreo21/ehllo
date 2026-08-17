@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { FloppyDiskIcon } from "@phosphor-icons/react/dist/csr/FloppyDisk";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { Save as FloppyDiskIcon } from "react-feather";
 import { BusinessShell } from "../../../../components/BusinessShell";
 import { Button, LinkButton } from "../../../../components/Button";
 import { TextAreaField, TextField } from "../../../../components/FormField";
@@ -58,7 +58,7 @@ export default function NewCampaignPage() {
         </label>
         <div className="form-actions">
           <LinkButton variant="ghost" href="/business/activate/campaigns">Cancel</LinkButton>
-          <Button type="submit"><FloppyDiskIcon size={18} weight="bold" />Create campaign</Button>
+          <Button type="submit"><FloppyDiskIcon size={18} />Create campaign</Button>
         </div>
       </form>
     </BusinessShell>

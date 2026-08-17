@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { BrandMark } from "../components/BrandMark";
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export default function PrivacyPage() {
   return (
     <main className="mx-auto w-full max-w-[760px] px-6 py-16 text-[#163300]">
       <a href="/" className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-[#163300] hover:text-[#0e0f0c]">
-        <ArrowLeftIcon size={15} weight="bold" />
+        <ArrowLeftIcon size={15} />
         ehllo
       </a>
       <div className="mb-10 flex items-center gap-3">

@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
-
+import { ChevronDown as CaretDownIcon } from "react-feather";
 import { COUNTRIES, countryByIso, detectDefaultCountryIso } from "../../lib/phone/countries";
 import {
   formatPhoneE164,
@@ -64,7 +63,7 @@ export function PhoneField({
               </option>
             ))}
           </select>
-          <CaretDownIcon size={14} weight="bold" aria-hidden />
+          <CaretDownIcon size={14} aria-hidden />
         </div>
         <input
           id={id}

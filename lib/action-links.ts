@@ -101,6 +101,16 @@ function normalizeProfileUrl(value: string, platform: "instagram" | "x" | "tikto
   return `https://tiktok.com/@${handle}`;
 }
 
+function meetingOpener(eventTitle?: string) {
+  const trimmed = eventTitle?.trim();
+  return trimmed ? `It was great meeting you at ${trimmed}.` : "It was great meeting you.";
+}
+
+function followUpEmailBody(personName: string, eventTitle?: string) {
+  const greeting = personName.trim() ? `Hey ${personName.trim().split(" ")[0]},` : "Hey there,";
+  return `${greeting}\n\n${meetingOpener(eventTitle)} I'd love to stay in touch.\n\nThanks!`;
+}
+
 function linkedInSearchUrl(personName: string) {
   const query = personName.trim() || "contact";
   return `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(query)}`;
@@ -245,7 +255,22 @@ export function resolveActionLink(
         external: true,
       };
     }
-    case "email":
+    case "email": {
+      const emailSubject = "Great meeting you";
+      const emailBody = followUpEmailBody(context.personName, context.encounterTitle);
+      if (context.personEmail) {
+        return {
+          href: gmailComposeLink(context.personEmail, emailSubject, emailBody),
+          label: "Send in Gmail",
+          external: true,
+        };
+      }
+      return {
+        href: mailtoLink("", emailSubject, emailBody),
+        label: "Send email",
+        external: false,
+      };
+    }
     case "other":
     default: {
       if (context.personEmail) {

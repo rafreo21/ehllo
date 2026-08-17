@@ -1,46 +1,46 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { CalendarBlankIcon } from "@phosphor-icons/react/dist/csr/CalendarBlank";
-import { ChatCircleDotsIcon } from "@phosphor-icons/react/dist/csr/ChatCircleDots";
-import { CurrencyDollarIcon } from "@phosphor-icons/react/dist/csr/CurrencyDollar";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
-import { CaretUpIcon } from "@phosphor-icons/react/dist/csr/CaretUp";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
-import { GlobeIcon } from "@phosphor-icons/react/dist/csr/Globe";
+import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { Calendar as CalendarBlankIcon } from "react-feather";
+import { MessageCircle as ChatCircleDotsIcon } from "react-feather";
+import { DollarSign as CurrencyDollarIcon } from "react-feather";
+import { ChevronDown as CaretDownIcon } from "react-feather";
+import { ChevronUp as CaretUpIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
+import { Globe as GlobeIcon } from "react-feather";
 import { DiscordLogoIcon } from "@phosphor-icons/react/dist/csr/DiscordLogo";
-import { FacebookLogoIcon } from "@phosphor-icons/react/dist/csr/FacebookLogo";
-import { GithubLogoIcon } from "@phosphor-icons/react/dist/csr/GithubLogo";
-import { InstagramLogoIcon } from "@phosphor-icons/react/dist/csr/InstagramLogo";
-import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
-import { LinkedinLogoIcon } from "@phosphor-icons/react/dist/csr/LinkedinLogo";
-import { MapPinIcon } from "@phosphor-icons/react/dist/csr/MapPin";
+import { Facebook as FacebookLogoIcon } from "react-feather";
+import { GitHub as GithubLogoIcon } from "react-feather";
+import { Instagram as InstagramLogoIcon } from "react-feather";
+import { Link as LinkIcon } from "react-feather";
+import { Linkedin as LinkedinLogoIcon } from "react-feather";
+import { MapPin as MapPinIcon } from "react-feather";
 import { PaletteIcon } from "@phosphor-icons/react/dist/csr/Palette";
 import { PaypalLogoIcon } from "@phosphor-icons/react/dist/csr/PaypalLogo";
-import { PhoneIcon } from "@phosphor-icons/react/dist/csr/Phone";
-import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
+import { Phone as PhoneIcon } from "react-feather";
+import { Plus as PlusIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { SkypeLogoIcon } from "@phosphor-icons/react/dist/csr/SkypeLogo";
 import { SnapchatLogoIcon } from "@phosphor-icons/react/dist/csr/SnapchatLogo";
-import { StarIcon } from "@phosphor-icons/react/dist/csr/Star";
+import { Star as StarIcon } from "react-feather";
 import { TelegramLogoIcon } from "@phosphor-icons/react/dist/csr/TelegramLogo";
 import { ThreadsLogoIcon } from "@phosphor-icons/react/dist/csr/ThreadsLogo";
 import { TiktokLogoIcon } from "@phosphor-icons/react/dist/csr/TiktokLogo";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
-import { TwitchLogoIcon } from "@phosphor-icons/react/dist/csr/TwitchLogo";
-import { UserCircleIcon } from "@phosphor-icons/react/dist/csr/UserCircle";
+import { Trash2 as TrashIcon } from "react-feather";
+import { Twitch as TwitchLogoIcon } from "react-feather";
+import { User as UserCircleIcon } from "react-feather";
 import { WhatsappLogoIcon } from "@phosphor-icons/react/dist/csr/WhatsappLogo";
-import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import { X as XIcon } from "react-feather";
 import { XLogoIcon } from "@phosphor-icons/react/dist/csr/XLogo";
-import { YoutubeLogoIcon } from "@phosphor-icons/react/dist/csr/YoutubeLogo";
+import { Youtube as YoutubeLogoIcon } from "react-feather";
 import { BusinessShell } from "../../../components/BusinessShell";
 import { Button, IconButton, LinkButton } from "../../../components/Button";
 import { TextAreaField, TextField } from "../../../components/FormField";
 import { PhoneField } from "../../../components/PhoneField";
-import { CheckIcon } from "@phosphor-icons/react/dist/csr/Check";
+import { Check as CheckIcon } from "react-feather";
 import { contactMethodHref, contactMethodOpensNewTab } from "../../../../lib/contact-methods";
 import { themeCoverBadgeStyle, themeForegroundColor, themeGradientCss, themeSurfaceStyle } from "../../../../lib/theme-contrast";
 import {
@@ -70,7 +70,13 @@ type CardDraft = {
   publishedAt?: string | null;
 };
 
-const methodMeta = {
+// These method types still render a Phosphor logo mark (no faithful react-feather
+// equivalent exists), so they alone keep the `weight="bold"` prop on their icon below.
+const PHOSPHOR_METHOD_TYPES = new Set<MethodType>([
+  "x", "threads", "snapchat", "tiktok", "whatsapp", "discord", "skype", "telegram", "paypal",
+]);
+
+const methodMeta: Record<MethodType, { category: string; name: string; placeholder: string; label: string; Icon: ComponentType<any> }> = {
   email: { category: "General", name: "Email", placeholder: "you@example.com", label: "Work", Icon: EnvelopeSimpleIcon },
   phone: { category: "General", name: "Phone", placeholder: "+44 7700 900000", label: "Mobile", Icon: PhoneIcon },
   website: { category: "General", name: "Company URL", placeholder: "https://yourcompany.com", label: "Visit our website", Icon: GlobeIcon },
@@ -96,7 +102,7 @@ const methodMeta = {
   paypal: { category: "Payment", name: "PayPal", placeholder: "PayPal.me URL or username", label: "Pay with PayPal", Icon: PaypalLogoIcon },
   venmo: { category: "Payment", name: "Venmo", placeholder: "Venmo username or URL", label: "Pay with Venmo", Icon: CurrencyDollarIcon },
   cashapp: { category: "Payment", name: "Cash App", placeholder: "$cashtag or URL", label: "Pay with Cash App", Icon: CurrencyDollarIcon },
-} as const;
+};
 
 const methodCategories = ["General", "Social", "Messaging", "Business", "Payment"] as const;
 const methodFieldLabels: Partial<Record<MethodType, string>> = {
@@ -243,7 +249,7 @@ export default function CardEditor() {
   const initials = draft.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
   const previewTheme = useMemo(() => themeSurfaceStyle(draft.theme), [draft.theme]);
   const coverBadgeStyle = useMemo(() => themeCoverBadgeStyle(draft.theme), [draft.theme]);
-  const EditingMethodIcon = editing ? methodMeta[editing.type].Icon : PlusIcon;
+  const EditingMethodIcon: ComponentType<any> = editing ? methodMeta[editing.type].Icon : PlusIcon;
   const addedMethodTypes = new Set(draft.methods.map((method) => method.type));
   const stepCompletion = [
     Boolean(draft.name.trim() && draft.role.trim() && draft.theme),
@@ -372,17 +378,17 @@ export default function CardEditor() {
 
   return (
     <BusinessShell active="cards" title={draft.label || "Create your card"} subtitle="A simple three-step setup"
-      actions={<Button size="small" loading={publishing} disabled={!hasUnpublishedChanges && saved} onClick={save}>{!hasUnpublishedChanges && saved ? <CheckCircleIcon weight="fill" /> : null}{publishLabel}</Button>}>
+      actions={<Button size="small" loading={publishing} disabled={!hasUnpublishedChanges && saved} onClick={save}>{!hasUnpublishedChanges && saved ? <CheckCircleIcon /> : null}{publishLabel}</Button>}>
       <section className="card-creator">
         {hydrated && (
           <div className={`creator-publish-state ${hasUnpublishedChanges ? "is-dirty" : "is-published"}`} role="status">
-            {hasUnpublishedChanges ? <><span>Unpublished changes</span><small>Your edits are saved as a draft on this device. Publish when they are ready to appear on your public card.</small></> : <><CheckCircleIcon size={18} weight="fill" /><span>Card is published</span><small>Your public card matches this editor.</small></>}
+            {hasUnpublishedChanges ? <><span>Unpublished changes</span><small>Your edits are saved as a draft on this device. Publish when they are ready to appear on your public card.</small></> : <><CheckCircleIcon size={18} /><span>Card is published</span><small>Your public card matches this editor.</small></>}
           </div>
         )}
         <nav className="creator-steps" aria-label="Card creation progress">
           {steps.map(({ label, Icon }, index) => (
             <button key={label} aria-current={index === step ? "step" : undefined} className={index === step ? "active" : stepCompletion[index] ? "complete" : ""} onClick={() => goToStep(index)}>
-              <span>{stepCompletion[index] && index !== step ? <CheckCircleIcon weight="fill" /> : <Icon weight="bold" />}</span>
+              <span>{stepCompletion[index] && index !== step ? <CheckCircleIcon /> : <Icon />}</span>
               <small>Step {index + 1}</small><strong>{label}</strong>
             </button>
           ))}
@@ -437,11 +443,11 @@ export default function CardEditor() {
                       className={draft.theme === theme ? "selected" : ""}
                       style={{ background: themeGradientCss(theme) }}
                       onClick={() => update("theme", theme)}>
-                      {draft.theme === theme ? <CheckIcon size={16} weight="bold" color={themeForegroundColor(theme)} /> : null}
+                      {draft.theme === theme ? <CheckIcon size={16} color={themeForegroundColor(theme)} /> : null}
                     </button>
                   ))}</div>
                 </div>
-                <div className="layout-choice selected"><div><strong>Focused</strong><p>Photo, identity, introduction, then contact methods.</p></div><CheckCircleIcon size={24} weight="fill" /></div>
+                <div className="layout-choice selected"><div><strong>Focused</strong><p>Photo, identity, introduction, then contact methods.</p></div><CheckCircleIcon size={24} /></div>
                 <div className="creator-note"><PaletteIcon weight="bold" /><p>More layouts can come later. The MVP uses one responsive layout that remains readable on every phone.</p></div>
               </div>
             )}
@@ -453,7 +459,7 @@ export default function CardEditor() {
                   {draft.methods.map((method, index) => {
                     const meta = methodMeta[method.type];
                     return <article className="method-row" key={method.id}>
-                      <span><meta.Icon size={21} weight="bold" /></span>
+                      <span>{PHOSPHOR_METHOD_TYPES.has(method.type) ? <meta.Icon size={21} weight="bold" /> : <meta.Icon size={21} />}</span>
                       <button className="method-copy" onClick={() => { setMethodError(""); setEditing(method); }}><strong>{meta.name}</strong><p>{method.value}</p><small>{method.label}</small></button>
                       <div><IconButton aria-label={`Move ${meta.name} up`} disabled={index === 0} onClick={() => moveMethod(index, -1)}><CaretUpIcon /></IconButton>
                         <IconButton aria-label={`Move ${meta.name} down`} disabled={index === draft.methods.length - 1} onClick={() => moveMethod(index, 1)}><CaretDownIcon /></IconButton>
@@ -463,7 +469,7 @@ export default function CardEditor() {
                 </div>
                 {editing && <section className="method-inline-editor" aria-labelledby="method-title">
                   <header>
-                    <div><span><EditingMethodIcon weight="bold" /></span><div><small>{draft.methods.some((item) => item.id === editing.id) ? "Edit method" : "New method"}</small><h2 id="method-title">{methodMeta[editing.type].name}</h2></div></div>
+                    <div><span>{editing && PHOSPHOR_METHOD_TYPES.has(editing.type) ? <EditingMethodIcon weight="bold" /> : <EditingMethodIcon />}</span><div><small>{draft.methods.some((item) => item.id === editing.id) ? "Edit method" : "New method"}</small><h2 id="method-title">{methodMeta[editing.type].name}</h2></div></div>
                     <IconButton aria-label="Close editor" onClick={() => setEditing(null)}><XIcon /></IconButton>
                   </header>
                   <div className="method-inline-fields">
@@ -502,7 +508,7 @@ export default function CardEditor() {
                     <h3>{category}</h3><div>
                       {availableTypes.map((type) => {
                         const meta = methodMeta[type];
-                        return <button key={type} onClick={() => openMethod(type)}><meta.Icon size={24} weight="bold" /><span>{meta.name}</span><PlusIcon /></button>;
+                        return <button key={type} onClick={() => openMethod(type)}>{PHOSPHOR_METHOD_TYPES.has(type) ? <meta.Icon size={24} weight="bold" /> : <meta.Icon size={24} />}<span>{meta.name}</span><PlusIcon /></button>;
                       })}
                     </div>
                   </section>;
@@ -515,9 +521,9 @@ export default function CardEditor() {
               <div className="creator-section review-section">
                 <header><span>03 · Review</span><h1>Your card is ready to share.</h1><p>Check the preview, save it, then open the QR sharing screen.</p></header>
                 <div className="review-list">
-                  <div><CheckCircleIcon weight="fill" /><span><strong>Identity</strong><small>{draft.name || "Name needed"} · {draft.role || "Job title needed"}{draft.company ? ` · ${draft.company}` : ""}</small></span><button onClick={() => goToStep(0)}>Edit</button></div>
-                  <div><CheckCircleIcon weight="fill" /><span><strong>Images and style</strong><small>{[draft.photo && "profile", draft.companyLogo && "logo", draft.coverPhoto && "cover"].filter(Boolean).join(", ") || "No images"} · {draft.theme} · Focused layout</small></span><button onClick={() => goToStep(0)}>Edit</button></div>
-                  <div><CheckCircleIcon weight="fill" /><span><strong>Contact methods</strong><small>{draft.methods.length} added · {draft.methods.map((method) => methodMeta[method.type].name).join(", ") || "None"}</small></span><button onClick={() => goToStep(1)}>Edit</button></div>
+                  <div><CheckCircleIcon /><span><strong>Identity</strong><small>{draft.name || "Name needed"} · {draft.role || "Job title needed"}{draft.company ? ` · ${draft.company}` : ""}</small></span><button onClick={() => goToStep(0)}>Edit</button></div>
+                  <div><CheckCircleIcon /><span><strong>Images and style</strong><small>{[draft.photo && "profile", draft.companyLogo && "logo", draft.coverPhoto && "cover"].filter(Boolean).join(", ") || "No images"} · {draft.theme} · Focused layout</small></span><button onClick={() => goToStep(0)}>Edit</button></div>
+                  <div><CheckCircleIcon /><span><strong>Contact methods</strong><small>{draft.methods.length} added · {draft.methods.map((method) => methodMeta[method.type].name).join(", ") || "None"}</small></span><button onClick={() => goToStep(1)}>Edit</button></div>
                 </div>
                 <LinkButton fullWidth variant="secondary" href="/business/cards"><QrCodeIcon weight="bold" /> Open card and QR</LinkButton>
               </div>
@@ -554,7 +560,7 @@ export default function CardEditor() {
                   const content = (
                     <>
                       <span style={{ background: previewTheme.backgroundGradient, color: previewTheme.color }}>
-                        <meta.Icon weight="bold" color={previewTheme.color} />
+                        {PHOSPHOR_METHOD_TYPES.has(method.type) ? <meta.Icon weight="bold" color={previewTheme.color} /> : <meta.Icon color={previewTheme.color} />}
                       </span>
                       <p><strong>{method.label}</strong><small>{method.value}</small></p>
                     </>

@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
 import { BuildingsIcon } from "@phosphor-icons/react/dist/csr/Buildings";
-import { UserIcon } from "@phosphor-icons/react/dist/csr/User";
+import { User as UserIcon } from "react-feather";
 import { Button } from "../components/Button";
 
 export function OnboardingUseCase() {
@@ -16,7 +16,7 @@ export function OnboardingUseCase() {
         <legend className="sr-only">How will you use ehllo?</legend>
         <label className="onboarding-choice selected">
           <input type="radio" name="use-case" value="personal" checked readOnly />
-          <span className="onboarding-choice-icon" aria-hidden="true"><UserIcon size={22} weight="bold" /></span>
+          <span className="onboarding-choice-icon" aria-hidden="true"><UserIcon size={22} /></span>
           <span className="onboarding-choice-copy">
             <strong>For me only</strong>
             <small>Create your card, share it at events, and remember the people you meet.</small>
@@ -31,7 +31,7 @@ export function OnboardingUseCase() {
         </div>
       </fieldset>
       <Button fullWidth type="button" onClick={continueFlow}>
-        Continue <ArrowRightIcon size={20} weight="bold" />
+        Continue <ArrowRightIcon size={20} />
       </Button>
     </div>
   );

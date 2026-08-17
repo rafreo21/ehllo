@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
 import { Button } from "../components/Button";
 import { TextField } from "../components/FormField";
 import { GoogleProviderIcon } from "../components/ProviderIcons";
@@ -71,7 +71,7 @@ export function VisitorOnboardingForm({
       />
       <p className="visitor-onboarding-copy">No card setup required. ehllo will remember the people you meet and shared meeting records.</p>
       <Button type="submit" loading={loading}>
-        {loading ? "Saving…" : "Continue to people you've met"} {!loading && <ArrowRightIcon weight="bold" />}
+        {loading ? "Saving…" : "Continue to people you've met"} {!loading && <ArrowRightIcon />}
       </Button>
     </form>
   );

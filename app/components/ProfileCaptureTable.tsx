@@ -1,8 +1,8 @@
 "use client";
 
-import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
-import { PhoneIcon } from "@phosphor-icons/react/dist/csr/Phone";
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
+import { Search as MagnifyingGlassIcon } from "react-feather";
+import { Phone as PhoneIcon } from "react-feather";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
 import { Button } from "./Button";
 import { TextField } from "./FormField";
 import { EnrichmentWaterfall } from "./EnrichmentWaterfall";
@@ -77,9 +77,9 @@ export function ProfileCaptureTable({
                 onClick={() => void onEnrich(row.enrichable!)}
               >
                 {row.enrichable === "email" ? (
-                  <><EnvelopeSimpleIcon size={15} weight="bold" />Find work email</>
+                  <><EnvelopeSimpleIcon size={15} />Find work email</>
                 ) : (
-                  <><PhoneIcon size={15} weight="bold" />Find phone</>
+                  <><PhoneIcon size={15} />Find phone</>
                 )}
               </Button>
             </div>
@@ -91,7 +91,7 @@ export function ProfileCaptureTable({
         <div className="rounded-xl bg-[#fbfdf8] p-4 sm:p-5">
           <div className="mb-4 flex items-start gap-3">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-[#e2f6d5] text-[#163300]">
-              <MagnifyingGlassIcon size={18} weight="bold" />
+              <MagnifyingGlassIcon size={18} />
             </span>
             <div>
               <p className="m-0 text-sm font-bold text-[#163300]">

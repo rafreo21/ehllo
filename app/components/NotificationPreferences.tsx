@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { BellIcon } from "@phosphor-icons/react/dist/csr/Bell";
-import { CalendarCheckIcon } from "@phosphor-icons/react/dist/csr/CalendarCheck";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { ClockCounterClockwiseIcon } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
-import { ShareNetworkIcon } from "@phosphor-icons/react/dist/csr/ShareNetwork";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
+import { useEffect, useState, type ComponentType } from "react";
+import { Bell as BellIcon } from "react-feather";
+import { Calendar as CalendarCheckIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { RotateCcw as ClockCounterClockwiseIcon } from "react-feather";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
+import { Share2 as ShareNetworkIcon } from "react-feather";
+import { Users as UsersThreeIcon } from "react-feather";
 import { HandWavingIcon } from "@phosphor-icons/react/dist/csr/HandWaving";
 import { StatusMessage } from "./AsyncState";
 
@@ -28,7 +28,9 @@ const DEFAULT_TYPE_PREFERENCES: NotificationPreferenceMap = {
   keep_in_touch: true,
 };
 
-const NOTIFICATION_TYPE_ROWS: Array<{ type: NotificationType; icon: typeof BellIcon; label: string; hint: string }> = [
+// "keep_in_touch" alone still renders a Phosphor icon (HandWaving has no
+// react-feather equivalent), so it alone keeps the `weight="bold"` prop below.
+const NOTIFICATION_TYPE_ROWS: Array<{ type: NotificationType; icon: ComponentType<any>; label: string; hint: string }> = [
   { type: "review_ready", icon: CheckCircleIcon, label: "Transcript ready", hint: "A capture is ready for your review." },
   { type: "follow_up_due", icon: CalendarCheckIcon, label: "Follow-up due", hint: "A reviewed follow-up is due today." },
   { type: "follow_up_overdue", icon: ClockCounterClockwiseIcon, label: "Follow-up overdue", hint: "A reviewed follow-up is overdue." },
@@ -162,19 +164,19 @@ export function NotificationPreferences() {
       <header><div><h2 id="notification-preferences-heading">Notification preferences</h2><p>Choose how ehllo reminds you about follow-ups.</p></div></header>
       {message ? <StatusMessage tone={message.tone}>{message.text}</StatusMessage> : null}
       <div className="preference-row">
-        <span className="preference-icon"><EnvelopeSimpleIcon size={22} weight="bold" /></span>
+        <span className="preference-icon"><EnvelopeSimpleIcon size={22} /></span>
         <div><h3>Email reminders</h3><p>Email me when a follow-up becomes overdue. This preference is shared with iOS and Android.</p></div>
         <PreferenceSwitch checked={emailEnabled} disabled={loading || emailSaving} label="Email reminders" onChange={(next) => void toggleEmail(next)} />
       </div>
       <div className="preference-row">
-        <span className="preference-icon"><BellIcon size={22} weight="bold" /></span>
+        <span className="preference-icon"><BellIcon size={22} /></span>
         <div><h3>Browser notifications</h3><p>Show due follow-up alerts in this browser while ehllo is open.</p>{browserPermission === "denied" ? <small>Blocked in browser settings</small> : browserPermission === "unsupported" ? <small>Not supported by this browser</small> : null}</div>
         <PreferenceSwitch checked={browserEnabled} disabled={browserPermission === "unsupported"} label="Browser notifications" onChange={(next) => void toggleBrowser(next)} />
       </div>
       <p className="preference-group-label">Notify me about</p>
       {NOTIFICATION_TYPE_ROWS.map((row) => (
         <div className="preference-row" key={row.type}>
-          <span className="preference-icon"><row.icon size={22} weight="bold" /></span>
+          <span className="preference-icon">{row.type === "keep_in_touch" ? <row.icon size={22} weight="bold" /> : <row.icon size={22} />}</span>
           <div><h3>{row.label}</h3><p>{row.hint}</p></div>
           <PreferenceSwitch
             checked={typePreferences[row.type]}

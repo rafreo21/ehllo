@@ -1,10 +1,10 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { DownloadSimpleIcon } from "@phosphor-icons/react/dist/csr/DownloadSimple";
-import { UploadSimpleIcon } from "@phosphor-icons/react/dist/csr/UploadSimple";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { Download as DownloadSimpleIcon } from "react-feather";
+import { Upload as UploadSimpleIcon } from "react-feather";
+import { Trash2 as TrashIcon } from "react-feather";
 import { Button } from "../../components/Button";
 import {
   createEmptyDiscoveryData,
@@ -222,7 +222,7 @@ export default function DiscoveryPage() {
   return (
     <main className="discovery-shell">
       <header className="discovery-nav">
-        <a href="/hub"><ArrowLeftIcon size={16} weight="bold" /> MVP hub</a>
+        <a href="/hub"><ArrowLeftIcon size={16} /> MVP hub</a>
         <div>
           <Button size="small" variant="secondary" onClick={exportData}><DownloadSimpleIcon size={16} /> Export JSON</Button>
           <Button size="small" variant="secondary" onClick={() => importRef.current?.click()}><UploadSimpleIcon size={16} /> Import JSON</Button>

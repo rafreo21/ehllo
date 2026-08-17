@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { ChartLineUpIcon } from "@phosphor-icons/react/dist/csr/ChartLineUp";
-import { HouseIcon } from "@phosphor-icons/react/dist/csr/House";
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
-import { ListIcon } from "@phosphor-icons/react/dist/csr/List";
-import { PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
-import { SignOutIcon } from "@phosphor-icons/react/dist/csr/SignOut";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
+import { TrendingUp as ChartLineUpIcon } from "react-feather";
+import { Home as HouseIcon } from "react-feather";
+import { CreditCard as IdentificationCardIcon } from "react-feather";
+import { List as ListIcon } from "react-feather";
+import { Send as PaperPlaneTiltIcon } from "react-feather";
+import { LogOut as SignOutIcon } from "react-feather";
+import { Users as UsersThreeIcon } from "react-feather";
 import { IconButton } from "./Button";
 import { useAppUser } from "./AppUserContext";
 import { BrandMark } from "./BrandMark";
@@ -55,7 +55,7 @@ export function BusinessShell({ active, title, subtitle, actions, children }: Bu
           <p className="nav-group-label">Business</p>
           {nav.map(([key, href, Icon, itemLabel]) => (
             <a className={active === key ? "active" : ""} href={href} key={key}>
-              <Icon size={20} weight="bold" /> {itemLabel}
+              <Icon size={20} /> {itemLabel}
             </a>
           ))}
         </nav>
@@ -65,7 +65,7 @@ export function BusinessShell({ active, title, subtitle, actions, children }: Bu
             <span>{initials || "AM"}</span>
             <div>{label}<small>{user.email}</small></div>
             <form action="/auth/signout" method="post">
-              <IconButton type="submit" aria-label="Sign out" title="Sign out"><SignOutIcon weight="bold" /></IconButton>
+              <IconButton type="submit" aria-label="Sign out" title="Sign out"><SignOutIcon /></IconButton>
             </form>
           </div>
         </div>
@@ -74,7 +74,7 @@ export function BusinessShell({ active, title, subtitle, actions, children }: Bu
       <section className="product-main">
         <header className="product-header">
           <IconButton className="menu-button" aria-label="Toggle navigation" onClick={() => setMobileNav(!mobileNav)}>
-            <ListIcon size={25} weight="bold" />
+            <ListIcon size={25} />
           </IconButton>
           <div>
             <span className="mobile-logo">ehllo Business</span>

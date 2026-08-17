@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { CloudArrowUpIcon } from "@phosphor-icons/react/dist/csr/CloudArrowUp";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { UploadCloud as CloudArrowUpIcon } from "react-feather";
+import { AlertCircle as WarningCircleIcon } from "react-feather";
 import { LinkButton } from "./Button";
 import { StatusMessage } from "./AsyncState";
 import { GoogleProviderIcon, MicrosoftProviderIcon } from "./ProviderIcons";
@@ -54,7 +54,7 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
     <section className="activate-panel">
       <header>
         <span className="step-pill">Connected accounts</span>
-        <h2><EnvelopeSimpleIcon size={22} weight="bold" /> Your connected services</h2>
+        <h2><EnvelopeSimpleIcon size={22} /> Your connected services</h2>
         <p>Connect once per provider. You stay in control of which approved messages, meetings, and recordings use each account.</p>
       </header>
 
@@ -72,7 +72,7 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
                   ["Calendar", status.google.capabilities.calendar],
                   ["Drive", status.google.capabilities.drive],
                 ] as Array<[string, boolean]>).map(([label, enabled]) => (
-                  <span className={enabled ? "enabled" : ""} key={String(label)}><CheckCircleIcon weight={enabled ? "fill" : "regular"} />{label}</span>
+                  <span className={enabled ? "enabled" : ""} key={String(label)}><CheckCircleIcon />{label}</span>
                 ))}
               </div>
             </div>
@@ -88,7 +88,7 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
               Connect Google
             </LinkButton>
           )}
-          {!status.configured.google && !status.google.connected ? <div className="connected-account-warning"><WarningCircleIcon size={17} weight="fill" /><span><strong>Setup required</strong><small>Google connection isn’t configured in this environment.</small></span></div> : null}
+          {!status.configured.google && !status.google.connected ? <div className="connected-account-warning"><WarningCircleIcon size={17} /><span><strong>Setup required</strong><small>Google connection isn’t configured in this environment.</small></span></div> : null}
         </article>
 
         <article className="connected-account-card">
@@ -104,7 +104,7 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
                   ["Calendar", status.microsoft.capabilities.calendar],
                   ["OneDrive", status.microsoft.capabilities.onedrive],
                 ] as Array<[string, boolean]>).map(([label, enabled]) => (
-                  <span className={enabled ? "enabled" : ""} key={label}><CheckCircleIcon weight={enabled ? "fill" : "regular"} />{label}</span>
+                  <span className={enabled ? "enabled" : ""} key={label}><CheckCircleIcon />{label}</span>
                 ))}
               </div>
             </div>
@@ -120,13 +120,13 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
               Connect Microsoft
             </LinkButton>
           )}
-          {!status.configured.microsoft && !status.microsoft.connected ? <div className="connected-account-warning"><WarningCircleIcon size={17} weight="fill" /><span><strong>Setup required</strong><small>Microsoft connection isn’t configured in this environment.</small></span></div> : null}
+          {!status.configured.microsoft && !status.microsoft.connected ? <div className="connected-account-warning"><WarningCircleIcon size={17} /><span><strong>Setup required</strong><small>Microsoft connection isn’t configured in this environment.</small></span></div> : null}
         </article>
       </div>
 
       {message ? <StatusMessage tone="success">{message}</StatusMessage> : null}
       {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
-      <small className="connected-account-note"><CloudArrowUpIcon size={14} weight="bold" /> Cloud storage is optional. Recordings stay local unless you choose Google Drive, OneDrive, or three-day sharing for that encounter.</small>
+      <small className="connected-account-note"><CloudArrowUpIcon size={14} /> Cloud storage is optional. Recordings stay local unless you choose Google Drive, OneDrive, or three-day sharing for that encounter.</small>
     </section>
   );
 }

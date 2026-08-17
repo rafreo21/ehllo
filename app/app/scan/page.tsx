@@ -1,14 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CameraIcon } from "@phosphor-icons/react/dist/csr/Camera";
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
-import { LinkedinLogoIcon } from "@phosphor-icons/react/dist/csr/LinkedinLogo";
-import { MicrophoneIcon } from "@phosphor-icons/react/dist/csr/Microphone";
+import { Camera as CameraIcon } from "react-feather";
+import { CreditCard as IdentificationCardIcon } from "react-feather";
+import { Linkedin as LinkedinLogoIcon } from "react-feather";
+import { Mic as MicrophoneIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { useAppShellChrome } from "../../components/AppShellChromeContext";
 import { StatusMessage } from "../../components/AsyncState";
 import { Button, LinkButton } from "../../components/Button";
+import { CaptureComingSoonModal } from "../../components/CaptureComingSoonModal";
 import { TextField } from "../../components/FormField";
 import {
   contactFromPublicCard,
@@ -105,6 +106,7 @@ export default function ScanPage() {
   const [card, setCard] = useState<PublicCard | null>(null);
   const [loadError, setLoadError] = useState("");
   const [savedContactId, setSavedContactId] = useState("");
+  const [captureModalOpen, setCaptureModalOpen] = useState(false);
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -269,7 +271,7 @@ export default function ScanPage() {
                     <>
                       <video ref={videoRef} className="scan-viewport" playsInline muted />
                       <div className="scan-viewport-overlay">
-                        <CameraIcon size={18} weight="bold" />
+                        <CameraIcon size={18} />
                         {cameraState === "starting" ? "Starting camera…" : "Hold steady over the QR code"}
                       </div>
                     </>
@@ -298,7 +300,7 @@ export default function ScanPage() {
               {mode === "camera" && cameraState !== "unsupported" ? (
                 <div className="scan-secondary-actions">
                   <Button variant="ghost" onClick={() => setMode("manual")}>Paste instead</Button>
-                  <LinkButton variant="ghost" href="/business/contacts/linkedin"><LinkedinLogoIcon size={16} weight="bold" />Add from LinkedIn</LinkButton>
+                  <LinkButton variant="ghost" href="/business/contacts/linkedin"><LinkedinLogoIcon size={16} />Add from LinkedIn</LinkButton>
                 </div>
               ) : null}
             </div>
@@ -316,16 +318,16 @@ export default function ScanPage() {
             <div className="scan-result-actions">
               {draftContact ? (
                 <Button onClick={() => saveContact(draftContact)}>
-                  <IdentificationCardIcon size={18} weight="bold" />Add to contacts
+                  <IdentificationCardIcon size={18} />Add to contacts
                 </Button>
               ) : null}
               {savedContactId ? (
                 <LinkButton variant="secondary" href={`/business/contacts/${savedContactId}`}>Open contact</LinkButton>
               ) : null}
               {draftContact ? (
-                <LinkButton variant="secondary" href={`/app/encounters/new?contact=${encodeURIComponent(draftContact.id)}`}>
-                  <MicrophoneIcon size={18} weight="fill" />Capture moment
-                </LinkButton>
+                <Button variant="secondary" onClick={() => setCaptureModalOpen(true)}>
+                  <MicrophoneIcon size={18} />Capture moment
+                </Button>
               ) : null}
               {target.type === "aftermeet_card" ? (
                 <LinkButton variant="ghost" href={`/c/${target.slug}`}>Open public card</LinkButton>
@@ -346,6 +348,8 @@ export default function ScanPage() {
           </section>
         )}
       </div>
+
+      <CaptureComingSoonModal open={captureModalOpen} onClose={() => setCaptureModalOpen(false)} />
     </>
   );
 }

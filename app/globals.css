@@ -14,7 +14,18 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 94px; }
 body { min-width: 320px; margin: 0; overflow-x: clip; background: var(--white); color: var(--navy); font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-button, input, textarea, select { font: inherit; }
+/* In @layer base (not bare CSS) so Tailwind's text-size utilities — which
+   live in a higher-priority layer — can actually override this reset.
+   Unlayered, this rule's `font: inherit` (a shorthand covering font-size)
+   silently beat every `text-xs`/`text-sm` class on every <button>, since
+   Tailwind places its utilities in @layer utilities, and unlayered CSS
+   always wins over any layered CSS regardless of source order or
+   specificity. <a>-based buttons were never affected, only <button> ones —
+   which is exactly why some buttons matched their intended size and their
+   <button>-rendered siblings never did, no matter what size prop was set. */
+@layer base {
+  button, input, textarea, select { font: inherit; }
+}
 a { color: inherit; text-decoration: none; }
 :where(a, button, input, textarea, select):focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 .nav { height: 78px; display: flex; align-items: center; justify-content: space-between; padding: 0 max(24px, 5vw); position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,.94); backdrop-filter: blur(16px); box-shadow: 0 4px 20px rgba(22,51,0,.04); }
@@ -174,13 +185,13 @@ footer a { font-size: 12px; text-decoration: underline; text-underline-offset: 5
 }
 .route-state { min-height: 100vh; padding: 24px; display: grid; place-items: center; background: #f2f5f0; color: #163300; }
 .route-state-panel, .route-error-panel { width: min(100%, 520px); padding: 32px; border-radius: 12px; background: white; box-shadow: 0 16px 50px rgba(22,51,0,.08); }
-.route-state-mark { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 8px; background: #9fe870; font-weight: 900; }
+.route-state-illustration { display: block; animation: draft-rise-in .5s ease both; }
 .route-state-lines { margin-top: 28px; display: grid; gap: 12px; }
 .route-state-lines span { height: 15px; overflow: hidden; position: relative; border-radius: 5px; background: #e6ebe3; }
 .route-state-lines span:first-child { width: 65%; height: 34px; }
 .route-state-lines span:last-child { width: 82%; }
 .route-state-lines span::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.8), transparent); animation: route-shimmer 1.2s infinite; }
-.route-error-panel h1 { margin: 26px 0 10px; font-size: clamp(36px,7vw,58px); line-height: .95; letter-spacing: -.05em; }
+.route-error-panel h1 { margin: 20px 0 8px; font-size: clamp(22px,4vw,28px); line-height: 1.15; letter-spacing: -.02em; }
 .route-error-panel p { color: #596156; line-height: 1.55; }
 .route-error-panel div { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 9px; }
 .route-error-panel button, .route-error-panel a { min-height: 42px; padding: 10px 16px; border: 0; border-radius: 6px; font: inherit; font-weight: 800; text-decoration: none; cursor: pointer; }

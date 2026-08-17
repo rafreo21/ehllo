@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowDownIcon } from "@phosphor-icons/react/dist/csr/ArrowDown";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { ArrowUpIcon } from "@phosphor-icons/react/dist/csr/ArrowUp";
-import { CheckIcon } from "@phosphor-icons/react/dist/csr/Check";
+import { ArrowDown as ArrowDownIcon } from "react-feather";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { ArrowUp as ArrowUpIcon } from "react-feather";
+import { Check as CheckIcon } from "react-feather";
 import { Button, LinkButton } from "../components/Button";
 import "./hub.css";
 
@@ -313,10 +313,10 @@ export default function HubPage() {
           <span>ehllo <small>MVP hub</small></span>
         </a>
         <div className="hub-nav-actions">
-          <a href="/"><ArrowLeftIcon size={15} weight="bold" /> Strategy</a>
+          <a href="/"><ArrowLeftIcon size={15} /> Strategy</a>
           <a href="/auth">Sign in</a>
           <a href="/app">Open app</a>
-          <LinkButton className="hub-nav-cta" size="small" href="#checklist">Checklist <ArrowDownIcon size={15} weight="bold" /></LinkButton>
+          <LinkButton className="hub-nav-cta" size="small" href="#checklist">Checklist <ArrowDownIcon size={15} /></LinkButton>
         </div>
       </header>
 
@@ -324,7 +324,7 @@ export default function HubPage() {
         <div>
           <span className="hub-kicker">Delivery control centre</span>
           <h1>Validate the problem.<br /><em>Then earn the build.</em></h1>
-          <LinkButton size="small" href="/hub/discovery">Open active discovery phase <ArrowRightIcon size={15} weight="bold" /></LinkButton>
+          <LinkButton size="small" href="/hub/discovery">Open active discovery phase <ArrowRightIcon size={15} /></LinkButton>
         </div>
         <div className="progress-card">
           <span className="hub-kicker">Status distribution</span>
@@ -341,7 +341,7 @@ export default function HubPage() {
           <h2>Validate before we build.</h2>
         </div>
         <p><strong>Current milestone:</strong> ten evidence-based customer interviews.<br /><strong>Current blocker:</strong> the segment and problem remain unvalidated.</p>
-        <LinkButton variant="ghost" href="/hub/discovery">Go to discovery <ArrowRightIcon size={16} weight="bold" /></LinkButton>
+        <LinkButton variant="ghost" href="/hub/discovery">Go to discovery <ArrowRightIcon size={16} /></LinkButton>
       </section>
 
       <section className="hub-checklist" id="checklist">
@@ -402,12 +402,12 @@ export default function HubPage() {
                     </section>
                   )}
                   {phase.id === "discovery" && (
-                    <LinkButton className="phase-workspace-link" size="small" href="/hub/discovery">Open discovery workspace <ArrowRightIcon size={15} weight="bold" /></LinkButton>
+                    <LinkButton className="phase-workspace-link" size="small" href="/hub/discovery">Open discovery workspace <ArrowRightIcon size={15} /></LinkButton>
                   )}
                   {visibleItems.map((item) => (
                     <article className={`task task-${statuses[item.id] ?? getDefaultStatus(item.id)}`} key={item.id}>
                       <span className="status-mark" aria-hidden="true">
-                        {(statuses[item.id] ?? getDefaultStatus(item.id)) === "production_ready" && <CheckIcon size={17} weight="bold" />}
+                        {(statuses[item.id] ?? getDefaultStatus(item.id)) === "production_ready" && <CheckIcon size={17} />}
                       </span>
                       <div className="task-main">
                         <span className="task-copy">
@@ -459,7 +459,7 @@ export default function HubPage() {
       <footer className="hub-footer">
         <div><span className="hub-brand-mark">A</span><strong>ehllo MVP hub</strong></div>
         <p>Keep the scope narrow. Measure real behavior. Earn every expansion.</p>
-        <a href="#checklist">Review checklist <ArrowUpIcon size={15} weight="bold" /></a>
+        <a href="#checklist">Review checklist <ArrowUpIcon size={15} /></a>
       </footer>
     </main>
   );

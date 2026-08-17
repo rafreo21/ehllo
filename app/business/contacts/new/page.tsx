@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { FloppyDiskIcon } from "@phosphor-icons/react/dist/csr/FloppyDisk";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { Save as FloppyDiskIcon } from "react-feather";
 import { BusinessShell } from "../../../components/BusinessShell";
 import { ActiveCampaignField, defaultCampaignId } from "../../../components/ActiveCampaignField";
 import { Button, LinkButton } from "../../../components/Button";
@@ -109,7 +109,7 @@ export default function NewContactPage() {
         <div className="context-box"><h3>Remember the meeting</h3><p>These private details never appear on your public card.</p></div>
         <TextAreaField label="What mattered?" hint="Private" value={form.context} onChange={(e) => update("context", e.target.value)} rows={4} placeholder="What did you discuss? What should you remember?" />
         <TextField label="Next action" value={form.nextAction} onChange={(e) => update("nextAction", e.target.value)} placeholder="e.g. Send the research deck on Monday" />
-        <div className="form-actions"><LinkButton variant="ghost" href="/business/contacts">Cancel</LinkButton><Button type="submit"><FloppyDiskIcon size={18} weight="bold" />Save contact</Button></div>
+        <div className="form-actions"><LinkButton variant="ghost" href="/business/contacts">Cancel</LinkButton><Button type="submit"><FloppyDiskIcon size={18} />Save contact</Button></div>
       </form>
     </BusinessShell>
   );

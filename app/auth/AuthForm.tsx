@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
 import { describeOtpDeliveryError } from "../../lib/auth/otp-delivery-error";
 import { appendVisitorIntentToCallback, VISITOR_DEFAULT_DESTINATION, type VisitorIntent, visitorOnboardingPath } from "../../lib/auth/visitor-intent";
 import { Button } from "../components/Button";
@@ -158,7 +158,7 @@ export function AuthForm({
   if (step === "code" && sentTo) {
     return (
       <div className="auth-success" aria-live="polite">
-        <div><CheckCircleIcon size={35} weight="fill" /></div>
+        <div><CheckCircleIcon size={35} /></div>
         <span>Code sent</span>
         <h1>Check your inbox.</h1>
         <p>We sent a 6-digit sign-in code to <strong>{sentTo}</strong>. Enter it below to continue.</p>
@@ -193,9 +193,9 @@ export function AuthForm({
       <form onSubmit={sendCode} noValidate>
         <TextField id="auth-email" label="Email address" type="email" autoComplete="email" inputMode="email"
           placeholder="you@example.com" value={email} onChange={(event) => setEmail(event.target.value)}
-          leadingIcon={<EnvelopeSimpleIcon size={21} weight="bold" />} error={error} autoFocus />
+          leadingIcon={<EnvelopeSimpleIcon size={21} />} error={error} autoFocus />
         <Button fullWidth type="submit" loading={loading} disabled={!email || Boolean(loadingProvider)}>
-          {loading ? "Sending code…" : "Continue"} {!loading && <ArrowRightIcon size={20} weight="bold" />}
+          {loading ? "Sending code…" : "Continue"} {!loading && <ArrowRightIcon size={20} />}
         </Button>
       </form>
       <div className="auth-divider"><span>or continue with</span></div>

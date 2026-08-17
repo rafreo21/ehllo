@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
+import { Calendar as CalendarBlankIcon } from "react-feather";
 import { ChevronDown as CaretDownIcon } from "react-feather";
 import { ChevronRight as CaretRightIcon } from "react-feather";
 import { ChevronUp as CaretUpIcon } from "react-feather";
@@ -15,15 +15,14 @@ import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
 import { X as XIcon } from "react-feather";
 import QRCode from "qrcode";
-import { useAppShellChrome } from "../../../components/AppShellChromeContext";
-import { StatusMessage } from "../../../components/AsyncState";
-import { Button } from "../../../components/Button";
-import { SelectField, TextField } from "../../../components/FormField";
-import { getActiveCardId, readCardLibrary } from "../../../../lib/card-library";
-import { fetchAllConnectionsMerged, filterConnections, type ConnectionItem } from "../../../../lib/connections";
-import { encounterToApiBody, writeEncounter, type Encounter } from "../../../../lib/encounters";
-import { displayFollowUpTitle, SELECTABLE_FOLLOW_UP_CHANNELS, type FollowUpChannel } from "../../../../lib/follow-up-channels";
-import { followUpDueDate } from "../../../../lib/follow-up-templates";
+import { StatusMessage } from "./AsyncState";
+import { Button } from "./Button";
+import { SelectField, TextField } from "./FormField";
+import { getActiveCardId, readCardLibrary } from "../../lib/card-library";
+import { fetchAllConnectionsMerged, filterConnections, type ConnectionItem } from "../../lib/connections";
+import { encounterToApiBody, writeEncounter, type Encounter } from "../../lib/encounters";
+import { displayFollowUpTitle, SELECTABLE_FOLLOW_UP_CHANNELS, type FollowUpChannel } from "../../lib/follow-up-channels";
+import { followUpDueDate } from "../../lib/follow-up-templates";
 
 type InboundExchange = {
   id: string;
@@ -37,16 +36,30 @@ function createId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-export default function NewFollowUpPage() {
-  const router = useRouter();
-  const params = useSearchParams();
-  const initialName = params.get("personName")?.trim() ?? "";
-  const initialEmail = params.get("personEmail")?.trim() ?? "";
-  const [personName, setPersonName] = useState(initialName);
-  const [personEmail, setPersonEmail] = useState(initialEmail);
-  const [sourceId, setSourceId] = useState(params.get("sourceId")?.trim() ?? "");
-  const [contactId, setContactId] = useState(params.get("contactId")?.trim() ?? params.get("contact")?.trim() ?? "");
-  const [exchangeId, setExchangeId] = useState(params.get("exchangeId")?.trim() ?? "");
+export type AddFollowUpPrefill = {
+  personName?: string;
+  personEmail?: string;
+  sourceId?: string;
+  contactId?: string;
+  exchangeId?: string;
+};
+
+export function AddFollowUpModal({
+  open,
+  onClose,
+  prefill,
+  onCreated,
+}: {
+  open: boolean;
+  onClose: () => void;
+  prefill?: AddFollowUpPrefill;
+  onCreated?: () => void;
+}) {
+  const [personName, setPersonName] = useState("");
+  const [personEmail, setPersonEmail] = useState("");
+  const [sourceId, setSourceId] = useState("");
+  const [contactId, setContactId] = useState("");
+  const [exchangeId, setExchangeId] = useState("");
   const [owner, setOwner] = useState<Encounter["actions"][number]["owner"]>("me");
   const [title, setTitle] = useState("");
   const [channel, setChannel] = useState<FollowUpChannel>("email");
@@ -69,6 +82,27 @@ export default function NewFollowUpPage() {
   const [loadingExchanges, setLoadingExchanges] = useState(false);
 
   useEffect(() => {
+    if (!open) return;
+    setPersonName(prefill?.personName ?? "");
+    setPersonEmail(prefill?.personEmail ?? "");
+    setSourceId(prefill?.sourceId ?? "");
+    setContactId(prefill?.contactId ?? "");
+    setExchangeId(prefill?.exchangeId ?? "");
+    setOwner("me");
+    setTitle("");
+    setChannel("email");
+    setDueAt(followUpDueDate(1));
+    setDetailOpen(false);
+    setError("");
+    setAddPersonOpen(false);
+    setPersonQuery("");
+    setManualOpen(false);
+    setQrOpen(false);
+    setScansOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  useEffect(() => {
     if (!addPersonOpen) return;
     void fetchAllConnectionsMerged().then(setConnections).catch(() => setConnections([]));
   }, [addPersonOpen]);
@@ -87,6 +121,8 @@ export default function NewFollowUpPage() {
         .catch(() => setQrSvg(""));
     });
   }, [qrOpen]);
+
+  if (!open) return null;
 
   const searchResults = personQuery.trim() ? filterConnections(connections, personQuery) : [];
 
@@ -209,89 +245,98 @@ export default function NewFollowUpPage() {
         const payload = await response.json().catch(() => ({})) as { error?: string };
         throw new Error(payload.error || "Could not sync this follow-up.");
       }
-      router.push("/app/followups");
+      setSaving(false);
+      onCreated?.();
+      onClose();
     } catch (caught) {
       setError(`${caught instanceof Error ? caught.message : "Could not sync this follow-up."} It is saved on this browser and can be retried later.`);
       setSaving(false);
     }
   }
 
-  useAppShellChrome({ backHref: "/app/followups" });
   return (
     <>
-      <div className="flow-page quick-follow-up-page">
-        <div className="flow-heading">
-          <div>
-            <h1>What needs to happen next?</h1>
-            <p>It will appear in Follow-ups, notifications, history, and this person’s timeline.</p>
-          </div>
-        </div>
-
-        {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
-
-        <form className="contact-form-card quick-follow-up-form" onSubmit={save}>
-          <button
-            type="button"
-            onClick={() => setAddPersonOpen(true)}
-            className="flex min-h-[72px] w-full items-center gap-3 rounded-[12px] border border-[#e5e9e2] bg-[#fbfdf9] px-5 py-4 text-left"
-          >
-            <span className="min-w-0 flex-1">
-              <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">Person</small>
-              {personName.trim() ? (
-                <>
-                  <strong className="block text-base text-[#163300]">{personName}</strong>
-                  {personEmail.trim() ? <span className="block text-xs text-[#6b7168]">{personEmail}</span> : null}
-                </>
-              ) : (
-                <span className="block text-sm text-[#6b7168]">Who is this follow-up for?</span>
-              )}
-            </span>
-            {personName.trim() ? <PencilSimpleIcon size={18} /> : <PlusIcon size={18} />}
-          </button>
-
-          <div className="quick-follow-up-owner">
-            <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">Owner</small>
-            <div className="flow-heading-actions" style={{ marginTop: 8 }}>
-              <Button type="button" variant={owner === "me" ? "primary" : "secondary"} size="small" onClick={() => setOwner("me")}>You</Button>
-              <Button type="button" variant={owner === "guest" ? "primary" : "secondary"} size="small" onClick={() => setOwner("guest")}>{personName.trim() || "Them"}</Button>
+      <div className="followup-drawer-backdrop" role="presentation" onClick={onClose}>
+        <div className="followup-drawer" role="dialog" aria-label="Add follow-up" onClick={(event) => event.stopPropagation()}>
+          <div className="followup-drawer-header">
+            <div>
+              <h2>What needs to happen next?</h2>
+              <p>It will appear in Follow-ups, notifications, history, and this person&rsquo;s timeline.</p>
+            </div>
+            <div className="followup-drawer-header-actions">
+              <button type="button" aria-label="Close" onClick={onClose}><XIcon size={18} /></button>
             </div>
           </div>
 
-          <div className="quick-follow-up-meta">
-            <SelectField label={`How will ${pronoun} follow up?`} value={channel} onChange={(event) => setChannel(event.target.value as FollowUpChannel)}>
-              {SELECTABLE_FOLLOW_UP_CHANNELS.map((option) => <option value={option.id} key={option.id}>{option.label}</option>)}
-            </SelectField>
-            <TextField label="Due date" type="date" value={dueAt} onChange={(event) => setDueAt(event.target.value)} />
-          </div>
+          <div className="followup-drawer-body">
+          {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
 
-          <div className="quick-follow-up-detail">
+          <form className="contact-form-card quick-follow-up-form" onSubmit={save}>
             <button
               type="button"
-              aria-expanded={detailOpen}
-              onClick={() => setDetailOpen((value) => !value)}
-              className="quick-follow-up-detail-toggle"
+              onClick={() => setAddPersonOpen(true)}
+              className="flex min-h-[72px] w-full items-center gap-3 rounded-[12px] border border-[#e5e9e2] bg-[#fbfdf9] px-5 py-4 text-left"
             >
-              <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">What do {pronoun} need to do? (optional)</small>
-              {detailOpen ? <CaretUpIcon size={16} /> : <CaretDownIcon size={16} />}
+              <span className="min-w-0 flex-1">
+                <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">Person</small>
+                {personName.trim() ? (
+                  <>
+                    <strong className="block text-base text-[#163300]">{personName}</strong>
+                    {personEmail.trim() ? <span className="block text-xs text-[#6b7168]">{personEmail}</span> : null}
+                  </>
+                ) : (
+                  <span className="block text-sm text-[#6b7168]">Who is this follow-up for?</span>
+                )}
+              </span>
+              {personName.trim() ? <PencilSimpleIcon size={18} /> : <PlusIcon size={18} />}
             </button>
-            {detailOpen ? (
-              <TextField
-                label="Next step"
-                hint="Shown in your reminders so you know what this one's about."
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="e.g. Send Sarah the revised product draft"
-              />
-            ) : null}
-          </div>
 
-          <div className="quick-follow-up-actions">
-            <Button variant="ghost" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" loading={saving}><CheckCircleIcon size={18} />Add follow-up</Button>
-          </div>
-        </form>
+            <div className="quick-follow-up-owner">
+              <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">Owner</small>
+              <div className="flow-heading-actions" style={{ marginTop: 8 }}>
+                <Button type="button" variant={owner === "me" ? "primary" : "secondary"} size="small" onClick={() => setOwner("me")}>You</Button>
+                <Button type="button" variant={owner === "guest" ? "primary" : "secondary"} size="small" onClick={() => setOwner("guest")}>{personName.trim() || "Them"}</Button>
+              </div>
+            </div>
 
-        <p className="quick-follow-up-note"><PaperPlaneTiltIcon size={16} />Nothing is sent automatically. ehllo reminds you until you complete it.</p>
+            <div className="quick-follow-up-meta">
+              <SelectField compact label={`How will ${pronoun} follow up?`} value={channel} onChange={(event) => setChannel(event.target.value as FollowUpChannel)}>
+                {SELECTABLE_FOLLOW_UP_CHANNELS.map((option) => <option value={option.id} key={option.id}>{option.label}</option>)}
+              </SelectField>
+              <TextField compact label="Due date" type="date" leadingIcon={<CalendarBlankIcon size={14} />} value={dueAt} onChange={(event) => setDueAt(event.target.value)} />
+            </div>
+
+            <div className="quick-follow-up-detail">
+              <button
+                type="button"
+                aria-expanded={detailOpen}
+                onClick={() => setDetailOpen((value) => !value)}
+                className="quick-follow-up-detail-toggle"
+              >
+                <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">What do {pronoun} need to do? (optional)</small>
+                {detailOpen ? <CaretUpIcon size={14} /> : <CaretDownIcon size={14} />}
+              </button>
+              {detailOpen ? (
+                <TextField
+                  compact
+                  label="Next step"
+                  hint="Shown in your reminders so you know what this one's about."
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="e.g. Send Sarah the revised product draft"
+                />
+              ) : null}
+            </div>
+
+            <div className="quick-follow-up-actions">
+              <Button type="button" size="small" variant="ghost" onClick={onClose}>Cancel</Button>
+              <Button type="submit" size="small" loading={saving}><CheckCircleIcon size={16} />Add follow-up</Button>
+            </div>
+          </form>
+
+          <p className="quick-follow-up-note"><PaperPlaneTiltIcon size={16} />Nothing is sent automatically. ehllo reminds you until you complete it.</p>
+          </div>
+        </div>
       </div>
 
       {addPersonOpen ? (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CloudArrowUpIcon } from "@phosphor-icons/react/dist/csr/CloudArrowUp";
+import { UploadCloud as CloudArrowUpIcon } from "react-feather";
 import { StatusMessage } from "./AsyncState";
 import { Button } from "./Button";
 import type { Contact } from "../../lib/contacts";
@@ -71,7 +71,7 @@ export function CrmSyncButton({
   return (
     <div className="crm-sync-control">
       <Button size={size} variant={variant} loading={loading} onClick={() => void syncToHubSpot()}>
-        <CloudArrowUpIcon size={16} weight="bold" />
+        <CloudArrowUpIcon size={16} />
         {existing ? "Re-sync to HubSpot" : "Sync to HubSpot"}
       </Button>
       {existing ? <small className="contact-source">Last synced {new Date(existing.syncedAt).toLocaleString()}</small> : null}

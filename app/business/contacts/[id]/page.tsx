@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { CalendarBlankIcon } from "@phosphor-icons/react/dist/csr/CalendarBlank";
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
-import { LinkedinLogoIcon } from "@phosphor-icons/react/dist/csr/LinkedinLogo";
-import { MicrophoneIcon } from "@phosphor-icons/react/dist/csr/Microphone";
-import { PhoneIcon } from "@phosphor-icons/react/dist/csr/Phone";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { Calendar as CalendarBlankIcon } from "react-feather";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
+import { CreditCard as IdentificationCardIcon } from "react-feather";
+import { Linkedin as LinkedinLogoIcon } from "react-feather";
+import { Mic as MicrophoneIcon } from "react-feather";
+import { Phone as PhoneIcon } from "react-feather";
 import { BusinessShell } from "../../../components/BusinessShell";
 import { LinkButton } from "../../../components/Button";
 import { contactDisplayName, findContactById, type Contact } from "../../../../lib/contacts";
@@ -78,7 +78,7 @@ export default function ContactDetailPage() {
             <p>{[contact.role, contact.company].filter(Boolean).join(" · ") || "No company listed yet"}</p>
           </div>
           <div className="contact-detail-actions">
-            <LinkButton href={`/app/encounters/new?contact=${encodeURIComponent(contactId)}`}><MicrophoneIcon size={16} weight="bold" />Capture moment</LinkButton>
+            <LinkButton href={`/app/encounters/new?contact=${encodeURIComponent(contactId)}`}><MicrophoneIcon size={16} />Capture moment</LinkButton>
             <CrmSyncButton contact={contact} encounters={encounters} />
             <LinkButton variant="secondary" href="/app/followups">Open inbox</LinkButton>
           </div>
@@ -90,7 +90,7 @@ export default function ContactDetailPage() {
             <div className="contact-method-list">
               {methods.map(({ label, href, Icon }) => (
                 <a key={href} className="contact-method" href={href} target={href.startsWith("http") ? "_blank" : undefined} rel={href.startsWith("http") ? "noreferrer" : undefined}>
-                  <Icon size={18} weight="bold" />
+                  <Icon size={18} />
                   <span>{label}</span>
                 </a>
               ))}
@@ -113,7 +113,7 @@ export default function ContactDetailPage() {
           <section className="contact-detail-section">
             <header><h2>Card exchange</h2><p>They shared their details back from your public card.</p></header>
             <div className="contact-exchange-card">
-              <IdentificationCardIcon size={22} weight="bold" />
+              <IdentificationCardIcon size={22} />
               <div><strong>Linked exchange</strong><small>Exchange ID {contact.exchangeId.slice(0, 8)}…</small></div>
             </div>
           </section>
@@ -136,7 +136,7 @@ export default function ContactDetailPage() {
           ) : (
             <div className="contact-detail-empty-inline">
               <p>No encounters linked yet.</p>
-              <LinkButton href={`/app/encounters/new?contact=${encodeURIComponent(contactId)}`}><MicrophoneIcon size={16} weight="bold" />Start capture</LinkButton>
+              <LinkButton href={`/app/encounters/new?contact=${encodeURIComponent(contactId)}`}><MicrophoneIcon size={16} />Start capture</LinkButton>
             </div>
           )}
         </section>

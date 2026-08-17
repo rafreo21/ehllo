@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { BusinessShell } from "../../../../components/BusinessShell";
 import { Button, LinkButton } from "../../../../components/Button";
 import {
@@ -87,7 +87,7 @@ export default function CampaignDetailPage() {
           </header>
           <div className="activate-actions">
             {activeCampaignId === campaign.id ? (
-              <Button variant="secondary" disabled><CheckCircleIcon size={18} weight="bold" />Active for new captures</Button>
+              <Button variant="secondary" disabled><CheckCircleIcon size={18} />Active for new captures</Button>
             ) : (
               <Button variant="secondary" onClick={setActive}>Set active for new captures</Button>
             )}

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { IdentificationBadgeIcon } from "@phosphor-icons/react/dist/csr/IdentificationBadge";
-import { ShieldCheckIcon } from "@phosphor-icons/react/dist/csr/ShieldCheck";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { CreditCard as IdentificationBadgeIcon } from "react-feather";
+import { Shield as ShieldCheckIcon } from "react-feather";
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import { Button } from "../../../components/Button";
 import { FormSection, TextField } from "../../../components/FormField";
@@ -87,7 +87,7 @@ export default function EditProfilePage() {
             <FormSection
               title="Your details"
               description="Shown only to you, never shared publicly."
-              icon={<IdentificationBadgeIcon size={18} weight="bold" />}
+              icon={<IdentificationBadgeIcon size={18} />}
             >
               <TextField
                 label="Full name"
@@ -106,7 +106,7 @@ export default function EditProfilePage() {
                   <span className="text-base text-[#0e0f0c]">{profile?.primaryEmail || "—"}</span>
                   {profile?.emailVerified ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-[#e2f6d5] px-2 py-0.5 text-xs font-bold text-[#163300]">
-                      <CheckCircleIcon size={13} weight="fill" /> Verified
+                      <CheckCircleIcon size={13} /> Verified
                     </span>
                   ) : null}
                 </div>
@@ -121,7 +121,7 @@ export default function EditProfilePage() {
                   onClick={() => setVerifyNoticeOpen(true)}
                   className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-md border border-[#aeb8aa] bg-white px-4 text-sm font-bold text-[#163300] transition hover:bg-[#f2f5f0] disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {profile?.phoneVerified ? <CheckCircleIcon size={18} weight="fill" /> : <ShieldCheckIcon size={18} weight="bold" />}
+                  {profile?.phoneVerified ? <CheckCircleIcon size={18} /> : <ShieldCheckIcon size={18} />}
                   {profile?.phoneVerified ? "Verified" : "Verify"}
                 </button>
                 <small className="text-xs text-[#6b7168]">

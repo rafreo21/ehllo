@@ -1,16 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { HouseIcon } from "@phosphor-icons/react/dist/csr/House";
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
-import { ListIcon } from "@phosphor-icons/react/dist/csr/List";
-import { PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
+import { Home as HouseIcon } from "react-feather";
+import { CreditCard as IdentificationCardIcon } from "react-feather";
+import { List as ListIcon } from "react-feather";
+import { Send as PaperPlaneTiltIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
-import { SignOutIcon } from "@phosphor-icons/react/dist/csr/SignOut";
-import { UserCircleIcon } from "@phosphor-icons/react/dist/csr/UserCircle";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { Users as UsersThreeIcon } from "react-feather";
+import { LogOut as SignOutIcon } from "react-feather";
+import { User as UserCircleIcon } from "react-feather";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { IconButton, LinkButton } from "./Button";
 import { useAppUser } from "./AppUserContext";
 import { useAppShellChromeValue } from "./AppShellChromeContext";
@@ -36,14 +36,16 @@ function deriveActive(pathname: string): AppShellActive {
   return "home";
 }
 
-const consumerNav = [
+// "scan" alone still renders a Phosphor icon (QrCode has no react-feather
+// equivalent), so it alone keeps the `weight="bold"` prop in renderNavItem below.
+const consumerNav: ReadonlyArray<readonly [string, string, ComponentType<any>, string]> = [
   ["home", "/app", HouseIcon, "Home"],
   ["cards", "/app/cards", IdentificationCardIcon, "My Cards"],
   ["people", "/app/people", UsersThreeIcon, "Connections"],
   ["followups", "/app/followups", PaperPlaneTiltIcon, "Follow-ups"],
   ["scan", "/app/scan", QrCodeIcon, "Scan"],
   ["settings", "/app/settings", UserCircleIcon, "My account"],
-] as const;
+];
 
 let hydratedConsumerUser = "";
 
@@ -70,7 +72,7 @@ export function AppShell({ children }: AppShellProps) {
 
   const renderNavItem = ([key, href, Icon, itemLabel]: (typeof consumerNav)[number]) => (
     <a className={active === key ? "active" : ""} href={href} key={key} onClick={() => setMobileNav(false)}>
-      <Icon size={20} weight="bold" /> <span>{itemLabel}</span>
+      {key === "scan" ? <Icon size={20} weight="bold" /> : <Icon size={20} />} <span>{itemLabel}</span>
       {key === "followups" && actionableCount ? <b className="nav-count" aria-label={`${actionableCount} due follow-ups`}>{actionableCount > 99 ? "99+" : actionableCount}</b> : null}
     </a>
   );
@@ -87,17 +89,20 @@ export function AppShell({ children }: AppShellProps) {
             <span>{initials || "AM"}</span>
             <div>{label}<small>{user.email}</small></div>
             <form action="/auth/signout" method="post">
-              <IconButton type="submit" aria-label="Sign out" title="Sign out"><SignOutIcon weight="bold" /></IconButton>
+              <IconButton type="submit" aria-label="Sign out" title="Sign out"><SignOutIcon /></IconButton>
             </form>
           </div>
         </div>
       </aside>
 
       <section className="product-main">
-        <div className="consumer-global-bell"><NotificationBell onActionableCountChange={updateActionableCount} /></div>
+        <div className="consumer-topbar">
+          <NotificationBell onActionableCountChange={updateActionableCount} />
+          <a className="consumer-topbar-avatar" href="/app/settings" aria-label="My account">{initials || "AM"}</a>
+        </div>
         <header className="product-mobile-header">
           <IconButton className="menu-button" aria-label="Toggle navigation" onClick={() => setMobileNav(!mobileNav)}>
-            <ListIcon size={25} weight="bold" />
+            <ListIcon size={25} />
           </IconButton>
           <span className="mobile-logo">ehllo</span>
         </header>
@@ -106,7 +111,7 @@ export function AppShell({ children }: AppShellProps) {
             <div className="product-page-toolbar">
               {backHref ? (
                 <LinkButton size="small" variant="ghost" href={backHref} className="product-page-back">
-                  <ArrowLeftIcon size={16} weight="bold" />{backLabel}
+                  <ArrowLeftIcon size={16} />{backLabel}
                 </LinkButton>
               ) : <span />}
               {actions ? <div className="product-page-actions">{actions}</div> : null}

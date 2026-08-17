@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CaretRightIcon } from "@phosphor-icons/react/dist/csr/CaretRight";
-import { CloudArrowUpIcon } from "@phosphor-icons/react/dist/csr/CloudArrowUp";
-import { DeviceMobileIcon } from "@phosphor-icons/react/dist/csr/DeviceMobile";
+import { ChevronRight as CaretRightIcon } from "react-feather";
+import { UploadCloud as CloudArrowUpIcon } from "react-feather";
+import { Smartphone as DeviceMobileIcon } from "react-feather";
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import type { ConnectedAccountStatus } from "../../../../lib/integrations/types";
 
@@ -13,9 +13,9 @@ type RecordingStorageDestination = "local_only" | "google_drive" | "onedrive";
 const STORAGE_KEY = "aftermeet.web.recording-storage-destination";
 
 const STORAGE_OPTIONS: { id: RecordingStorageDestination; label: string; icon: React.ReactNode }[] = [
-  { id: "local_only", label: "Only in this browser", icon: <DeviceMobileIcon size={18} weight="bold" /> },
-  { id: "google_drive", label: "Google Drive", icon: <CloudArrowUpIcon size={18} weight="bold" /> },
-  { id: "onedrive", label: "OneDrive", icon: <CloudArrowUpIcon size={18} weight="bold" /> },
+  { id: "local_only", label: "Only in this browser", icon: <DeviceMobileIcon size={18} /> },
+  { id: "google_drive", label: "Google Drive", icon: <CloudArrowUpIcon size={18} /> },
+  { id: "onedrive", label: "OneDrive", icon: <CloudArrowUpIcon size={18} /> },
 ];
 
 export default function RecordingStorageSettingsPage() {
@@ -56,7 +56,7 @@ export default function RecordingStorageSettingsPage() {
         </div>
         <section className="activate-panel">
           <header>
-            <h2><CloudArrowUpIcon size={22} weight="bold" /> Recording storage</h2>
+            <h2><CloudArrowUpIcon size={22} /> Recording storage</h2>
           </header>
           <div className="grid gap-2">
             {STORAGE_OPTIONS.map((option) => {
@@ -78,7 +78,7 @@ export default function RecordingStorageSettingsPage() {
                     <strong className="block text-sm text-[#163300]">{option.label}</strong>
                     {!enabled ? <small className="text-xs text-[#6b7168]">Tap to connect this account</small> : null}
                   </span>
-                  {selected ? <CaretRightIcon size={16} weight="bold" /> : !enabled ? <CaretRightIcon size={16} weight="bold" className="text-[#6b7168]" /> : null}
+                  {selected ? <CaretRightIcon size={16} /> : !enabled ? <CaretRightIcon size={16} className="text-[#6b7168]" /> : null}
                 </button>
               );
             })}

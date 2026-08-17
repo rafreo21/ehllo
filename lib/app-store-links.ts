@@ -18,3 +18,7 @@ export function getAppStoreUrl() {
 export function hasPublishedMobileApp() {
   return Boolean(getPlayStoreUrl() || getAppStoreUrl());
 }
+
+export function getBetaSignupUrl() {
+  return process.env.NEXT_PUBLIC_BETA_SIGNUP_URL?.trim() || null;
+}

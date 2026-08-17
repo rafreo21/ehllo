@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { CopyIcon } from "@phosphor-icons/react/dist/csr/Copy";
-import { DownloadSimpleIcon } from "@phosphor-icons/react/dist/csr/DownloadSimple";
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
-import { LinkedinLogoIcon } from "@phosphor-icons/react/dist/csr/LinkedinLogo";
-import { PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
+import { Copy as CopyIcon } from "react-feather";
+import { Download as DownloadSimpleIcon } from "react-feather";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
+import { Linkedin as LinkedinLogoIcon } from "react-feather";
+import { Send as PaperPlaneTiltIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
-import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import { X as XIcon } from "react-feather";
 import {
   buildEmailShareUrl,
   buildLinkedInShareUrl,
@@ -59,7 +59,7 @@ export function ShareCardModal({
             <span><QrCodeIcon size={20} weight="bold" /></span>
             <h2 id="share-card-title">Share card</h2>
           </div>
-          <IconButton aria-label="Close share card" onClick={onClose}><XIcon weight="bold" /></IconButton>
+          <IconButton aria-label="Close share card" onClick={onClose}><XIcon /></IconButton>
         </header>
 
         <div className="share-card-modal-body">
@@ -68,7 +68,7 @@ export function ShareCardModal({
             <div>
               <input readOnly value={shareUrl} />
               <Button size="small" variant="secondary" onClick={() => void onCopyLink()}>
-                <CopyIcon size={16} weight="bold" />{copied ? "Copied" : "Copy"}
+                <CopyIcon size={16} />{copied ? "Copied" : "Copy"}
               </Button>
             </div>
           </label>
@@ -82,7 +82,7 @@ export function ShareCardModal({
               <small>QR code</small>
               {qrDataUrl ? (
                 <LinkButton size="small" variant="secondary" href={qrDataUrl} download={qrDataUrl.startsWith("data:image/svg+xml") ? "ehllo-qr.svg" : "ehllo-qr.png"}>
-                  <DownloadSimpleIcon size={16} weight="bold" />Download
+                  <DownloadSimpleIcon size={16} />Download
                 </LinkButton>
               ) : null}
             </div>
@@ -91,13 +91,13 @@ export function ShareCardModal({
           <div className="share-card-channel-list">
             <span className="share-card-channel-label">Share via</span>
             <LinkButton fullWidth variant="secondary" href={buildEmailShareUrl(shareUrl, cardName)}>
-              <EnvelopeSimpleIcon size={18} weight="bold" />Share via Email
+              <EnvelopeSimpleIcon size={18} />Share via Email
             </LinkButton>
             <LinkButton fullWidth variant="secondary" href={buildSmsShareUrl(shareUrl, cardName)}>
-              <PaperPlaneTiltIcon size={18} weight="bold" />Share via Messages
+              <PaperPlaneTiltIcon size={18} />Share via Messages
             </LinkButton>
             <LinkButton fullWidth variant="secondary" href={buildLinkedInShareUrl(shareUrl)} target="_blank" rel="noreferrer">
-              <LinkedinLogoIcon size={18} weight="bold" />Share via LinkedIn
+              <LinkedinLogoIcon size={18} />Share via LinkedIn
             </LinkButton>
           </div>
         </div>

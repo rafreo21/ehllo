@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { resolveAppUrlFromHeaders } from "../../lib/auth/app-url";
 import { readPublicSupabaseConfig } from "../../lib/supabase/env";
 import { sanitizeIntendedDestination } from "../../lib/auth/redirect";
@@ -55,7 +55,7 @@ export default async function AuthPage({
     <main className="auth-page">
       <div className="auth-header">
         <a className="auth-logo" href="/"><BrandMark size={40} /><strong>ehllo</strong></a>
-        <LinkButton size="small" variant="ghost" href="/"><ArrowLeftIcon size={16} weight="bold" />Back to home</LinkButton>
+        <LinkButton size="small" variant="ghost" href="/"><ArrowLeftIcon size={16} />Back to home</LinkButton>
       </div>
       <section className="auth-panel">
         <div className="auth-intro">

@@ -1,24 +1,24 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
-import { CaretUpIcon } from "@phosphor-icons/react/dist/csr/CaretUp";
-import { MagicWandIcon } from "@phosphor-icons/react/dist/csr/MagicWand";
-import { MicrophoneIcon } from "@phosphor-icons/react/dist/csr/Microphone";
-import { EyeIcon } from "@phosphor-icons/react/dist/csr/Eye";
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
-import { PauseIcon } from "@phosphor-icons/react/dist/csr/Pause";
-import { PlayIcon } from "@phosphor-icons/react/dist/csr/Play";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { Send as PaperPlaneTiltIcon } from "react-feather";
+import { ChevronDown as CaretDownIcon } from "react-feather";
+import { ChevronUp as CaretUpIcon } from "react-feather";
+import { Zap as MagicWandIcon } from "react-feather";
+import { Mic as MicrophoneIcon } from "react-feather";
+import { Eye as EyeIcon } from "react-feather";
+import { CreditCard as IdentificationCardIcon } from "react-feather";
+import { Pause as PauseIcon } from "react-feather";
+import { Play as PlayIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
-import { StopIcon } from "@phosphor-icons/react/dist/csr/Stop";
-import { UploadSimpleIcon } from "@phosphor-icons/react/dist/csr/UploadSimple";
-import { UserPlusIcon } from "@phosphor-icons/react/dist/csr/UserPlus";
-import { XIcon } from "@phosphor-icons/react/dist/csr/X";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
+import { StopCircle as StopIcon } from "react-feather";
+import { Upload as UploadSimpleIcon } from "react-feather";
+import { UserPlus as UserPlusIcon } from "react-feather";
+import { X as XIcon } from "react-feather";
+import { Users as UsersThreeIcon } from "react-feather";
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import { ActiveCampaignField, defaultCampaignId } from "../../../components/ActiveCampaignField";
 import { Button, LinkButton } from "../../../components/Button";
@@ -1191,7 +1191,7 @@ export default function NewEncounterPage() {
                   if (index === 3) continueFromConnect();
                 }}
               >
-                <span>{stepCompletion[index] && index !== captureStep ? <CheckCircleIcon weight="fill" /> : <Icon weight="bold" />}</span>
+                <span>{stepCompletion[index] && index !== captureStep ? <CheckCircleIcon /> : <Icon />}</span>
                 <small>{short}</small>
                 <strong>{label}</strong>
               </button>
@@ -1201,8 +1201,8 @@ export default function NewEncounterPage() {
           {crossDeviceMessage ? (
             <div className={`encounter-success-banner${crossDeviceInterrupted ? " is-interrupted" : ""}`} role="status">
               {crossDeviceInterrupted
-                ? <StopIcon size={22} weight="fill" />
-                : <CheckCircleIcon size={22} weight="fill" />}
+                ? <StopIcon size={22} />
+                : <CheckCircleIcon size={22} />}
               <div>
                 <strong>{crossDeviceInterrupted ? "Recording interrupted" : "Capture updated elsewhere"}</strong>
                 <p>{crossDeviceMessage}</p>
@@ -1214,14 +1214,14 @@ export default function NewEncounterPage() {
           {captureStep === 0 && <>
           <section className="quick-context-card">
             <header className="encounter-card-header">
-              <span className="encounter-card-icon"><MagicWandIcon size={22} weight="bold" /></span>
+              <span className="encounter-card-icon"><MagicWandIcon size={22} /></span>
               <div className="encounter-card-copy"><h2>Quick context</h2><p>Skip recording and add notes from memory.</p></div>
             </header>
-            <Button type="button" variant="secondary" onClick={() => continueFromRecord({ skipRecording: true })}>Add notes instead <ArrowRightIcon size={16} weight="bold" /></Button>
+            <Button type="button" variant="secondary" onClick={() => continueFromRecord({ skipRecording: true })}>Add notes instead <ArrowRightIcon size={16} /></Button>
           </section>
           <section className={`consent-card ${consent ? "confirmed" : ""}`}>
             <header className="encounter-card-header">
-              <span className="encounter-card-icon consent-icon">{consent ? <CheckCircleIcon size={24} weight="fill" /> : <MicrophoneIcon size={24} weight="bold" />}</span>
+              <span className="encounter-card-icon consent-icon">{consent ? <CheckCircleIcon size={24} /> : <MicrophoneIcon size={24} />}</span>
               <div className="encounter-card-copy">
               <h2>Confirm recording consent</h2>
               <p>Ask clearly: “Is everyone comfortable with me recording this conversation so I can remember the agreed next steps?”</p>
@@ -1238,7 +1238,7 @@ export default function NewEncounterPage() {
 
           <section className={`recorder-card ${recordingState === "recording" ? "is-recording" : ""}`}>
             <header className="encounter-card-header recorder-status">
-              <span className="encounter-card-icon recorder-status-icon"><MicrophoneIcon size={24} weight={recordingState === "recording" ? "fill" : "bold"} /></span>
+              <span className="encounter-card-icon recorder-status-icon"><MicrophoneIcon size={24} /></span>
               <div className="encounter-card-copy"><h2>{recordingState === "recording" ? "Recording" : recordingState === "paused" ? "Paused" : recordingState === "stopped" ? "Recording complete" : "Ready to record"}</h2><p>Microphone is {recordingState === "recording" ? "on" : "off"}</p></div>
               <time>{formatDuration(seconds)}</time>
             </header>
@@ -1249,18 +1249,18 @@ export default function NewEncounterPage() {
               <strong>{recordingState === "paused" ? "Recording paused" : audioLevel > .08 ? "Voice detected" : "Listening for speech…"}</strong>
             </div>}
             <div className="recorder-actions">
-              {recordingState === "idle" && <Button onClick={startRecording} disabled={!consent}><MicrophoneIcon size={18} weight="fill" />Start recording</Button>}
+              {recordingState === "idle" && <Button onClick={startRecording} disabled={!consent}><MicrophoneIcon size={18} />Start recording</Button>}
               {recordingState === "idle" && <label className={`import-recording-button ${!consent ? "disabled" : ""}`}>
-                <UploadSimpleIcon size={18} weight="bold" />Import recording
+                <UploadSimpleIcon size={18} />Import recording
                 <input type="file" accept="audio/*,.m4a,.mp3,.wav,.webm,.aac,.ogg" disabled={!consent} onChange={importRecording} />
               </label>}
               {(recordingState === "recording" || recordingState === "paused") && <>
-                <Button variant="secondary" onClick={pauseOrResume}>{recordingState === "paused" ? <PlayIcon size={18} weight="fill" /> : <PauseIcon size={18} weight="fill" />}{recordingState === "paused" ? "Resume" : "Pause"}</Button>
-                <Button onClick={stopRecording}><StopIcon size={18} weight="fill" />Finish</Button>
+                <Button variant="secondary" onClick={pauseOrResume}>{recordingState === "paused" ? <PlayIcon size={18} /> : <PauseIcon size={18} />}{recordingState === "paused" ? "Resume" : "Pause"}</Button>
+                <Button onClick={stopRecording}><StopIcon size={18} />Finish</Button>
               </>}
               {recordingState === "stopped" && <Button variant="secondary" onClick={() => { recordingStateRef.current = "idle"; pausedElapsedMsRef.current = 0; recordedChunksRef.current = []; audioBlobRef.current = null; setRecordingState("idle"); setSeconds(0); replaceAudioUrl(""); setDraftMessage(""); setTranscriptStatus("idle"); }}>Record again</Button>}
               <Button variant="ghost" onClick={() => setTranscriptOpen((value) => !value)}>
-                {transcriptOpen ? <CaretUpIcon size={16} weight="bold" /> : <CaretDownIcon size={16} weight="bold" />}
+                {transcriptOpen ? <CaretUpIcon size={16} /> : <CaretDownIcon size={16} />}
                 {transcriptOpen ? "Hide transcript" : "Show transcript"}
               </Button>
             </div>
@@ -1306,7 +1306,7 @@ export default function NewEncounterPage() {
 
           {recordingComplete && captureStep === 0 && (
             <div className="encounter-success-banner" role="status">
-              <CheckCircleIcon size={22} weight="fill" />
+              <CheckCircleIcon size={22} />
               <div>
                 <strong>Recording ready</strong>
                 <p>{form.transcript.trim() ? "We will draft meeting context from your transcript on the next step." : "Continue to add meeting context, or paste a transcript first."}</p>
@@ -1319,7 +1319,7 @@ export default function NewEncounterPage() {
             <LinkButton variant="ghost" href="/app">Cancel</LinkButton>
             <div className="encounter-step-actions-primary">
               <Button type="button" onClick={() => continueFromRecord()} disabled={!consent || recordingState === "recording" || recordingState === "paused"} className={recordingComplete ? "encounter-primary-ready" : undefined}>
-                {recordingComplete ? "Next: meeting context" : "Continue"} <ArrowRightIcon size={18} weight="bold" />
+                {recordingComplete ? "Next: meeting context" : "Continue"} <ArrowRightIcon size={18} />
               </Button>
             </div>
           </div>
@@ -1329,7 +1329,7 @@ export default function NewEncounterPage() {
           {(draftLoading || (form.transcript.trim() && (form.title.trim() || form.sharedSummary.trim()))) && (
             <section className={`encounter-processing-card ${draftLoading ? "is-processing" : "is-ready"}`} role="status" aria-live="polite">
               <span className="encounter-processing-icon">
-                {draftLoading ? <MagicWandIcon size={22} weight="bold" /> : <CheckCircleIcon size={22} weight="fill" />}
+                {draftLoading ? <MagicWandIcon size={22} /> : <CheckCircleIcon size={22} />}
               </span>
               <div>
                 <strong>{draftLoading ? "Turning the conversation into context…" : "Context ready to review"}</strong>
@@ -1343,14 +1343,14 @@ export default function NewEncounterPage() {
             <section className="encounter-source-panel">
               <button type="button" className="encounter-source-toggle" onClick={() => setSourceOpen((value) => !value)} aria-expanded={sourceOpen}>
                 <div><strong>Source transcript</strong><small>Reference what was said while you edit the summary.</small></div>
-                {sourceOpen ? <CaretUpIcon size={16} weight="bold" /> : <CaretDownIcon size={16} weight="bold" />}
+                {sourceOpen ? <CaretUpIcon size={16} /> : <CaretDownIcon size={16} />}
               </button>
               {sourceOpen && <TextAreaField label="Transcript" hint="Private" rows={5} value={form.transcript} onChange={(event) => update("transcript", event.target.value)} />}
             </section>
           )}
           <section className="encounter-form-section">
             <header className="encounter-card-header">
-              <span className="encounter-card-icon"><MagicWandIcon size={22} weight="bold" /></span>
+              <span className="encounter-card-icon"><MagicWandIcon size={22} /></span>
               <div className="encounter-card-copy"><h2>Meeting context</h2><p>Who was it with and what mattered? Contact details sync on the next step.</p></div>
             </header>
             {draftMessage && <p className="encounter-draft-note"><span className="encounter-draft-label">{draftSource === "ai" ? "AI draft" : "Suggested draft"}</span>{draftMessage.replace(/^(AI draft|Suggested draft)[^.]*\.\s*/, "")}{draftLoading ? " Generating…" : ""}</p>}
@@ -1397,7 +1397,7 @@ export default function NewEncounterPage() {
                   <small>Add everyone who should have their own relationship record and follow-up.</small>
                 </div>
                 <Button type="button" variant="secondary" size="small" onClick={addParticipant} disabled={additionalParticipants.length >= 9}>
-                  <UserPlusIcon size={15} weight="bold" /> Add person
+                  <UserPlusIcon size={15} /> Add person
                 </Button>
               </div>
               {additionalParticipants.length > 0 && (
@@ -1422,7 +1422,7 @@ export default function NewEncounterPage() {
                         autoComplete="off"
                       />
                       <Button type="button" variant="ghost" size="small" aria-label={`Remove attendee ${index + 2}`} onClick={() => removeParticipant(person.id)}>
-                        <XIcon size={16} weight="bold" />
+                        <XIcon size={16} />
                       </Button>
                     </div>
                   ))}
@@ -1434,13 +1434,13 @@ export default function NewEncounterPage() {
             <TextField label="Meeting title" value={form.title} onChange={(event) => update("title", event.target.value)} placeholder="e.g. Coffee after ProductCon" hint="Optional if the full name is enough" />
             <TextAreaField label="Private notes" hint="Only you: what they said that matters" rows={4} value={form.privateNotes} onChange={(event) => update("privateNotes", event.target.value)} placeholder="Key points from the other person: their priorities, constraints, commitments, and anything you'd want to remember later." />
             <TextAreaField label="Shared meeting summary" hint="Review before sharing" rows={4} value={form.sharedSummary} onChange={(event) => update("sharedSummary", event.target.value)} placeholder="What you both discussed and agreed, neutral enough to share with them." />
-            {(form.transcript.trim() || form.privateNotes.trim() || form.sharedSummary.trim()) && <Button type="button" variant="secondary" loading={draftLoading} onClick={() => void generateMeetingContext(form.transcript.trim() || form.privateNotes.trim() || form.sharedSummary.trim())}><MagicWandIcon size={15} weight="bold" />{draftLoading ? "Generating draft…" : "Draft commitments and follow-up"}</Button>}
+            {(form.transcript.trim() || form.privateNotes.trim() || form.sharedSummary.trim()) && <Button type="button" variant="secondary" loading={draftLoading} onClick={() => void generateMeetingContext(form.transcript.trim() || form.privateNotes.trim() || form.sharedSummary.trim())}><MagicWandIcon size={15} />{draftLoading ? "Generating draft…" : "Draft commitments and follow-up"}</Button>}
           </section>
           {error && <p className="encounter-error" role="alert">{error}</p>}
           <div className="form-actions encounter-step-actions">
             <Button type="button" variant="ghost" onClick={() => goToCaptureStep(0)}><ArrowLeftIcon size={16} />Back</Button>
             <Button type="button" onClick={continueFromContext}>
-              Next: connect <ArrowRightIcon size={18} weight="bold" />
+              Next: connect <ArrowRightIcon size={18} />
             </Button>
           </div>
           </>}
@@ -1448,12 +1448,12 @@ export default function NewEncounterPage() {
           {captureStep === 2 && <>
           <section className="encounter-form-section encounter-connect-section">
             <header className="encounter-card-header">
-              <span className="encounter-card-icon"><IdentificationCardIcon size={22} weight="bold" /></span>
+              <span className="encounter-card-icon"><IdentificationCardIcon size={22} /></span>
               <div className="encounter-card-copy"><h2>Connect</h2><p>Link this moment to a person. Email and contact methods sync here, not during capture.</p></div>
             </header>
             {linkedContact ? (
               <div className="encounter-linked-person">
-                <CheckCircleIcon size={24} weight="fill" />
+                <CheckCircleIcon size={24} />
                 <div>
                   <strong>{contactDisplayName(linkedContact)}</strong>
                   <small>{linkedContact.email || linkedContact.company || linkedContact.role || "Linked from People"}</small>
@@ -1475,7 +1475,7 @@ export default function NewEncounterPage() {
                 )}
                 <div className="encounter-connect-actions">
                   <LinkButton variant="secondary" href="/app/cards#share"><QrCodeIcon size={16} weight="bold" />Share your card</LinkButton>
-                  <LinkButton variant="ghost" href="/app/people"><UsersThreeIcon size={16} weight="bold" />Open Connections</LinkButton>
+                  <LinkButton variant="ghost" href="/app/people"><UsersThreeIcon size={16} />Open Connections</LinkButton>
                 </div>
                 <p className="follow-up-note">You can continue without linking. Add their details later from People.</p>
               </>
@@ -1485,7 +1485,7 @@ export default function NewEncounterPage() {
           <div className="form-actions encounter-step-actions">
             <Button type="button" variant="ghost" onClick={() => goToCaptureStep(1)}><ArrowLeftIcon size={16} />Back</Button>
             <Button type="button" onClick={continueFromConnect}>
-              Next: follow-up <ArrowRightIcon size={18} weight="bold" />
+              Next: follow-up <ArrowRightIcon size={18} />
             </Button>
           </div>
           </>}
@@ -1499,7 +1499,7 @@ export default function NewEncounterPage() {
             <section className="encounter-advanced-panel">
               <button type="button" className="encounter-advanced-toggle" onClick={() => setAudioSettingsOpen((value) => !value)} aria-expanded={audioSettingsOpen}>
                 <div><strong>Recording storage</strong><small>Choose this device, three-day sharing, Google Drive, or OneDrive.</small></div>
-                {audioSettingsOpen ? <CaretUpIcon size={16} weight="bold" /> : <CaretDownIcon size={16} weight="bold" />}
+                {audioSettingsOpen ? <CaretUpIcon size={16} /> : <CaretDownIcon size={16} />}
               </button>
               {audioSettingsOpen && (
                 <div className="local-audio-settings">
@@ -1519,7 +1519,7 @@ export default function NewEncounterPage() {
           )}
           <section className="encounter-form-section encounter-followup-section">
             <header className="encounter-card-header">
-              <span className="encounter-card-icon"><PaperPlaneTiltIcon size={22} weight="bold" /></span>
+              <span className="encounter-card-icon"><PaperPlaneTiltIcon size={22} /></span>
               <div className="encounter-card-copy"><h2>Follow-up</h2><p>Optional. Add one next step now, or save and handle it later from review.</p></div>
             </header>
             <div className="follow-up-fields">

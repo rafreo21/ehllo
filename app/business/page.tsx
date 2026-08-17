@@ -1,10 +1,10 @@
 "use client";
 
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { ChartLineUpIcon } from "@phosphor-icons/react/dist/csr/ChartLineUp";
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
-import { PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { TrendingUp as ChartLineUpIcon } from "react-feather";
+import { CreditCard as IdentificationCardIcon } from "react-feather";
+import { Send as PaperPlaneTiltIcon } from "react-feather";
+import { Users as UsersThreeIcon } from "react-feather";
 import { BusinessShell } from "../components/BusinessShell";
 import { LinkButton } from "../components/Button";
 import "../app/product.css";
@@ -29,31 +29,31 @@ export default function BusinessHomePage() {
         <div className="dashboard-grid">
           <article className="dashboard-card dashboard-card-primary">
             <span>Identity</span>
-            <IdentificationCardIcon size={30} weight="bold" />
+            <IdentificationCardIcon size={30} />
             <h2>Create your card</h2>
             <p>Same card creation flow as mobile. Publish the identity your team shares.</p>
-            <LinkButton href="/business/cards">Open my card <ArrowRightIcon size={16} weight="bold" /></LinkButton>
+            <LinkButton href="/business/cards">Open my card <ArrowRightIcon size={16} /></LinkButton>
           </article>
           <article className="dashboard-card">
             <span>CRM</span>
-            <UsersThreeIcon size={30} weight="bold" />
+            <UsersThreeIcon size={30} />
             <h2>Contacts CRM</h2>
             <p>Directory, imports, and HubSpot-ready contact records.</p>
-            <LinkButton variant="secondary" href="/business/contacts">Open contacts <ArrowRightIcon size={16} weight="bold" /></LinkButton>
+            <LinkButton variant="secondary" href="/business/contacts">Open contacts <ArrowRightIcon size={16} /></LinkButton>
           </article>
           <article className="dashboard-card">
             <span>Activate</span>
-            <ChartLineUpIcon size={30} weight="bold" />
+            <ChartLineUpIcon size={30} />
             <h2>Activate data</h2>
             <p>HubSpot sync, campaigns, team workspace, and connected accounts.</p>
-            <LinkButton variant="secondary" href="/business/activate">Open Activate <ArrowRightIcon size={16} weight="bold" /></LinkButton>
+            <LinkButton variant="secondary" href="/business/activate">Open Activate <ArrowRightIcon size={16} /></LinkButton>
           </article>
           <article className="dashboard-card">
             <span>Outbound</span>
-            <PaperPlaneTiltIcon size={30} weight="bold" />
+            <PaperPlaneTiltIcon size={30} />
             <h2>Outbound queue</h2>
             <p>Review-first drafts before send. Not part of the consumer pilot.</p>
-            <LinkButton variant="secondary" href="/business/outbound">Open outbound <ArrowRightIcon size={16} weight="bold" /></LinkButton>
+            <LinkButton variant="secondary" href="/business/outbound">Open outbound <ArrowRightIcon size={16} /></LinkButton>
           </article>
         </div>
       </div>

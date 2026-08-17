@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { CopyIcon } from "@phosphor-icons/react/dist/csr/Copy";
-import { MagicWandIcon } from "@phosphor-icons/react/dist/csr/MagicWand";
-import { PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
-import { XCircleIcon } from "@phosphor-icons/react/dist/csr/XCircle";
+import { ExternalLink as ArrowSquareOutIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { Copy as CopyIcon } from "react-feather";
+import { Zap as MagicWandIcon } from "react-feather";
+import { Send as PaperPlaneTiltIcon } from "react-feather";
+import { XCircle as XCircleIcon } from "react-feather";
 import type { ActionLinkContext } from "../../lib/action-links";
 import { resolveActionLink } from "../../lib/action-links";
 import type { Contact } from "../../lib/contacts";
@@ -190,17 +190,6 @@ export function OutboundDraftPanel({
 
   return (
     <section className={`outbound-draft ${compact ? "outbound-draft-compact" : ""}`}>
-      <header className="outbound-draft-header">
-        <div>
-          <strong>Review-first outbound</strong>
-          <small>Draft, edit, approve, then send yourself. ehllo never auto-sends.</small>
-        </div>
-        {!draft || draft.status === "dismissed" ? (
-          <Button size="small" loading={loading} onClick={() => void generateDraft()}>
-            <MagicWandIcon size={15} weight="bold" />Draft message
-          </Button>
-        ) : null}
-      </header>
 
       {draft && draft.status !== "dismissed" ? (
         <>
@@ -224,20 +213,20 @@ export function OutboundDraftPanel({
           <div className="outbound-draft-actions">
             {draft.status === "proposed" ? (
               <>
-                <Button size="small" onClick={approveDraft}><CheckCircleIcon size={15} weight="bold" />Approve draft</Button>
-                <Button size="small" variant="ghost" onClick={dismissDraft}><XCircleIcon size={15} weight="bold" />Dismiss</Button>
+                <Button size="small" onClick={approveDraft}><CheckCircleIcon size={15} />Approve draft</Button>
+                <Button size="small" variant="ghost" onClick={dismissDraft}><XCircleIcon size={15} />Dismiss</Button>
               </>
             ) : null}
             {draft.status === "approved" ? (
               <>
                 {integrations.google.connected ? (
                   <Button size="small" loading={sending === "google"} onClick={() => void sendViaConnected("google")}>
-                    <PaperPlaneTiltIcon size={15} weight="bold" />Send via Gmail
+                    <PaperPlaneTiltIcon size={15} />Send via Gmail
                   </Button>
                 ) : null}
                 {integrations.microsoft.connected ? (
                   <Button size="small" loading={sending === "microsoft"} onClick={() => void sendViaConnected("microsoft")}>
-                    <PaperPlaneTiltIcon size={15} weight="bold" />Send via Outlook
+                    <PaperPlaneTiltIcon size={15} />Send via Outlook
                   </Button>
                 ) : null}
                 {composeLinks.map((link) => (
@@ -248,21 +237,21 @@ export function OutboundDraftPanel({
                     target={link.external ? "_blank" : undefined}
                     rel={link.external ? "noreferrer" : undefined}
                   >
-                    <PaperPlaneTiltIcon size={15} weight="bold" />{link.label}
-                    {link.external ? <ArrowSquareOutIcon size={14} weight="bold" /> : null}
+                    <PaperPlaneTiltIcon size={15} />{link.label}
+                    {link.external ? <ArrowSquareOutIcon size={14} /> : null}
                   </LinkButton>
                 ))}
                 {linkedInLink && !linkedInLink.unavailableReason ? (
                   <>
                     <LinkButton size="small" href={linkedInLink.href} target="_blank" rel="noreferrer">
-                      {linkedInLink.label}<ArrowSquareOutIcon size={14} weight="bold" />
+                      {linkedInLink.label}<ArrowSquareOutIcon size={14} />
                     </LinkButton>
                     <Button size="small" variant="secondary" onClick={() => void copyLinkedInDraft()}>
-                      <CopyIcon size={15} weight="bold" />Copy message
+                      <CopyIcon size={15} />Copy message
                     </Button>
                   </>
                 ) : null}
-                <Button size="small" onClick={markSent}><CheckCircleIcon size={15} weight="bold" />I sent it</Button>
+                <Button size="small" onClick={markSent}><CheckCircleIcon size={15} />I sent it</Button>
               </>
             ) : null}
           </div>

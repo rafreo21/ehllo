@@ -1,14 +1,14 @@
 "use client";
 
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
-import { FileArrowUpIcon } from "@phosphor-icons/react/dist/csr/FileArrowUp";
-import { LinkedinLogoIcon } from "@phosphor-icons/react/dist/csr/LinkedinLogo";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
-import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
+import { FilePlus as FileArrowUpIcon } from "react-feather";
+import { Linkedin as LinkedinLogoIcon } from "react-feather";
+import { Search as MagnifyingGlassIcon } from "react-feather";
+import { Plus as PlusIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
-import { PhoneIcon } from "@phosphor-icons/react/dist/csr/Phone";
+import { Users as UsersThreeIcon } from "react-feather";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
+import { Phone as PhoneIcon } from "react-feather";
 import { BusinessShell } from "../../components/BusinessShell";
 import { PageSkeleton, StatusMessage } from "../../components/AsyncState";
 import { Button, LinkButton } from "../../components/Button";
@@ -213,10 +213,10 @@ export default function ContactsPage() {
     }
   }
 
-  const importButton = <Button variant="secondary" loading={importing} onClick={() => importInput.current?.click()}><FileArrowUpIcon size={17} weight="bold" />{importing ? "Importing…" : "Import contacts"}</Button>;
+  const importButton = <Button variant="secondary" loading={importing} onClick={() => importInput.current?.click()}><FileArrowUpIcon size={17} />{importing ? "Importing…" : "Import contacts"}</Button>;
   const captureButtons = <>
     <LinkButton variant="secondary" href="/app/scan"><QrCodeIcon size={17} weight="bold" />Scan badge</LinkButton>
-    <LinkButton variant="secondary" href="/business/contacts/linkedin"><LinkedinLogoIcon size={17} weight="bold" />LinkedIn</LinkButton>
+    <LinkButton variant="secondary" href="/business/contacts/linkedin"><LinkedinLogoIcon size={17} />LinkedIn</LinkButton>
   </>;
 
   return (
@@ -256,7 +256,7 @@ export default function ContactsPage() {
             <div className="contact-search">
               <TextField label="Search contacts" value={query} onChange={(e) => setQuery(e.target.value)} leadingIcon={<MagnifyingGlassIcon size={18} />} />
             </div>
-            <div className="contact-toolbar-actions">{captureButtons}{importButton}<LinkButton href="/business/contacts/new"><PlusIcon size={17} weight="bold" />Add person</LinkButton></div>
+            <div className="contact-toolbar-actions">{captureButtons}{importButton}<LinkButton href="/business/contacts/new"><PlusIcon size={17} />Add person</LinkButton></div>
           </div>
           {visible.length ? (
             <ul className="m-0 grid list-none gap-3 p-0">
@@ -299,7 +299,7 @@ export default function ContactsPage() {
                               loading={enrichingKey === `${contact.id}:email`}
                               onClick={() => void enrichContactField(contact, "email")}
                             >
-                              <EnvelopeSimpleIcon size={15} weight="bold" />Find email
+                              <EnvelopeSimpleIcon size={15} />Find email
                             </Button>
                           )}
                         </div>
@@ -317,7 +317,7 @@ export default function ContactsPage() {
                               loading={enrichingKey === `${contact.id}:phone`}
                               onClick={() => void enrichContactField(contact, "phone")}
                             >
-                              <PhoneIcon size={15} weight="bold" />Find mobile
+                              <PhoneIcon size={15} />Find mobile
                             </Button>
                           )}
                         </div>
@@ -335,7 +335,7 @@ export default function ContactsPage() {
           ) : (
             <div className="empty-state"><div><h2>No matching people</h2><p>Try a different name or company.</p><Button variant="secondary" onClick={() => setQuery("")}>Clear search</Button></div></div>
           )}
-        </> : <div className="empty-state"><div><span className="empty-icon"><UsersThreeIcon size={32} weight="bold" /></span><h2>No contacts yet</h2><p>Add someone you’ve met, scan a badge, import a file, or publish a card so people can share their details back.</p><div className="empty-state-actions"><LinkButton href="/business/contacts/new"><PlusIcon size={17} weight="bold" />Add person</LinkButton><LinkButton href="/app/scan"><QrCodeIcon size={17} weight="bold" />Scan badge</LinkButton><LinkButton href="/business/contacts/linkedin"><LinkedinLogoIcon size={17} weight="bold" />LinkedIn</LinkButton>{importButton}</div></div></div>}
+        </> : <div className="empty-state"><div><span className="empty-icon"><UsersThreeIcon size={32} /></span><h2>No contacts yet</h2><p>Add someone you’ve met, scan a badge, import a file, or publish a card so people can share their details back.</p><div className="empty-state-actions"><LinkButton href="/business/contacts/new"><PlusIcon size={17} />Add person</LinkButton><LinkButton href="/app/scan"><QrCodeIcon size={17} weight="bold" />Scan badge</LinkButton><LinkButton href="/business/contacts/linkedin"><LinkedinLogoIcon size={17} />LinkedIn</LinkButton>{importButton}</div></div></div>}
       </div>
     </BusinessShell>
   );

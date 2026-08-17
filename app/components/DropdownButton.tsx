@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { ChevronDown as CaretDownIcon } from "react-feather";
 import { Button } from "./Button";
 
 export type DropdownItem = {
@@ -94,14 +94,14 @@ export function DropdownButton({ label, icon, items, size = "small", fullWidth =
       >
         {icon}
         {label}
-        <CaretDownIcon size={14} weight="bold" />
+        <CaretDownIcon size={14} />
       </Button>
       {open && position ? createPortal(
         <div
           ref={menuRef}
           role="menu"
           style={{ position: "absolute", top: position.top, left: position.left, minWidth: position.width, zIndex: 1000 }}
-          className="grid gap-1 rounded-md border border-[#e5e9e2] bg-white p-1.5 shadow-lg"
+          className="grid gap-1 rounded-lg border border-[#e5e9e2] bg-white p-1.5 shadow-lg"
         >
           {items.map((item) => (
             <button
@@ -110,7 +110,7 @@ export function DropdownButton({ label, icon, items, size = "small", fullWidth =
               role="menuitem"
               disabled={item.disabled}
               onClick={() => selectItem(item)}
-              className="flex items-center gap-2 whitespace-nowrap rounded px-3 py-2 text-left text-sm font-semibold text-[#163300] hover:bg-[#f2f5f0] disabled:cursor-not-allowed disabled:text-[#a4aba0] disabled:hover:bg-transparent"
+              className="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm font-medium text-[#163300] hover:bg-[#f2f5f0] disabled:cursor-not-allowed disabled:text-[#a4aba0] disabled:hover:bg-transparent"
             >
               {item.icon}
               {item.label}

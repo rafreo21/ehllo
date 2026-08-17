@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CopyIcon } from "@phosphor-icons/react/dist/csr/Copy";
+import { Copy as CopyIcon } from "react-feather";
 import { GoogleLogoIcon } from "@phosphor-icons/react/dist/csr/GoogleLogo";
 import { ContactlessPaymentIcon } from "@phosphor-icons/react/dist/csr/ContactlessPayment";
 import { WalletIcon } from "@phosphor-icons/react/dist/csr/Wallet";
@@ -157,7 +157,7 @@ export function WalletSharePanel({ slug, shareUrl }: WalletSharePanelProps) {
             <ContactlessPaymentIcon size={18} weight="bold" />Write NFC tag
           </Button>
           <Button variant="ghost" onClick={() => void copyNfcPayload()}>
-            <CopyIcon size={16} weight="bold" />{copiedNfc ? "Payload copied" : "Copy manufacturer payload"}
+            <CopyIcon size={16} />{copiedNfc ? "Payload copied" : "Copy manufacturer payload"}
           </Button>
         </div>
         {!nfcSupported ? (

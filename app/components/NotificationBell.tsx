@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { BellIcon } from "@phosphor-icons/react/dist/csr/Bell";
-import { CalendarCheckIcon } from "@phosphor-icons/react/dist/csr/CalendarCheck";
-import { CheckIcon } from "@phosphor-icons/react/dist/csr/Check";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { ClockCounterClockwiseIcon } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
-import { ShareNetworkIcon } from "@phosphor-icons/react/dist/csr/ShareNetwork";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
+import { useCallback, useEffect, useRef, useState, type ComponentType } from "react";
+import { Bell as BellIcon } from "react-feather";
+import { Calendar as CalendarCheckIcon } from "react-feather";
+import { Check as CheckIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { RotateCcw as ClockCounterClockwiseIcon } from "react-feather";
+import { Share2 as ShareNetworkIcon } from "react-feather";
+import { Users as UsersThreeIcon } from "react-feather";
 import { HandWavingIcon } from "@phosphor-icons/react/dist/csr/HandWaving";
 import { LinkButton } from "./Button";
 import { BROWSER_NOTIFICATION_CHANGE_EVENT, BROWSER_NOTIFICATION_KEY } from "./NotificationPreferences";
@@ -43,7 +43,9 @@ function isUrgent(dueAt: string): boolean {
   return due <= startOfToday();
 }
 
-function iconForType(type: NotificationType) {
+// "keep_in_touch" alone still renders a Phosphor icon (HandWaving has no
+// react-feather equivalent), so it alone keeps the `weight="bold"` prop below.
+function iconForType(type: NotificationType): ComponentType<any> {
   switch (type) {
     case "review_ready": return CheckCircleIcon;
     case "follow_up_due": return CalendarCheckIcon;
@@ -204,7 +206,7 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
   return (
     <div className="notification-bell-shell" ref={shellRef}>
       <button type="button" className="notification-bell-button" aria-label={unreadCount ? `Notifications, ${unreadCount} unread` : "Notifications"} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((value) => !value)}>
-        <BellIcon size={20} weight={unreadCount ? "fill" : "bold"} />
+        <BellIcon size={20} />
         {unreadCount ? <span>{unreadCount > 9 ? "9+" : unreadCount}</span> : null}
       </button>
 
@@ -212,7 +214,7 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
         <section className="notification-popover" role="dialog" aria-label="Notifications">
           <header>
             <div><span>Attention centre</span><h2>Notifications</h2></div>
-            {unreadCount ? <button type="button" onClick={() => void markAllRead()}><CheckIcon size={14} weight="bold" />Mark all read</button> : null}
+            {unreadCount ? <button type="button" onClick={() => void markAllRead()}><CheckIcon size={14} />Mark all read</button> : null}
           </header>
           <div className="notification-popover-body">
             {loading ? <div className="notification-loading"><i /><i /><i /></div> : failed ? (
@@ -222,13 +224,13 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
               const isUnread = !alert.readAt;
               return (
                 <a className={`notification-item ${isUnread ? "is-unread" : ""}`} href={notificationHref(alert)} key={alert.id} onClick={() => void markRead(alert)}>
-                  <span className={`notification-status notification-status-${alert.type}`}><Icon size={17} weight="bold" /></span>
+                  <span className={`notification-status notification-status-${alert.type}`}>{alert.type === "keep_in_touch" ? <Icon size={17} weight="bold" /> : <Icon size={17} />}</span>
                   <span><strong>{alert.title}</strong>{alert.body ? <small>{alert.body}</small> : null}<em>{relativeTime(alert.createdAt)}</em></span>
                   {isUnread ? <i aria-label="Unread" /> : null}
                 </a>
               );
             }) : (
-              <div className="notification-empty"><span><CheckIcon size={22} weight="bold" /></span><strong>You&apos;re all caught up</strong><p>Review-ready captures, due follow-ups, and shared-meeting updates will appear here.</p></div>
+              <div className="notification-empty"><span><CheckIcon size={22} /></span><strong>You&apos;re all caught up</strong><p>Review-ready captures, due follow-ups, and shared-meeting updates will appear here.</p></div>
             )}
           </div>
           <footer><LinkButton fullWidth variant="secondary" href="/app/followups" onClick={() => setOpen(false)}>Open follow-ups</LinkButton></footer>

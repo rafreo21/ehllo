@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { ClockIcon } from "@phosphor-icons/react/dist/csr/Clock";
-import { MagicWandIcon } from "@phosphor-icons/react/dist/csr/MagicWand";
-import { PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { Clock as ClockIcon } from "react-feather";
+import { Zap as MagicWandIcon } from "react-feather";
+import { Send as PaperPlaneTiltIcon } from "react-feather";
 import { BusinessShell } from "../../components/BusinessShell";
 import { OutboundDraftPanel } from "../../components/OutboundDraftPanel";
 import { PageSkeleton, StatusMessage } from "../../components/AsyncState";
@@ -119,7 +119,7 @@ export default function OutboundPage() {
             <h1>Draft before you send.</h1>
             <p>Autonomous outbound unlocks only after you prove the review habit. Complete follow-ups or send approved drafts first.</p>
           </div>
-          <LinkButton href="/app/followups"><PaperPlaneTiltIcon size={17} weight="bold" />Open Inbox</LinkButton>
+          <LinkButton href="/app/followups"><PaperPlaneTiltIcon size={17} />Open Inbox</LinkButton>
         </div>
 
         <section className="outbound-habit-card">
@@ -136,7 +136,7 @@ export default function OutboundPage() {
           </div>
           {habitProven ? (
             <Button loading={bulkLoading} disabled={!draftableWithoutDraft.length} onClick={() => void generateAllDrafts()}>
-              <MagicWandIcon size={17} weight="bold" />Generate drafts for queue ({draftableWithoutDraft.length})
+              <MagicWandIcon size={17} />Generate drafts for queue ({draftableWithoutDraft.length})
             </Button>
           ) : null}
         </section>
@@ -155,7 +155,7 @@ export default function OutboundPage() {
                     <div>
                       <h2>{action.title}</h2>
                       <p>{encounter.personName || encounter.title}</p>
-                      <small><ClockIcon size={14} weight="bold" />{action.dueAt ? `Due ${action.dueAt}` : "No due date"}</small>
+                      <small><ClockIcon size={14} />{action.dueAt ? `Due ${action.dueAt}` : "No due date"}</small>
                     </div>
                     <LinkButton size="small" variant="secondary" href={`/app/encounters/${encounter.id}`}>Review context</LinkButton>
                   </header>
@@ -173,7 +173,7 @@ export default function OutboundPage() {
         ) : (
           <div className="empty-state">
             <div>
-              <span className="empty-icon"><CheckCircleIcon size={32} weight="bold" /></span>
+              <span className="empty-icon"><CheckCircleIcon size={32} /></span>
               <h2>No outbound actions waiting</h2>
               <p>Email, send, and LinkedIn actions from your Inbox appear here for review-first drafting.</p>
               <LinkButton href="/app/followups">Go to Inbox</LinkButton>

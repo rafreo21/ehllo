@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { CreditCard as IdentificationCardIcon } from "react-feather";
 import { Button } from "../../components/Button";
 import { ContactMethodIcon } from "../../components/ContactMethodIcon";
 import { PublicAppDownloadPrompt } from "../../components/PublicAppDownloadPrompt";
@@ -307,7 +307,7 @@ export function PublicCardClient({
       {showCoach ? (
         <div className="public-save-coach" role="dialog" aria-modal="true" aria-labelledby="save-coach-title">
           <div className="public-save-coach-card">
-            <IdentificationCardIcon size={34} weight="bold" />
+            <IdentificationCardIcon size={34} />
             <h2 id="save-coach-title">Save {ownerName} to your phone</h2>
             <p>
               On the next screen, scroll down and tap <strong>Create New Contact</strong> so iOS saves the right name,
@@ -318,7 +318,7 @@ export function PublicCardClient({
               <small>Add to Existing Contact</small>
             </div>
             <Button fullWidth onClick={handleCoachContinue}>
-              Continue <ArrowRightIcon size={18} weight="bold" />
+              Continue <ArrowRightIcon size={18} />
             </Button>
             <button type="button" className="ghost-link" onClick={() => setShowCoach(false)}>
               Back

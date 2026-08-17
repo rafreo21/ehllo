@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
-import { CalendarBlankIcon } from "@phosphor-icons/react/dist/csr/CalendarBlank";
+import { ExternalLink as ArrowSquareOutIcon } from "react-feather";
+import { Calendar as CalendarBlankIcon } from "react-feather";
 import type { ActionLinkContext } from "../../lib/action-links";
 import { resolveActionLink, resolveSecondaryActionLinks } from "../../lib/action-links";
 import type { EncounterAction } from "../../lib/encounters";
@@ -105,7 +105,7 @@ export function ActionDoButton({ action, context, size = "small", showSecondary 
       <div className="action-do-group">
         <DropdownButton
           label={TRIGGER_LABEL.meeting}
-          icon={<CalendarBlankIcon size={14} weight="bold" />}
+          icon={<CalendarBlankIcon size={14} />}
           items={items}
           size={buttonSize}
           loading={scheduling !== ""}
@@ -173,7 +173,7 @@ export function ActionDoButton({ action, context, size = "small", showSecondary 
         rel={primary.external ? "noreferrer" : undefined}
       >
         {primary.label}
-        {primary.external ? <ArrowSquareOutIcon size={14} weight="bold" /> : null}
+        {primary.external ? <ArrowSquareOutIcon size={14} /> : null}
       </LinkButton>
     </div>
   );

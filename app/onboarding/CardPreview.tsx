@@ -1,5 +1,5 @@
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
-import { PhoneIcon } from "@phosphor-icons/react/dist/csr/Phone";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
+import { Phone as PhoneIcon } from "react-feather";
 import { Button } from "../components/Button";
 
 import { themeForegroundColor, themeGradientCss } from "@/lib/theme-contrast";
@@ -46,11 +46,11 @@ export function CardPreview({
           <div className="card-methods">
             {methods.length ? methods.map((method) => (
               <div className="card-method" key={method.type}>
-                <span>{method.type === "phone" ? <PhoneIcon size={18} weight="bold" /> : <EnvelopeSimpleIcon size={18} weight="bold" />}</span>
+                <span>{method.type === "phone" ? <PhoneIcon size={18} /> : <EnvelopeSimpleIcon size={18} />}</span>
                 <div><strong>{method.label}</strong><small>{method.value}</small></div>
               </div>
             )) : (
-              <div className="card-method card-method-empty"><span><EnvelopeSimpleIcon size={18} weight="bold" /></span><div><strong>Email</strong><small>Add your email to preview it here</small></div></div>
+              <div className="card-method card-method-empty"><span><EnvelopeSimpleIcon size={18} /></span><div><strong>Email</strong><small>Add your email to preview it here</small></div></div>
             )}
           </div>
           <div className="card-actions"><Button fullWidth style={{ background: themeGradientCss(theme), color: onAccent }}>Save contact</Button></div>

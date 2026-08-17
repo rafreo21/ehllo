@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
-import { ListChecksIcon } from "@phosphor-icons/react/dist/csr/ListChecks";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { CreditCard as IdentificationCardIcon } from "react-feather";
+import { CheckSquare as ListChecksIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
+import { TrendingUp as TrendUpIcon } from "react-feather";
+import { Users as UsersThreeIcon } from "react-feather";
 import { LinkButton } from "../components/Button";
 import { PageSkeleton } from "../components/AsyncState";
 import { CapturePromoBanner } from "../components/CapturePromoBanner";
@@ -145,14 +146,9 @@ export default function HomeDashboard() {
     };
   }, []);
 
-  const attentionHeadline = nudge.urgentCount
-    ? `${nudge.urgentCount} follow-up${nudge.urgentCount === 1 ? "" : "s"} need you`
-    : (nudge.completedCount || nudge.openCount)
-      ? "You’re all caught up"
-      : "No follow-ups yet";
-  const attentionCopy = (nudge.completedCount || nudge.openCount)
-    ? `${nudge.completedCount} completed · ${nudge.completionRate}% of ${nudge.completedCount + nudge.openCount} kept`
-    : "Your commitments will appear here.";
+  const followUpStatLabel = nudge.urgentCount
+    ? `${nudge.urgentCount} need${nudge.urgentCount === 1 ? "s" : ""} you`
+    : "Open follow-ups";
 
   const activeWork = useMemo(() => {
     const items: Array<{ key: string; icon: typeof ListChecksIcon; label: string; href: string }> = [];
@@ -187,25 +183,38 @@ export default function HomeDashboard() {
           <PageSkeleton rows={3} />
         ) : (
           <>
-            <a className="home-followup-summary" href="/app/followups">
-              <span className={nudge.urgentCount ? "attention" : ""}>
-                <ListChecksIcon size={25} weight="bold" />
-              </span>
-              <div>
-                <strong>{attentionHeadline}</strong>
-                <small>{attentionCopy}</small>
+            <div className="home-stats">
+              <a className="home-stat-tile" href="/app/followups">
+                <span className={`home-stat-icon${nudge.urgentCount ? " home-stat-icon-attention" : ""}`}>
+                  <ListChecksIcon size={19} />
+                </span>
+                <strong className="home-stat-value">{nudge.openCount}</strong>
+                <span className="home-stat-label">{followUpStatLabel}</span>
+              </a>
+              <a className="home-stat-tile" href="/app/people">
+                <span className="home-stat-icon">
+                  <UsersThreeIcon size={19} />
+                </span>
+                <strong className="home-stat-value">{sortedConnections.length}</strong>
+                <span className="home-stat-label">People met</span>
+              </a>
+              <div className="home-stat-tile">
+                <span className="home-stat-icon">
+                  <TrendUpIcon size={19} />
+                </span>
+                <strong className="home-stat-value">{nudge.completionRate}%</strong>
+                <span className="home-stat-label">Follow-ups kept</span>
               </div>
-              <ArrowRightIcon size={19} weight="bold" />
-            </a>
+            </div>
             {followUpsFailed ? <p className="home-inline-error">Could not load follow-ups. <button type="button" onClick={() => void loadFollowUps()}>Retry</button></p> : null}
 
             {activeWork.length ? (
               <div className="home-active-work">
                 {activeWork.map((item) => (
                   <a className="home-active-work-row" href={item.href} key={item.key}>
-                    <span><item.icon size={17} weight="bold" /></span>
+                    <span><item.icon size={17} /></span>
                     <strong>{item.label}</strong>
-                    <ArrowRightIcon size={15} weight="bold" />
+                    <ArrowRightIcon size={15} />
                   </a>
                 ))}
               </div>
@@ -213,7 +222,7 @@ export default function HomeDashboard() {
 
             <div className="home-quick-actions">
               <LinkButton href="/app/cards#share"><QrCodeIcon size={17} weight="bold" />Share my card</LinkButton>
-              <LinkButton variant="secondary" href="/app/followups/new"><ListChecksIcon size={17} weight="bold" />Quick follow-up</LinkButton>
+              <LinkButton variant="secondary" href="/app/followups/new"><ListChecksIcon size={17} />Quick follow-up</LinkButton>
               <LinkButton variant="secondary" href="/app/scan"><ScanIcon size={17} weight="bold" />Quick scan</LinkButton>
             </div>
 
@@ -248,14 +257,14 @@ export default function HomeDashboard() {
                             {isOverdue(openFollowUp.dueAt ?? "") ? "Overdue" : "Follow-up due"}
                           </em>
                         ) : null}
-                        <ArrowRightIcon size={15} weight="bold" />
+                        <ArrowRightIcon size={15} />
                       </a>
                     );
                   })}
                 </div>
               ) : (
                 <div className="home-empty-compact">
-                  <UsersThreeIcon size={20} weight="fill" />
+                  <UsersThreeIcon size={20} />
                   <div>
                     <strong>No recent people yet.</strong>
                     <p>Scan a card or add someone after your next conversation.</p>
@@ -270,18 +279,18 @@ export default function HomeDashboard() {
               {hasCards && card ? (
                 <a className="home-card-row" href="/app/cards">
                   {card.photo ? <img className="home-card-avatar" src={card.photo} alt="" /> : (
-                    <span className="home-card-avatar home-card-avatar-fallback"><IdentificationCardIcon size={20} weight="bold" /></span>
+                    <span className="home-card-avatar home-card-avatar-fallback"><IdentificationCardIcon size={20} /></span>
                   )}
                   <span>
                     <strong>{card.label || "My card"}</strong>
                     <small>{cardSubtitle || "Add your details"}</small>
                   </span>
                   <em>Open card</em>
-                  <ArrowRightIcon size={15} weight="bold" />
+                  <ArrowRightIcon size={15} />
                 </a>
               ) : (
                 <div className="home-empty-compact">
-                  <IdentificationCardIcon size={20} weight="bold" />
+                  <IdentificationCardIcon size={20} />
                   <div>
                     <strong>Create your first card</strong>
                     <p>Publish a card so people can save your details instantly.</p>

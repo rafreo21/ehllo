@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr/CheckCircle";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
-
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { AlertCircle as WarningCircleIcon } from "react-feather";
 export function StatusMessage({
   tone,
   children,
@@ -13,7 +12,7 @@ export function StatusMessage({
 }) {
   return (
     <div className={`status-message status-${tone}`} role={tone === "error" ? "alert" : "status"} aria-live="polite">
-      {tone === "success" ? <CheckCircleIcon weight="fill" /> : tone === "error" ? <WarningCircleIcon weight="fill" /> : null}
+      {tone === "success" ? <CheckCircleIcon /> : tone === "error" ? <WarningCircleIcon /> : null}
       <div>{children}</div>
       {action}
     </div>

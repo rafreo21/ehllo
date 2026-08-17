@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChartLineUpIcon } from "@phosphor-icons/react/dist/csr/ChartLineUp";
-import { CloudArrowUpIcon } from "@phosphor-icons/react/dist/csr/CloudArrowUp";
-import { DownloadSimpleIcon } from "@phosphor-icons/react/dist/csr/DownloadSimple";
-import { PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
+import { TrendingUp as ChartLineUpIcon } from "react-feather";
+import { UploadCloud as CloudArrowUpIcon } from "react-feather";
+import { Download as DownloadSimpleIcon } from "react-feather";
+import { Send as PaperPlaneTiltIcon } from "react-feather";
 import { BusinessShell } from "../../components/BusinessShell";
 import { StatusMessage } from "../../components/AsyncState";
 import { ConnectedAccountsPanel } from "../../components/ConnectedAccountsPanel";
@@ -143,7 +143,7 @@ export default function ActivatePage() {
           )}
           <div className="activate-actions">
             <Button loading={bulkState === "syncing"} disabled={!contacts.length || !hubspotConfigured} onClick={() => void syncAllToHubSpot()}>
-              <CloudArrowUpIcon size={18} weight="bold" />Sync all contacts
+              <CloudArrowUpIcon size={18} />Sync all contacts
             </Button>
             <LinkButton variant="secondary" href="/business/contacts">Review contacts</LinkButton>
           </div>
@@ -159,10 +159,10 @@ export default function ActivatePage() {
           </header>
           <div className="activate-actions">
             <Button variant="secondary" disabled={!contacts.length} onClick={exportJson}>
-              <DownloadSimpleIcon size={18} weight="bold" />Download JSON bundle
+              <DownloadSimpleIcon size={18} />Download JSON bundle
             </Button>
             <Button variant="secondary" disabled={!contacts.length} onClick={exportCsv}>
-              <DownloadSimpleIcon size={18} weight="bold" />Download CSV
+              <DownloadSimpleIcon size={18} />Download CSV
             </Button>
           </div>
         </section>
@@ -170,11 +170,11 @@ export default function ActivatePage() {
         <section className="activate-panel">
           <header>
             <span className="step-pill">Campaigns</span>
-            <h2><ChartLineUpIcon size={22} weight="bold" /> Attribution and workspace analytics</h2>
+            <h2><ChartLineUpIcon size={22} /> Attribution and workspace analytics</h2>
             <p>Tag conferences and outreach pushes, then review people, captures, source mix, and follow-through by campaign.</p>
           </header>
           <div className="activate-actions">
-            <LinkButton href="/business/activate/campaigns"><ChartLineUpIcon size={18} weight="bold" />Open campaigns</LinkButton>
+            <LinkButton href="/business/activate/campaigns"><ChartLineUpIcon size={18} />Open campaigns</LinkButton>
             <LinkButton variant="secondary" href="/business/activate/campaigns/new">Create campaign</LinkButton>
           </div>
         </section>
@@ -186,11 +186,11 @@ export default function ActivatePage() {
         <section className="activate-panel">
           <header>
             <span className="step-pill">Outbound</span>
-            <h2><PaperPlaneTiltIcon size={22} weight="bold" /> Review-first drafts</h2>
+            <h2><PaperPlaneTiltIcon size={22} /> Review-first drafts</h2>
             <p>Draft email and LinkedIn follow-ups from meeting context. Approve each message before opening Gmail or LinkedIn. Nothing auto-sends.</p>
           </header>
           <div className="activate-actions">
-            <LinkButton href="/business/outbound"><PaperPlaneTiltIcon size={18} weight="bold" />Open outbound queue</LinkButton>
+            <LinkButton href="/business/outbound"><PaperPlaneTiltIcon size={18} />Open outbound queue</LinkButton>
             <LinkButton variant="secondary" href="/app/followups">Review Inbox</LinkButton>
           </div>
         </section>

@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowDownIcon } from "@phosphor-icons/react/dist/ssr/ArrowDown";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
-import { ArrowUpIcon } from "@phosphor-icons/react/dist/ssr/ArrowUp";
+import { ArrowDown as ArrowDownIcon } from "react-feather";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { ArrowUp as ArrowUpIcon } from "react-feather";
 import { BrandMark } from "./components/BrandMark";
 import { IconLinkButton, LinkButton } from "./components/Button";
 import { DraftMotion } from "./homepage-draft/DraftMotion";
@@ -27,13 +27,13 @@ export default function HomepageClient({ includeDraftReviewLink = false }: Homep
 
     <nav className="nav">
       <a className="brand" href="#top" aria-label="ehllo home"><BrandMark className="brand-mark" size={38}/><span>ehllo</span></a>
-      <div className="nav-links"><LinkButton size="small" variant="ghost" href="/auth">Login</LinkButton><LinkButton className="nav-cta" size="small" href="/auth?next=/onboarding">Start for free <ArrowRightIcon size={15} weight="bold"/></LinkButton></div>
+      <div className="nav-links"><LinkButton size="small" variant="ghost" href="/auth">Login</LinkButton><LinkButton className="nav-cta" size="small" href="/auth?next=/onboarding">Start for free <ArrowRightIcon size={15}/></LinkButton></div>
     </nav>
 
     <section className="hero draft-hero" id="top">
       <div className="eyebrow draft-hero-eyebrow"><span/> Your relationship workspace</div>
       <h1><span>Remember every person.</span><br/><span><em>Make the next move.</em></span></h1>
-      <div className="hero-bottom"><p>Meet someone, remember what mattered, and know what to do next. <small>ehllo keeps the people, context and next actions connected.</small></p><IconLinkButton className="circle-link" size="normal" variant="secondary" href="#lifecycle" aria-label="See how it works"><ArrowDownIcon size={21} weight="bold"/></IconLinkButton></div>
+      <div className="hero-bottom"><p>Meet someone, remember what mattered, and know what to do next. <small>ehllo keeps the people, context and next actions connected.</small></p><IconLinkButton className="circle-link" size="normal" variant="secondary" href="#lifecycle" aria-label="See how it works"><ArrowDownIcon size={21}/></IconLinkButton></div>
     </section>
 
     <section className="study section draft-reveal" id="lifecycle">
@@ -42,7 +42,7 @@ export default function HomepageClient({ includeDraftReviewLink = false }: Homep
         <div><h2>One conversation.<br/><em>A relationship remembered.</em></h2><p className="lede">ehllo turns the moment you meet into context you can use—without turning the conversation into CRM admin.</p></div>
         <LifecycleDemo/>
       </div>
-      <div className="draft-path" aria-label="Meeting to next move lifecycle">{["Meeting", "Encounter", "Person", "Context", "Next move"].map((item, index) => <div className="draft-reveal-item" style={{transitionDelay: `${index * 70}ms`}} key={item}><span>0{index + 1}</span><strong>{item}</strong>{index < 4 && <ArrowRightIcon size={15} weight="bold"/>}</div>)}</div>
+      <div className="draft-path" aria-label="Meeting to next move lifecycle">{["Meeting", "Encounter", "Person", "Context", "Next move"].map((item, index) => <div className="draft-reveal-item" style={{transitionDelay: `${index * 70}ms`}} key={item}><span>0{index + 1}</span><strong>{item}</strong>{index < 4 && <ArrowRightIcon size={15}/>}</div>)}</div>
     </section>
 
     <HorizontalLoops/>
@@ -62,6 +62,6 @@ export default function HomepageClient({ includeDraftReviewLink = false }: Homep
       <div className="metric"><div className="metric-window"><span>Follow-up window</span><strong>72h</strong></div><div className="metric-copy"><span>The outcome that matters</span><h3>A completed next move.</h3><p>Not another contact stored. A relationship moved forward with something timely, useful and personal.</p></div></div>
     </section>
 
-    <footer><div><BrandMark className="brand-mark" size={38}/><strong>ehllo</strong></div><p>Meet someone. Remember what mattered. Make the next move.</p><LinkButton variant="ghost" href="/auth?next=/onboarding">Start for free <ArrowUpIcon size={15} weight="bold"/></LinkButton></footer>
+    <footer><div><BrandMark className="brand-mark" size={38}/><strong>ehllo</strong></div><p>Meet someone. Remember what mattered. Make the next move.</p><LinkButton variant="ghost" href="/auth?next=/onboarding">Start for free <ArrowUpIcon size={15}/></LinkButton></footer>
   </main>;
 }

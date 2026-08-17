@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
+import { Trash2 as TrashIcon } from "react-feather";
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import { Button } from "../../../components/Button";
 import { PageSkeleton, StatusMessage } from "../../../components/AsyncState";
@@ -202,7 +202,7 @@ export default function RecentScansPage() {
                       <strong className="truncate">{group.latest.visitor_name || "Unknown visitor"}</strong>
                       {saved ? (
                         <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#e2f6d5] px-2 py-0.5 text-[10px] font-bold text-[#163300]">
-                          <CheckCircleIcon size={11} weight="fill" /> Saved
+                          <CheckCircleIcon size={11} /> Saved
                         </span>
                       ) : null}
                     </div>
@@ -219,11 +219,11 @@ export default function RecentScansPage() {
                     <div className="flex shrink-0 items-center gap-2">
                       {!saved ? (
                         <Button size="small" onClick={() => void addGroup(group)}>
-                          <CheckCircleIcon size={15} weight="bold" /> Add
+                          <CheckCircleIcon size={15} /> Add
                         </Button>
                       ) : null}
                       <Button size="small" variant="ghost" onClick={() => void dismissGroup(group)}>
-                        <TrashIcon size={15} weight="bold" /> Dismiss
+                        <TrashIcon size={15} /> Dismiss
                       </Button>
                     </div>
                   )}

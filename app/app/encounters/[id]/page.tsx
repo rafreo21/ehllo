@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
-import { CaretUpIcon } from "@phosphor-icons/react/dist/csr/CaretUp";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { CopyIcon } from "@phosphor-icons/react/dist/csr/Copy";
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
-import { LockKeyIcon } from "@phosphor-icons/react/dist/csr/LockKey";
-import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/csr/PencilSimple";
-import { ShareNetworkIcon } from "@phosphor-icons/react/dist/csr/ShareNetwork";
+import { ChevronDown as CaretDownIcon } from "react-feather";
+import { ChevronUp as CaretUpIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { Copy as CopyIcon } from "react-feather";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
+import { Lock as LockKeyIcon } from "react-feather";
+import { Plus as PlusIcon } from "react-feather";
+import { Edit2 as PencilSimpleIcon } from "react-feather";
+import { Share2 as ShareNetworkIcon } from "react-feather";
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import { ActionDoButton } from "../../../components/ActionDoButton";
 import { OutboundDraftPanel } from "../../../components/OutboundDraftPanel";
@@ -336,7 +336,7 @@ export default function EncounterReviewPage() {
         <main className="review-main">
           <header className="review-heading">
             <div><h1>{encounter.personName || encounter.title}</h1><p>{encounter.personName && encounter.title ? encounter.title : encounter.personName || "Unlinked person"} · {formatDuration(encounter.durationSeconds)}</p></div>
-            {encounter.status === "shared" && <CheckCircleIcon size={42} weight="fill" />}
+            {encounter.status === "shared" && <CheckCircleIcon size={42} />}
           </header>
 
           <p className="review-status-line" aria-label="Meeting review summary">
@@ -355,10 +355,10 @@ export default function EncounterReviewPage() {
           <section className="review-section review-primary-section review-tabs-section">
             <div className="review-tabs" role="tablist" aria-label="Meeting recap and details">
               <button type="button" role="tab" aria-selected={reviewTab === "recap"} className={reviewTab === "recap" ? "active" : ""} onClick={() => setReviewTab("recap")}>
-                <ShareNetworkIcon size={16} weight="bold" />Recap
+                <ShareNetworkIcon size={16} />Recap
               </button>
               <button type="button" role="tab" aria-selected={reviewTab === "details"} className={reviewTab === "details" ? "active" : ""} onClick={() => setReviewTab("details")}>
-                <LockKeyIcon size={16} weight="bold" />Details
+                <LockKeyIcon size={16} />Details
               </button>
             </div>
             {reviewTab === "recap" ? (
@@ -379,7 +379,7 @@ export default function EncounterReviewPage() {
                 <>
                   <button type="button" className="review-transcript-toggle" onClick={() => setTranscriptOpen((value) => !value)} aria-expanded={transcriptOpen}>
                     <div><strong>Full transcript</strong><small>{transcriptOpen ? "Hide the raw transcript while you focus on what to share." : "Expand to edit the full transcript. Collapsed by default on review."}</small></div>
-                    {transcriptOpen ? <CaretUpIcon size={16} weight="bold" /> : <CaretDownIcon size={16} weight="bold" />}
+                    {transcriptOpen ? <CaretUpIcon size={16} /> : <CaretDownIcon size={16} />}
                   </button>
                   {transcriptOpen ? (
                     <>
@@ -428,12 +428,12 @@ export default function EncounterReviewPage() {
           </section>
 
           <section className="review-section">
-            <header><span><CheckCircleIcon size={20} weight="bold" /></span><div><h2>Follow-ups</h2><p>Confirm the owner and due date for each commitment.</p></div></header>
+            <header><span><CheckCircleIcon size={20} /></span><div><h2>Follow-ups</h2><p>Confirm the owner and due date for each commitment.</p></div></header>
             {guestCommitments.length ? (
               <div className="guest-response-list">
                 {guestCommitments.map((commitment, index) => (
                   <article key={commitment.id || `${commitment.committedAt}-${index}`}>
-                    <CheckCircleIcon size={20} weight="fill" />
+                    <CheckCircleIcon size={20} />
                     <div><strong>{commitment.note || "They confirmed they will follow up."}</strong><small>{commitment.guestName || participantName(commitment.participantId) || "Guest"}{commitment.channel ? ` · ${commitment.channel}` : ""}{commitment.dueAt ? ` · due ${commitment.dueAt}` : ""} · shared {new Date(commitment.committedAt).toLocaleDateString()}</small></div>
                   </article>
                 ))}
@@ -462,7 +462,7 @@ export default function EncounterReviewPage() {
                       }));
                     }}
                     aria-label={action.status === "completed" ? "Mark open" : canToggle ? "Mark complete" : "Confirm review to activate this follow-up first"}
-                  ><CheckCircleIcon size={22} weight={action.status === "completed" ? "fill" : "regular"} /></button>
+                  ><CheckCircleIcon size={22} /></button>
                   <div className="action-copy"><strong>{action.title}</strong><small>{actionOwnerLabel(action)}{action.dueAt ? ` · due ${action.dueAt}` : ""} · {channelLabel(action.channel)}</small></div>
                   {editingActionId === action.id ? (
                     <div className="action-inline-editor">
@@ -535,7 +535,7 @@ export default function EncounterReviewPage() {
                     aria-label={`Edit owner and due date for ${action.title}`}
                     aria-expanded={editingActionId === action.id}
                     onClick={() => setEditingActionId((current) => current === action.id ? "" : action.id)}
-                  ><PencilSimpleIcon size={17} weight="bold" />Edit</button>
+                  ><PencilSimpleIcon size={17} />Edit</button>
                   {actionContext && <ActionDoButton action={action} context={actionContext} showSecondary />}
                   {actionContext && action.owner === "me" && supportsOutboundDraft(action.channel) ? (
                     <OutboundDraftPanel
@@ -560,8 +560,8 @@ export default function EncounterReviewPage() {
               onClick={() => setActionComposerOpen((value) => !value)}
               aria-expanded={actionComposerOpen}
             >
-              <span><PlusIcon size={16} weight="bold" />Add another follow-up</span>
-              {actionComposerOpen ? <CaretUpIcon size={16} weight="bold" /> : <CaretDownIcon size={16} weight="bold" />}
+              <span><PlusIcon size={16} />Add another follow-up</span>
+              {actionComposerOpen ? <CaretUpIcon size={16} /> : <CaretDownIcon size={16} />}
             </button>
             {actionComposerOpen ? <div className="new-action">
               <div className="quick-follow-up-owner">
@@ -612,7 +612,7 @@ export default function EncounterReviewPage() {
                   className="quick-follow-up-detail-toggle"
                 >
                   <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">What do you need to do? (optional)</small>
-                  {newActionDetailOpen ? <CaretUpIcon size={16} weight="bold" /> : <CaretDownIcon size={16} weight="bold" />}
+                  {newActionDetailOpen ? <CaretUpIcon size={16} /> : <CaretDownIcon size={16} />}
                 </button>
                 {newActionDetailOpen ? (
                   <TextField
@@ -626,7 +626,7 @@ export default function EncounterReviewPage() {
               </div>
               <div className="quick-follow-up-actions">
                 <Button variant="ghost" onClick={() => setActionComposerOpen(false)}>Cancel</Button>
-                <Button onClick={addAction}><PlusIcon size={15} weight="bold" />Add</Button>
+                <Button onClick={addAction}><PlusIcon size={15} />Add</Button>
               </div>
             </div> : null}
           </section>
@@ -655,9 +655,9 @@ export default function EncounterReviewPage() {
             </>
           ) : null}
           {encounter.status !== "shared" ? (
-            <Button fullWidth onClick={approveAndShare}><CheckCircleIcon size={18} weight="bold" />Approve and create link</Button>
+            <Button fullWidth onClick={approveAndShare}><CheckCircleIcon size={18} />Approve and create link</Button>
           ) : (
-            <Button fullWidth onClick={() => void copyGuestLink()}><CopyIcon size={18} weight="bold" />Copy guest link</Button>
+            <Button fullWidth onClick={() => void copyGuestLink()}><CopyIcon size={18} />Copy guest link</Button>
           )}
           {encounter.status === "shared" && encounter.personEmail ? (
             <a className="email-invite" href={recordingShareMailtoHref({
@@ -668,11 +668,11 @@ export default function EncounterReviewPage() {
               sharedSummary: encounter.sharedSummary,
               meetingDate: formatMeetingEmailDate(encounter.startedAt),
               cloudExpired,
-            })}><EnvelopeSimpleIcon size={18} weight="bold" />Email guest link</a>
+            })}><EnvelopeSimpleIcon size={18} />Email guest link</a>
           ) : null}
           {showEmailRecording ? (
             <>
-              <a className="email-invite" href={recordingEmailHref}><EnvelopeSimpleIcon size={18} weight="bold" />Email recording + details</a>
+              <a className="email-invite" href={recordingEmailHref}><EnvelopeSimpleIcon size={18} />Email recording + details</a>
               <a className="email-invite" href={localAudioUrl ?? "#"} download={`${encounter.title.replace(/[^\w\- ]+/g, "").trim() || "ehllo"}-recording.${localRecordingMimeType.includes("wav") ? "wav" : "m4a"}`}>Download recording for attachment</a>
               <small>Email apps cannot attach files automatically. Download the recording, then attach it in your email draft.</small>
             </>

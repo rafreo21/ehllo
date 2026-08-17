@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { BriefcaseIcon } from "@phosphor-icons/react/dist/csr/Briefcase";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { Briefcase as BriefcaseIcon } from "react-feather";
 import { BuildingsIcon } from "@phosphor-icons/react/dist/csr/Buildings";
-import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import { X as XIcon } from "react-feather";
 import { Button } from "../../components/Button";
 import { ContactMethodIcon } from "../../components/ContactMethodIcon";
 import { TextField } from "../../components/FormField";
@@ -23,7 +23,7 @@ const OPTIONAL_PILLS: { id: OptionalField; label: string; fieldLabel: string; pl
 ];
 
 function OptionalPillIcon({ field }: { field: OptionalField }) {
-  if (field === "role") return <BriefcaseIcon size={14} weight="bold" aria-hidden />;
+  if (field === "role") return <BriefcaseIcon size={14} aria-hidden />;
   if (field === "company") return <BuildingsIcon size={14} weight="bold" aria-hidden />;
   return <ContactMethodIcon type={field} size={14} />;
 }
@@ -184,7 +184,7 @@ export function PublicExchangeForm({
               aria-label={`Remove ${pill.label}`}
               onClick={() => hideField(pill.id)}
             >
-              <XIcon size={16} weight="bold" aria-hidden />
+              <XIcon size={16} aria-hidden />
             </button>
           </div>
         ))}
@@ -207,7 +207,7 @@ export function PublicExchangeForm({
         type="submit"
         loading={loading}
         style={{ background: themeGradientCss(themeColor), color: themeForegroundColor(themeColor) }}>
-        {loading ? "Sending…" : "Send my details"} {!loading && <ArrowRightIcon size={18} weight="bold" />}
+        {loading ? "Sending…" : "Send my details"} {!loading && <ArrowRightIcon size={18} />}
       </Button>
       <small className="public-exchange-privacy">We don&apos;t sell your contact details.</small>
     </form>

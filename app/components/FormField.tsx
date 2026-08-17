@@ -1,7 +1,6 @@
 import { forwardRef } from "react";
 import type { FieldsetHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
-
+import { ChevronDown as CaretDownIcon } from "react-feather";
 type SharedProps = {
   label: string;
   hint?: string;
@@ -20,7 +19,7 @@ const fieldControlClass = [
   "border-[#aeb8aa]",
 ].join(" ");
 const compactControlClass = [
-  "block h-[42px] min-h-[42px] w-full rounded-[7px] border bg-white px-3 text-[13px] font-extrabold text-[#0e0f0c]",
+  "block h-[42px] min-h-[42px] w-full rounded-[7px] border bg-white px-3 text-[13px] font-normal text-[#0e0f0c]",
   "outline-none transition",
   "focus:border-[#163300] focus:ring-4 focus:ring-[#aeb8aa]/45",
   "disabled:cursor-not-allowed disabled:bg-[#f2f5f0] disabled:text-[#858b82]",
@@ -68,6 +67,7 @@ export const TextField = forwardRef<HTMLInputElement, SharedProps & InputHTMLAtt
     hint,
     error,
     leadingIcon,
+    compact = false,
     id,
     className = "",
     ...props
@@ -78,14 +78,14 @@ export const TextField = forwardRef<HTMLInputElement, SharedProps & InputHTMLAtt
   const descriptionId = hint || error ? `${fieldId}-description` : undefined;
 
   return (
-    <div className={`grid gap-2 ${className}`}>
-      <div className="flex items-center justify-between gap-4">
+    <div className={`grid ${compact ? "gap-1" : "gap-2"} ${className}`}>
+      <div className="grid gap-0.5">
         <label htmlFor={fieldId} className={fieldLabelClass}>{label}</label>
         {hint && !error && <span className="text-xs text-[#6b7168]">{hint}</span>}
       </div>
       <div className="relative">
         {leadingIcon && (
-          <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-[#52604b]">
+          <span className={`pointer-events-none absolute inset-y-0 left-0 flex items-center text-[#52604b] ${compact ? "pl-3" : "pl-3.5"}`}>
             {leadingIcon}
           </span>
         )}
@@ -96,9 +96,9 @@ export const TextField = forwardRef<HTMLInputElement, SharedProps & InputHTMLAtt
           aria-invalid={Boolean(error)}
           aria-describedby={descriptionId}
           className={[
-            fieldControlClass,
+            compact ? compactControlClass : fieldControlClass,
             "placeholder:text-[#858b82]",
-            leadingIcon ? "pl-11" : "",
+            leadingIcon ? (compact ? "pl-9" : "pl-11") : "",
             error ? "border-[#b42318] focus:border-[#b42318] focus:ring-[#fecdca]/50" : "",
           ].join(" ")}
         />
@@ -149,7 +149,6 @@ export const SelectField = forwardRef<HTMLSelectElement, SharedProps & SelectHTM
         </select>
         <CaretDownIcon
           size={compact ? 14 : 16}
-          weight="bold"
           aria-hidden="true"
           className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-[#52604b] ${compact ? "right-3" : "right-3.5"}`}
         />

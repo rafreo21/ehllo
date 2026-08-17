@@ -45,7 +45,7 @@
 .nav-group-label-spaced { margin-top: 22px; }
 
 /* Consumer app sidebar only (AppShell) — business sidebar keeps the compact style above. */
-.product-shell:has(.consumer-sidebar) { background: #e9ede6; gap: 18px; padding: 18px; }
+.product-shell:has(.consumer-sidebar) { background: #eef0ef; gap: 18px; padding: 18px; }
 .consumer-sidebar {
   padding: 28px 20px;
   margin: 0;
@@ -65,9 +65,10 @@
 .workspace-card div { display: flex; flex-direction: column; font-weight: 800; font-size: 12px; }
 .workspace-card small { color: #7d8ba0; font-weight: 500; margin-top: 3px; }
 .product-main { min-width: 0; }
-.consumer-global-bell { position: fixed; top: 20px; right: 24px; z-index: 90; }
+.consumer-topbar { position: fixed; top: 16px; right: 24px; z-index: 90; display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 999px; background: white; box-shadow: 0 8px 24px rgba(22,51,0,.1); }
+.consumer-topbar-avatar { width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; background: var(--p-navy); color: white; font-size: 11px; font-weight: 900; text-decoration: none; flex: 0 0 auto; }
 .notification-bell-shell { position: relative; }
-.notification-bell-button { position: relative; width: 42px; height: 42px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 8px; background: white; color: var(--p-navy); box-shadow: 0 8px 24px rgba(22,51,0,.1); cursor: pointer; }
+.notification-bell-button { position: relative; width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 999px; background: var(--p-ice); color: var(--p-navy); cursor: pointer; }
 .notification-bell-button:hover { background: var(--p-sky); }
 .notification-bell-button:focus-visible { outline: 3px solid rgba(159,232,112,.65); outline-offset: 2px; }
 .notification-bell-button > span { position: absolute; top: -5px; right: -5px; min-width: 20px; height: 20px; padding: 0 5px; display: grid; place-items: center; border: 2px solid white; border-radius: 999px; background: #c92a1d; color: white; font-size: 9px; font-weight: 900; line-height: 1; }
@@ -288,8 +289,7 @@
 }
 
 @media (max-width: 760px) {
-  .consumer-global-bell { top: 11px; right: 16px; }
-  .notification-bell-button { width: 40px; height: 40px; box-shadow: none; background: transparent; }
+  .consumer-topbar { top: 10px; right: 16px; }
   .notification-popover { position: fixed; top: 60px; left: 12px; right: 12px; width: auto; max-height: calc(100vh - 76px); }
   .product-content { padding: 36px 18px 56px; }
   .product-page-toolbar { margin-bottom: 16px; }
