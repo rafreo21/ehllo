@@ -20,6 +20,7 @@
     "deploy:send-auth-email": "node scripts/deploy-send-auth-email.mjs",
     "verify:resend-delivery": "node scripts/verify-resend-delivery.mjs",
     "verify:google-wallet": "node scripts/verify-google-wallet.mjs",
+    "verify:apple-wallet": "node scripts/verify-apple-wallet.mjs",
     "security:secrets": "node scripts/check-committed-secrets.mjs",
     "release:check": "npm run security:secrets && node scripts/check-release-readiness.mjs"
   },
