@@ -12,7 +12,7 @@ import { useToast } from "./ToastContext";
 type CrmSyncButtonProps = {
   contact: Contact;
   encounters: Encounter[];
-  size?: "small" | "medium";
+  size?: "small" | "normal";
   variant?: "primary" | "secondary" | "ghost";
   onSynced?: (externalId: string) => void;
 };

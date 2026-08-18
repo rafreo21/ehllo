@@ -37,7 +37,7 @@ type NotificationTypeRow = {
   // Phosphor/react-feather icons here are components with their own prop types,
   // and the narrower signature matched neither - it only ever compiled because
   // nothing typechecked this file.
-  icon: ComponentType<{ size?: number; weight?: string }>;
+  icon: ComponentType<{ size?: number; weight?: "bold" }>;
   label: string;
   hint: string;
 };

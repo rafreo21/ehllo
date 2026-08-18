@@ -133,10 +133,10 @@ type InboundExchange = {
 };
 
 const captureSteps = [
-  { label: "Record", short: "Capture", Icon: MicrophoneIcon },
-  { label: "Context", short: "Context", Icon: MagicWandIcon },
-  { label: "Connect", short: "Connect", Icon: IdentificationCardIcon },
-  { label: "Follow-up", short: "Follow-up", Icon: PaperPlaneTiltIcon },
+  { label: "Record", short: "Capture", Icon: MicrophoneIcon, locked: false },
+  { label: "Context", short: "Context", Icon: MagicWandIcon, locked: false },
+  { label: "Connect", short: "Connect", Icon: IdentificationCardIcon, locked: false },
+  { label: "Follow-up", short: "Follow-up", Icon: PaperPlaneTiltIcon, locked: false },
   { label: "Review", short: "Review", Icon: EyeIcon, locked: true },
 ] as const;
 

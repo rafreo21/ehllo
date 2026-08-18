@@ -29,7 +29,7 @@ export async function buildVirtualBackgroundPanelPng(profile: ShareAssetProfile,
   );
 
   const svg = await satori(
-    {
+    ({
       type: "div",
       props: {
         style: {
@@ -119,7 +119,9 @@ export async function buildVirtualBackgroundPanelPng(profile: ShareAssetProfile,
           },
         ],
       },
-    },
+      // satori's first parameter is a ReactNode; a hand-built element object is
+      // the documented way to call it without JSX.
+    } as unknown as Parameters<typeof satori>[0]),
     {
       width,
       height,

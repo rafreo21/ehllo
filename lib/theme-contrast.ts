@@ -28,7 +28,7 @@ function mixHex(hex: string, targetHex: string, weight: number) {
   return `#${channels.map((channel) => channel.toString(16).padStart(2, "0")).join("").toUpperCase()}`;
 }
 
-export function normalizeThemeColor(value: string, fallback = "#9FE870") {
+export function normalizeThemeColor(value: string | null | undefined, fallback = "#9FE870") {
   const trimmed = value?.trim() || fallback;
   if (!/^#[0-9A-Fa-f]{6}$/.test(trimmed)) return fallback.toUpperCase();
   return trimmed.toUpperCase();

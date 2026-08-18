@@ -347,7 +347,16 @@ export default function CardEditor() {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "We couldn’t publish this card.");
-      const published = { ...savedDraft, updatedAt: result.updatedAt || savedDraft.updatedAt, status: "published" as const, publishedAt: new Date().toISOString() };
+      // flushCardSync returns the persisted LibraryCard shape, which types its
+      // method kind as a plain string. These are the methods we just sent, so
+      // narrowing them back is safe.
+      const published: CardDraft = {
+        ...savedDraft,
+        methods: savedDraft.methods as ContactMethod[],
+        updatedAt: result.updatedAt || savedDraft.updatedAt,
+        status: "published" as const,
+        publishedAt: new Date().toISOString(),
+      };
       setDraft(published);
       persistDraft(published);
       setPublishedFingerprint(cardPublishFingerprint(published));

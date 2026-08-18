@@ -152,8 +152,8 @@ export function buildHeuristicDraft(
   };
 }
 
-export function applyExtractionDraft(
-  current: {
+export function applyExtractionDraft<
+  T extends {
     title: string;
     personName: string;
     privateNotes: string;
@@ -161,9 +161,11 @@ export function applyExtractionDraft(
     followUp: string;
     followUpType: Encounter["actions"][number]["channel"];
   },
+>(
+  current: T,
   draft: EncounterExtractionDraft,
   options?: { replace?: boolean },
-) {
+): T {
   if (options?.replace) {
     return {
       ...current,
@@ -173,7 +175,7 @@ export function applyExtractionDraft(
       sharedSummary: draft.sharedSummary,
       followUp: draft.followUp,
       followUpType: draft.followUpType,
-    };
+    } as T;
   }
 
   return {
@@ -184,7 +186,7 @@ export function applyExtractionDraft(
     sharedSummary: current.sharedSummary || draft.sharedSummary,
     followUp: current.followUp || draft.followUp,
     followUpType: current.followUp ? current.followUpType : draft.followUpType,
-  };
+  } as T;
 }
 
 export const EXTRACTION_DRAFT_NOTE = {

@@ -1,4 +1,4 @@
-import { capturedNodes, type CapturedNode } from "./captured-node";
+import { capturedNodes, type CapturedNode } from "./captured-node.ts";
 function clean(value: string | null | undefined) {
   return (value ?? "").replace(/\s+/g, " ").trim();
 }

@@ -47,6 +47,7 @@
     "supabase/functions",
     "worker",
     "db",
-    "scripts"
+    "scripts",
+    "examples"
   ]
 }

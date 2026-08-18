@@ -28,7 +28,9 @@ export function readPublicSupabaseConfig(
   };
 }
 
-export function requirePublicSupabaseConfig(source = process.env): PublicSupabaseConfig {
+export function requirePublicSupabaseConfig(
+  source: Record<string, string | undefined> = process.env,
+): PublicSupabaseConfig {
   const result = readPublicSupabaseConfig(source);
   if (!result.config) throw new Error(`ehllo Supabase configuration is missing: ${result.missing.join(", ")}`);
   return result.config;

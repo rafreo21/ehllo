@@ -60,7 +60,7 @@ function parseCsv(text: string): Contact[] {
   const rows = text.trim().split(/\r?\n/).map((row) => row.split(",").map((cell) => cell.trim().replace(/^"|"$/g, "")));
   const headers = rows.shift()?.map((header) => header.toLowerCase()) ?? [];
   const value = (row: string[], names: string[]) => row[headers.findIndex((header) => names.includes(header))] || "";
-  return rows.map((row, index) => ({
+  return rows.map((row, index): Contact => ({
     id: `csv-${Date.now()}-${index}`,
     firstName: value(row, ["first name", "firstname", "given name"]),
     lastName: value(row, ["last name", "lastname", "family name"]),

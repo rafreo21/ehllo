@@ -53,6 +53,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "16:46",
+    title: "The web app typechecks again, and it caught real breakage",
+    impact: "fix",
+    detail:
+      "Type checking on the web app had been off long enough to hide 1,262 problems, so nothing it would have caught was being caught. It is on and clean now. Three of the things it found were live: your workspace list was reading a field the wrong shape and could have shown you nothing, uploading a card photo relied on a check that could never be true in some browsers, and the Sync to HubSpot button was asking for a size that does not exist. Separately, one import written without its file extension had stopped three test files from loading at all - the suite is back to 368 passing.",
+    testing:
+      "Switching workspaces, uploading a card photo, and generating meeting context from a transcript are the three worth a look.",
+  },
+  {
+    date: "2026-08-18",
     time: "16:40",
     title: "Invitations are visible, answerable and revocable",
     impact: "new",
@@ -257,6 +267,16 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
 ];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
+  {
+    title: "Three test files silently stopped running",
+    time: "16:46",
+    status: "fixed",
+    detail:
+      "A file added earlier today was imported without its file extension, which the rest of the codebase always writes out. Three test files could not load at all as a result - so they reported as failing rather than passing, and had they been skipped instead, nobody would have noticed the gap.",
+    resolution:
+      "Extension added; all 368 tests load and pass. Worth recording because it only surfaced when the suite was actually run, not from reading the change.",
+    reportedOn: "2026-08-18",
+  },
   {
     title: "Calendar option appeared to do nothing",
     time: "13:20",
