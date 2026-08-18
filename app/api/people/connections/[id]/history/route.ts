@@ -3,14 +3,14 @@ import { NextResponse } from "next/server";
 import { createApiSupabaseClient, resolveApiUser } from "../../../../../../lib/auth/api-request";
 
 /**
- * The mutually-visible history between the two parties of a connection.
+ * The connection thread: one conversation both parties are looking at.
  *
- * What counts as mutually visible is decided in get_shared_history, not here,
- * so mobile and web cannot drift into disagreeing about it - which is the same
- * mistake the four connection RPCs made about reciprocity. Briefly: facts both
- * people already witnessed (when and where they met, invitations between them
- * and the response, subjects of emails that were actually delivered), never
- * capture notes, AI summaries, drafts, or anything queued but unsent.
+ * Visibility is decided in get_connection_thread, not here, so mobile and web
+ * cannot drift into disagreeing about it - the same mistake the four connection
+ * RPCs made about reciprocity. Items reach whoever they concern, keyed on email:
+ * a meeting everyone attended reaches everyone, a follow-up recorded against
+ * three addresses reaches exactly those three. Transcripts and private notes
+ * never cross, and a summary only crosses once the meeting is actually shared.
  *
  * Ownership is enforced inside the function too, since it is SECURITY DEFINER
  * and RLS does not apply to it. A connection belonging to another workspace
@@ -28,14 +28,14 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   }
 
   const supabase = await createApiSupabaseClient(request);
-  const { data, error } = await supabase.rpc("get_shared_history", { p_connection_id: connectionId });
+  const { data, error } = await supabase.rpc("get_connection_thread", { p_connection_id: connectionId });
 
   if (error) {
     // Say which cause it was. An unknown or foreign connection is a permanent
     // answer and the client should stop asking; a fault is worth retrying. The
     // scan route learned this the hard way - one friendly sentence for every
     // cause made a missing row indistinguishable from a broken database.
-    console.error("[connection-history] get_shared_history failed", {
+    console.error("[connection-thread] get_connection_thread failed", {
       connectionId,
       code: error.code,
       message: error.message,

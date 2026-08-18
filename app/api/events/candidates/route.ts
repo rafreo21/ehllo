@@ -34,9 +34,43 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "We couldn’t load your added events." }, { status: 500 });
   }
 
+  // Events somebody invited this user to.
+  //
+  // This was the missing third source. A calendar suggestion and a self-added
+  // event both surface here purely by having no attendance row - the schema is
+  // explicit that absence means undecided - but an invitation created only an
+  // event_invitations row, which nothing on this path read. So inviting an
+  // existing ehllo user put nothing in their app at all: their only way in was
+  // finding the email and tapping the token link, and until they did,
+  // claim_event_invitation never ran and no attendance row existed.
+  //
+  // An invitation is the same kind of thing as the other two - a decision
+  // waiting to be made - so it belongs in the same place rather than in a new
+  // "invited" status. Going and Not going then flow through the attendance path
+  // that already exists, and the email link keeps working for anyone who uses it.
+  const { data: invited, error: invitedError } = await supabase
+    .from("event_invitations")
+    .select("invited_email, status, events!inner(*)")
+    .ilike("invited_email", user.email)
+    .neq("status", "revoked")
+    .limit(250);
+
+  if (invitedError) {
+    // Say why rather than quietly returning a shorter list: an invitation that
+    // silently fails to appear is indistinguishable from never being invited.
+    console.error("[event-candidates] could not read invitations for this user", {
+      code: invitedError.code,
+      message: invitedError.message,
+    });
+  }
+
+  const invitedEvents = ((invited ?? []) as unknown as Array<{ events: EventRow | null }>)
+    .flatMap((row) => (row.events && row.events.status === "scheduled" ? [eventFromRow(row.events)] : []));
+
   const possibleCandidates = [
     ...synced,
     ...((selfAdded ?? []) as EventRow[]).map(eventFromRow),
+    ...invitedEvents,
   ];
 
   if (!possibleCandidates.length) {

@@ -4,6 +4,8 @@ import { createApiSupabaseClient, resolveApiUser } from "../../../../../lib/auth
 import { createEventInvitationToken, hashEventInvitationToken, normalizeInvitationEmail } from "../../../../../lib/event-invitations";
 import { buildEventInvitationEmail } from "../../../../../lib/event-invitation-email";
 import { deliverQueuedEventEmail, enqueueEventEmail } from "../../../../../lib/event-email-outbox";
+import { createNotification } from "../../../../../lib/notifications-server";
+import { createServiceSupabaseClient } from "../../../../../lib/supabase/service";
 
 async function resolveOwnedEvent(request: Request, id: string) {
   const user = await resolveApiUser(request);
@@ -16,7 +18,7 @@ async function resolveOwnedEvent(request: Request, id: string) {
     .eq("workspace_id", user.workspaceId)
     .maybeSingle();
   if (!event) return { error: NextResponse.json({ error: "Event not found." }, { status: 404 }) };
-  return { supabase, event };
+  return { supabase, event, user };
 }
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -61,7 +63,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const { id } = await context.params;
   const owned = await resolveOwnedEvent(request, id);
   if (owned.error) return owned.error;
-  const { supabase, event } = owned;
+  const { supabase, event, user } = owned;
 
   const token = createEventInvitationToken();
   const expiresAt = body?.expiresAt && !Number.isNaN(Date.parse(body.expiresAt)) ? body.expiresAt : null;
@@ -97,9 +99,64 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     dedupeKey: `invitation:${invitation.id}:${invitation.token_hash}`,
   });
   const delivery = await deliverQueuedEventEmail(supabase, queued.id);
+
+  // Tell them in the app too, if they are already an ehllo user.
+  //
+  // Until now an invitation existed only as an email. Someone with the app
+  // installed got no notification and nothing in their events list, so the only
+  // route in was noticing the email and tapping the token link. The event now
+  // appears as an undecided candidate for them; this is what makes them aware of
+  // it without having to go looking.
+  //
+  // Service client because the notification belongs to the invitee's workspace,
+  // not the inviter's, and RLS on the caller's client cannot reach it. Best
+  // effort: the invitation and the email have already succeeded, so a failure
+  // here must not fail the request - but it must say why.
+  let notifiedInApp = false;
+  try {
+    const service = createServiceSupabaseClient();
+    if (service) {
+      const { data: invitee } = await service
+        .from("users")
+        .select("id, status, primary_email")
+        .ilike("primary_email", email)
+        .eq("status", "active")
+        .maybeSingle();
+      const inviteeId = (invitee as { id?: string } | null)?.id;
+      if (inviteeId) {
+        const { data: membership } = await service
+          .from("workspace_memberships")
+          .select("workspace_id")
+          .eq("user_id", inviteeId)
+          .eq("status", "active")
+          .maybeSingle();
+        const inviteeWorkspaceId = (membership as { workspace_id?: string } | null)?.workspace_id;
+        if (inviteeWorkspaceId) {
+          const created = await createNotification(service, {
+            userId: inviteeId,
+            workspaceId: inviteeWorkspaceId,
+            type: "shared_meeting_update",
+            title: `${user.displayName || "Someone"} invited you to ${String(event.title ?? "an event")}`,
+            body: "Open Events to answer.",
+            actionId: `event:${id}`,
+            dedupeKey: `event_invitation:${invitation.id}`,
+          });
+          notifiedInApp = Boolean(created);
+        }
+      }
+    }
+  } catch (caught) {
+    console.error("[event-invitations] could not notify the invitee in app", {
+      eventId: id,
+      code: caught instanceof Error ? caught.name : "unknown",
+      message: caught instanceof Error ? caught.message : String(caught),
+    });
+  }
+
   return NextResponse.json({
     ok: true,
     guestUrl,
+    notifiedInApp,
     emailSent: delivery.ok,
     warning: delivery.ok ? undefined : "Invitation saved, but email delivery is unavailable. Share the link instead.",
   }, { headers: { "Cache-Control": "private, no-store" } });

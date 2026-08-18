@@ -145,7 +145,12 @@ export function FollowUpsSheet({
 
 const styles = StyleSheet.create({
   tools: { gap: spacing.x3 },
-  search: { fontFamily: fonts.regular,
+  // fontSize is required, not optional. A TextInput carrying a custom
+  // fontFamily with no explicit size renders Cereal with broken metrics on
+  // iOS - every glyph spaced out, as if letterSpacing had been set. Text
+  // components with the same family are fine; only TextInput is affected,
+  // which is why it only showed up on fields.
+  search: { fontFamily: fonts.regular, fontSize: 15,
     minHeight: 48,
     paddingHorizontal: spacing.x4,
     borderWidth: 1,

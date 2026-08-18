@@ -76,7 +76,12 @@ export function EventManageSheet({ event, loading, error, onClose, onSave, onCan
 const styles = StyleSheet.create({
   field: { gap: spacing.x2 },
   label: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '800' },
-  input: { fontFamily: fonts.regular, minHeight: 52, paddingHorizontal: spacing.x4, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, color: colors.ink, backgroundColor: colors.canvas },
+  // fontSize is required, not optional. A TextInput carrying a custom
+  // fontFamily with no explicit size renders Cereal with broken metrics on
+  // iOS - every glyph spaced out, as if letterSpacing had been set. Text
+  // components with the same family are fine; only TextInput is affected,
+  // which is why it only showed up on fields.
+  input: { fontFamily: fonts.regular, fontSize: 15, minHeight: 52, paddingHorizontal: spacing.x4, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, color: colors.ink, backgroundColor: colors.canvas },
   dateButton: { minHeight: 52, justifyContent: 'center', paddingHorizontal: spacing.x4, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, backgroundColor: colors.canvas },
   dateText: { color: colors.ink, fontSize: 14, fontFamily: fonts.medium, fontWeight: '700' },
   error: { color: colors.danger, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
