@@ -163,17 +163,35 @@ export async function buildBrandedContactQrDataUri(input: CardVcardInput, size =
   return buildBrandedQrDataUri(buildContactQrPayload(input), size);
 }
 
+/**
+ * The brand mark for a pass, as the round badge it was designed to be.
+ *
+ * public/ehllo-logo.svg draws it as `<rect width="60" height="60" rx="30">` - on a
+ * 60x60 box, rx=30 is a circle. public/ehllo-mark.png is a flattened square export
+ * of that same mark with the green baked in as opaque pixels, and that is what the
+ * pass was using: so `logo.png` came out as a small green *square* adrift in a
+ * 160x50 transparent box, sitting on whatever colour the card happened to be. On a
+ * coral card it read as a mismatched green tile rather than a logo.
+ *
+ * Rendering from the SVG keeps the circle and keeps the corners transparent, so the
+ * badge sits on the card's own colour instead of punching a square hole in it.
+ *
+ * Sized square rather than padded to Apple's full 160x50 allowance: Apple
+ * left-aligns the logo, so a 50x50 circle lands flush against the edge where it
+ * belongs, and the padding was only ever pushing it away from it.
+ */
 export async function buildWalletLogoBuffers() {
   if (!sharpAvailable()) {
     throw new Error("Wallet pass images require sharp, which isn't available in this local dev sandbox. Test this against a Vercel preview instead.");
   }
   const sharp = await loadSharp();
-  const logoBuffer = await loadEhlloLogoBuffer();
+  const markBuffer = await loadEhlloMarkForWallet();
+  const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
   const [icon, icon2x, logo, logo2x] = await Promise.all([
-    sharp(logoBuffer).resize(29, 29, { fit: "contain", background: { r: 135, g: 234, b: 92, alpha: 1 } }).png().toBuffer(),
-    sharp(logoBuffer).resize(58, 58, { fit: "contain", background: { r: 135, g: 234, b: 92, alpha: 1 } }).png().toBuffer(),
-    sharp(logoBuffer).resize(160, 50, { fit: "contain", background: { r: 135, g: 234, b: 92, alpha: 0 } }).png().toBuffer(),
-    sharp(logoBuffer).resize(320, 100, { fit: "contain", background: { r: 135, g: 234, b: 92, alpha: 0 } }).png().toBuffer(),
+    sharp(markBuffer).resize(29, 29, { fit: "contain", background: transparent }).png().toBuffer(),
+    sharp(markBuffer).resize(58, 58, { fit: "contain", background: transparent }).png().toBuffer(),
+    sharp(markBuffer).resize(50, 50, { fit: "contain", background: transparent }).png().toBuffer(),
+    sharp(markBuffer).resize(100, 100, { fit: "contain", background: transparent }).png().toBuffer(),
   ]);
 
   return {
@@ -182,4 +200,27 @@ export async function buildWalletLogoBuffers() {
     "logo.png": logo,
     "logo@2x.png": logo2x,
   };
+}
+
+/**
+ * Prefers the SVG, because it is the only source that still has the circle and
+ * transparent corners. Falls back to the square PNG rather than failing the pass -
+ * a square mark is worse-looking, not broken. Kept separate from
+ * loadEhlloLogoBuffer so the QR centre mark, which is composited onto a white plate
+ * and does not need transparency, keeps working exactly as it does now.
+ */
+let walletMarkPromise: Promise<Buffer> | null = null;
+async function loadEhlloMarkForWallet() {
+  if (!walletMarkPromise) {
+    walletMarkPromise = (async () => {
+      try {
+        const svg = await readFile(join(process.cwd(), "public", "ehllo-logo.svg"));
+        if (svg.length > 0) return svg;
+      } catch {
+        // fall through to the raster mark
+      }
+      return loadEhlloLogoBuffer();
+    })();
+  }
+  return walletMarkPromise;
 }

@@ -41,6 +41,9 @@ export function buildApplePassJson(card: {
     foregroundColor: "rgb(255, 255, 255)",
     backgroundColor: hexToRgb(card.themeColor || "#9fe870"),
     labelColor: "rgba(255, 255, 255, 0.72)",
+    // iOS lays a glossy highlight over the strip unless told not to. On a
+    // photograph it reads as a dated sheen across someone's face.
+    suppressStripShine: true,
     // storeCard rather than generic. generic renders the photo as a small
     // thumbnail crowded against the name; storeCard gives the strip image the
     // full width, which is the shape the Google pass gets right - person first,
