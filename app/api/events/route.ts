@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createApiSupabaseClient, resolveApiUser } from "../../../lib/auth/api-request";
+import { calendarPushAvailability } from "../../../lib/events-calendar-push";
 import { eventFromRow, type EventRow } from "../../../lib/events-server";
 
 export async function GET(request: Request) {
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
     startsAt?: string;
     endsAt?: string;
     sourceUrl?: string;
+    addToCalendar?: boolean;
   } | null;
 
   const title = body?.title?.trim().slice(0, 160) ?? "";
@@ -71,6 +73,15 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createApiSupabaseClient(request);
+
+  // Per-event opt-in, and only offered when a calendar is actually connected and
+  // healthy. Provider health is a first-class state, so an event is never queued
+  // toward a connection that cannot accept it - that would just manufacture
+  // failed pushes for someone who never asked for one.
+  const wantsCalendar = body.addToCalendar === true;
+  const calendarStatus = wantsCalendar ? await calendarPushAvailability(user, supabase) : null;
+  const pushEnabled = Boolean(calendarStatus?.available);
+
   const { data, error } = await supabase.from("events").insert({
     workspace_id: user.workspaceId,
     created_by_user_id: user.id,
@@ -80,6 +91,9 @@ export async function POST(request: Request) {
     ends_at: endsAt,
     source: sourceUrl ? "link" : "manual",
     source_url: sourceUrl,
+    calendar_push_enabled: pushEnabled,
+    sync_state: pushEnabled ? "pending" : "none",
+    sync_next_attempt_at: pushEnabled ? new Date().toISOString() : null,
   }).select("*").single();
 
   if (error || !data) {
@@ -87,7 +101,16 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json(
-    { ok: true, event: eventFromRow(data as EventRow) },
+    {
+      ok: true,
+      event: eventFromRow(data as EventRow),
+      // Say what happened to the request rather than silently ignoring it. Asking
+      // for the calendar and not getting it is exactly the kind of thing that
+      // should not be discovered later by its absence.
+      calendar: wantsCalendar
+        ? { requested: true, enabled: pushEnabled, reason: calendarStatus?.reason ?? null }
+        : { requested: false, enabled: false, reason: null },
+    },
     { headers: { "Cache-Control": "private, no-store" } },
   );
 }

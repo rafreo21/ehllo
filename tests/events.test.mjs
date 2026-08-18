@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  calendarSyncRetryDelayMinutes,
   candidateSuppressionKey,
   decideCalendarImport,
+  decideCalendarPush,
   normalizeCalendarCandidate,
   externalAttendeeCount,
   isEventCandidateWorthy,
@@ -329,9 +331,15 @@ describe("decideCalendarImport", () => {
 
   it("will not rewrite an ehllo-authored event the provider echoed back", () => {
     for (const source of ["manual", "link"]) {
-      const result = decideCalendarImport({ ...imported, source, title: "My own title" }, candidate);
-      assert.equal(result.decision, "keep", `${source} must stay ehllo's`);
-      assert.equal(result.reason, "not-importer-owned");
+      // Agreeing: nothing to do, and nothing to report.
+      const agreed = decideCalendarImport({ ...imported, source }, candidate);
+      assert.equal(agreed.decision, "keep", `${source} must stay ehllo's`);
+      assert.equal(agreed.reason, "not-importer-owned");
+
+      // Diverging: still never an update, but no longer silent about it.
+      const diverged = decideCalendarImport({ ...imported, source, title: "My own title" }, candidate);
+      assert.equal(diverged.decision, "conflict", `${source} divergence must surface`);
+      assert.notEqual(diverged.decision, "update");
     }
   });
 
@@ -359,5 +367,121 @@ describe("decideCalendarImport", () => {
     const long = "x".repeat(200);
     assert.equal(normalizeCalendarCandidate({ ...candidate, title: long }).title.length, 160);
     assert.equal(normalizeCalendarCandidate({ ...candidate, title: "   " }).title, "Untitled event");
+  });
+});
+
+describe("decideCalendarImport conflict surfacing", () => {
+  const candidate = {
+    title: "Connect X Ignite",
+    location: "Lagos",
+    startsAt: "2026-09-04T09:00:00.000Z",
+    endsAt: "2026-09-04T12:00:00.000Z",
+    organizerEmail: "host@example.com",
+  };
+  const ehlloAuthored = {
+    source: "manual",
+    status: "scheduled",
+    title: "Connect X Ignite",
+    location: "Lagos",
+    starts_at: "2026-09-04T09:00:00.000Z",
+    ends_at: "2026-09-04T12:00:00.000Z",
+    organizer_email: "host@example.com",
+  };
+
+  it("stays quiet when the provider agrees with an ehllo-authored event", () => {
+    const result = decideCalendarImport(ehlloAuthored, candidate);
+    assert.equal(result.decision, "keep");
+    assert.equal(result.reason, "not-importer-owned");
+  });
+
+  it("reports a conflict instead of silently keeping when the provider diverged", () => {
+    const result = decideCalendarImport(ehlloAuthored, { ...candidate, startsAt: "2026-09-04T15:00:00.000Z" });
+    assert.equal(result.decision, "conflict");
+    assert.equal(result.scheduleChanged, true);
+  });
+
+  it("never overwrites an ehllo-authored event, however it disagrees", () => {
+    for (const change of [{ title: "Renamed by provider" }, { location: "Abuja" }]) {
+      const result = decideCalendarImport(ehlloAuthored, { ...candidate, ...change });
+      assert.notEqual(result.decision, "update");
+    }
+  });
+});
+
+describe("decideCalendarPush", () => {
+  const base = {
+    source: "manual",
+    status: "scheduled",
+    external_id: null,
+    calendar_push_enabled: true,
+    sync_state: "pending",
+  };
+
+  it("creates on the first push of an opted-in event", () => {
+    assert.equal(decideCalendarPush(base).action, "create");
+  });
+
+  it("updates once the provider has an id for it", () => {
+    assert.equal(decideCalendarPush({ ...base, external_id: "abc" }).action, "update");
+  });
+
+  it("refuses to push the provider's own entry back to it", () => {
+    const result = decideCalendarPush({ ...base, source: "calendar", external_id: "abc" });
+    assert.equal(result.action, "skip");
+    assert.equal(result.reason, "provider-owned");
+  });
+
+  it("refuses to overwrite the provider while a conflict is unresolved", () => {
+    const result = decideCalendarPush({ ...base, external_id: "abc", sync_state: "conflict" });
+    assert.equal(result.action, "skip");
+    assert.equal(result.reason, "conflict-unresolved");
+  });
+
+  it("cancels on the provider when the event is cancelled here", () => {
+    assert.equal(decideCalendarPush({ ...base, status: "cancelled", external_id: "abc" }).action, "cancel");
+  });
+
+  it("does nothing for an event cancelled before it was ever pushed", () => {
+    const result = decideCalendarPush({ ...base, status: "cancelled" });
+    assert.equal(result.action, "skip");
+    assert.equal(result.reason, "never-pushed");
+  });
+
+  it("withdraws an entry it already created when the opt-in is turned off", () => {
+    const result = decideCalendarPush({ ...base, calendar_push_enabled: false, external_id: "abc" });
+    assert.equal(result.action, "cancel");
+    assert.equal(result.reason, "opted-out-after-push");
+  });
+
+  it("stays out of the calendar entirely without an opt-in", () => {
+    const result = decideCalendarPush({ ...base, calendar_push_enabled: false });
+    assert.equal(result.action, "skip");
+    assert.equal(result.reason, "not-opted-in");
+  });
+
+  it("puts loop prevention ahead of every other rule", () => {
+    // A calendar-sourced event must be refused even when everything else about
+    // it argues for a push, because echoing it back is the actual loop.
+    const result = decideCalendarPush({
+      source: "calendar", status: "cancelled", external_id: "abc",
+      calendar_push_enabled: true, sync_state: "pending",
+    });
+    assert.equal(result.reason, "provider-owned");
+  });
+});
+
+describe("calendarSyncRetryDelayMinutes", () => {
+  it("matches the email outbox curve", () => {
+    assert.equal(calendarSyncRetryDelayMinutes(1), 5);
+    assert.equal(calendarSyncRetryDelayMinutes(2), 10);
+    assert.equal(calendarSyncRetryDelayMinutes(3), 20);
+  });
+
+  it("caps at a day however many attempts have been made", () => {
+    assert.equal(calendarSyncRetryDelayMinutes(20), 24 * 60);
+  });
+
+  it("does not go backwards on a zeroth attempt", () => {
+    assert.equal(calendarSyncRetryDelayMinutes(0), 5);
   });
 });

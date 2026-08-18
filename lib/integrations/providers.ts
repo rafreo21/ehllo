@@ -1,6 +1,7 @@
 import "server-only";
 
 import { buildPlainEmailRaw } from "./email";
+import type { IntegrationProvider } from "./types";
 
 /** A 401/403 from the provider means the access token itself was rejected - distinct from a 5xx/network blip, since the former means the connection needs reconnecting, not just retrying. */
 export class CalendarProviderAuthError extends Error {}
@@ -241,4 +242,117 @@ export async function listMicrosoftCalendarEvents(
       cancelled: false,
     }];
   });
+}
+
+/**
+ * A real event, as opposed to the follow-up meeting window that
+ * createGoogleCalendarEvent builds from a due date. That one derives its own
+ * start and end and throws the provider's id away, so it cannot be updated or
+ * cancelled later; these carry explicit instants and hand the id back so ehllo
+ * can keep the two sides pointing at each other.
+ */
+export type ProviderCalendarEventPayload = {
+  title: string;
+  details?: string;
+  location?: string;
+  startsAt: string;
+  endsAt: string;
+};
+
+/** The provider already forgot this event, so there is nothing left to do. */
+export class CalendarProviderGoneError extends Error {}
+
+function googleEventBody(payload: ProviderCalendarEventPayload) {
+  return {
+    summary: payload.title,
+    ...(payload.details ? { description: payload.details } : {}),
+    ...(payload.location ? { location: payload.location } : {}),
+    start: { dateTime: new Date(payload.startsAt).toISOString() },
+    end: { dateTime: new Date(payload.endsAt).toISOString() },
+  };
+}
+
+function microsoftEventBody(payload: ProviderCalendarEventPayload) {
+  return {
+    subject: payload.title,
+    ...(payload.details ? { body: { contentType: "Text", content: payload.details } } : {}),
+    ...(payload.location ? { location: { displayName: payload.location } } : {}),
+    start: { dateTime: new Date(payload.startsAt).toISOString(), timeZone: "UTC" },
+    end: { dateTime: new Date(payload.endsAt).toISOString(), timeZone: "UTC" },
+  };
+}
+
+function assertCalendarResponse(response: Response, provider: IntegrationProvider) {
+  if (response.status === 401 || response.status === 403) {
+    throw new CalendarProviderAuthError(
+      provider === "google" ? "Google Calendar rejected this token." : "Outlook Calendar rejected this token.",
+    );
+  }
+  // 404/410 on an update or cancel means the entry is already gone from the
+  // provider. That is a settled outcome, not a failure to retry forever.
+  if (response.status === 404 || response.status === 410) {
+    throw new CalendarProviderGoneError("The calendar no longer has this event.");
+  }
+  if (!response.ok) {
+    throw new Error(
+      provider === "google" ? "Google Calendar rejected this request." : "Outlook Calendar rejected this request.",
+    );
+  }
+}
+
+const CALENDAR_ENDPOINTS = {
+  google: {
+    collection: "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+    item: (externalId: string) =>
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(externalId)}`,
+  },
+  microsoft: {
+    collection: "https://graph.microsoft.com/v1.0/me/events",
+    item: (externalId: string) => `https://graph.microsoft.com/v1.0/me/events/${encodeURIComponent(externalId)}`,
+  },
+} as const;
+
+/** Creates the event and returns the provider's id for it. */
+export async function createProviderCalendarEvent(
+  provider: IntegrationProvider,
+  accessToken: string,
+  payload: ProviderCalendarEventPayload,
+): Promise<string> {
+  const response = await fetch(CALENDAR_ENDPOINTS[provider].collection, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify(provider === "google" ? googleEventBody(payload) : microsoftEventBody(payload)),
+  });
+  assertCalendarResponse(response, provider);
+  const created = await response.json() as { id?: string };
+  if (!created.id) throw new Error("The calendar did not return an event id.");
+  return created.id;
+}
+
+export async function updateProviderCalendarEvent(
+  provider: IntegrationProvider,
+  accessToken: string,
+  externalId: string,
+  payload: ProviderCalendarEventPayload,
+): Promise<void> {
+  const response = await fetch(CALENDAR_ENDPOINTS[provider].item(externalId), {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify(provider === "google" ? googleEventBody(payload) : microsoftEventBody(payload)),
+  });
+  assertCalendarResponse(response, provider);
+}
+
+export async function cancelProviderCalendarEvent(
+  provider: IntegrationProvider,
+  accessToken: string,
+  externalId: string,
+): Promise<void> {
+  const response = await fetch(CALENDAR_ENDPOINTS[provider].item(externalId), {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  // A delete that finds nothing has still achieved what it was asked to.
+  if (response.status === 404 || response.status === 410) return;
+  assertCalendarResponse(response, provider);
 }

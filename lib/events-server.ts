@@ -233,6 +233,21 @@ export async function syncCalendarCandidates(
       endsAt: item.endsAt,
       organizerEmail: item.organizerEmail,
     });
+    if (decision === "conflict") {
+      // Do not apply it, and do not stay quiet about it. The row keeps ehllo's
+      // values; sync_state says the two sides disagree so something can ask.
+      const conflictAt = new Date().toISOString();
+      const { data: flagged } = await supabase
+        .from("events")
+        .update({ sync_state: "conflict", sync_conflict_at: conflictAt, updated_at: conflictAt })
+        .eq("id", existing.id)
+        .neq("sync_state", "conflict")
+        .select("*")
+        .maybeSingle();
+      rows.push(((flagged ?? existing) as EventRow));
+      continue;
+    }
+
     if (decision !== "update") {
       rows.push(existing);
       continue;

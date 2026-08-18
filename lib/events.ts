@@ -226,20 +226,8 @@ export function normalizeCalendarCandidate(candidate: CalendarImportCandidate) {
 export function decideCalendarImport(
   existing: CalendarImportTarget | undefined,
   candidate: CalendarImportCandidate,
-): { decision: "insert" | "update" | "keep"; scheduleChanged: boolean; reason: string } {
+): { decision: "insert" | "update" | "keep" | "conflict"; scheduleChanged: boolean; reason: string } {
   if (!existing) return { decision: "insert", scheduleChanged: false, reason: "new" };
-
-  // An ehllo-authored event keeps its own truth even once it carries an
-  // external_id. Letting the importer touch it is how ownership disappears on
-  // the first echo back from the provider.
-  if (existing.source !== "calendar") {
-    return { decision: "keep", scheduleChanged: false, reason: "not-importer-owned" };
-  }
-
-  // A local cancellation is a decision, not stale data.
-  if (existing.status === "cancelled") {
-    return { decision: "keep", scheduleChanged: false, reason: "cancelled-locally" };
-  }
 
   const next = normalizeCalendarCandidate(candidate);
   const scheduleChanged = existing.title !== next.title
@@ -247,9 +235,89 @@ export function decideCalendarImport(
     || !sameCalendarInstant(existing.starts_at, candidate.startsAt)
     || !sameCalendarInstant(existing.ends_at, candidate.endsAt);
 
+  // An ehllo-authored event keeps its own truth even once it carries an
+  // external_id. Letting the importer touch it is how ownership disappears on
+  // the first echo back from the provider.
+  //
+  // Where the provider's copy has actually diverged, silence is not good enough.
+  // DEC-031 says surface the disagreement rather than resolve it, so this
+  // reports a conflict; keeping quiet would leave correct behaviour that nobody
+  // can see, which is the defect running through this whole surface.
+  if (existing.source !== "calendar") {
+    return scheduleChanged
+      ? { decision: "conflict", scheduleChanged: true, reason: "provider-diverged-from-ehllo-event" }
+      : { decision: "keep", scheduleChanged: false, reason: "not-importer-owned" };
+  }
+
+  // A local cancellation is a decision, not stale data.
+  if (existing.status === "cancelled") {
+    return { decision: "keep", scheduleChanged: false, reason: "cancelled-locally" };
+  }
+
   if (!scheduleChanged && existing.organizer_email === next.organizerEmail) {
     return { decision: "keep", scheduleChanged: false, reason: "unchanged" };
   }
 
   return { decision: "update", scheduleChanged, reason: "provider-changed" };
+}
+
+/** Same ceiling the email outbox uses, so both queues give up at the same point. */
+export const CALENDAR_SYNC_MAX_ATTEMPTS = 8;
+
+/** Identical curve to event_email_outbox: 5 minutes doubling, capped at a day. */
+export function calendarSyncRetryDelayMinutes(attempts: number) {
+  return Math.min(24 * 60, 5 * 2 ** Math.max(0, attempts - 1));
+}
+
+export type CalendarPushAction = "create" | "update" | "cancel" | "skip";
+
+export type CalendarPushTarget = {
+  source: string;
+  status: string;
+  external_id: string | null;
+  calendar_push_enabled: boolean;
+  sync_state: string;
+};
+
+/**
+ * What, if anything, ehllo should send the provider for this event.
+ *
+ * Pure so the rules can be tested without a token: the push path is the one
+ * place where getting this wrong writes to somebody's real calendar.
+ *
+ * The ordering matters more than the individual branches. A calendar-sourced
+ * event is refused first, because pushing the provider's own entry back to it is
+ * the loop that sinks two-way sync. An unresolved conflict is refused next,
+ * since overwriting the provider is exactly what DEC-031 says not to do while
+ * the two sides disagree. Only then does opt-in apply - and a cancel of
+ * something already pushed is allowed through regardless, because ehllo put that
+ * entry on the calendar and withdrawing consent should not strand it there.
+ */
+export function decideCalendarPush(event: CalendarPushTarget): { action: CalendarPushAction; reason: string } {
+  if (event.source === "calendar") {
+    return { action: "skip", reason: "provider-owned" };
+  }
+  if (event.sync_state === "conflict") {
+    return { action: "skip", reason: "conflict-unresolved" };
+  }
+
+  const alreadyPushed = Boolean(event.external_id);
+
+  if (event.status === "cancelled") {
+    return alreadyPushed
+      ? { action: "cancel", reason: "cancelled-locally" }
+      : { action: "skip", reason: "never-pushed" };
+  }
+
+  if (!event.calendar_push_enabled) {
+    // Opted out after a push: take it back off the calendar rather than leaving
+    // an entry ehllo will no longer maintain.
+    return alreadyPushed
+      ? { action: "cancel", reason: "opted-out-after-push" }
+      : { action: "skip", reason: "not-opted-in" };
+  }
+
+  return alreadyPushed
+    ? { action: "update", reason: "local-change" }
+    : { action: "create", reason: "first-push" };
 }

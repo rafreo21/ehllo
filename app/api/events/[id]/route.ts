@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
 import { buildEventCancelledEmail, buildEventScheduleChangedEmail } from "../../../../lib/event-invitation-email";
 import { deliverQueuedEventEmail, enqueueEventEmail } from "../../../../lib/event-email-outbox";
+import { calendarPushAvailability, queueEventCalendarPush } from "../../../../lib/events-calendar-push";
 import { eventFromRow, type EventRow } from "../../../../lib/events-server";
 
 type UpdateBody = {
@@ -12,6 +13,7 @@ type UpdateBody = {
   endsAt?: string | null;
   status?: "scheduled" | "cancelled";
   expectedUpdatedAt?: string;
+  addToCalendar?: boolean;
 };
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -49,10 +51,26 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     title !== current.title || location !== current.location || startsAt !== current.starts_at || endsAt !== current.ends_at
   );
 
+  // Turning the calendar on has to clear the same health gate as create; turning
+  // it off never needs one. A push already made is withdrawn by the push path
+  // itself rather than left orphaned on the calendar.
+  let calendarToggle: boolean | undefined;
+  let calendarReason: string | null = null;
+  if (body.addToCalendar !== undefined) {
+    if (body.addToCalendar) {
+      const availability = await calendarPushAvailability(user, supabase);
+      calendarToggle = availability.available;
+      calendarReason = availability.reason;
+    } else {
+      calendarToggle = false;
+    }
+  }
+
   const now = new Date().toISOString();
   let updateQuery = supabase.from("events").update({
     title, location, starts_at: startsAt, ends_at: endsAt, status: nextStatus,
     cancelled_at: nextStatus === "cancelled" ? (current.cancelled_at || now) : null,
+    ...(calendarToggle === undefined ? {} : { calendar_push_enabled: calendarToggle }),
     updated_at: now,
   }).eq("id", id).eq("workspace_id", user.workspaceId);
   if (body.expectedUpdatedAt) updateQuery = updateQuery.eq("updated_at", body.expectedUpdatedAt);
@@ -66,6 +84,17 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       conflict: true,
       event: latest ? eventFromRow(latest as EventRow) : undefined,
     }, { status: 409, headers: { "Cache-Control": "private, no-store" } });
+  }
+
+  // Only after the conditional update succeeded, so a write rejected for being
+  // stale never queues a push built on the version it lost with. The cron drains
+  // it; this request does not wait on somebody else's API.
+  const calendarRelevant = cancelled
+    || scheduleChanged
+    || calendarToggle !== undefined
+    || Boolean((updated as { external_id?: string | null }).external_id);
+  if (calendarRelevant) {
+    await queueEventCalendarPush(supabase, id);
   }
 
   let emailsSent = 0;
@@ -101,7 +130,17 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
   }
 
-  return NextResponse.json({ ok: true, event: eventFromRow(updated as EventRow), emailsSent, emailsFailed }, {
+  return NextResponse.json({
+    ok: true,
+    event: eventFromRow(updated as EventRow),
+    emailsSent,
+    emailsFailed,
+    // Asking to add this to a calendar and not getting it should be visible in
+    // the answer, not discovered later by the event's absence there.
+    ...(calendarToggle === undefined
+      ? {}
+      : { calendar: { requested: body.addToCalendar === true, enabled: calendarToggle, reason: calendarReason } }),
+  }, {
     headers: { "Cache-Control": "private, no-store" },
   });
 }
