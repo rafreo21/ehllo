@@ -12,14 +12,39 @@ function cleanUrl(value: string) {
 }
 
 export function parseEhlloCardSlugFromUrl(value: string) {
+  return parseEhlloCardFromUrl(value)?.slug ?? null;
+}
+
+/**
+ * The origin matters as much as the slug. A card QR carries a full URL, and
+ * until now only the /c/<slug> path was read - so a production card scanned by
+ * the staging app produced a slug that environment has never heard of. The
+ * scan queued, the server could not resolve it, and the retry loop hammered a
+ * request that could never succeed while telling the user their people list
+ * was to blame.
+ */
+export function parseEhlloCardFromUrl(value: string): { slug: string; origin: string } | null {
   const trimmed = value.trim();
   if (!/^https?:\/\//i.test(trimmed)) return null;
   try {
     const parsed = new URL(trimmed);
     const match = parsed.pathname.match(/\/c\/([^/?#]+)/i);
-    return match?.[1]?.trim().toLowerCase() ?? null;
+    const slug = match?.[1]?.trim().toLowerCase();
+    return slug ? { slug, origin: parsed.origin.toLowerCase() } : null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Whether a scanned card belongs to the environment this app talks to. Cards
+ * live in one backend only, so a mismatch is never recoverable by retrying.
+ */
+export function isSameEhlloEnvironment(scannedOrigin: string, apiBaseUrl: string) {
+  try {
+    return new URL(apiBaseUrl).host.toLowerCase() === new URL(scannedOrigin).host.toLowerCase();
+  } catch {
+    return true; // Can't tell - let the server decide rather than blocking a valid scan.
   }
 }
 

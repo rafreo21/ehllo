@@ -15,8 +15,9 @@ import { enqueueOfflineScan } from '@/features/connections/offline-scan-queue';
 import { resolveCachedEventSnapshot } from '@/features/events/event-cache';
 import { setAuthReturnPath } from '@/features/encounters/capture-draft';
 import { isOnline } from '@/lib/connectivity';
+import { isNetworkError } from '@/lib/mobile-api';
 import { describeError } from '@/lib/friendly-error';
-import { parseEhlloCardSlugFromScan } from '@/lib/parse-scanned-qr';
+import { isSameEhlloEnvironment, parseEhlloCardFromUrl, parseEhlloCardSlugFromScan } from '@/lib/parse-scanned-qr';
 import { useAppInsets } from '@/lib/safe-area';
 import { colors, spacing, fonts } from '@/theme/tokens';
 
@@ -64,7 +65,11 @@ export default function ScannerScreen() {
       setError('This card could not be added. Ask them to publish their card, then try again.');
       setLocked(false);
     } catch (caught) {
-      if (!isOnline()) {
+      // isOnline() is optimistic and debounced by 3s, so a venue with flaky
+      // wifi reports "online" while requests fail - exactly where scanning
+      // happens. Queue whenever the failure is network-shaped, not only when
+      // connectivity has already been declared down.
+      if (isNetworkError(caught) || !isOnline()) {
         await enqueueOfflineScan(normalized, eventSnapshot);
         setQueuedMessage(eventSnapshot
           ? `Saved at ${eventSnapshot.eventTitle}. This card will be added to your connections when you're back online.`
@@ -86,6 +91,18 @@ export default function ScannerScreen() {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const slug = parseCardSlug(result.data);
     if (slug) {
+      // A card exists in exactly one backend. Scanning a production QR with a
+      // staging build (or the reverse) yields a slug this environment has
+      // never seen, and no amount of retrying will change that - so say so
+      // here rather than queueing a request that can only ever fail.
+      const scanned = parseEhlloCardFromUrl(result.data);
+      const { readEnv } = await import('@/lib/env');
+      const apiBase = readEnv()?.publicCardBaseUrl ?? '';
+      if (scanned && apiBase && !isSameEhlloEnvironment(scanned.origin, apiBase)) {
+        setError("That card belongs to a different ehllo environment, so it can't be added here. Ask them to share the card from the same app you're using.");
+        setLocked(false);
+        return;
+      }
       await openScannedCard(slug);
       return;
     }

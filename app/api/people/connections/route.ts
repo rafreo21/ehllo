@@ -44,6 +44,31 @@ export async function POST(request: Request) {
     p_occurred_at: snapshot?.occurredAt || null,
   });
   if (error) {
+    // Returning only the friendly sentence made every cause identical from the
+    // outside: a card that does not exist in this environment looked exactly
+    // like a database fault, so the offline queue retried a request that could
+    // never succeed and blamed the user's people list for it. Log the real
+    // reason; the slug is not sensitive and is what makes this diagnosable.
+    console.error("[people-connections] link_people_connection_from_scan failed", {
+      slug,
+      code: error.code,
+      message: error.message,
+    });
+
+    // A missing card is a permanent answer, not a transient one. Say so with a
+    // 404 so the client can stop retrying and explain what actually happened.
+    const { data: card } = await supabase
+      .from("cards")
+      .select("slug")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (!card) {
+      return NextResponse.json(
+        { error: "That card isn’t available here. It may belong to a different ehllo environment, or have been unpublished." },
+        { status: 404 },
+      );
+    }
+
     return NextResponse.json({ error: "We couldn’t link that card to your people list." }, { status: 500 });
   }
 
