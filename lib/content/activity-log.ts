@@ -53,6 +53,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "19:55",
+    title: "Asking someone for a detail now actually reaches them",
+    impact: "fix",
+    detail:
+      "Requesting a phone number or email off the back of a follow-up recorded the request and told nobody. The person you asked got no notification and no push - they had to happen to open ehllo and happen to look. They are now notified and pushed. Alongside that, every bottom sheet puts its main action first and the way out underneath, and cells across follow-ups and history share one padding instead of three.",
+    testing:
+      "Request a detail from the other account and watch for the notification there.",
+  },
+  {
+    date: "2026-08-18",
     time: "19:10",
     title: "Follow-ups the other person owes you now reach you",
     impact: "fix",
@@ -317,6 +327,16 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
 ];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
+  {
+    title: "A requested contact detail notified nobody",
+    time: "19:55",
+    status: "fixed",
+    detail:
+      "Pressing request after a follow-up appeared to work - it returned success - but the person being asked was never told. No in-app notification, no push. From the requester's side it was indistinguishable from a request that had been delivered and ignored.",
+    resolution:
+      "The route carried the comment \"push delivery will be wired when device tokens are available\" long after tokens and the push dispatcher existed and were being used by four other surfaces. Now notified and pushed, scoped to the address named on the request, and it says so in the logs when the address belongs to nobody with an ehllo account yet - so \"they never got it\" and \"they have no account\" stop looking the same.",
+    reportedOn: "2026-08-18",
+  },
   {
     title: "Follow-ups did not carry across between two connected accounts",
     time: "19:10",

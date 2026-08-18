@@ -28,8 +28,8 @@ export function CardDeleteSheet({
       onClose={onCancel}
       footer={
         <>
-          <Button variant="secondary" onPress={onCancel} disabled={loading}>Keep card</Button>
           <Button onPress={onConfirm} loading={loading}>Yes, delete card</Button>
+          <Button variant="secondary" onPress={onCancel} disabled={loading}>Keep card</Button>
         </>
       }>
       <View style={styles.iconWrap}>

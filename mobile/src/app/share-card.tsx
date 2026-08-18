@@ -331,11 +331,11 @@ export default function ShareCardScreen() {
         onClose={() => setWalletConfirmOpen(false)}
         footer={
           <View style={styles.walletConfirmRow}>
-            <Button style={styles.walletConfirmButton} variant="secondary" onPress={() => setWalletConfirmOpen(false)}>
-              Not yet
-            </Button>
             <Button style={styles.walletConfirmButton} onPress={confirmWalletSaved}>
               Yes, added
+            </Button>
+            <Button style={styles.walletConfirmButton} variant="secondary" onPress={() => setWalletConfirmOpen(false)}>
+              Not yet
             </Button>
           </View>
         }>

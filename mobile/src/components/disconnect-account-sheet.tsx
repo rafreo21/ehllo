@@ -28,8 +28,8 @@ export function DisconnectAccountSheet({
       onClose={onCancel}
       footer={
         <>
-          <Button variant="secondary" onPress={onCancel} disabled={loading}>Keep connected</Button>
           <Button onPress={onConfirm} loading={loading}>Yes, disconnect</Button>
+          <Button variant="secondary" onPress={onCancel} disabled={loading}>Keep connected</Button>
         </>
       }>
       <View style={styles.iconWrap}>

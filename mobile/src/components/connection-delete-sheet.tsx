@@ -28,8 +28,8 @@ export function ConnectionDeleteSheet({
       onClose={onCancel}
       footer={
         <>
-          <Button variant="secondary" onPress={onCancel} disabled={loading}>Keep</Button>
           <Button onPress={onConfirm} loading={loading}>Yes, delete</Button>
+          <Button variant="secondary" onPress={onCancel} disabled={loading}>Keep</Button>
         </>
       }>
       <View style={styles.iconWrap}>

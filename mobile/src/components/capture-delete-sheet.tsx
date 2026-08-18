@@ -41,8 +41,8 @@ export function CaptureDeleteSheet({
       onClose={onCancel}
       footer={
         <>
-          <Button variant="secondary" onPress={onCancel} disabled={loading}>{cancelLabel}</Button>
           <Button onPress={onConfirm} loading={loading}>{confirmLabel}</Button>
+          <Button variant="secondary" onPress={onCancel} disabled={loading}>{cancelLabel}</Button>
         </>
       }>
       <View style={styles.iconWrap}>

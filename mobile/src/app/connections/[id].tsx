@@ -861,7 +861,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.x3,
-    padding: spacing.x4,
+    // x3, matching the follow-up row. Cells across the app were sitting on three
+    // different paddings (x3, x4, x5) with nothing distinguishing them but where
+    // they were written.
+    padding: spacing.x3,
     borderRadius: radius.medium,
     backgroundColor: colors.surface,
   },

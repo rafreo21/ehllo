@@ -16,8 +16,8 @@ export function CaptureLeaveSheet({ visible, onStay, onSaveDraft, onDiscard }: C
       onClose={onStay}
       footer={
         <>
-          <Button variant="secondary" onPress={onStay}>Keep capturing</Button>
           <Button onPress={onSaveDraft}>Save to drafts</Button>
+          <Button variant="secondary" onPress={onStay}>Keep capturing</Button>
           <Button variant="secondary" onPress={onDiscard}>Leave and discard</Button>
         </>
       }>
