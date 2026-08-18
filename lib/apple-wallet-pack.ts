@@ -10,6 +10,18 @@ function sha1(content: Buffer | string) {
   return createHash("sha1").update(content).digest("hex");
 }
 
+/** The card's theme as sharp's rgb object, falling back to the brand green. */
+function themeRgb(themeColor: string) {
+  const hex = /^#?([0-9a-f]{6})$/i.exec((themeColor || "").trim());
+  const value = hex ? hex[1] : "9fe870";
+  return {
+    r: parseInt(value.slice(0, 2), 16),
+    g: parseInt(value.slice(2, 4), 16),
+    b: parseInt(value.slice(4, 6), 16),
+    alpha: 1,
+  };
+}
+
 async function fetchImageBuffer(url: string) {
   if (!url.trim()) return null;
   try {
@@ -71,29 +83,69 @@ export async function buildAppleWalletPass(card: WalletCardPayload, certs: Apple
     ...(await walletIconBuffers()),
   };
 
-  // storeCard renders `strip` as a full-width banner across the top of the
-  // pass, which is what gives the Google version its "person first" reading.
-  // Apple's strip slots are 375x123 @1x and 750x246 @2x; anything else gets
-  // letterboxed or stretched, so crop to the exact aspect rather than handing
-  // over the raw upload.
+  // The designed card layout, expressed in the parts of a pass that Apple lets
+  // us control.
+  //
+  // The order is already the right one and PassKit draws it: logo and "ehllo"
+  // across the top, the strip as a full-width band, then the name, then the role,
+  // then the barcode with "Scan to connect" beneath it. What was crude was the
+  // band itself - a raw crop of the upload, with nothing at all when there was no
+  // photo, so a card without one rendered as a bare block of colour.
+  //
+  // The slot stays 375x123 because that is the geometry storeCard actually
+  // renders; anything else is letterboxed or stretched by iOS, so a taller band
+  // is not available however large the file is. What size does buy is density,
+  // hence @2x and @3x - a 3:1 crop of a face has little room to spare, and on a
+  // retina screen the difference is the whole difference.
+  //
+  // Composited over the card's theme colour rather than resized alone: a PNG with
+  // transparency, or one that cannot fill the band, otherwise leaves black
+  // instead of the card's own colour.
+  const STRIP_SCALES: Array<[name: string, width: number, height: number]> = [
+    ["strip.png", 375, 123],
+    ["strip@2x.png", 750, 246],
+    ["strip@3x.png", 1125, 369],
+  ];
+  const stripBackground = themeRgb(card.themeColor);
   const profileImage = await fetchImageBuffer(card.profileImageUrl || "");
-  if (profileImage) {
-    try {
-      const sharp = await loadSharp();
-      const strip = (width: number, height: number) => sharp(profileImage)
-        .resize(width, height, { fit: "cover", position: "attention" })
-        .png()
-        .toBuffer();
-      const [strip1x, strip2x] = await Promise.all([strip(375, 123), strip(750, 246)]);
-      files["strip.png"] = strip1x;
-      files["strip@2x.png"] = strip2x;
-    } catch (error) {
-      // A pass without the banner is still a working pass. Never fail the
-      // whole download because one optional image could not be resized.
-      console.error("[apple-wallet] strip image failed, continuing without it", {
-        message: error instanceof Error ? error.message : String(error),
-      });
+
+  try {
+    const sharp = await loadSharp();
+
+    if (profileImage) {
+      await Promise.all(STRIP_SCALES.map(async ([name, width, height]) => {
+        // "attention" keeps the face in frame far more reliably than a centre
+        // crop, which decapitates most portraits at this aspect.
+        const photo = await sharp(profileImage)
+          .resize(width, height, { fit: "cover", position: "attention" })
+          .png()
+          .toBuffer();
+        files[name] = await sharp({
+          create: { width, height, channels: 4, background: stripBackground },
+        })
+          .composite([{ input: photo }])
+          .png()
+          .toBuffer();
+      }));
+    } else {
+      // No photo is a normal state, not a broken one. A flat themed band keeps
+      // the card's proportions and its colour, so the pass still reads as a card
+      // rather than as one with a piece missing.
+      await Promise.all(STRIP_SCALES.map(async ([name, width, height]) => {
+        files[name] = await sharp({
+          create: { width, height, channels: 4, background: stripBackground },
+        })
+          .png()
+          .toBuffer();
+      }));
     }
+  } catch (error) {
+    // A pass without the band is still a working pass. Never fail the whole
+    // download because one optional image could not be composed.
+    console.error("[apple-wallet] strip image failed, continuing without it", {
+      hasPhoto: Boolean(profileImage),
+      message: error instanceof Error ? error.message : String(error),
+    });
   }
 
   const manifest = Object.fromEntries(
