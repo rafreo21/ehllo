@@ -90,7 +90,9 @@ export function notificationDeepLink(notification: NotificationRecord): string |
   // Somebody asked you for a detail. There is no incoming-requests screen yet, so
   // this lands on People, where the person who asked can be found - a tap that
   // arrives somewhere useful beats a notification that cannot be opened at all.
-  if (notification.type === 'contact_request') return '/connections';
+  // Straight to where it can be answered. This pointed at People as a placeholder
+  // while there was no screen to answer one.
+  if (notification.type === 'contact_request') return '/settings/contact-requests';
   // Straight to the follow-up that was ticked off, when we know which one.
   if (notification.type === 'follow_up_completed') return '/settings/follow-ups';
   if (notification.type === 'keep_in_touch') {

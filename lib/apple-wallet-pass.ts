@@ -58,7 +58,12 @@ export function buildApplePassJson(card: {
   companyLogoUrl?: string;
   showCompany?: boolean;
 }, certs: { passTypeId: string; teamId: string }) {
-  const companyVisible = card.showCompany !== false && card.company.trim();
+  // Collapse runs of whitespace: a card in the wild already carries "Product  Designer"
+  // with a double space, and a pass prints exactly what it is given.
+  const tidy = (value: string) => value.replace(/\s+/g, " ").trim();
+  const role = tidy(card.role);
+  const company = tidy(card.company);
+  const companyVisible = card.showCompany !== false && company;
 
   return {
     formatVersion: 1,
@@ -103,16 +108,24 @@ export function buildApplePassJson(card: {
       // which is the only lever we have to keep each on a single line. Wallet
       // truncates rather than wraps, and it decides where - so the fewer things
       // sharing a row, the more of the name survives.
-      secondaryFields: [{ key: "name", label: "", value: card.fullName }],
+      // Name and occupation share a row so they read as one line about one person,
+      // at the same size. Splitting them across secondary and auxiliary made the name
+      // tower over the role, which is not the relationship between a person and what
+      // they do.
+      secondaryFields: [
+        { key: "name", label: "", value: card.fullName },
+        ...(role ? [{ key: "role", label: "", value: role }] : []),
+      ],
       // Whatever the person filled in appears, in fixed positions: occupation in
       // the first column, company in the second. Each is omitted when empty rather
       // than rendering a blank cell, so a card with only a role shows only a role
       // and the row does not collapse to something lopsided. The third column stays
       // free.
-      auxiliaryFields: [
-        ...(card.role.trim() ? [{ key: "role", label: "", value: card.role.trim() }] : []),
-        ...(companyVisible ? [{ key: "company", label: "", value: card.company.trim() }] : []),
-      ],
+      // Company sits on its own row beneath them - it is about the place, not the
+      // person, and it is the field most often absent.
+      auxiliaryFields: companyVisible
+        ? [{ key: "company", label: "", value: company }]
+        : [],
       backFields: [
         // Company is on the front now, so the back carries only what cannot go
         // there: a paragraph a column would truncate, and the URL the QR encodes.

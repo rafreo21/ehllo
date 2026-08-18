@@ -191,8 +191,11 @@ export async function buildWalletLogoBuffers() {
   const [icon, icon2x, logo, logo2x] = await Promise.all([
     sharp(markBuffer).resize(29, 29, { fit: "contain", background: transparent }).png().toBuffer(),
     sharp(markBuffer).resize(58, 58, { fit: "contain", background: transparent }).png().toBuffer(),
-    sharp(markBuffer).resize(50, 50, { fit: "contain", background: transparent }).png().toBuffer(),
-    sharp(markBuffer).resize(100, 100, { fit: "contain", background: transparent }).png().toBuffer(),
+    // 36, not 50. Apple draws the logo at whatever height it is given, up to 50, and
+    // at 50 the badge stood as tall as the entire brand row and dwarfed the text
+    // beside it.
+    sharp(markBuffer).resize(36, 36, { fit: "contain", background: transparent }).png().toBuffer(),
+    sharp(markBuffer).resize(72, 72, { fit: "contain", background: transparent }).png().toBuffer(),
   ]);
 
   return {
