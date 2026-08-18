@@ -100,7 +100,9 @@ export function EventCard({
             ) : null}
             {showCandidateActions ? (
               <Text style={styles.suggested} numberOfLines={1}>
-                {event.source === 'calendar' ? 'From calendar' : 'Added by you'}
+                {event.invited
+                  ? `Invited by ${event.invitedByName || 'someone'}`
+                  : event.source === 'calendar' ? 'From calendar' : 'Added by you'}
               </Text>
             ) : null}
           </View>

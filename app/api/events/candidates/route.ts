@@ -64,8 +64,25 @@ export async function GET(request: Request) {
     });
   }
 
-  const invitedEvents = ((invited ?? []) as unknown as Array<{ events: EventRow | null }>)
-    .flatMap((row) => (row.events && row.events.status === "scheduled" ? [eventFromRow(row.events)] : []));
+  const invitedRows = ((invited ?? []) as unknown as Array<{ events: EventRow | null }>)
+    .flatMap((row) => (row.events && row.events.status === "scheduled" ? [row.events] : []));
+  const invitedEvents = invitedRows.map(eventFromRow);
+
+  // Who invited them, so the card can say so. Without this an invitee sees
+  // "Added by you" on an event they did not add, which is a small lie in the one
+  // place they are deciding whether to go.
+  const inviterIds = [...new Set(invitedRows.map((row) => row.created_by_user_id))];
+  const inviterNames = new Map<string, string>();
+  if (inviterIds.length) {
+    const { data: inviters } = await supabase
+      .from("users")
+      .select("id, display_name")
+      .in("id", inviterIds);
+    for (const row of (inviters ?? []) as Array<{ id: string; display_name: string | null }>) {
+      if (row.display_name?.trim()) inviterNames.set(row.id, row.display_name.trim());
+    }
+  }
+  const invitedById = new Map(invitedRows.map((row) => [row.id, inviterNames.get(row.created_by_user_id) ?? ""]));
 
   const possibleCandidates = [
     ...synced,
@@ -92,5 +109,9 @@ export async function GET(request: Request) {
     && possibleCandidates.findIndex((candidate) => candidate.id === event.id) === index
   ));
 
-  return NextResponse.json({ candidates, providerStatus, syncedAt }, { headers: { "Cache-Control": "private, no-store" } });
+  const decorated = candidates.map((event) => (invitedById.has(event.id)
+    ? { ...event, invited: true, invitedByName: invitedById.get(event.id) || "" }
+    : event));
+
+  return NextResponse.json({ candidates: decorated, providerStatus, syncedAt }, { headers: { "Cache-Control": "private, no-store" } });
 }

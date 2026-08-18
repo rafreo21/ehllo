@@ -456,3 +456,10 @@ footer a { font-size: 12px; text-decoration: underline; text-underline-offset: 5
   .draft-horizontal-hint { padding-top:10px; }
 }
 @media (prefers-reduced-motion: reduce) { .homepage-draft *, .homepage-draft *::before, .homepage-draft *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } .motion-ready .draft-reveal, .motion-ready .draft-reveal-item { opacity: 1; transform: none; } }
+
+/* Footer links. The activity log is the reason this row exists - privacy and
+   terms were previously reachable only from the auth screen, which is a poor
+   place to keep the only route to them. */
+.footer-links { margin-top: 18px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.footer-links a { color: var(--muted); }
+.footer-links a:hover { color: var(--navy); }

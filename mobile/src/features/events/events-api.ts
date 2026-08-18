@@ -45,6 +45,9 @@ export type EventItem = {
   syncState?: 'none' | 'pending' | 'synced' | 'failed' | 'conflict';
   calendarPushEnabled?: boolean;
   syncProvider?: 'google' | 'microsoft' | null;
+  /** Someone invited you to this; it is not one of your own additions. */
+  invited?: boolean;
+  invitedByName?: string;
 };
 
 function mapEvent(row: Record<string, unknown>): EventItem {
@@ -65,6 +68,8 @@ function mapEvent(row: Record<string, unknown>): EventItem {
     syncState: (row.syncState as EventItem['syncState']) ?? 'none',
     calendarPushEnabled: row.calendarPushEnabled === true,
     syncProvider: (row.syncProvider as EventItem['syncProvider']) ?? null,
+    invited: row.invited === true,
+    invitedByName: typeof row.invitedByName === 'string' ? row.invitedByName : '',
   };
 }
 
