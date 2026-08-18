@@ -12,6 +12,7 @@ type ConnectionSuccessSheetProps = {
   mutual: boolean;
   onClose: () => void;
   onAddFollowUp: () => void;
+  onStartCapture: () => void;
   onViewCard: () => void;
 };
 
@@ -21,6 +22,7 @@ export function ConnectionSuccessSheet({
   mutual,
   onClose,
   onAddFollowUp,
+  onStartCapture,
   onViewCard,
 }: ConnectionSuccessSheetProps) {
   const name = personName.trim() || 'them';
@@ -33,7 +35,13 @@ export function ConnectionSuccessSheet({
       onClose={onClose}
       footer={(
         <>
-          <Button onPress={onAddFollowUp}>Add follow-up</Button>
+          {/* The moment after a scan is when context is freshest, so offer the
+              two things worth doing with it - capture what was said, or commit
+              to the next step - before the quieter "view card". */}
+          <Button onPress={onStartCapture}>Start a capture</Button>
+          <PillButton tone="outline" onPress={onAddFollowUp} style={styles.viewCardButton}>
+            Add follow-up
+          </PillButton>
           <PillButton tone="outline" onPress={onViewCard} style={styles.viewCardButton}>
             View card
           </PillButton>

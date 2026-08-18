@@ -159,6 +159,20 @@ export async function enrichConnectionPhotos(accessToken: string, connections: C
 
 export type ScannedCardResult = { connection: ConnectionItem; mutual: boolean };
 
+/**
+ * Carries the server's machine-readable reason so callers can tell a permanent
+ * failure from a transient one without parsing the message.
+ */
+export class ScanFailureError extends Error {
+  readonly code?: string;
+
+  constructor(message: string, code?: string) {
+    super(message);
+    this.name = 'ScanFailureError';
+    this.code = code;
+  }
+}
+
 export async function registerScannedCard(
   accessToken: string,
   slug: string,
@@ -174,6 +188,7 @@ export async function registerScannedCard(
   });
   const payload = await response.json() as {
     error?: string;
+    code?: string;
     connectionId?: string;
     mutual?: boolean;
     personName?: string;
@@ -181,7 +196,11 @@ export async function registerScannedCard(
     personCompany?: string;
   };
   if (!response.ok) {
-    throw new Error(payload.error || 'Could not save this card to your connections.');
+    const failure = new ScanFailureError(
+      payload.error || 'Could not save this card to your connections.',
+      payload.code,
+    );
+    throw failure;
   }
 
   if (payload.connectionId) {

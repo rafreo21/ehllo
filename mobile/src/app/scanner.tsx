@@ -216,6 +216,21 @@ export default function ScannerScreen() {
           setScanResult(null);
           if (id) router.replace(`/connections/${encodeURIComponent(id)}`);
         }}
+        onStartCapture={() => {
+          const connection = scanResult?.connection;
+          setScanResult(null);
+          if (!connection) return;
+          router.replace({
+            pathname: '/capture/new',
+            params: {
+              personName: connection.name,
+              personEmail: connection.email || '',
+              sourceId: connection.sourceId,
+              contactId: connection.source === 'contact' ? connection.sourceId : '',
+              exchange: connection.source === 'inbound' ? connection.sourceId : '',
+            },
+          });
+        }}
         onAddFollowUp={() => {
           const connection = scanResult?.connection;
           setScanResult(null);

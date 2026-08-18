@@ -1,5 +1,5 @@
 import { useAuth } from '@/features/auth/auth-context';
-import { connectionFromScannedSlug } from '@/features/connections/connections-api';
+import { connectionFromScannedSlug, ScanFailureError } from '@/features/connections/connections-api';
 import { dequeueOfflineScan, readOfflineScanQueue } from '@/features/connections/offline-scan-queue';
 import { useForegroundSync } from '@/lib/background-sync';
 import { isOnline } from '@/lib/connectivity';
@@ -13,10 +13,13 @@ import { clearSyncFailure, recordSyncFailure, syncFailureKey } from '@/features/
  * should leave the queue; a flaky venue network must keep its place in line.
  */
 function isPermanentScanFailure(error: unknown) {
+  // The server's code is authoritative. Matching the sentence was fragile in
+  // exactly the way it sounds: the copy uses a typographic apostrophe and the
+  // check used a straight one, so that branch never fired. The prose fallback
+  // stays only for a device talking to a server older than the code.
+  if (error instanceof ScanFailureError && error.code === 'card_not_found') return true;
   const message = (error instanceof Error ? error.message : String(error ?? '')).toLowerCase();
-  return message.includes("isn't available here")
-    || message.includes('different ehllo environment')
-    || message.includes('unpublished');
+  return message.includes('different ehllo environment') || message.includes('unpublished');
 }
 
 export function OfflineScanSyncManager() {

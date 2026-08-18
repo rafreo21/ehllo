@@ -64,7 +64,13 @@ export async function POST(request: Request) {
       .maybeSingle();
     if (!card) {
       return NextResponse.json(
-        { error: "That card isn’t available here. It may belong to a different ehllo environment, or have been unpublished." },
+        {
+          // A code, not just prose. The client has to decide whether to keep
+          // retrying, and matching on the sentence broke the moment the copy
+          // used a typographic apostrophe the client did not.
+          code: "card_not_found",
+          error: "That card isn’t available here. It may belong to a different ehllo environment, or have been unpublished.",
+        },
         { status: 404 },
       );
     }
