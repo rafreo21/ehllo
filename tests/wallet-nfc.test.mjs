@@ -100,7 +100,12 @@ test("virtual background svg uses card theme gradient and side-by-side layout", 
   assert.match(svg, /font-family="Inter/);
   assert.match(svg, /Scan to save my contact/);
   assert.match(svg, /width="120"/);
-  assert.match(svg, /data:image\/svg\+xml;base64,/);
+  // The QR must be embedded as a flattened raster. It used to be an SVG that
+  // itself embedded images, leaving the code two levels deep inside this
+  // document - resvg resolves one level but not two, so the rasterised
+  // background shipped with a blank badge where the code should be.
+  assert.match(svg, /<image href="data:image\/png;base64,/);
+  assert.doesNotMatch(svg, /<image href="data:image\/svg\+xml;base64,/);
   assert.match(svg, new RegExp(`stop-color="${highlight}"`));
   assert.match(svg, new RegExp(`stop-color="${base}"`));
   assert.match(svg, new RegExp(`stop-color="${shadow}"`));
