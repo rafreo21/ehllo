@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import LottieView from 'lottie-react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
-import { Body, Button, PillButton } from '@/components/ui';
+import { Body, Button } from '@/components/ui';
 import { useDeferredMount } from '@/lib/use-deferred-mount';
 import { colors, spacing, fonts } from '@/theme/tokens';
 
@@ -32,21 +32,7 @@ export function ConnectionSuccessSheet({
     <BottomSheet
       visible={visible}
       title="Connected"
-      onClose={onClose}
-      footer={(
-        <>
-          {/* The moment after a scan is when context is freshest, so offer the
-              two things worth doing with it - capture what was said, or commit
-              to the next step - before the quieter "view card". */}
-          <Button onPress={onStartCapture}>Start a capture</Button>
-          <PillButton tone="outline" onPress={onAddFollowUp} style={styles.viewCardButton}>
-            Add follow-up
-          </PillButton>
-          <PillButton tone="outline" onPress={onViewCard} style={styles.viewCardButton}>
-            View card
-          </PillButton>
-        </>
-      )}>
+      onClose={onClose}>
       <View style={styles.body}>
         <View style={styles.icon}>
           {showLottie ? (
@@ -65,6 +51,12 @@ export function ConnectionSuccessSheet({
             : `${name} has been added to your list.`}
         </Body>
       </View>
+
+      <Button onPress={onAddFollowUp}>Add follow-up</Button>
+      <Button variant="secondary" onPress={onStartCapture}>Start a capture</Button>
+      <Button variant="secondary" onPress={onViewCard}>View card</Button>
+      <Button variant="ghost" onPress={onClose}>Not now</Button>
+
     </BottomSheet>
   );
 }
@@ -80,5 +72,4 @@ const styles = StyleSheet.create({
   lottie: { width: '100%', height: '100%' },
   title: { color: colors.ink, fontSize: 18, fontFamily: fonts.bold, fontWeight: '800', textAlign: 'center' },
   copy: { textAlign: 'center' },
-  viewCardButton: { alignSelf: 'center' },
 });
