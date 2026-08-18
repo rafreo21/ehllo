@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 as TrashIcon } from "react-feather";
 import { ChevronRight as CaretRightIcon } from "react-feather";
 import { Bell as BellIcon } from "react-feather";
 import { UploadCloud as CloudArrowUpIcon } from "react-feather";
@@ -13,6 +14,7 @@ const SETTINGS_LINKS: { href: string; icon: React.ReactNode; label: string; hint
   { href: "/app/settings/notifications", icon: <BellIcon size={20} />, label: "Notification preferences", hint: "How ehllo reminds you about follow-ups" },
   { href: "/app/settings/connected-accounts", icon: <PlugsIcon size={20} weight="bold" />, label: "Connected accounts", hint: "Google, Microsoft, and future integrations" },
   { href: "/app/settings/recording-storage", icon: <CloudArrowUpIcon size={20} />, label: "Recording storage", hint: "Where new recordings are stored by default" },
+  { href: "/app/settings/local-data", icon: <TrashIcon size={20} />, label: "Local data", hint: "Clear the copy this browser is holding" },
 ];
 
 export default function ConsumerSettingsPage() {
