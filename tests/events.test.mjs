@@ -3,6 +3,8 @@ import { describe, it } from "node:test";
 
 import {
   candidateSuppressionKey,
+  decideCalendarImport,
+  normalizeCalendarCandidate,
   externalAttendeeCount,
   isEventCandidateWorthy,
   isVirtualLocation,
@@ -290,5 +292,72 @@ describe("one place at a time, over time", () => {
     const at = resolveCurrentEvent([a, b], new Date("2026-09-04T14:00:00.000Z"));
     assert.equal(at, "meetup");
     assert.equal(typeof at, "string");
+  });
+});
+
+describe("decideCalendarImport", () => {
+  const candidate = {
+    title: "Connect X Ignite",
+    location: "Lagos",
+    startsAt: "2026-09-04T09:00:00.000Z",
+    endsAt: "2026-09-04T12:00:00.000Z",
+    organizerEmail: "host@example.com",
+  };
+  const imported = {
+    source: "calendar",
+    status: "scheduled",
+    title: "Connect X Ignite",
+    location: "Lagos",
+    starts_at: "2026-09-04T09:00:00.000Z",
+    ends_at: "2026-09-04T12:00:00.000Z",
+    organizer_email: "host@example.com",
+  };
+
+  it("inserts an entry it has not seen before", () => {
+    assert.equal(decideCalendarImport(undefined, candidate).decision, "insert");
+  });
+
+  it("leaves an unchanged row alone rather than rewriting it", () => {
+    assert.equal(decideCalendarImport(imported, candidate).decision, "keep");
+  });
+
+  it("does not resurrect an event cancelled in ehllo", () => {
+    const result = decideCalendarImport({ ...imported, status: "cancelled" }, candidate);
+    assert.equal(result.decision, "keep");
+    assert.equal(result.reason, "cancelled-locally");
+  });
+
+  it("will not rewrite an ehllo-authored event the provider echoed back", () => {
+    for (const source of ["manual", "link"]) {
+      const result = decideCalendarImport({ ...imported, source, title: "My own title" }, candidate);
+      assert.equal(result.decision, "keep", `${source} must stay ehllo's`);
+      assert.equal(result.reason, "not-importer-owned");
+    }
+  });
+
+  it("takes a real schedule change from the provider", () => {
+    const result = decideCalendarImport(imported, { ...candidate, startsAt: "2026-09-04T14:00:00.000Z" });
+    assert.equal(result.decision, "update");
+    assert.equal(result.scheduleChanged, true);
+  });
+
+  it("treats the same instant written differently as no change", () => {
+    const result = decideCalendarImport(
+      { ...imported, starts_at: "2026-09-04T10:00:00.000+01:00" },
+      candidate,
+    );
+    assert.equal(result.decision, "keep");
+  });
+
+  it("updates a changed organizer without claiming the schedule moved", () => {
+    const result = decideCalendarImport(imported, { ...candidate, organizerEmail: "new-host@example.com" });
+    assert.equal(result.decision, "update");
+    assert.equal(result.scheduleChanged, false);
+  });
+
+  it("clamps an overlong title the same way the column does", () => {
+    const long = "x".repeat(200);
+    assert.equal(normalizeCalendarCandidate({ ...candidate, title: long }).title.length, 160);
+    assert.equal(normalizeCalendarCandidate({ ...candidate, title: "   " }).title, "Untitled event");
   });
 });

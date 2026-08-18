@@ -174,3 +174,82 @@ function suppressionTimeSlot(startsAt: string): string {
 export function candidateSuppressionKey(organizerEmail: string, title: string, startsAt: string): string {
   return `${organizerEmail.trim().toLowerCase()}::${title.trim().toLowerCase()}::${suppressionTimeSlot(startsAt)}`;
 }
+
+/** True when two timestamps name the same instant, whatever their offset. */
+export function sameCalendarInstant(left: string | null, right: string | null) {
+  if (!left || !right) return left === right;
+  const leftTime = Date.parse(left);
+  const rightTime = Date.parse(right);
+  return !Number.isNaN(leftTime) && !Number.isNaN(rightTime) && leftTime === rightTime;
+}
+
+export type CalendarImportCandidate = {
+  title: string;
+  location: string;
+  startsAt: string;
+  endsAt: string;
+  organizerEmail: string;
+};
+
+export type CalendarImportTarget = {
+  source: string;
+  status: string;
+  title: string;
+  location: string;
+  starts_at: string | null;
+  ends_at: string | null;
+  organizer_email: string;
+};
+
+/** The column values the importer would write, clamped as the table requires. */
+export function normalizeCalendarCandidate(candidate: CalendarImportCandidate) {
+  return {
+    title: candidate.title.trim().slice(0, 160) || "Untitled event",
+    location: candidate.location.trim().slice(0, 320),
+    organizerEmail: candidate.organizerEmail.trim().slice(0, 320),
+  };
+}
+
+/**
+ * What the importer is allowed to do with one provider entry.
+ *
+ * Extracted from syncCalendarCandidates so the policy can be tested without a
+ * database or a provider token. The behaviour it encodes is the part that was
+ * wrong: a blanket upsert let the provider's copy win on conflict, which
+ * resurrected locally-cancelled events, reassigned ownership, and overwrote
+ * local edits with no revision check.
+ *
+ * `keep` means leave the row exactly as it is. It is not "nothing changed" -
+ * it also covers the cases where the provider disagrees with ehllo and ehllo
+ * wins, which is what DEC-031 requires instead of silently overwriting.
+ */
+export function decideCalendarImport(
+  existing: CalendarImportTarget | undefined,
+  candidate: CalendarImportCandidate,
+): { decision: "insert" | "update" | "keep"; scheduleChanged: boolean; reason: string } {
+  if (!existing) return { decision: "insert", scheduleChanged: false, reason: "new" };
+
+  // An ehllo-authored event keeps its own truth even once it carries an
+  // external_id. Letting the importer touch it is how ownership disappears on
+  // the first echo back from the provider.
+  if (existing.source !== "calendar") {
+    return { decision: "keep", scheduleChanged: false, reason: "not-importer-owned" };
+  }
+
+  // A local cancellation is a decision, not stale data.
+  if (existing.status === "cancelled") {
+    return { decision: "keep", scheduleChanged: false, reason: "cancelled-locally" };
+  }
+
+  const next = normalizeCalendarCandidate(candidate);
+  const scheduleChanged = existing.title !== next.title
+    || existing.location !== next.location
+    || !sameCalendarInstant(existing.starts_at, candidate.startsAt)
+    || !sameCalendarInstant(existing.ends_at, candidate.endsAt);
+
+  if (!scheduleChanged && existing.organizer_email === next.organizerEmail) {
+    return { decision: "keep", scheduleChanged: false, reason: "unchanged" };
+  }
+
+  return { decision: "update", scheduleChanged, reason: "provider-changed" };
+}

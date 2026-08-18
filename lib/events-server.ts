@@ -4,7 +4,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AppUser } from "./auth/context";
 import { deliverQueuedEventEmail, enqueueEventEmail, type EventEmailKind } from "./event-email-outbox";
 import { buildEventCancelledEmail, buildEventScheduleChangedEmail } from "./event-invitation-email";
-import { candidateSuppressionKey, isEventCandidateWorthy, resolveCurrentEvent, type EventSource } from "./events";
+import {
+  candidateSuppressionKey,
+  decideCalendarImport,
+  isEventCandidateWorthy,
+  normalizeCalendarCandidate,
+  resolveCurrentEvent,
+  type EventSource,
+} from "./events";
 import { getConnectedAccountAccessTokenStatus } from "./integrations/connected-accounts";
 import {
   CalendarProviderAuthError,
@@ -172,47 +179,99 @@ export async function syncCalendarCandidates(
   const surviving = worthy.filter((item) => !suppressed.has(candidateSuppressionKey(item.organizerEmail, item.title, item.startsAt)));
   if (!surviving.length) return { candidates: [], providerStatus, syncedAt };
 
-  const { data, error } = await supabase
-    .from("events")
-    .upsert(surviving.map((item) => ({
-      workspace_id: user.workspaceId,
-      created_by_user_id: user.id,
-      title: item.title.trim().slice(0, 160) || "Untitled event",
-      location: item.location.trim().slice(0, 320),
-      starts_at: item.startsAt,
-      ends_at: item.endsAt,
-      source: "calendar" as const,
-      organizer_email: item.organizerEmail.trim().slice(0, 320),
-      external_id: item.externalId,
-      status: "scheduled",
-      cancelled_at: null,
-    })), { onConflict: "workspace_id,external_id" })
-    .select("*");
+  // This used to be one blanket upsert of every surviving candidate, which made
+  // Google's copy win on conflict: `source` flipped to 'calendar',
+  // `created_by_user_id` became whoever synced last, and status/cancelled_at
+  // were forced back to 'scheduled'/null. Two consequences, both silent. An
+  // event cancelled in ehllo came back to life on the next pull. And a
+  // multi-user workspace where two members both attend the same entry has the
+  // second member's sync quietly take ownership of the first member's row,
+  // because the unique arc is (workspace_id, external_id) and the payload
+  // rewrote created_by_user_id.
+  //
+  // The importer now only writes rows it owns. Google is authoritative for the
+  // entries it created; it is not authoritative for a row ehllo authored, nor
+  // for a decision the user made here. DEC-031 forbids resolving that kind of
+  // conflict by overwriting, so where the two disagree the local record stands.
+  const newItems = surviving.filter((item) => !beforeByExternalId.has(item.externalId));
+  const existingItems = surviving.filter((item) => beforeByExternalId.has(item.externalId));
 
-  if (error || !data) return { candidates: [], providerStatus, syncedAt };
-  for (const item of surviving) {
+  const rows: EventRow[] = [];
+
+  if (newItems.length) {
+    const { data: insertedRows, error: insertError } = await supabase
+      .from("events")
+      .insert(newItems.map((item) => ({
+        workspace_id: user.workspaceId,
+        created_by_user_id: user.id,
+        title: item.title.trim().slice(0, 160) || "Untitled event",
+        location: item.location.trim().slice(0, 320),
+        starts_at: item.startsAt,
+        ends_at: item.endsAt,
+        source: "calendar" as const,
+        organizer_email: item.organizerEmail.trim().slice(0, 320),
+        external_id: item.externalId,
+        status: "scheduled",
+        cancelled_at: null,
+      })))
+      .select("*");
+    if (insertError) return { candidates: [], providerStatus, syncedAt };
+    rows.push(...((insertedRows ?? []) as EventRow[]));
+  }
+
+  for (const item of existingItems) {
     const existing = beforeByExternalId.get(item.externalId);
     if (!existing) continue;
-    const changed = existing.title !== item.title.trim().slice(0, 160)
-      || existing.location !== item.location.trim().slice(0, 320)
-      || !sameInstant(existing.starts_at, item.startsAt)
-      || !sameInstant(existing.ends_at, item.endsAt)
-      || existing.status === "cancelled";
-    if (!changed) continue;
+
+    // The policy itself lives in lib/events.ts so it can be tested without a
+    // database or a provider token; see decideCalendarImport for why each
+    // "keep" is a keep.
+    const { decision, scheduleChanged } = decideCalendarImport(existing, {
+      title: item.title,
+      location: item.location,
+      startsAt: item.startsAt,
+      endsAt: item.endsAt,
+      organizerEmail: item.organizerEmail,
+    });
+    if (decision !== "update") {
+      rows.push(existing);
+      continue;
+    }
+
+    const { title, location, organizerEmail } = normalizeCalendarCandidate({
+      title: item.title,
+      location: item.location,
+      startsAt: item.startsAt,
+      endsAt: item.endsAt,
+      organizerEmail: item.organizerEmail,
+    });
+
+    // Deliberately narrow: never source, never created_by_user_id, never
+    // status or cancelled_at.
+    const { data: updatedRow } = await supabase
+      .from("events")
+      .update({
+        title,
+        location,
+        starts_at: item.startsAt,
+        ends_at: item.endsAt,
+        organizer_email: organizerEmail,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id)
+      .select("*")
+      .maybeSingle();
+    rows.push(((updatedRow ?? existing) as EventRow));
+
+    if (!scheduleChanged) continue;
     await notifyCalendarEventGuests(supabase, existing.id, buildEventScheduleChangedEmail({
       eventTitle: item.title,
       startsAt: item.startsAt,
       location: item.location,
     }), "schedule_notice_sent_at", "schedule_changed", syncedAt, true);
   }
-  return { candidates: (data as EventRow[]).map(eventFromRow), providerStatus, syncedAt };
-}
 
-function sameInstant(left: string | null, right: string | null) {
-  if (!left || !right) return left === right;
-  const leftTime = Date.parse(left);
-  const rightTime = Date.parse(right);
-  return !Number.isNaN(leftTime) && !Number.isNaN(rightTime) && leftTime === rightTime;
+  return { candidates: rows.map(eventFromRow), providerStatus, syncedAt };
 }
 
 async function notifyCalendarEventGuests(
