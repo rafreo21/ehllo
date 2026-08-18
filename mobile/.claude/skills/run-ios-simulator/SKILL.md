@@ -74,7 +74,7 @@ npm run typecheck   # tsc --noEmit
 npm run lint        # expo lint
 ```
 
-As of this writing, both currently fail on pre-existing issues unrelated to any particular change - `typecheck` has ~3 existing type errors (e.g. `src/components/ui.tsx`, `src/features/card/nfc-actions.ts`), and `lint` reports 45 errors / 26 warnings baseline. Don't assume a failure here was caused by your change; diff the output against this baseline.
+Measured 2026-08-18: `npm run typecheck` is **clean (0 errors)** and `npm run lint` reports **17 problems** (8 errors, 9 warnings), all pre-existing - impure-call-during-render in `(tabs)/settings.tsx`, setState-in-effect in `settings/edit-profile.tsx`, unused imports, one unescaped entity, and import ordering plus "value cannot be modified" in `method-list-editor.tsx`. The earlier note here claimed ~3 type errors and a 45-error/26-warning lint baseline; both were stale, and a stale baseline is worse than none - it invites you to wave through a regression as pre-existing. Re-measure rather than trusting this line, and update it when you do.
 
 ## Gotchas
 
