@@ -102,9 +102,9 @@ function completedLabel(completedAt?: string) {
 }
 
 function addedLabel(startedAt?: string) {
-  if (!startedAt) return "—";
+  if (!startedAt) return "-";
   const date = new Date(startedAt);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 

@@ -445,7 +445,7 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
                 {copiedField === "transcript" ? <CheckCircleIcon size={15} /> : <CopyIcon size={15} />}
               </button>
             </div>
-            <span className="review-tab-badge"><LockKeyIcon size={13} />Recording, transcript, and speaker names — only you can see this.</span>
+            <span className="review-tab-badge"><LockKeyIcon size={13} />Recording, transcript, and speaker names - only you can see this.</span>
           </div>
         ) : (
           <div className="review-tab-panel review-details-content" role="tabpanel">

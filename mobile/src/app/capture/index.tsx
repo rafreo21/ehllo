@@ -134,7 +134,7 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
   const visibleEncounters = useMemo(() => {
     const needle = query.trim().toLowerCase();
     // Unreviewed encounters live in the "Needs review" section on the
-    // landing screen, not History — History is for completed, reviewed work.
+    // landing screen, not History - History is for completed, reviewed work.
     const reviewable = encounters.filter((encounter) => encounter.status !== 'draft');
     const filtered = needle
       ? reviewable.filter((encounter) => [encounter.personName, encounter.title, encounter.status]
@@ -199,7 +199,7 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
             ? encounterResult.reason
             : sessionResult.status === 'rejected' ? sessionResult.reason : null;
           // A plain offline blip is already covered by the OfflineBanner up
-          // top — this longer notice is reserved for a real server-side
+          // top - this longer notice is reserved for a real server-side
           // sync failure while actually connected.
           if (!isNetworkError(rejection)) {
             setSyncNotice('Cloud sync is temporarily unavailable. You can still capture and save a draft on this device.');
@@ -231,7 +231,7 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
       return;
     }
     // Any other draft still showing recording/paused has no live session
-    // behind it (that would have tripped the guard above) — it's stale from
+    // behind it (that would have tripped the guard above) - it's stale from
     // an app kill or an interruption the watchdog never got to record.
     // Reconcile those before starting fresh so they don't linger looking
     // like phantom live recordings; this never blocks the new recording.

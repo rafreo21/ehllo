@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 // Lets a card link opened on a device with the app installed launch straight
 // into the app instead of the browser. The SHA-256 fingerprint below is the
 // staging app's actual signing certificate (extracted from an installed
-// build) — the production package has no fingerprint here yet because no
+// build) - the production package has no fingerprint here yet because no
 // production build has been signed/installed to pull it from. Add the Play
 // Console "App signing key certificate" SHA-256 once production ships.
 const STAGING_FINGERPRINT = "CD:F4:0E:8F:51:99:A2:7D:FA:C3:85:BC:D8:6A:2D:3F:F8:2B:81:1C:9B:F1:AC:2E:3C:6F:65:B5:3A:B0:7C:41";

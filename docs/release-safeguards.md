@@ -56,7 +56,7 @@ connecting to either Supabase project or mutating external services.
 ## Crash symbolication
 
 `staging-store` and `production` previously set `SENTRY_DISABLE_AUTO_UPLOAD=true`
-— the two profiles testers actually run — so no dSYMs or source maps ever
+- the two profiles testers actually run - so no dSYMs or source maps ever
 reached Sentry. Native crashes and app hangs arrived with every first-party
 frame redacted, which made the most widespread issue in the app impossible to
 attribute to any call site.
@@ -84,7 +84,7 @@ only.
 
 An OTA update carries JavaScript and assets only. `runtimeVersion.policy` is
 `appVersion`, so a native change or an app version bump still needs a fresh
-`staging-store` build — and devices left on the previous version stop receiving
+`staging-store` build - and devices left on the previous version stop receiving
 updates until they take it.
 
 ## External and hardware work still required
@@ -103,7 +103,7 @@ Do not describe the app as store-ready until those items have recorded evidence.
 
 - Publishable/anonymous Supabase keys may exist in a client build; privileged service-role or secret keys must never be committed or bundled.
 - CI scans every tracked file for privileged Supabase credentials.
-- Server-only credentials belong in Supabase, Vercel, GitHub, or EAS secret storage—not package scripts or source files.
+- Server-only credentials belong in Supabase, Vercel, GitHub, or EAS secret storage-not package scripts or source files.
 - A production secret previously shared in conversation or committed history must be rotated in Supabase, then updated in Vercel and any authorized local secret store. Removing it from the latest source does not invalidate the old credential.
 
 ## Calendar OAuth refresh gate
@@ -111,7 +111,7 @@ Do not describe the app as store-ready until those items have recorded evidence.
 - Successful connection is not enough: each enabled calendar provider must prove an expired-token refresh on its deployed environment and persist the replacement access token.
 - Google and Microsoft OAuth client credentials are server-only, environment-specific Vercel configuration. A staging credential or staging verification cannot approve production.
 - Events must show provider state (`ok`, `not_connected`, `needs_reconnect`, or `error`) and a reconnect path; an unhealthy provider must never look like an empty calendar.
-- Suppression must apply only to the specific provider-event occurrence, using its provider identity and rounded start time — never title-only matching.
+- Suppression must apply only to the specific provider-event occurrence, using its provider identity and rounded start time - never title-only matching.
 - Current evidence: staging Google refresh is verified. Production Google and every enabled Microsoft provider require recorded deployed refresh proof before launch.
 
 ## Rollout and rollback

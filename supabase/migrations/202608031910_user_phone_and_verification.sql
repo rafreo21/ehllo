@@ -7,10 +7,10 @@ alter table public.users
   add column phone_verified boolean not null default false,
   add column phone_verified_at timestamptz;
 
--- Adds new output columns, so the existing function must be dropped first —
+-- Adds new output columns, so the existing function must be dropped first -
 -- CREATE OR REPLACE cannot change a function's return shape. Keeps the
 -- workspace_name/type/role + active-workspace selection added by
--- team_workspaces — this function is also used by the team switcher.
+-- team_workspaces - this function is also used by the team switcher.
 drop function if exists public.get_my_app_context();
 
 create function public.get_my_app_context()
@@ -72,7 +72,7 @@ revoke all on function public.get_my_app_context() from public, anon;
 grant execute on function public.get_my_app_context() to authenticated;
 
 -- Updates the internal account profile (full name + phone). Changing the
--- phone number always resets verification — a re-verified number cannot be
+-- phone number always resets verification - a re-verified number cannot be
 -- inherited from a previous value.
 create or replace function public.update_my_account_profile(
   p_display_name text, p_phone text

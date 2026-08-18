@@ -1,6 +1,6 @@
 // Dynamic config so a "staging" build can be installed side-by-side with
 // production on the same device (own bundle ID/package, own app name, own
-// backend) instead of overwriting it. Selected via APP_VARIANT — set by the
+// backend) instead of overwriting it. Selected via APP_VARIANT - set by the
 // mobile/scripts/*.sh helpers. Plain local commands default to staging so a
 // developer cannot accidentally write to production.
 const requestedVariant = process.env.APP_VARIANT ?? "staging";
@@ -55,7 +55,7 @@ module.exports = {
       icon: "./assets/images/icon.png",
       bundleIdentifier: bundleId,
       supportsTablet: true,
-      // Universal Links — matches the Android intentFilter's /c/ pathPrefix
+      // Universal Links - matches the Android intentFilter's /c/ pathPrefix
       // above. The apple-app-site-association file served at this domain
       // lives in site/app/.well-known/apple-app-site-association/route.ts.
       associatedDomains: [
@@ -86,7 +86,7 @@ module.exports = {
       package: bundleId,
       // Without these, @react-native-community/netinfo's native module can't
       // properly query the ConnectivityManager or register for connectivity
-      // broadcasts — confirmed on-device: it silently reported a stale
+      // broadcasts - confirmed on-device: it silently reported a stale
       // isConnected:true/type:wifi reading while the device was genuinely,
       // fully offline (WiFi off, no active network per `dumpsys connectivity`).
       permissions: ["ACCESS_NETWORK_STATE", "ACCESS_WIFI_STATE"],
@@ -260,17 +260,17 @@ module.exports = {
       supabaseUrl: BACKEND.supabaseUrl,
       supabaseAnonKey: BACKEND.supabaseAnonKey,
       // Hardcoded rather than env-driven for the same reason as sentryDsn
-      // above — EAS builds never see local .env, so this silently fell back
+      // above - EAS builds never see local .env, so this silently fell back
       // to "" (plain text input, no autocomplete) on every real build.
       // Split per platform since a Google Cloud API key can only carry one
-      // application-restriction type (Android apps OR iOS apps, not both) —
+      // application-restriction type (Android apps OR iOS apps, not both) -
       // each is restricted in Cloud Console to its own package name/SHA-1 or
       // bundle ID, and to the Places API only. Same key for both app
       // variants (Places is billing-account-scoped, not staging/production-split).
       googlePlacesApiKeyAndroid: "AIzaSyBzK6N7DA6itgONIYotNSPoo6MuvQa7Fbc",
       googlePlacesApiKeyIos: "AIzaSyD0QU2QDSaYG_C5k9h0224wlToCf_TevKE",
       // DSNs are not secret (Sentry's own docs: safe to expose client-side,
-      // same trust tier as the Supabase anon key above) — hardcoded here
+      // same trust tier as the Supabase anon key above) - hardcoded here
       // rather than via env var since this project never wires EAS env vars
       // through to runtime (see BACKEND above), only local-only .env.
       sentryDsn: "https://95ecbc235e3dc8301c48cb83da697b06@o4511911251214336.ingest.us.sentry.io/4511911445463040",

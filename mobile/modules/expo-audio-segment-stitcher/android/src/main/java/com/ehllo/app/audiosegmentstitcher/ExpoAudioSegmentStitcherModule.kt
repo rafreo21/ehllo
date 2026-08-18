@@ -14,7 +14,7 @@ class ExpoAudioSegmentStitcherModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("ExpoAudioSegmentStitcher")
 
-    // Combines recording segments (each its own finalized .m4a — expo-audio
+    // Combines recording segments (each its own finalized .m4a - expo-audio
     // can't reopen and append to an already-stopped file, e.g. after the
     // interruption watchdog forces a new take) into one continuous .m4a via
     // MediaExtractor/MediaMuxer, so playback/upload always sees a single file.

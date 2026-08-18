@@ -12,8 +12,8 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & SharedButtonProps;
 type LinkButtonProps = AnchorHTMLAttributes<HTMLAnchorElement> & SharedButtonProps & { href: string };
 
 // Flowbite's button conventions (flowbite.com/docs/components/buttons):
-// rounded-lg, font-medium (not bold), a visible focus ring, and — for the
-// secondary/"Alternative" style — a bordered white button instead of a
+// rounded-lg, font-medium (not bold), a visible focus ring, and - for the
+// secondary/"Alternative" style - a bordered white button instead of a
 // flat tinted fill.
 const variants = {
   primary:

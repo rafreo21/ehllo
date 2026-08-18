@@ -16,7 +16,7 @@ export function mergeEventActionQueue(
 ) {
   const next = current.filter((item) => !(item.eventId === entry.eventId && item.action === entry.action));
   // Declining an event you had queued a presence action for makes that
-  // presence action meaningless — drop both rather than replaying "I'm here"
+  // presence action meaningless - drop both rather than replaying "I'm here"
   // for something you have since said you are not attending.
   const compatible = entry.action === 'attendance' && entry.attendanceStatus === 'not_going'
     ? next.filter((item) => !(item.eventId === entry.eventId && (item.action === 'leave' || item.action === 'check_in')))

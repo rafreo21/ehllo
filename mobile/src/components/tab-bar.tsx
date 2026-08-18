@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   // The active item hugs its own content (badge + label) instead of
-  // flex-growing to fill the row — flex:1 here left a dead gap between the
+  // flex-growing to fill the row - flex:1 here left a dead gap between the
   // label and the pill's edge. Inactive items stay fixed circles.
   item: {
     height: ITEM_SIZE,
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     // Android doesn't reliably clip a View's own backgroundColor fill to
     // its borderRadius without an explicit overflow:hidden (iOS does, via
-    // CALayer) — without this the badge rendered as a square there.
+    // CALayer) - without this the badge rendered as a square there.
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',

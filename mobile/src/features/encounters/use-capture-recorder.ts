@@ -50,7 +50,7 @@ type UseCaptureRecorderOptions = {
 };
 
 /**
- * Mono, 16kHz, 32kbps AAC — Whisper resamples everything to 16kHz mono anyway, so the
+ * Mono, 16kHz, 32kbps AAC - Whisper resamples everything to 16kHz mono anyway, so the
  * stereo 44.1kHz/128kbps HIGH_QUALITY preset was spending ~4x the bytes for no
  * transcription benefit. At this bitrate a full MAX_RECORDING_SECONDS (1hr) clip is
  * ~14MB, comfortably under Whisper's 25MB upload limit (see audio-upload.ts).
@@ -79,17 +79,17 @@ const RECORDING_OPTIONS: RecordingOptions = {
   },
 };
 
-/** Hard cap for on-device capture — auto Finish when reached. */
+/** Hard cap for on-device capture - auto Finish when reached. */
 export const MAX_RECORDING_SECONDS = 60 * 60;
 
-// Grace period before the interruption watchdog trusts isRecording:false —
+// Grace period before the interruption watchdog trusts isRecording:false -
 // covers the native catch-up window right after calling record(). Android's
 // MediaRecorder start-up latency runs longer than iOS's AVAudioRecorder,
 // especially on older hardware, so it gets a wider window to avoid false
 // positives on Pause -> Resume.
 const INTERRUPTION_GRACE_MS = Platform.OS === 'android' ? 3500 : 2000;
 
-// Below this length a transcript isn't considered usable — reused by the
+// Below this length a transcript isn't considered usable - reused by the
 // background transcription-retry sweep so its threshold can't silently
 // drift from this hook's.
 export const MIN_USABLE_TRANSCRIPT_LENGTH = 20;
@@ -129,7 +129,7 @@ export function useCaptureRecorder({
   const speechTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stopRecordingRef = useRef<(reason?: 'interrupted') => Promise<void>>(async () => {});
   const interruptionHandledRef = useRef(false);
-  // When the current native take actually started — used to grace-period the
+  // When the current native take actually started - used to grace-period the
   // interruption watchdog's post-record() catch-up window. This must be
   // per-take, not derived from cumulative `seconds`: on a resumed recording,
   // `seconds` already carries the prior segments' total, so a `seconds >= 2`
@@ -137,7 +137,7 @@ export function useCaptureRecorder({
   // at all, misreading its own startup catch-up window as an interruption.
   const takeStartedAtRef = useRef(0);
   // Cumulative transcript/duration from segments completed before the
-  // current one — kept outside React state since they're only ever read
+  // current one - kept outside React state since they're only ever read
   // synchronously inside stopRecording/continueRecording, never rendered.
   const priorTranscriptRef = useRef('');
   const priorDurationRef = useRef(0);
@@ -171,7 +171,7 @@ export function useCaptureRecorder({
   const seconds = useMemo(
     () => (usingSpeechCapture
       ? speechSeconds
-      // Cumulative across segments — durationMillis alone only reflects the
+      // Cumulative across segments - durationMillis alone only reflects the
       // current take, which would otherwise visibly reset after a resume.
       : priorDurationSeconds + Math.max(0, Math.round(recorderState.durationMillis / 1000))),
     [priorDurationSeconds, recorderState.durationMillis, speechSeconds, usingSpeechCapture],
@@ -253,7 +253,7 @@ export function useCaptureRecorder({
 
   // iOS can reset media services mid-recording (a system-level crash/reset,
   // typically from a call, Siri, another app grabbing the mic, or a
-  // prolonged background session) — expo-audio surfaces this via
+  // prolonged background session) - expo-audio surfaces this via
   // mediaServicesDidReset. When it fires, the native recorder is dead: its
   // duration silently drops to 0 while our own state still says "recording",
   // which looked like a broken/reset timer. The same silent-death pattern
@@ -264,7 +264,7 @@ export function useCaptureRecorder({
   useEffect(() => {
     if (usingSpeechCapture) return;
     if (recordingState !== 'recording') return;
-    // `canRecord` is a general readiness flag, not "not currently recording" —
+    // `canRecord` is a general readiness flag, not "not currently recording" -
     // right after record() is called there's a brief window before the native
     // poll catches up where isRecording is still false with canRecord true.
     // Only trust that combination as a genuine mid-session drop once this take
@@ -286,7 +286,7 @@ export function useCaptureRecorder({
     recorderState.mediaServicesDidReset,
     recordingState,
     // Not read directly below, but ticks every second while recording so
-    // this effect keeps re-evaluating the elapsed-time gate over time —
+    // this effect keeps re-evaluating the elapsed-time gate over time -
     // without it, the effect would only re-run on isRecording/canRecord
     // *transitions* and could miss the 2s grace period elapsing.
     seconds,
@@ -432,7 +432,7 @@ export function useCaptureRecorder({
     setPlaybackSource(null);
     onErrorRef.current('');
     interruptionHandledRef.current = false;
-    // A genuinely fresh recording (not a resume) starts with a clean slate —
+    // A genuinely fresh recording (not a resume) starts with a clean slate -
     // no carried-over segments from whatever encounter was last open in this
     // shared recorder instance.
     priorTranscriptRef.current = '';
@@ -467,7 +467,7 @@ export function useCaptureRecorder({
 
   /**
    * Starts a new take after a segment ended (typically the interruption
-   * watchdog) without discarding what's already captured — unlike
+   * watchdog) without discarding what's already captured - unlike
    * resetRecording, which throws everything away for a genuine do-over.
    * expo-audio can't reopen an already-finalized .m4a to keep writing to it
    * (Apple's AVAudioRecorder has no append mode), so this really does start
@@ -485,7 +485,7 @@ export function useCaptureRecorder({
       setRecordingSegments((current) => [...current, recordingUri]);
     }
     // `seconds` is already cumulative (priorDurationRef + the current take),
-    // so this is the new total, not an increment — using += here would
+    // so this is the new total, not an increment - using += here would
     // double-count everything accumulated before this take.
     priorDurationRef.current = seconds;
     setPriorDurationSeconds(seconds);
@@ -537,7 +537,7 @@ export function useCaptureRecorder({
         if (started) startSpeechTimer();
       } else {
         audioRecorder.record();
-        // Same native catch-up window as any other record() call — without
+        // Same native catch-up window as any other record() call - without
         // resetting this, the interruption watchdog's grace period is
         // already satisfied by the time already accumulated before the
         // pause, so resuming would immediately misread its own startup lag
@@ -608,7 +608,7 @@ export function useCaptureRecorder({
             segments: segmentsSoFar,
           });
           setPlaybackReady(true);
-          // Keep the interruption message on screen — the watchdog set it
+          // Keep the interruption message on screen - the watchdog set it
           // moments ago and it would otherwise be silently wiped here.
           if (reason !== 'interrupted') onErrorRef.current('');
         } else if (cleaned.trim()) {
@@ -673,7 +673,7 @@ export function useCaptureRecorder({
       }
       if (draft.durationSeconds && draft.durationSeconds > 0) {
         // publishDuration only forwards to the external onDurationChange
-        // callback — it doesn't feed the `seconds` memo that actually drives
+        // callback - it doesn't feed the `seconds` memo that actually drives
         // the on-screen timer. Without seeding priorDurationRef too, a
         // reopened draft displays 00:00 until a new segment starts.
         priorDurationRef.current = draft.durationSeconds;
@@ -685,7 +685,7 @@ export function useCaptureRecorder({
       setRecordingSegments(draft.recordingSegments);
     }
     if (draft.transcript?.trim()) {
-      // Seeds the base a resumed recording's transcript gets stitched onto —
+      // Seeds the base a resumed recording's transcript gets stitched onto -
       // without this, resuming after reopening the app would silently drop
       // everything transcribed before the restart.
       priorTranscriptRef.current = draft.transcript.trim();
@@ -732,7 +732,7 @@ export function useCaptureRecorder({
     setCaptureMode(resolveSpeechCaptureMode());
     publishDuration(0);
     setRecordingUri('');
-    // A real do-over, unlike continueRecording — nothing prior carries forward.
+    // A real do-over, unlike continueRecording - nothing prior carries forward.
     priorTranscriptRef.current = '';
     priorDurationRef.current = 0;
     setPriorDurationSeconds(0);

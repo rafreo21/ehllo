@@ -10,7 +10,7 @@ function readAuthCode(url: string) {
 
 // Google's redirect lands with tokens directly in the URL fragment
 // (#access_token=...&refresh_token=...) rather than a PKCE-style ?code=
-// query param — confirmed on-device via direct URL logging on both
+// query param - confirmed on-device via direct URL logging on both
 // platforms. Email OTP verification produces a query-param code (handled
 // above); OAuth providers here use this implicit-flow shape instead, so
 // both need to be checked.
@@ -26,7 +26,7 @@ function readImplicitTokens(url: string) {
 
 // Both auth codes and implicit tokens are single-use / one-shot to apply.
 // On Android, the same redirect can reach the app through two independent
-// channels — the browser-session promise that initiated the flow (needed
+// channels - the browser-session promise that initiated the flow (needed
 // on iOS, where ASWebAuthenticationSession only delivers the result that
 // way) and the app-wide Linking "url" event (which also fires there, unlike
 // on iOS). Without this guard, the second handler to run re-applies an

@@ -2,7 +2,7 @@ begin;
 
 -- Lightweight per-device pending-sync counts, so a device can show "another
 -- device has changes waiting to sync" without ever syncing the pending
--- items' actual content anywhere — just a count and a timestamp.
+-- items' actual content anywhere - just a count and a timestamp.
 create table public.device_pending_status (
   user_id uuid not null references public.users(id) on delete cascade,
   device_id text not null,

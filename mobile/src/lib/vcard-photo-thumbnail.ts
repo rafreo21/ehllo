@@ -15,12 +15,12 @@ const THUMBNAIL_ATTEMPTS = [
  * so the offline QR can carry a real thumbnail instead of just a URL when there's
  * capacity left over after fitting every contact method (see offline-qr-payload.ts).
  * Tries each size in THUMBNAIL_ATTEMPTS (largest first) and returns the first one
- * `accepts` approves of — callers use this to check the resulting vCard still fits
+ * `accepts` approves of - callers use this to check the resulting vCard still fits
  * a scannable QR. Returns null if every size fails or the download/resize itself fails.
  *
  * expo-image-manipulator is required lazily, inside the try/catch: a native module,
- * statically imported, executes its native-lookup at module-load time — before any
- * try/catch here could run — and crashes every screen that imports this file if the
+ * statically imported, executes its native-lookup at module-load time - before any
+ * try/catch here could run - and crashes every screen that imports this file if the
  * installed native build doesn't have it yet (e.g. dev client not rebuilt). Requiring
  * it lazily keeps that failure contained to this best-effort enhancement.
  */

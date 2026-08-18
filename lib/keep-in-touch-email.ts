@@ -22,7 +22,7 @@ export function keepInTouchTitle(threshold: KeepInTouchThreshold, personName: st
 
 export function keepInTouchBody(threshold: KeepInTouchThreshold, personName: string) {
   const name = personName.trim() || "them";
-  return `You connected with ${name} ${THRESHOLD_COPY[threshold].timeframe} — a quick hello goes a long way.`;
+  return `You connected with ${name} ${THRESHOLD_COPY[threshold].timeframe} - a quick hello goes a long way.`;
 }
 
 export function buildKeepInTouchEmail(threshold: KeepInTouchThreshold, personName: string, appUrl: string) {

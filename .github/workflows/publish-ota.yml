@@ -6,8 +6,8 @@ name: Publish OTA update
 # talking to. This closes that gap.
 #
 # IMPORTANT: an OTA update reaches real testers within minutes. It carries
-# JavaScript and assets only. Anything native — a new Expo module, a permission,
-# a config-plugin change, or an app version bump — still needs a fresh
+# JavaScript and assets only. Anything native - a new Expo module, a permission,
+# a config-plugin change, or an app version bump - still needs a fresh
 # `staging-store` build, because runtimeVersion.policy is "appVersion" and an
 # update only reaches devices whose runtime version matches.
 
@@ -60,7 +60,7 @@ jobs:
       - name: Verify staging/production split
         # Both checks import only Node built-ins, so they need no install. That
         # also keeps publishing an update independent of the web app's
-        # lockfile — which is currently out of sync with its package.json
+        # lockfile - which is currently out of sync with its package.json
         # (`npm ci` fails on a missing lru-cache entry) and would otherwise
         # block every mobile release for an unrelated reason.
         run: |
@@ -84,7 +84,7 @@ jobs:
 
       # Nothing uploads source maps for an update. SENTRY_DISABLE_AUTO_UPLOAD
       # is only read by sentry.gradle and the two sentry-xcode scripts, so it
-      # covers native builds and not `eas update` — which means the JavaScript
+      # covers native builds and not `eas update` - which means the JavaScript
       # testers actually run day to day arrives in Sentry unsymbolicated.
       #
       # continue-on-error because a symbolication problem must never take down

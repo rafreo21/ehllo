@@ -7,10 +7,10 @@ export type EventSource = 'manual' | 'link' | 'calendar';
 export type EventAttendanceStatus = 'going' | 'not_going';
 
 /**
- * "ok" — synced fine. "not_connected" — provider was never linked, a normal
- * state. "needs_reconnect" — a connection exists but its token is dead
+ * "ok" - synced fine. "not_connected" - provider was never linked, a normal
+ * state. "needs_reconnect" - a connection exists but its token is dead
  * (revoked grant, provider rejected the refresh) and nothing will sync
- * again until the user reconnects. "error" — a transient failure, worth
+ * again until the user reconnects. "error" - a transient failure, worth
  * retrying, not worth alarming the user about.
  */
 export type CalendarProviderStatus = 'ok' | 'not_connected' | 'needs_reconnect' | 'error';
@@ -95,10 +95,10 @@ export async function updateEvent(
   return { event: mapEvent(payload.event), emailsSent: payload.emailsSent ?? 0, emailsFailed: payload.emailsFailed ?? 0 };
 }
 
-/** Events the user is going to — see GET /api/events. Candidates awaiting a decision are separate, see fetchEventCandidates. */
+/** Events the user is going to - see GET /api/events. Candidates awaiting a decision are separate, see fetchEventCandidates. */
 /**
- * `include` defaults to 'going' so every existing caller — Home's event card,
- * capture tagging, the connection timeline — keeps the going-only set it was
+ * `include` defaults to 'going' so every existing caller - Home's event card,
+ * capture tagging, the connection timeline - keeps the going-only set it was
  * written against. Only the Events list asks for 'all', because it is the one
  * surface that has somewhere to put a declined event.
  */
@@ -246,7 +246,7 @@ export async function setEventAttendance(accessToken: string, eventId: string, s
   }
 }
 
-/** "I've left" — caps this event's effective end at now for passive-attach, without changing its real end time. Pass left: false to undo. */
+/** "I've left" - caps this event's effective end at now for passive-attach, without changing its real end time. Pass left: false to undo. */
 export async function removeEventFromMyList(accessToken: string, eventId: string) {
   const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}/attendance`, accessToken, {
     method: 'DELETE',
@@ -274,8 +274,8 @@ export async function sendEventCheckIn(accessToken: string, eventId: string, che
 
 /**
  * Queues when offline. Being at an event is exactly the moment connectivity is
- * worst — a venue basement with no signal is the normal case, not the edge one
- * — and the whole point of checking in is that scans made there attribute
+ * worst - a venue basement with no signal is the normal case, not the edge one
+ * - and the whole point of checking in is that scans made there attribute
  * correctly, so this must not depend on the network.
  */
 export async function setEventCheckIn(accessToken: string, eventId: string, checkedIn = true) {

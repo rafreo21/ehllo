@@ -12,7 +12,7 @@ import { colors, fonts } from '@/theme/tokens';
 export type QrShareMode = 'online' | 'offline';
 
 type BrandedQrCodeProps = {
-  /** Card page URL — default QR payload for online visitor flow. */
+  /** Card page URL - default QR payload for online visitor flow. */
   cardUrl?: string;
   value?: string;
   /** Required only for offline contact QR mode. */
@@ -22,7 +22,7 @@ type BrandedQrCodeProps = {
   style?: ViewStyle;
   color?: string;
   backgroundColor?: string;
-  /** The sharer's currently-happening event, if any — offline mode only, an activator. */
+  /** The sharer's currently-happening event, if any - offline mode only, an activator. */
   activeEventTitle?: string;
 };
 

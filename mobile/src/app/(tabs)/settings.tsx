@@ -25,7 +25,7 @@ export default function SettingsScreen() {
   const [integrationStatus, setIntegrationStatus] = useState<ConnectedAccountStatus | null>(null);
 
   // A single tap can occasionally deliver more than one onPress call on this
-  // screen's Pressables (seen on both platforms) — each call pushes another
+  // screen's Pressables (seen on both platforms) - each call pushes another
   // stack entry, so the same screen opens 2-3 times. Gate every navigation
   // here behind a short cooldown instead of relying on distinguishing real
   // repeat taps from duplicate events at the touch layer.

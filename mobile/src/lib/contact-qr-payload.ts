@@ -45,7 +45,7 @@ export type MobileContactQrOptions = {
   omitBioCover?: boolean;
   /** Embed a pre-built tiny thumbnail instead of a profile photo URL, when it fits. */
   embeddedPhoto?: VcardEmbeddedImage | null;
-  /** The sharer's currently-happening event, if any — an activator: omit it and the note is unchanged. */
+  /** The sharer's currently-happening event, if any - an activator: omit it and the note is unchanged. */
   eventTitle?: string;
 };
 

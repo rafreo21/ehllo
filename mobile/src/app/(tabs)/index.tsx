@@ -119,7 +119,7 @@ export default function HomeScreen() {
     setDrafts(draftList);
 
     // authLoading means the session hasn't finished resolving yet (e.g. right
-    // after a reload) — session momentarily reads null even though the user
+    // after a reload) - session momentarily reads null even though the user
     // is signed in. Only wipe the lists once we're sure they're actually
     // signed out, not mid-resolve, so a real reconnect doesn't flash "empty".
     if (authLoading) return;
@@ -152,7 +152,7 @@ export default function HomeScreen() {
     if (connectionsResult.status === 'fulfilled') {
       setConnections(connectionsResult.value);
       // Real profile photos load in the background so the first paint isn't
-      // blocked on a per-card fetch — same pattern as the connections list.
+      // blocked on a per-card fetch - same pattern as the connections list.
       void enrichConnectionPhotos(token, connectionsResult.value).then(setConnections);
     }
 
@@ -161,7 +161,7 @@ export default function HomeScreen() {
     }
 
     // Events are independent of the "did Home data load" error banner above
-    // — a user with no calendar connected (the common case) has candidates
+    // - a user with no calendar connected (the common case) has candidates
     // fail by design, and that must stay silent, not read as an outage.
     void fetchMyEvents(token).then(setGoingEvents).catch(() => undefined);
     void fetchEventCandidates(token).then((result) => setEventCandidates(result.candidates)).catch(() => setEventCandidates([]));
@@ -170,7 +170,7 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       // Wait for the auth session to finish restoring from storage before the
-      // first load — otherwise this can fire once with session still null,
+      // first load - otherwise this can fire once with session still null,
       // render the signed-out/empty state, and latch hasLoadedOnce true
       // before the real session (and real data) ever arrives, permanently
       // skipping the skeleton on the load that actually matters.
@@ -209,7 +209,7 @@ export default function HomeScreen() {
     try {
       await markNotificationRead(session.access_token, id);
     } catch {
-      // Best-effort — the card is already gone locally; it'll just come
+      // Best-effort - the card is already gone locally; it'll just come
       // back on next refresh if this failed, which is an acceptable retry.
     }
   }
@@ -231,7 +231,7 @@ export default function HomeScreen() {
       else setGoingEvents((current) => current.filter((item) => item.id !== event.id));
     } catch {
       // The event stays in the candidate list, but the user needs to know the
-      // tap didn't actually do anything — this used to fail silently.
+      // tap didn't actually do anything - this used to fail silently.
       setEventActionError('Could not update this event. Check your connection and try again.');
     } finally {
       setEventCardBusy(false);
@@ -243,7 +243,7 @@ export default function HomeScreen() {
     setEventCardBusy(true);
     try {
       const checkedInAt = new Date().toISOString();
-      // Local state first — see the same handler in the Events screen. A venue
+      // Local state first - see the same handler in the Events screen. A venue
       // with no signal is the normal case for this action, not the edge one.
       await cacheEventCheckIn(event.id, checkedInAt);
       setGoingEvents((current) => current.map((item) => (
@@ -269,7 +269,7 @@ export default function HomeScreen() {
       setGoingEvents((current) => current.map((item) => (item.id === event.id ? { ...item, leftAt } : item)));
     } catch {
       // The card stays showing "You're here", but the user needs to know the
-      // tap didn't actually do anything — this used to fail silently.
+      // tap didn't actually do anything - this used to fail silently.
       setEventActionError('Could not update this event. Check your connection and try again.');
     } finally {
       setEventCardBusy(false);
@@ -331,7 +331,7 @@ export default function HomeScreen() {
 
   const hasCard = cards.length > 0;
   // AppTabBar floats as an absolute overlay now, so this screen's root View
-  // spans the full window height — the FAB must clear the pill itself.
+  // spans the full window height - the FAB must clear the pill itself.
   const fabBottomOffset = tabBarHeight + spacing.x3;
   const fabClearance = fabBottomOffset + 56 + spacing.x4;
 
@@ -569,7 +569,7 @@ export default function HomeScreen() {
 
 /**
  * The one Home event card, in the state resolveHomeEventCardState picked.
- * Deliberately renders at most one thing — no separate "Events" section —
+ * Deliberately renders at most one thing - no separate "Events" section -
  * so Home stays quiet except when something's actually relevant right now.
  */
 function HomeEventCard({

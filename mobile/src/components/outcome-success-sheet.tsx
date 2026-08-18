@@ -48,7 +48,7 @@ export function OutcomeSuccessSheet({
 }
 
 const styles = StyleSheet.create({
-  // Tighter than the body's default inter-child gap (spacing.x4) — the
+  // Tighter than the body's default inter-child gap (spacing.x4) - the
   // video's own frame already reads as a distinct block, so the message
   // doesn't need as much air under it as two separate sheet sections would.
   group: {

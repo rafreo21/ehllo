@@ -16,7 +16,7 @@ function formatEventWhen(startsAt: string) {
 export type EventCardVariant = 'current' | 'going' | 'candidate' | 'past';
 
 /**
- * The one event card component — used on Home (at most one, whichever state
+ * The one event card component - used on Home (at most one, whichever state
  * resolveHomeEventCardState picks) and in My Events (one per row). Keeping a
  * single component means the two screens can never visually drift apart.
  */
@@ -48,7 +48,7 @@ export function EventCard({
   const showLeaveAction = variant === 'current' && Boolean(onLeave);
   // "I'm here" is offered on an event that is actually running and not yet
   // confirmed. Until someone confirms, which of two overlapping events owns a
-  // scanned card is decided by whichever started later — a guess. Once
+  // scanned card is decided by whichever started later - a guess. Once
   // confirmed the card says so, because the useful information at that point
   // is which event your scans are being filed under, not that a button exists.
   const checkedIn = Boolean(event.checkedInAt);
@@ -57,7 +57,7 @@ export function EventCard({
   // different questions in one row.
   const showCheckInAction = Boolean(onCheckIn) && !checkedIn && variant !== 'candidate';
   const showGoingNotGoingAction = (variant === 'going' || variant === 'current') && Boolean(onNotGoing);
-  // Independent of the action row below — this is Home's "tap the card to
+  // Independent of the action row below - this is Home's "tap the card to
   // see it in My Events" affordance. Events itself never passes onPress, so
   // this never shows there even when the same variant has action buttons.
   const showCaret = variant !== 'past' && Boolean(onPress);
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   cardPressed: { opacity: 0.92 },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
   // Indented to start under the title/meta text (icon width + topRow gap),
-  // not the icon — a full-width right-aligned row left an orphaned gap
+  // not the icon - a full-width right-aligned row left an orphaned gap
   // under the icon that read as a layout mistake.
   actionRow: { flexDirection: 'row', marginTop: spacing.x3, marginLeft: 40 + spacing.x3 },
   icon: {

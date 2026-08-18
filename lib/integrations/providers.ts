@@ -2,7 +2,7 @@ import "server-only";
 
 import { buildPlainEmailRaw } from "./email";
 
-/** A 401/403 from the provider means the access token itself was rejected — distinct from a 5xx/network blip, since the former means the connection needs reconnecting, not just retrying. */
+/** A 401/403 from the provider means the access token itself was rejected - distinct from a 5xx/network blip, since the former means the connection needs reconnecting, not just retrying. */
 export class CalendarProviderAuthError extends Error {}
 
 export async function sendGoogleEmail(accessToken: string, input: { to: string; subject: string; body: string }) {
@@ -121,7 +121,7 @@ type GoogleCalendarListResponse = {
 /**
  * Lists events in a rolling window from the user's primary Google Calendar.
  * Reuses the same `calendar.events` scope already granted for
- * createGoogleCalendarEvent — no new consent screen for an already-connected
+ * createGoogleCalendarEvent - no new consent screen for an already-connected
  * account. Cancelled events and all-day entries (date, not dateTime) are
  * dropped: an all-day block rarely represents a single attendable gathering
  * and has no meaningful duration for the candidate filter.
@@ -188,7 +188,7 @@ type MicrosoftCalendarViewResponse = {
 /**
  * Lists events in a rolling window via Microsoft Graph's calendarView,
  * which (unlike a raw /events list) already expands recurring series into
- * per-day instances within the window — so `type` tells us instance vs.
+ * per-day instances within the window - so `type` tells us instance vs.
  * series membership directly. Reuses the existing Calendars.ReadWrite scope.
  */
 export async function listMicrosoftCalendarEvents(
@@ -229,7 +229,7 @@ export async function listMicrosoftCalendarEvents(
       title: item.subject?.trim() ?? "",
       location: item.location?.displayName?.trim() ?? "",
       // Graph returns naive local-time strings for the requested timezone
-      // (UTC, forced via the Prefer header above) rather than an offset —
+      // (UTC, forced via the Prefer header above) rather than an offset -
       // appending "Z" makes them parse as the UTC instants they represent.
       startsAt: `${startsAt}Z`,
       endsAt: `${endsAt}Z`,

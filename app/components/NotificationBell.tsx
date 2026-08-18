@@ -100,7 +100,7 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
   }, []);
 
   // The "Follow-ups" nav badge counts due/overdue work items, which is a
-  // distinct concept from unread notifications — notifications are alerts
+  // distinct concept from unread notifications - notifications are alerts
   // that point at work, not the work queue itself.
   const loadActionableFollowUpCount = useCallback(async () => {
     try {
@@ -186,7 +186,7 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
         body: JSON.stringify({ id: alert.id }),
       });
     } catch {
-      // Best-effort — the next load() reconciles state if this failed.
+      // Best-effort - the next load() reconciles state if this failed.
     }
   }
 
@@ -201,7 +201,7 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
         body: JSON.stringify({ markAllRead: true }),
       });
     } catch {
-      // Best-effort — the next load() reconciles state if this failed.
+      // Best-effort - the next load() reconciles state if this failed.
     }
   }
 

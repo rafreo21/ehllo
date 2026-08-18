@@ -38,7 +38,7 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
   'widget';
 
   // The 'widget' directive serializes only this function's own body text
-  // for native evaluation — nothing from outer scope is captured, not even
+  // for native evaluation - nothing from outer scope is captured, not even
   // plain constants. Every helper AND constant the render logic needs must
   // be declared inside this function.
   const WIDGET_COLORS = {

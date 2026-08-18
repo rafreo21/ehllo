@@ -22,7 +22,7 @@ async function fetchImageBuffer(url: string) {
 }
 
 // Signs with a pure-JS PKCS#7/SMIME implementation instead of shelling out to
-// the system `openssl` CLI — that binary isn't guaranteed to exist in
+// the system `openssl` CLI - that binary isn't guaranteed to exist in
 // Vercel's Node serverless runtime (it's a separate thing from the OpenSSL
 // library Node's own crypto module links against), which was causing this
 // to 500 on every request in production while working fine on a dev machine

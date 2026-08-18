@@ -11,7 +11,7 @@ import { useForegroundSync } from '@/lib/background-sync';
 import { isOnline } from '@/lib/connectivity';
 import { clearSyncFailure, recordSyncFailure, syncFailureKey } from '@/features/sync/sync-failure-store';
 
-// Mounted globally rather than scoped to the follow-ups screen — actions can
+// Mounted globally rather than scoped to the follow-ups screen - actions can
 // also be queued from notifications.tsx and connections/[id].tsx, and the
 // app could background right after.
 export function FollowUpSyncManager() {

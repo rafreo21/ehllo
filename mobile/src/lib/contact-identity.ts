@@ -1,4 +1,4 @@
-// Shared identity-matching helpers for deciding "is this the same person" —
+// Shared identity-matching helpers for deciding "is this the same person" -
 // used anywhere we dedupe/merge people by email or phone (Recent Scans,
 // Connections merging, directory "already saved" checks). Deliberately a
 // fixed correction list rather than fuzzy/edit-distance matching, which

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Install the debug dev client (if needed), forward Metro, and open ehllo on a USB phone.
-# Use this when live updates are not showing — usually means the release APK is installed.
+# Use this when live updates are not showing - usually means the release APK is installed.
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export JAVA_HOME="${JAVA_HOME:-/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home}"
@@ -32,7 +32,7 @@ if [[ ! -f "$APK" ]]; then
 fi
 
 echo ""
-echo "ehllo — connect phone for live updates"
+echo "ehllo - connect phone for live updates"
 echo "=========================================="
 echo ""
 echo "On your phone:"
@@ -63,7 +63,7 @@ echo "Device: $device"
 if adb shell run-as "$PACKAGE" true >/dev/null 2>&1; then
   echo "Dev client already installed (debug build)."
 else
-  echo "Release or unknown build detected — installing debug dev client…"
+  echo "Release or unknown build detected - installing debug dev client…"
   adb install -r -d "$APK"
 fi
 

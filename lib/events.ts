@@ -15,7 +15,7 @@ function emailDomain(email: string): string {
 }
 
 /**
- * Counts attendees whose email domain differs from the user's own — the
+ * Counts attendees whose email domain differs from the user's own - the
  * "external, not just an internal sync" signal a calendar candidate needs
  * to be worth surfacing. Case/whitespace-insensitive, dedupes repeats, and
  * excludes the user's own address if it's listed among the attendees.
@@ -47,13 +47,13 @@ const MIN_CANDIDATE_DURATION_MINUTES = 45;
 /**
  * Decides whether a calendar entry is worth surfacing as an event
  * candidate, using only structural signals (recurrence, duration) rather
- * than matching event-sounding words in the title — title keyword matching
+ * than matching event-sounding words in the title - title keyword matching
  * has no reliable stopping point across languages/styles and produces
  * exactly the false positives ("are you attending your dentist?") that make
  * an inference feature feel dumb. Virtual and physical locations are
- * treated the same — an RSVP is an RSVP regardless of venue, and a bare
+ * treated the same - an RSVP is an RSVP regardless of venue, and a bare
  * self-added block (no formal invite, no attendees) is just as often a real
- * event as a calendar invite is — many physical events get added to a
+ * event as a calendar invite is - many physical events get added to a
  * calendar by hand, not sent as an invite, so attendee presence isn't
  * required.
  */
@@ -72,7 +72,7 @@ export type GoingEventWindow = {
   id: string;
   startsAt: string;
   endsAt?: string | null;
-  // Set when the user tapped "I've left" — caps this event's effective end
+  // Set when the user tapped "I've left" - caps this event's effective end
   // for presence purposes without touching its real scheduled end time.
   leftAt?: string | null;
   /** When the user confirmed they are physically here. Outranks the time window. */
@@ -96,8 +96,8 @@ export const EARLY_CHECK_IN_GRACE_MS = 60 * 60 * 1000;
  * early.
  *
  * Among matches, an explicit check-in wins. Only when nobody has said where
- * they are does this fall back to the old heuristic — the most recently
- * started event — on the theory that the one you arrived at last is the one
+ * they are does this fall back to the old heuristic - the most recently
+ * started event - on the theory that the one you arrived at last is the one
  * you are most likely still at. That heuristic is fine for a single event and
  * a coin toss for two overlapping ones, which is exactly why check-in exists.
  * A wrong guess costs one tap to correct on the encounter (the event chip is
@@ -117,7 +117,7 @@ export function resolveCurrentEvent(goingEvents: GoingEventWindow[], now: Date =
     }
     // Checking in opens the window early. People arrive before the scheduled
     // start and meet the most interesting person of the day in the queue, so
-    // scans made then belong to the event they are standing at — but only for
+    // scans made then belong to the event they are standing at - but only for
     // an event they explicitly said they are at. Inferring the same grace for
     // every RSVP would let a lunch invite claim the morning.
     const windowStart = event.checkedInAt ? start - EARLY_CHECK_IN_GRACE_MS : start;
@@ -126,7 +126,7 @@ export function resolveCurrentEvent(goingEvents: GoingEventWindow[], now: Date =
   if (!matches.length) return null;
 
   // An explicit check-in outranks the clock. Two events overlapping on the same
-  // afternoon are otherwise decided by whichever started most recently — a
+  // afternoon are otherwise decided by whichever started most recently - a
   // guess that silently attributes scanned cards, exchanges, encounters and
   // their follow-ups to the wrong event. If the user has said where they are,
   // that answer wins, and the most recent check-in wins among several.
@@ -150,7 +150,7 @@ export function resolveCurrentEvent(goingEvents: GoingEventWindow[], now: Date =
 
 /**
  * Buckets a timestamp to the nearest 30 minutes of its time-of-day (UTC),
- * ignoring the date entirely — a standing weekly block repeats at the same
+ * ignoring the date entirely - a standing weekly block repeats at the same
  * clock time even though its calendar date moves every week.
  */
 function suppressionTimeSlot(startsAt: string): string {
@@ -167,7 +167,7 @@ function suppressionTimeSlot(startsAt: string): string {
  * user says "not going" to a candidate, this key (organizer + title + time
  * of day) is remembered so the same recurring-in-spirit entry (e.g. a
  * standing "Dentist" block with no formal recurrence rule) doesn't get
- * re-suggested. Time-of-day is part of the key — without it, declining one
+ * re-suggested. Time-of-day is part of the key - without it, declining one
  * meeting permanently hides every future meeting anyone ever reuses that
  * exact title for, even an unrelated one at a completely different time.
  */

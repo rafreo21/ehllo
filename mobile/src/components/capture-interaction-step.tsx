@@ -253,7 +253,7 @@ export function CaptureInteractionStep({
   })();
 
   // The Finish button and the interruption watchdog both land the recorder
-  // in 'stopped' with a real recordingUri — this is the only signal telling
+  // in 'stopped' with a real recordingUri - this is the only signal telling
   // them apart, so "resume, nothing lost" only shows for the latter.
   const wasInterrupted = draft.failureReason === 'recording_auto_saved_interrupted';
 
@@ -273,7 +273,7 @@ export function CaptureInteractionStep({
 
   useEffect(() => {
     if (!addPersonSheetOpen || deviceContacts.length) return;
-    // Fetch once per sheet session and filter client-side per keystroke —
+    // Fetch once per sheet session and filter client-side per keystroke -
     // re-requesting permission and re-reading the address book on every
     // character typed would be slow and intrusive.
     void fetchDeviceContacts().then(setDeviceContacts).catch(() => {});
@@ -463,7 +463,7 @@ export function CaptureInteractionStep({
                 variant="secondary"
                 onPress={() => {
                   if (wasInterrupted) {
-                    // Preserve the segment/transcript already captured —
+                    // Preserve the segment/transcript already captured -
                     // resetRecording would throw it away, which is exactly
                     // what "resume" must not do.
                     onConsentChange(false);

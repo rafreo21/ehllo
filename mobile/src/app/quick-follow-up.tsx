@@ -96,7 +96,7 @@ export default function QuickFollowUpScreen() {
 
   // Resume an in-progress Quick Follow-up if the app was backgrounded or
   // closed before it was saved. Only when there's no explicit navigation
-  // target (from a connection's detail page) or the draft matches it — a
+  // target (from a connection's detail page) or the draft matches it - a
   // stale draft for a different person should never silently take over.
   useEffect(() => {
     (async () => {

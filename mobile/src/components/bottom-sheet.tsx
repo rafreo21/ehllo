@@ -21,7 +21,7 @@ type BottomSheetProps = PropsWithChildren<{
   title: string;
   onClose: () => void;
   footer?: ReactNode;
-  /** Shows a back icon beside the title instead of a separate row — for a multi-step sheet stepping back to a previous screen rather than closing. */
+  /** Shows a back icon beside the title instead of a separate row - for a multi-step sheet stepping back to a previous screen rather than closing. */
   onBack?: () => void;
 }>;
 
@@ -60,17 +60,17 @@ export function BottomSheet({ visible, title, onClose, footer, onBack, children 
     Math.max(280, windowHeight - lift - Math.max(insets.top, spacing.x4) - spacing.x4),
   );
   // react-native-safe-area-context reports insets.bottom as 0 for content
-  // inside a core RN <Modal> on Android — it's a separate native window from
+  // inside a core RN <Modal> on Android - it's a separate native window from
   // the rest of the app, so the real nav-bar inset measured at the app root
   // never reaches in here (confirmed: a standard 3-button nav bar measures
   // 48dp on-device, but insets.bottom reads 0 inside this Modal). Screens
   // built on ScreenFrame/Screen instead of a core Modal don't have this
-  // problem and just use insets.bottom + spacing.x5 — this floor matches
+  // problem and just use insets.bottom + spacing.x5 - this floor matches
   // that same total so every sheet clears the nav bar by the same amount.
   const sheetPaddingBottom = Math.max(insets.bottom, Platform.OS === 'android' ? 68 : spacing.x4);
 
   // Keep the focused field reachable after the sheet resizes for the keyboard.
-  // Avoid measureLayout — Fabric requires a native host ref and ScrollView is not one.
+  // Avoid measureLayout - Fabric requires a native host ref and ScrollView is not one.
   useEffect(() => {
     if (!visible || lift <= 0) return;
 

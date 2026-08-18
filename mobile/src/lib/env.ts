@@ -7,7 +7,7 @@ type PublicEnv = {
   supabaseUrl: string;
   supabaseAnonKey: string;
   publicCardBaseUrl: string;
-  /** Empty when not configured — callers must fall back to a plain text input rather than assume autocomplete is available. */
+  /** Empty when not configured - callers must fall back to a plain text input rather than assume autocomplete is available. */
   googlePlacesApiKey: string;
 };
 

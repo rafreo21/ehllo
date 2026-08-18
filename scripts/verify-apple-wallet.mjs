@@ -147,7 +147,7 @@ if (signerCert) {
 if (signerCert && wwdrCert) {
   const issuedByWwdr = signerCert.issuer.hash === wwdrCert.subject.hash;
   if (!issuedByWwdr) {
-    fail("The supplied WWDR certificate did not issue the signing certificate — this is usually the wrong WWDR generation (Apple currently issues pass certificates under G4).");
+    fail("The supplied WWDR certificate did not issue the signing certificate - this is usually the wrong WWDR generation (Apple currently issues pass certificates under G4).");
   } else {
     let verified = false;
     try { verified = wwdrCert.verify(signerCert); } catch { verified = false; }
@@ -174,7 +174,7 @@ if (signerCert) {
     fail("APPLE_WALLET_SIGNER_KEY is encrypted and APPLE_WALLET_SIGNER_KEY_PASSPHRASE is missing or wrong.");
   }
   if (privateKey && signerCert.publicKey.n.toString(16) !== privateKey.n.toString(16)) {
-    fail("APPLE_WALLET_SIGNER_KEY does not belong to APPLE_WALLET_SIGNER_CERT — they are from different key pairs.");
+    fail("APPLE_WALLET_SIGNER_KEY does not belong to APPLE_WALLET_SIGNER_CERT - they are from different key pairs.");
   }
 }
 
@@ -216,7 +216,7 @@ function report() {
   }
 
   console.log("\nApple Wallet signing material is valid.");
-  console.log("This checks the material only — it cannot confirm the same values are present on the deployed server.");
+  console.log("This checks the material only - it cannot confirm the same values are present on the deployed server.");
   console.log(`Confirm that with:  curl -H "Authorization: Bearer <token>" ${environment === "production" ? "https://ehllo.io" : "https://staging.ehllo.io"}/api/mobile/wallet/status`);
 
   if (printEnv) {

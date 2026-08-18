@@ -101,7 +101,7 @@ export default function ConnectionDetailScreen() {
     allFollowUps,
   });
 
-  // For the "Where we met" line in the meeting detail sheet — event is an
+  // For the "Where we met" line in the meeting detail sheet - event is an
   // activator: with no linked event this stays empty and the sheet is
   // unchanged.
   useEffect(() => {
@@ -576,7 +576,7 @@ export default function ConnectionDetailScreen() {
           setMeetingRecordingUri(null);
         }}
         onPressFollowUp={(item) => {
-          // Close this sheet before running the action — it may open another
+          // Close this sheet before running the action - it may open another
           // sheet (missing contact info, audience choice), and two RN <Modal>
           // instances visible at once hangs on iOS.
           setActiveMeeting(null);
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium,
     backgroundColor: colors.surface,
   },
-  // The History bottom sheet has no other surface to separate cells from —
+  // The History bottom sheet has no other surface to separate cells from -
   // unlike the same list embedded in the page, it reads as too flat/white
   // without a border here.
   meetingCellSheet: {

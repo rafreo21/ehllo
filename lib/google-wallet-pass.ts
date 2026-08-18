@@ -33,7 +33,7 @@ function signJwt(payload: Record<string, unknown>, config: GoogleWalletConfig) {
   return `${encoded}.${signer.sign(config.privateKey, "base64url")}`;
 }
 
-/** Pass list icon and header logo — profile first, then company mark, then hosted ehllo mark. */
+/** Pass list icon and header logo - profile first, then company mark, then hosted ehllo mark. */
 export function resolveGoogleWalletLogoUrl(card: WalletCardPayload) {
   const profile = card.profileImageUrl?.trim();
   if (profile) return profile;

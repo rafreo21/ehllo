@@ -5,7 +5,7 @@ import { useForegroundSync } from '@/lib/background-sync';
 import { isOnline } from '@/lib/connectivity';
 import { clearSyncFailure, recordSyncFailure, syncFailureKey } from '@/features/sync/sync-failure-store';
 
-// Mounted globally, same reasoning as FollowUpSyncManager — a scan queued
+// Mounted globally, same reasoning as FollowUpSyncManager - a scan queued
 // while offline should link into Connections the moment connectivity comes
 // back, without the user needing to re-open the scanner and rescan.
 export function OfflineScanSyncManager() {

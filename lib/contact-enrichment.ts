@@ -38,7 +38,7 @@ export type EnrichmentResult = {
   steps: EnrichmentStep[];
 };
 
-/** Surfe-style provider order — verified sources only, no pattern guessing. */
+/** Surfe-style provider order - verified sources only, no pattern guessing. */
 export const WORK_EMAIL_PROVIDERS: EnrichmentProvider[] = [
   { id: "linkedin", label: "LinkedIn", description: "Work email visible on profile or Contact info" },
   { id: "hunter", label: "Hunter.io", description: "Verified work email lookup" },
@@ -195,7 +195,7 @@ function skippedBecauseFound(provider: EnrichmentProvider): EnrichmentStep {
     id: provider.id,
     label: provider.label,
     status: "skipped",
-    detail: "Skipped — verified match already found",
+    detail: "Skipped - verified match already found",
   };
 }
 

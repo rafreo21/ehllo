@@ -79,7 +79,7 @@ function formatEventWhen(event: Pick<EventItem, 'startsAt'>) {
 type EventFilterKey = 'upcoming' | 'attended' | 'notGoing' | 'didNotAttend' | 'cancelled';
 
 // Each filter explains its own emptiness. A shared "nothing here" would be
-// technically true and useless — not having declined anything is a different
+// technically true and useless - not having declined anything is a different
 // situation from not having attended anything yet.
 const emptyFilterCopy: Record<EventFilterKey, { title: string; copy: string }> = {
   upcoming: { title: 'Nothing coming up', copy: 'Add an event, or connect your calendar in Settings.' },
@@ -95,7 +95,7 @@ export default function EventsScreen() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [candidates, setCandidates] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
-  // Separate from `loading`, which only ever gates the first-load skeleton —
+  // Separate from `loading`, which only ever gates the first-load skeleton -
   // this drives the header refresh icon's spin without re-blanking the screen
   // on every focus/manual refresh (same flash `loading` caused on Home before
   // it got its own hasLoadedOnce guard).
@@ -132,7 +132,7 @@ export default function EventsScreen() {
     setRefreshing(true);
     if (options?.manual) setError('');
     // fetchEventCandidates swallows its own per-provider errors below so a
-    // flaky Google Calendar call never blocks the rest of the screen — but
+    // flaky Google Calendar call never blocks the rest of the screen - but
     // for a manual refresh the user explicitly asked to be told, so track it
     // separately instead of letting it disappear silently like it used to.
     let candidateSyncFailed = false;
@@ -179,7 +179,7 @@ export default function EventsScreen() {
   }, [accessToken]);
 
   // Calendar candidates come from a live Google Calendar fetch on every call
-  // (see syncCalendarCandidates) — there's no push/webhook, so re-syncing
+  // (see syncCalendarCandidates) - there's no push/webhook, so re-syncing
   // every time this screen regains focus is what actually surfaces a newly
   // created calendar event, not just the one-time mount fetch this replaced.
   useFocusEffect(
@@ -287,7 +287,7 @@ export default function EventsScreen() {
     try {
       // Update locally first. Checking in happens at the door of a venue,
       // which is exactly where reception is worst, and the point of the whole
-      // feature is that scans made there file correctly — so the local answer
+      // feature is that scans made there file correctly - so the local answer
       // must be right immediately, whether or not the write lands now.
       await cacheEventCheckIn(event.id, checkedInAt);
       setEvents((current) => current.map((item) => (
@@ -614,7 +614,7 @@ export default function EventsScreen() {
         title={refreshTitle}
         message={refreshMessage}
         // This sheet is reused for every event outcome (sync, add, invite,
-        // update, cancel) — all of them are event-themed, so they share this
+        // update, cancel) - all of them are event-themed, so they share this
         // illustration rather than falling through to the generic default.
         lottieSource={require('@/assets/animations/event-synced.json')}
         onClose={() => setRefreshMessage('')}
@@ -629,7 +629,7 @@ function defaultForm(): AddEventForm {
   return { title: '', location: '', start: null, end: null, sourceUrl: '' };
 }
 
-// Seed value for opening a picker on a field that has no date yet — the
+// Seed value for opening a picker on a field that has no date yet - the
 // next round hour, matching what "Starts" used to default the whole form to.
 function nextHourDefault(): Date {
   const date = new Date();
@@ -640,7 +640,7 @@ function nextHourDefault(): Date {
 
 // choose: the two big entry options. link: paste + Continue. link-loading:
 // reading the page. form: the field editor, reached blank (manual) or
-// prefilled (after a successful link read) — see cameFromLink for copy.
+// prefilled (after a successful link read) - see cameFromLink for copy.
 type AddEventStep = 'choose' | 'link' | 'link-loading' | 'form';
 
 function AddEventSheet({
@@ -682,7 +682,7 @@ function AddEventSheet({
   }, [visible, prefill]);
 
   // Seamless paste: the moment the link step opens with a URL already on
-  // the clipboard (the common case — just copied from a browser or invite),
+  // the clipboard (the common case - just copied from a browser or invite),
   // pull it in without making the user paste by hand.
   useEffect(() => {
     if (step !== 'link' || linkUrl.trim()) return;
@@ -936,7 +936,7 @@ function AddEventSheet({
 
 /**
  * Falls back to a plain text input whenever no Places API key is
- * configured (readEnv().googlePlacesApiKey empty) — the field must stay
+ * configured (readEnv().googlePlacesApiKey empty) - the field must stay
  * fully usable before that key ever gets provisioned.
  */
 function AddressAutocompleteField({ value, onChange }: { value: string; onChange: (value: string) => void }) {

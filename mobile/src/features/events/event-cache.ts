@@ -41,7 +41,7 @@ export async function cacheEventCheckIn(eventId: string, checkedInAt: string | n
 
 /**
  * The offline counterpart of resolveCurrentEvent. It must apply the same
- * precedence — an explicit check-in beats the most-recently-started guess —
+ * precedence - an explicit check-in beats the most-recently-started guess -
  * or a capture made in a venue with no signal attributes to a different event
  * than the identical capture made with a bar of reception.
  */

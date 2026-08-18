@@ -21,7 +21,7 @@ export function pushDeliveryConfigured(): boolean {
 }
 
 /**
- * Returns whether this device now holds an actively registered push token —
+ * Returns whether this device now holds an actively registered push token -
  * the only state that should ever be described to the user as "push is on."
  */
 export async function registerPushToken(accessToken: string): Promise<boolean> {
@@ -47,7 +47,7 @@ export async function registerPushToken(accessToken: string): Promise<boolean> {
     });
     return response.ok;
   } catch {
-    // Registration is best-effort — a missing/rotated token must never block app usage.
+    // Registration is best-effort - a missing/rotated token must never block app usage.
     return false;
   }
 }

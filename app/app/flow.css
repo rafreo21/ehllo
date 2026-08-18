@@ -62,7 +62,7 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
 .quick-follow-up-page { max-width: 760px; }
 /* .contact-form-card's own margin: 0 auto makes it a shrink-to-content,
    auto-centered grid item here (this page's heading sits outside the card,
-   unlike other contact-form-card pages) — stretch it flush with the
+   unlike other contact-form-card pages) - stretch it flush with the
    heading above instead of letting it float centered and narrower. */
 .quick-follow-up-form { display: grid; gap: 22px; width: 100%; margin: 0; max-width: none; }
 .connections-modal .quick-follow-up-form, .followup-drawer-body .quick-follow-up-form { padding: 0; background: transparent; box-shadow: none; border-radius: 0; }
@@ -673,7 +673,7 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
 /* .review-section is shared with other, unrelated card components
    (.consent-card, .recorder-card, .encounter-form-section) via a single
    combined selector, so it can't be edited directly without affecting
-   those — scope the flat, unboxed look to just the drawer instead. */
+   those - scope the flat, unboxed look to just the drawer instead. */
 .encounter-drawer-view .review-section:not(.review-primary-section) { padding: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .encounter-drawer-view .outbound-draft { padding: 0; background: transparent; border-top: 0; }
 .encounter-drawer-back { justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; margin-left: -10px; border: 0; border-radius: 999px; background: none; color: var(--p-muted); font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color .15s ease, color .15s ease; }
@@ -729,7 +729,7 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
 .action-list .action-edit:disabled { opacity: .45; cursor: not-allowed; }
 .action-list .action-edit:disabled:hover { background: var(--p-sky); }
 /* Edit and the primary action (Schedule/Send/...) sit together at the
-   right edge — only the first of the two should claim the flex line's
+   right edge - only the first of the two should claim the flex line's
    free space, or the auto margins split it and space them apart. */
 .action-list article .action-edit { margin-left: auto; }
 .action-list article .action-do-group { margin-left: 0; }

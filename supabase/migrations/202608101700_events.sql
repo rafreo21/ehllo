@@ -75,7 +75,7 @@ create policy "event_attendance_owner_all" on public.event_attendance for all to
   ));
 
 comment on table public.event_attendance is
-  'Per-user going/not_going decision for an event. Absence of a row means undecided (calendar candidates awaiting a decision) — there is no explicit "unknown" status stored.';
+  'Per-user going/not_going decision for an event. Absence of a row means undecided (calendar candidates awaiting a decision) - there is no explicit "unknown" status stored.';
 
 alter table public.encounters
   add column if not exists event_id uuid references public.events(id) on delete set null;

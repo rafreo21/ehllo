@@ -47,8 +47,8 @@ export async function buildBrandedQrPngBuffer(payload: string, size = 1024) {
   });
 
   // Cloudflare's local workerd dev sandbox can't load sharp's native/wasm bindings
-  // at all — attempting the import crashes the sandbox itself, not a catchable JS
-  // error — so we must skip the attempt entirely there and fall back to a plain QR.
+  // at all - attempting the import crashes the sandbox itself, not a catchable JS
+  // error - so we must skip the attempt entirely there and fall back to a plain QR.
   if (!sharpAvailable()) return qrBuffer;
   let sharp;
   try {
@@ -61,7 +61,7 @@ export async function buildBrandedQrPngBuffer(payload: string, size = 1024) {
     // Log it though. Swallowing this silently meant a deployed environment
     // could ship logo-less QR codes indefinitely and look completely healthy,
     // and it made a plain QR indistinguishable from sharp being switched off
-    // by the availability guard — two very different faults.
+    // by the availability guard - two very different faults.
     console.error("[branded-qr] sharp unavailable, falling back to a plain QR", {
       name: error instanceof Error ? error.name : typeof error,
       message: error instanceof Error ? error.message : String(error),
@@ -105,8 +105,8 @@ export async function buildBrandedQrPngBuffer(payload: string, size = 1024) {
 /**
  * Builds the branded QR as a self-contained SVG (QR modules + logo badge, all
  * drawn with markup) instead of compositing raster layers with sharp. This is
- * what every current caller actually needs — an `<img>`/`<image>`-embeddable
- * data URI — and it works in every runtime, including the local dev sandbox
+ * what every current caller actually needs - an `<img>`/`<image>`-embeddable
+ * data URI - and it works in every runtime, including the local dev sandbox
  * where sharp's native/wasm bindings can't load at all.
  */
 export async function buildBrandedQrDataUri(payload: string, size = 1024) {

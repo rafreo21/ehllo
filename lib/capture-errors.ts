@@ -55,7 +55,7 @@ export function classifyTranscriptionError(error: unknown): CaptureErrorResponse
       status: 503,
       code: "transcription_quota",
       retryable: true,
-      error: "Automatic transcription has temporarily reached its usage limit. Your recording is safe—retry later or continue with manual notes.",
+      error: "Automatic transcription has temporarily reached its usage limit. Your recording is safe-retry later or continue with manual notes.",
     };
   }
   if (/rate.?limit|too many requests|429/.test(message)) {
@@ -63,14 +63,14 @@ export function classifyTranscriptionError(error: unknown): CaptureErrorResponse
       status: 429,
       code: "transcription_rate_limited",
       retryable: true,
-      error: "Transcription is busy right now. Your recording is safe—wait a moment, then retry.",
+      error: "Transcription is busy right now. Your recording is safe-wait a moment, then retry.",
     };
   }
   return {
     status: 503,
     code: "transcription_unavailable",
     retryable: true,
-    error: "Transcription is temporarily unavailable. Your recording is safe—retry later or continue with manual notes.",
+    error: "Transcription is temporarily unavailable. Your recording is safe-retry later or continue with manual notes.",
   };
 }
 
@@ -96,6 +96,6 @@ export function classifyRecordingUploadError(error: unknown): CaptureErrorRespon
     status: 502,
     code: "recording_upload_failed",
     retryable: true,
-    error: "The recording could not be uploaded for sharing. Your local copy is safe—check your connection and retry.",
+    error: "The recording could not be uploaded for sharing. Your local copy is safe-check your connection and retry.",
   };
 }

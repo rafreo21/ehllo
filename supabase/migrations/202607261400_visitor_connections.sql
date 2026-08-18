@@ -254,7 +254,7 @@ grant execute on function public.link_people_connection_from_exchange(uuid) to a
 grant execute on function public.list_my_people_connections() to authenticated;
 
 -- Adds signup_intent to the output columns, so the existing function must be
--- dropped first — CREATE OR REPLACE cannot change a function's return shape.
+-- dropped first - CREATE OR REPLACE cannot change a function's return shape.
 drop function if exists public.get_my_app_context();
 
 create function public.get_my_app_context()

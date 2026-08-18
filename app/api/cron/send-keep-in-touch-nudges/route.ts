@@ -27,7 +27,7 @@ function daysSince(iso: string, now: Date) {
   return Math.floor((now.getTime() - new Date(iso).getTime()) / DAY_MS);
 }
 
-/** The single threshold this connection is currently due for, if any — the
+/** The single threshold this connection is currently due for, if any - the
  * grace window means a threshold is only attempted for a few days after it's
  * crossed, so a years-old connection isn't re-checked forever. */
 function dueThreshold(connectedAt: string, now: Date): KeepInTouchThreshold | null {
@@ -120,7 +120,7 @@ export async function GET(request: Request) {
       const threshold = dueThreshold(candidate.connectedAt, now);
       if (!threshold) continue;
 
-      // Already engaged — a real encounter with this person after they
+      // Already engaged - a real encounter with this person after they
       // connected means they don't need a nudge to reach out.
       const { data: existingEncounter } = await service
         .from("encounters")
@@ -163,7 +163,7 @@ export async function GET(request: Request) {
           if (result.ok) emailsSent += 1;
         }
       } catch {
-        // Best-effort — one missed nudge must never block the rest.
+        // Best-effort - one missed nudge must never block the rest.
       }
     }
   }

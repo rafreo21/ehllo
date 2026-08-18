@@ -11,7 +11,7 @@ import {
   hasPublishedMobileApp,
 } from "../../lib/app-store-links";
 
-// Capture is mobile-only on the web consumer dashboard — every "Capture"
+// Capture is mobile-only on the web consumer dashboard - every "Capture"
 // entry point here should offer the app instead of the real capture flow.
 export function CaptureComingSoonModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   if (!open) return null;

@@ -19,7 +19,7 @@ export const QR_LOGO = logoAsset;
 export async function buildWidgetQrFileUri(cardUrl: string, fileKey = 'primary') {
   const QR_FILE_NAME = qrFileName(fileKey);
   // The `qrcode` npm package's toDataURL resolves to a canvas-based renderer
-  // that doesn't exist in Hermes/React Native and throws there — generate via
+  // that doesn't exist in Hermes/React Native and throws there - generate via
   // react-native-svg's native rasterizer (see widget-qr-renderer.tsx) instead.
   const base64 = await requestQrDataUrl(cardUrl, 512, { color: '#163300', backgroundColor: '#FFFFFF' });
 

@@ -43,7 +43,7 @@ export type ExtractionOwnerContext = {
   }>;
 };
 
-/** The event this encounter was passively attached to (see resolveCurrentEvent), if any — used only as an optional hint for the summary/follow-up, never required. */
+/** The event this encounter was passively attached to (see resolveCurrentEvent), if any - used only as an optional hint for the summary/follow-up, never required. */
 export type ExtractionEventContext = {
   title: string;
   location?: string;

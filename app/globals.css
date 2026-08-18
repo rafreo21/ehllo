@@ -14,13 +14,13 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 94px; }
 body { min-width: 320px; margin: 0; overflow-x: clip; background: var(--white); color: var(--navy); font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-/* In @layer base (not bare CSS) so Tailwind's text-size utilities — which
-   live in a higher-priority layer — can actually override this reset.
+/* In @layer base (not bare CSS) so Tailwind's text-size utilities - which
+   live in a higher-priority layer - can actually override this reset.
    Unlayered, this rule's `font: inherit` (a shorthand covering font-size)
    silently beat every `text-xs`/`text-sm` class on every <button>, since
    Tailwind places its utilities in @layer utilities, and unlayered CSS
    always wins over any layered CSS regardless of source order or
-   specificity. <a>-based buttons were never affected, only <button> ones —
+   specificity. <a>-based buttons were never affected, only <button> ones -
    which is exactly why some buttons matched their intended size and their
    <button>-rendered siblings never did, no matter what size prop was set. */
 @layer base {

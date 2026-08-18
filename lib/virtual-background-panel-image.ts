@@ -13,7 +13,7 @@ function profileSubtitle(profile: ShareAssetProfile) {
   return [role, company].filter(Boolean).join(" · ");
 }
 
-/** Renders the white card panel (text + branded QR) to PNG — matches the in-app preview. */
+/** Renders the white card panel (text + branded QR) to PNG - matches the in-app preview. */
 export async function buildVirtualBackgroundPanelPng(profile: ShareAssetProfile, scale = 2) {
   const width = VIRTUAL_BG_PANEL.width * scale;
   const height = VIRTUAL_BG_PANEL.height * scale;

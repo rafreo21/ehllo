@@ -14,8 +14,8 @@ type GoogleWalletButtonProps = {
 };
 
 /**
- * A custom black pill — Google's wallet icon plus real text, laid out with
- * flexbox — so it fills the same width as the Share button in both modes.
+ * A custom black pill - Google's wallet icon plus real text, laid out with
+ * flexbox - so it fills the same width as the Share button in both modes.
  * Matches AppleWalletButton's shape/sizing.
  */
 export function GoogleWalletButton({ onPress, loading, disabled, mode = 'add', style }: GoogleWalletButtonProps) {

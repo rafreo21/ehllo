@@ -134,5 +134,5 @@ A slice is **Done** only when:
 3. No mocked logic remains in that path.
 4. The product owner can reproduce the outcome.
 
-Anything less is Prototype, In progress, or Blocked—not Done.
+Anything less is Prototype, In progress, or Blocked-not Done.
 

@@ -85,7 +85,7 @@ export default function EditProfilePage() {
     <>
       <div className="flow-page settings-page">
         <header className="flow-heading">
-          <div><h1>Edit profile</h1><p>These details are for your account only. Your public card is separate — edit it anytime from My card.</p></div>
+          <div><h1>Edit profile</h1><p>These details are for your account only. Your public card is separate - edit it anytime from My card.</p></div>
         </header>
 
         {loading ? <PageSkeleton rows={2} /> : (
@@ -109,7 +109,7 @@ export default function EditProfilePage() {
                   <span className="text-sm font-semibold text-[#454745]">Email</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-base text-[#0e0f0c]">{profile?.primaryEmail || "—"}</span>
+                  <span className="text-base text-[#0e0f0c]">{profile?.primaryEmail || "-"}</span>
                   {profile?.emailVerified ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-[#e2f6d5] px-2 py-0.5 text-xs font-bold text-[#163300]">
                       <CheckCircleIcon size={13} /> Verified

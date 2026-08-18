@@ -6,7 +6,7 @@ import { isOnline } from '@/lib/connectivity';
 import { clearSyncFailure, recordSyncFailure, syncFailureKey } from '@/features/sync/sync-failure-store';
 
 // Mounted globally, same reasoning as FollowUpSyncManager and
-// OfflineScanSyncManager — a Quick Follow-up saved while offline queues
+// OfflineScanSyncManager - a Quick Follow-up saved while offline queues
 // instead of failing, and this links it in for real the next time
 // connectivity comes back, without the user redoing any data entry.
 export function QuickFollowUpSyncManager() {

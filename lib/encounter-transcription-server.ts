@@ -136,7 +136,7 @@ async function transcribeWithOpenAi(
   };
 }
 
-/** Groq hosts open-source Whisper behind an OpenAI-compatible endpoint — same multipart shape, free tier, no billing-account requirement. */
+/** Groq hosts open-source Whisper behind an OpenAI-compatible endpoint - same multipart shape, free tier, no billing-account requirement. */
 async function transcribeWithGroqWhisper(
   audio: Uint8Array,
   options: { language?: string; mimeType: string; fileName: string },

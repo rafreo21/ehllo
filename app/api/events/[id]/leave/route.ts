@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createApiSupabaseClient, resolveApiUser } from "../../../../../lib/auth/api-request";
 
 /**
- * "I've left" — caps this going-event's effective end at now (or clears
+ * "I've left" - caps this going-event's effective end at now (or clears
  * that cap, if `left: false`) without touching the event's real scheduled
  * end time. See resolveCurrentEvent in lib/events.ts for how left_at is
  * applied to the passive-attach decision.

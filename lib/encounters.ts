@@ -144,7 +144,7 @@ export type Encounter = {
   contactId?: string;
   exchangeId?: string;
   campaignId?: string;
-  /** The event this meeting happened at, if any — see lib/events.ts. Optional context, never required. */
+  /** The event this meeting happened at, if any - see lib/events.ts. Optional context, never required. */
   eventId?: string;
   startedAt: string;
   endedAt: string;

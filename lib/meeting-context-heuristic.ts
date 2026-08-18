@@ -60,7 +60,7 @@ export function detectPersonName(transcript: string, hint = "", ownerNames: stri
     /\b([A-Z][a-z]+)\s+(?:is|are)\s+(?:the\s+)?(?:lead|senior|head|chief)\b/i,
     /\b([A-Z][a-z]+)\s+(?:is|are)\s+supposed to\b/i,
     /\b(?:they'?re|she'?s|he'?s)\s+(?:called|named)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b/i,
-    // Owner introductions last — "my name is" often refers to the other person introducing themselves in 1:1
+    // Owner introductions last - "my name is" often refers to the other person introducing themselves in 1:1
     /\b(?:my name is|I am|this is)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b/i,
   ];
 

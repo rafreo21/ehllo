@@ -49,7 +49,7 @@ function readMetaContent(
 
 function headlineFromTitle(title: string) {
   const titleName = title.replace(/\s*\|\s*LinkedIn\s*$/i, "").trim();
-  const dashParts = titleName.split(/\s+[-–—]\s+/);
+  const dashParts = titleName.split(/\s+[-–-]\s+/);
   if (dashParts.length > 1) return dashParts.slice(1).join(" - ");
   return "";
 }
@@ -59,7 +59,7 @@ function headlineFromOpenGraph(documentLike: {
 }) {
   const ogTitle = readMetaContent(documentLike, "og:title").replace(/\s*\|\s*LinkedIn\s*$/i, "");
   if (ogTitle) {
-    const dashParts = ogTitle.split(/\s+[-–—]\s+/);
+    const dashParts = ogTitle.split(/\s+[-–-]\s+/);
     if (dashParts.length > 1) return dashParts.slice(1).join(" - ");
   }
   return readMetaContent(documentLike, "og:description");
@@ -117,7 +117,7 @@ export function captureFromLinkedInDocument(documentLike: {
   const h1 = clean(documentLike.querySelector("h1")?.textContent);
   const ogTitle = readMetaContent(documentLike, "og:title").replace(/\s*\|\s*LinkedIn\s*$/i, "");
   const fullName = normalizeLinkedInProfileName(
-    h1 || ogTitle.split(/\s+[-–—]\s+/)[0] || titleName.split(/\s+[-–—]\s+/)[0] || titleName.split("|")[0] || "",
+    h1 || ogTitle.split(/\s+[-–-]\s+/)[0] || titleName.split(/\s+[-–-]\s+/)[0] || titleName.split("|")[0] || "",
   );
 
   const experience = parseExperienceFromText(pageText);

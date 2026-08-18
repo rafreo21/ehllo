@@ -55,7 +55,7 @@ export default defineConfig(async () => {
           preset: "vercel",
           // Covers native deps if anything ever imports them from Nitro's
           // own runtime graph (_libs). It does NOT cover sharp/resvg as
-          // actually used here — they're only imported from vinext's own
+          // actually used here - they're only imported from vinext's own
           // Vite/Rolldown-built _ssr route chunks, which Nitro's trace step
           // never sees, so their real binaries never land in the deployed
           // function despite being marked `external` below. That's fixed
@@ -64,7 +64,7 @@ export default defineConfig(async () => {
           traceDeps: nativeServerPackages,
         }),
       ],
-      // Sentry stack traces need these — this build goes through Nitro/Rolldown,
+      // Sentry stack traces need these - this build goes through Nitro/Rolldown,
       // not webpack, so @sentry/nextjs's webpack plugin never runs. A manual
       // sentry-cli inject+upload step in build:vercel (package.json) reads
       // whatever .map files land in .vercel/output/** after this build.
@@ -85,7 +85,7 @@ export default defineConfig(async () => {
     server: {
       watch: {
         // mobile/ is a separate React Native app living in this same repo
-        // root, with its own ~12GB node_modules — nothing in it affects this
+        // root, with its own ~12GB node_modules - nothing in it affects this
         // web app, but left unignored it was fully in-scope for the file
         // watcher, growing its in-memory file-state graph for the entire
         // session and driving the dev server's gradual slowdown.

@@ -177,7 +177,7 @@ end;
 $$;
 
 -- Drops signup_intent and adds workspace_name/type/role, so the existing
--- function must be dropped first — CREATE OR REPLACE cannot change a
+-- function must be dropped first - CREATE OR REPLACE cannot change a
 -- function's return shape.
 drop function if exists public.get_my_app_context();
 

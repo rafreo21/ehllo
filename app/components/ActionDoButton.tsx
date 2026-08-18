@@ -28,7 +28,7 @@ export function ActionDoButton({ action, context, size = "small", showSecondary 
   const [integrations, setIntegrations] = useState<ConnectedAccountStatus>(emptyConnectedAccountStatus());
   const [scheduling, setScheduling] = useState<"" | "google" | "microsoft">("");
   const [scheduleMessage, setScheduleMessage] = useState("");
-  // ehllo never auto-sends anything external — creating a private event
+  // ehllo never auto-sends anything external - creating a private event
   // on your own calendar needs no review, but inviting the other person is
   // an outward-facing action, so it always stops here for an explicit
   // choice instead of firing straight from the dropdown.
@@ -45,7 +45,7 @@ export function ActionDoButton({ action, context, size = "small", showSecondary 
   }, []);
 
   // A proposed action is still awaiting review confirmation and must not be
-  // externally actionable — schedules and sends stay disabled until then.
+  // externally actionable - schedules and sends stay disabled until then.
   if (action.owner !== "me" || action.status === "completed" || action.status === "proposed") return null;
 
   const primary = resolveActionLink(action, context);
@@ -89,7 +89,7 @@ export function ActionDoButton({ action, context, size = "small", showSecondary 
     return <span className="action-do-unavailable" title={primary.unavailableReason}>{primary.label} unavailable</span>;
   }
 
-  // Meeting always has two providers to choose between — always offer both
+  // Meeting always has two providers to choose between - always offer both
   // as a dropdown rather than defaulting to whichever the code picks first.
   if (action.channel === "meeting") {
     const items: DropdownItem[] = [
@@ -148,7 +148,7 @@ export function ActionDoButton({ action, context, size = "small", showSecondary 
     );
   }
 
-  // Multiple ways to send (Gmail/Outlook/Mail app/Drive) — collapse into one
+  // Multiple ways to send (Gmail/Outlook/Mail app/Drive) - collapse into one
   // dropdown instead of a button per option. Falls through to the plain
   // single-button case below when there's nothing to choose between (no
   // email on file, so only one delivery method resolved).

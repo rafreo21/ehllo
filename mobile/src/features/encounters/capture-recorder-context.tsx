@@ -92,7 +92,7 @@ export function CaptureRecorderProvider({ children }: PropsWithChildren) {
         : null;
 
   // pauseOrResume/stopRecording aren't guaranteed stable across renders, and
-  // recorder.seconds changes every tick — so reading them directly here
+  // recorder.seconds changes every tick - so reading them directly here
   // would re-run this effect (and re-register with a fresh seconds:0
   // snapshot) on every single second, producing a visible flicker back to
   // 00:00 before the real value from the effect below lands. Read them from

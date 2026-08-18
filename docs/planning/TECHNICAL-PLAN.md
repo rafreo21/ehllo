@@ -67,14 +67,14 @@ Guardrails:
 
 ## Delivery phases
 
-### Phase 0 — validation, 1–2 weeks
+### Phase 0 - validation, 1–2 weeks
 
 - Interviews
 - Journey prototype
 - Concierge follow-up test
 - Segment and pricing decision
 
-### Phase 1 — card and capture, 2–3 weeks
+### Phase 1 - card and capture, 2–3 weeks
 
 - Authentication and onboarding
 - Profile editor and public card
@@ -82,7 +82,7 @@ Guardrails:
 - Reciprocal details form
 - Contact list
 
-### Phase 2 — context and action, 2–3 weeks
+### Phase 2 - context and action, 2–3 weeks
 
 - Encounters and notes
 - Voice upload and transcription
@@ -90,7 +90,7 @@ Guardrails:
 - Follow-up drafts and reminders
 - Relationship timeline
 
-### Phase 3 — pilot hardening, 2 weeks
+### Phase 3 - pilot hardening, 2 weeks
 
 - Analytics
 - Imports/exports

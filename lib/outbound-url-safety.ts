@@ -6,7 +6,7 @@ import { isIP } from "node:net";
  * before any server-side fetch of a user-pasted URL (see
  * lib/outbound-url-guard.ts and app/api/events/extract) so a pasted link
  * can't be used to reach internal services or cloud metadata from this
- * server. Pure and unit-tested directly — the async fetch wrapper that
+ * server. Pure and unit-tested directly - the async fetch wrapper that
  * calls this lives in outbound-url-guard.ts (server-only) instead.
  */
 export function isBlockedOutboundAddress(address: string): boolean {
@@ -31,5 +31,5 @@ export function isBlockedOutboundAddress(address: string): boolean {
     if (normalized.startsWith("::ffff:")) return isBlockedOutboundAddress(normalized.slice(7)); // IPv4-mapped
     return false;
   }
-  return true; // unresolvable/unknown — fail closed
+  return true; // unresolvable/unknown - fail closed
 }

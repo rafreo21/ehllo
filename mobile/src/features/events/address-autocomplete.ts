@@ -7,7 +7,7 @@ export type AddressSuggestion = {
 };
 
 // Google's Android/iOS app-restricted keys are verified via these headers,
-// not via anything the OS attaches automatically — a plain fetch() (as
+// not via anything the OS attaches automatically - a plain fetch() (as
 // opposed to a request made through a native Google SDK) never sends them
 // on its own, so an app-restricted key fails every request with a generic
 // "not authorized" error unless the app sets them itself. iOS only needs
@@ -35,7 +35,7 @@ function buildPlatformHeaders(): Record<string, string> {
 }
 
 /**
- * Google Places Autocomplete (legacy REST endpoint — simplest to call
+ * Google Places Autocomplete (legacy REST endpoint - simplest to call
  * directly from the client with a restricted API key, no SDK needed).
  * Deliberately unrestricted by `types` so both named venues ("ExCeL
  * London") and plain addresses/postcodes surface, matching how a user

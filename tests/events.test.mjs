@@ -77,7 +77,7 @@ describe("isEventCandidateWorthy", () => {
     }), true);
   });
 
-  it("accepts a bare self-added block with no attendees at all — a real event can be added by hand, not just invited to", () => {
+  it("accepts a bare self-added block with no attendees at all - a real event can be added by hand, not just invited to", () => {
     assert.equal(isEventCandidateWorthy({
       ...baseCandidate,
       attendeeEmails: [],
@@ -191,7 +191,7 @@ describe("candidateSuppressionKey", () => {
 
 describe("resolveCurrentEvent with check-in", () => {
   const now = new Date("2026-09-04T14:00:00.000Z");
-  // Two events overlapping the same afternoon — the case the clock cannot decide.
+  // Two events overlapping the same afternoon - the case the clock cannot decide.
   const conference = { id: "conference", startsAt: "2026-09-04T09:00:00.000Z", endsAt: "2026-09-04T18:00:00.000Z", leftAt: null, checkedInAt: null };
   const meetup = { id: "meetup", startsAt: "2026-09-04T13:00:00.000Z", endsAt: "2026-09-04T17:00:00.000Z", leftAt: null, checkedInAt: null };
 

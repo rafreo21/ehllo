@@ -1,7 +1,7 @@
-// Mirrors mobile/src/lib/contact-identity.ts — kept in sync by hand since the
+// Mirrors mobile/src/lib/contact-identity.ts - kept in sync by hand since the
 // web and mobile apps are separate packages. Used only for identity LOOKUPS
 // (e.g. "does this person already have an account"), never to rewrite what a
-// user actually typed/submitted — a typo'd email is still stored and emailed
+// user actually typed/submitted - a typo'd email is still stored and emailed
 // exactly as entered; this only prevents a typo from creating a duplicate
 // account for someone who already has one under the corrected spelling.
 

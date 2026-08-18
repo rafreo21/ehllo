@@ -88,7 +88,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // "Where we met" / follow-up email opener context — event is an activator,
+  // "Where we met" / follow-up email opener context - event is an activator,
   // so this map only ever adds a title for encounters that actually have one.
   const eventIds = [...new Set(encounters.map((encounter) => encounter.eventId).filter((id): id is string => Boolean(id)))];
   const eventTitlesById = new Map<string, string>();

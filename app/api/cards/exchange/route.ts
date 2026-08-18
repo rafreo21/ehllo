@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
   const supabase = createClient(url, key, { auth: { persistSession: false } });
 
-  // Best-effort: the card owner's currently-happening event, if any — an
+  // Best-effort: the card owner's currently-happening event, if any - an
   // anonymous visitor has no session of their own, so this is the only
   // "where did this exchange happen" signal available. Never blocks the
   // submission.

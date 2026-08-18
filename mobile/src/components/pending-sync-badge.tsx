@@ -11,7 +11,7 @@ export function PendingSyncBadge({
   style,
 }: {
   count: number;
-  /** Items waiting to sync on other devices on this account, not this one — see useOtherDevicesPendingCount. */
+  /** Items waiting to sync on other devices on this account, not this one - see useOtherDevicesPendingCount. */
   otherDevicesCount?: number;
   style?: ViewStyle;
 }) {

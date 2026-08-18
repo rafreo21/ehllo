@@ -3,7 +3,7 @@
 // These scripts used to hard-code `PROJECT_REF = process.env.SUPABASE_PROJECT_REF
 // ?? "<production ref>"` and read credentials from `.env.local`. Because that
 // read never consulted an env file, a developer with staging values sitting in
-// `.env.local` would still reconfigure and redeploy *production* — the exact
+// `.env.local` would still reconfigure and redeploy *production* - the exact
 // inversion `docs/release-safeguards.md` exists to prevent. Selection now
 // mirrors `scripts/run-web-dev.mjs`: staging by default, production only behind
 // an explicit one-command opt-in, and the project ref is derived from the

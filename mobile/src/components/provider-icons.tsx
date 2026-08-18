@@ -6,7 +6,7 @@ type IconProps = {
 
 /**
  * Official brand marks for the Connected Accounts providers, inlined as
- * react-native-svg (the project has no SVG file transformer — same approach as
+ * react-native-svg (the project has no SVG file transformer - same approach as
  * google-wallet-icon.tsx). Paths are copied verbatim from the source SVG assets;
  * colors are baked in, so these ignore any tint and render full-color inside the
  * existing icon circles.

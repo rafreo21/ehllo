@@ -8,7 +8,7 @@ export type DirtyCardEntry = {
   label: string;
 };
 
-// Cards with local edits/creates not yet confirmed synced to the server —
+// Cards with local edits/creates not yet confirmed synced to the server -
 // see setCardDirty in card-context.tsx. Read independently here (rather than
 // through CardProvider) so the Pending Sync screen can list them without
 // depending on the card context being mounted.

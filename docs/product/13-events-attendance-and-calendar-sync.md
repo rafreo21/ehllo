@@ -1,6 +1,6 @@
 # Events: attendance record, reversal, and calendar sync
 
-Status: Proposed — not yet accepted into the Product Source of Truth
+Status: Proposed - not yet accepted into the Product Source of Truth
 Raised: 2026-08-17
 Scope: Consumer mobile and consumer web Events surface
 
@@ -11,7 +11,7 @@ Declining an event today makes it **disappear completely**.
 `bucketEvents` in `mobile/src/features/events/event-home-state.ts` only ever
 buckets events the user is **going** to. A `not_going` record is written to
 `public.event_attendance`, and `candidateSuppressionKey` in `lib/events.ts`
-then uses it to stop the calendar importer re-suggesting that entry — but
+then uses it to stop the calendar importer re-suggesting that entry - but
 nothing in the interface ever shows the decision back to the user.
 
 So the user made a decision, the product remembered it, and then gave them no
@@ -21,7 +21,7 @@ way to see or change it. Two consequences follow:
    user's week that the product holds and hides.
 2. **Changing your mind is impossible.** There is no row to tap. Worse, the
    suppression key is organizer + title + time-of-day, so declining one
-   instance quietly suppresses future look-alike entries — an invisible,
+   instance quietly suppresses future look-alike entries - an invisible,
    irreversible side effect of a single tap.
 
 This is the actual defect. "Not-going events should be in Past" is the
@@ -31,10 +31,10 @@ user-facing symptom of it.
 
 Two independent axes are being collapsed into one:
 
-- **Time** — has the event ended? (`isUpcomingEvent` compares `ends_at`, not
+- **Time** - has the event ended? (`isUpcomingEvent` compares `ends_at`, not
   `starts_at`, which is correct and must stay: an in-progress event is still
   upcoming until it finishes.)
-- **Intent** — going, not going, or undecided.
+- **Intent** - going, not going, or undecided.
 
 `Upcoming` is *going × future*. Everything else with a recorded decision has
 nowhere to live. The fix is not to redefine "past" as "not on my plate", but to
@@ -43,9 +43,9 @@ lying about which is which.
 
 ## Taxonomy
 
-**Upcoming** — `going`, not yet ended. Unchanged.
+**Upcoming** - `going`, not yet ended. Unchanged.
 
-**Past** — three groups, in this order:
+**Past** - three groups, in this order:
 
 | Group | Contents | Why it is here |
 |---|---|---|
@@ -54,14 +54,14 @@ lying about which is which.
 | **Didn't attend** | ended, `not_going` | Completes the record. Collapsed by default. |
 
 Cancelled events (`events.status = 'cancelled'`) leave Upcoming regardless of
-attendance and appear under Past with a `Cancelled` label — a cancelled event
+attendance and appear under Past with a `Cancelled` label - a cancelled event
 sitting in Upcoming is its own version of an untrue record.
 
 Group headers carry counts; empty groups disappear entirely rather than
 rendering an empty state, per the Product Source of Truth's rule that the
 landing surface is an active-work queue.
 
-## Tap behaviour — one sheet, three shapes
+## Tap behaviour - one sheet, three shapes
 
 Every Past row opens the same bottom sheet component. What it offers is
 determined by **time**, not by the group label, so the behaviour is never
@@ -72,9 +72,9 @@ surprising:
 > **Connect X Ignite** · Thu 4 Sep, 09:00
 > You said you're not going.
 
-- **I'm going after all** (primary) — sets `going`, clears the suppression, row
+- **I'm going after all** (primary) - sets `going`, clears the suppression, row
   animates out of Past and into Upcoming.
-- **Remove from my events** — secondary, destructive styling.
+- **Remove from my events** - secondary, destructive styling.
 - Dismiss to leave unchanged.
 
 This is the "I changed my mind" path, and it is the only one that needs to feel
@@ -85,7 +85,7 @@ fast: one tap, no confirmation, no navigation.
 > **Connect X Ignite** · finished 12 Aug
 
 - **View captures & follow-ups** (primary, only when the event has any).
-- **Create a new event from this** — opens the existing create flow prefilled
+- **Create a new event from this** - opens the existing create flow prefilled
   with title and location, **dates deliberately cleared**.
 - **Remove from my events**.
 
@@ -96,7 +96,7 @@ captures and follow-ups are already attached to. A new row keeps both truthful.
 This also gives the malformed-link case a blessed path. The current
 "Confirm event" sheet warns *"This link contains a past event date. Choose the
 current event's correct start date and time before adding it."* and then leaves
-`STARTS` as `Not set` — which is the recreate flow, arrived at by accident. It
+`STARTS` as `Not set` - which is the recreate flow, arrived at by accident. It
 should be the same flow, reached deliberately.
 
 ## Logic that must not be missed

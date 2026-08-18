@@ -1,6 +1,6 @@
 /**
  * Cloudflare's local workerd dev sandbox (used by `npm run dev`) cannot load
- * the image library's native or WASM bindings — production (Vercel, via Nitro)
+ * the image library's native or WASM bindings - production (Vercel, via Nitro)
  * runs real Node.js and is unaffected.
  */
 export function sharpAvailable() {
@@ -17,7 +17,7 @@ export function sharpAvailable() {
   if (process.env.VERCEL === "1" || process.env.NITRO_PRESET === "vercel") return true;
 
   // Neither of those fires on Vercel unless the project opts into exposing
-  // system environment variables, and this project does not — so the checks
+  // system environment variables, and this project does not - so the checks
   // above were answering "no sharp" in production. Asking an operator to set
   // one more variable just moves the same fragility somewhere else.
   //
@@ -59,7 +59,7 @@ export async function loadSharp(): Promise<SharpModule> {
   }
 
   // In the deployed bundle that ESM import resolves to
-  // sharp/dist/index.mjs — a file sharp does not publish; it ships
+  // sharp/dist/index.mjs - a file sharp does not publish; it ships
   // dist/index.cjs. The failure surfaced as "Cannot find module ... Did you
   // mean to import sharp/dist/index.cjs?" and was swallowed by the caller,
   // so every server-rendered QR quietly lost its logo and Wallet passes 500'd.
@@ -71,7 +71,7 @@ export async function loadSharp(): Promise<SharpModule> {
   // Anchor matters more than it looks. import.meta.url survives bundling as
   // the *build* path (/vercel/path0/lib/sharp-runtime.ts), a directory that
   // does not exist at runtime and therefore has no node_modules to walk up
-  // into — so resolving from it fails with a bare "Cannot find module 'sharp'"
+  // into - so resolving from it fails with a bare "Cannot find module 'sharp'"
   // even though the package is sitting in /var/task/node_modules. Try the
   // function's working directory too, and the explicit CommonJS entry point
   // that the resolver's own error message pointed at.

@@ -23,7 +23,7 @@ function whenLabel(event: EventItem) {
  *
  * What it offers is decided by whether the event can still be attended, not by
  * which group the row was filed under, so the two can never disagree. An event
- * still to come can be rejoined in a single tap — that is the whole point of
+ * still to come can be rejoined in a single tap - that is the whole point of
  * keeping declined events visible. An event that has finished can only be
  * recreated: editing its date would silently rewrite history that captures and
  * follow-ups are already attached to.

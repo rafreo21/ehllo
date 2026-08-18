@@ -7,7 +7,7 @@ export type DeviceContactMatch = {
   phone: string;
 };
 
-// Fetches once, lets the caller filter per keystroke — a permission prompt
+// Fetches once, lets the caller filter per keystroke - a permission prompt
 // and a full address-book read on every character typed would be too slow
 // and too intrusive.
 export async function fetchDeviceContacts(): Promise<DeviceContactMatch[]> {

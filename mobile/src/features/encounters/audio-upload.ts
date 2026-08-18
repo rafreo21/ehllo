@@ -34,7 +34,7 @@ export function isSupportedAudioImport(fileName?: string, mimeType?: string, uri
   if (ext && SUPPORTED_AUDIO_EXTENSIONS.has(ext)) return true;
   const mime = (mimeType || '').toLowerCase();
   if (mime.startsWith('audio/') || mime.startsWith('video/') || mime === 'application/octet-stream') return true;
-  // Document picker already filtered the file — default to allow unless clearly not audio.
+  // Document picker already filtered the file - default to allow unless clearly not audio.
   return !ext || !BLOCKED_IMPORT_EXTENSIONS.has(ext);
 }
 
@@ -81,7 +81,7 @@ export function normalizeAudioMimeType(mimeType: string, hintPath: string) {
 }
 
 export const MAX_TRANSCRIBE_UPLOAD_BYTES = 25 * 1024 * 1024;
-/** Above this size, base64 JSON exceeds typical server body limits — prefer multipart upload. */
+/** Above this size, base64 JSON exceeds typical server body limits - prefer multipart upload. */
 export const MAX_BASE64_TRANSCRIBE_BYTES = 3 * 1024 * 1024;
 
 export type PreparedAudioUpload = {

@@ -14,7 +14,7 @@ type ExpoTicket = {
 };
 
 /**
- * Every notification type currently deep-links to the same review screen —
+ * Every notification type currently deep-links to the same review screen -
  * matching notificationDeepLink() in mobile/src/features/notifications/notification-center-api.ts,
  * which is what the in-app centre already uses for the same event types.
  */
@@ -24,7 +24,7 @@ function routeFor(encounterId?: string): string | null {
 
 /**
  * Sends a remote push to every active device the user has registered, and
- * best-effort records delivery status per token. Never throws — a missed
+ * best-effort records delivery status per token. Never throws - a missed
  * push must never fail the database notification that already exists, or
  * whatever save/save-adjacent request triggered it.
  */
@@ -70,7 +70,7 @@ export async function dispatchPushForUser(
       );
     }
   } catch {
-    // Best-effort — the notification row already exists regardless.
+    // Best-effort - the notification row already exists regardless.
   }
 }
 
@@ -109,7 +109,7 @@ async function sendChunk(supabase: SupabaseClient, messages: unknown[], tokens: 
       return;
     }
 
-    // DeviceNotRegistered means Expo will never deliver to this token again —
+    // DeviceNotRegistered means Expo will never deliver to this token again -
     // any other install, uninstall, or re-registration issues a new one.
     const errorCode = ticket.details?.error;
     const deactivate = errorCode === "DeviceNotRegistered";

@@ -26,7 +26,7 @@ async function readWalletError(response: Response, fallback: string) {
 // A wallet failure is almost always a server-side configuration problem, and
 // the server already says which one. Keep the HTTP status attached so a tester
 // screenshot distinguishes "not configured" (503) from "signing failed" (500)
-// from "publish your card first" (404) — previously every one of these
+// from "publish your card first" (404) - previously every one of these
 // collapsed into the same unactionable sentence on the device.
 function walletFailure(status: number, message: string) {
   const trimmed = message.trim();

@@ -48,7 +48,7 @@ describe("applyCachedCheckIn", () => {
     assert.equal(a.leftAt, null);
   });
 
-  it("clears every other check-in — you can only be in one place", () => {
+  it("clears every other check-in - you can only be in one place", () => {
     const next = applyCachedCheckIn(events, "a", "2026-09-04T12:00:00.000Z");
     assert.equal(next.find((e) => e.id === "b").checkedInAt, null);
   });

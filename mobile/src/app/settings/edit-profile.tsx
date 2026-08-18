@@ -32,7 +32,7 @@ export default function EditProfileScreen() {
   const [verifyNoticeOpen, setVerifyNoticeOpen] = useState(false);
 
   useEffect(() => {
-    // fetchAccountProfile calls an RPC that requires a real session — without
+    // fetchAccountProfile calls an RPC that requires a real session - without
     // this gate, opening this screen signed out always failed with a raw
     // "permission denied" error instead of showing anything useful.
     if (!session?.access_token) {

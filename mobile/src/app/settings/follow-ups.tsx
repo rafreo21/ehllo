@@ -78,7 +78,7 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
   const loadFollowUps = useCallback(async (background = false) => {
     // Same reasoning as Home: session can momentarily read null while it's
     // still resolving (e.g. right after a reload), not because the user
-    // actually signed out — don't wipe a working list on that transient window.
+    // actually signed out - don't wipe a working list on that transient window.
     if (authLoading) return;
 
     if (!accessToken) {
@@ -101,7 +101,7 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
     } catch (caught) {
       if (isNetworkError(caught)) {
         // Keep whatever's already on screen (cached copy) instead of wiping
-        // it — the OfflineBanner up top already covers this, no need for a
+        // it - the OfflineBanner up top already covers this, no need for a
         // second indicator here.
       } else {
         setFollowUps([]);
@@ -281,7 +281,7 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
             completingId={completingId}
             onPressItem={(actionId) => {
               const item = activeGroup.items.find((entry) => entry.actionId === actionId);
-              // Close this sheet before running the action — it may open another
+              // Close this sheet before running the action - it may open another
               // sheet (missing contact info, audience choice), and two RN
               // <Modal> instances visible at once hangs on iOS.
               setActiveGroup(null);
@@ -289,7 +289,7 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
             }}
             onCompleteItem={(actionId) => {
               const item = activeGroup.items.find((entry) => entry.actionId === actionId);
-              // Close this sheet before opening the confirmation sheet — two
+              // Close this sheet before opening the confirmation sheet - two
               // RN <Modal> instances visible at once hangs on iOS.
               setActiveGroup(null);
               if (item) completeAndConfirm(item);

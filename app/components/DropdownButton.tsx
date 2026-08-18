@@ -25,7 +25,7 @@ type DropdownButtonProps = {
 };
 
 // Portaled to <body> rather than absolutely positioned inside its own
-// wrapper — a few places this renders (e.g. the follow-ups table) have an
+// wrapper - a few places this renders (e.g. the follow-ups table) have an
 // `overflow-x: auto` ancestor, which would otherwise clip the menu.
 export function DropdownButton({ label, icon, items, size = "small", fullWidth = false, loading = false }: DropdownButtonProps) {
   const [open, setOpen] = useState(false);

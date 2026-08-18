@@ -557,7 +557,7 @@ export default function CardEditor() {
           <section className="creator-workspace">
             {step === 0 && (
               <div className="creator-section">
-                <header><span>01 · Design card</span><h1>{isCreating ? "Let's create your card." : "Make your card recognisable and ready to share."}</h1><p>{isCreating ? "Start with your identity, images and visual style — you can fill in the rest later." : "Add your identity, images and visual style in one place."}</p></header>
+                <header><span>01 · Design card</span><h1>{isCreating ? "Let's create your card." : "Make your card recognisable and ready to share."}</h1><p>{isCreating ? "Start with your identity, images and visual style - you can fill in the rest later." : "Add your identity, images and visual style in one place."}</p></header>
                 <div className="image-panel">
                   <div className="image-panel-heading"><div><h2>Card images</h2><p>Add a company logo, profile picture and cover photo.</p></div></div>
                   <input ref={photoInput} className="sr-only" type="file" accept="image/*" onChange={selectPhoto} />

@@ -26,7 +26,7 @@ export function buildHeuristicOutboundDraft(
       body: [
         `Hi ${firstName},`,
         "",
-        encounter.sharedSummary ? `Good to connect — ${encounter.sharedSummary}` : "Good to connect.",
+        encounter.sharedSummary ? `Good to connect - ${encounter.sharedSummary}` : "Good to connect.",
         "",
         action.title,
         "",
@@ -37,7 +37,7 @@ export function buildHeuristicOutboundDraft(
 
   const summaryLine = encounter.sharedSummary
     ? `Good to meet you. ${encounter.sharedSummary}`
-    : "Good to meet you — thanks for the conversation.";
+    : "Good to meet you - thanks for the conversation.";
 
   return {
     subject,

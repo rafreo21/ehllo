@@ -4,14 +4,14 @@ ehllo uses **expo-dev-client**, not Expo Go. You need the **debug dev client APK
 
 ## Quick fix (phone plugged in via USB)
 
-Terminal 1 — Metro (keep open):
+Terminal 1 - Metro (keep open):
 
 ```bash
 cd mobile
 npm run android:dev
 ```
 
-Terminal 2 — install dev client + connect:
+Terminal 2 - install dev client + connect:
 
 ```bash
 cd mobile
@@ -44,7 +44,7 @@ You can copy that file to your phone and install manually (enable “Install unk
 | `npm run android:dev` | Start Metro on port 8081 (live reload) |
 | `npm run android:dev:connect` | USB: install debug APK if needed, `adb reverse`, open app |
 | `npm run android:dev-client` | Build + install debug dev client (first time) |
-| `npm run android:install` | **Release APK — no Metro, no live reload** |
+| `npm run android:install` | **Release APK - no Metro, no live reload** |
 
 ---
 

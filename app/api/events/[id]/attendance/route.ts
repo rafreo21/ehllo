@@ -59,7 +59,7 @@ export async function PATCH(
  * event stays listed so the user can reverse it, and its record is what
  * suppresses the matching calendar candidate. Removing withdraws both. For a
  * calendar-sourced event that means it may legitimately reappear as a
- * candidate on the next sync, which is the correct outcome — an invisible,
+ * candidate on the next sync, which is the correct outcome - an invisible,
  * permanent suppression applied by a single tap is the behaviour this whole
  * change exists to undo.
  *

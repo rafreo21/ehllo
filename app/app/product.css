@@ -44,7 +44,7 @@
 }
 .nav-group-label-spaced { margin-top: 22px; }
 
-/* Consumer app sidebar only (AppShell) — business sidebar keeps the compact style above. */
+/* Consumer app sidebar only (AppShell) - business sidebar keeps the compact style above. */
 .product-shell:has(.consumer-sidebar) { background: #eef0ef; gap: 18px; padding: 18px; }
 .consumer-sidebar {
   padding: 28px 20px;
@@ -111,7 +111,7 @@
 .product-content { max-width: 1260px; margin: auto; padding: 58px 40px 72px; }
 
 /* Consumer app only: float the back-button/actions toolbar in the top gutter so it never
-   pushes the page heading down — every page's <h1> starts at the same offset as Home's. */
+   pushes the page heading down - every page's <h1> starts at the same offset as Home's. */
 .product-shell:has(.consumer-sidebar) .product-content { position: relative; }
 .product-shell:has(.consumer-sidebar) .product-page-toolbar { position: absolute; top: 20px; left: 40px; right: 40px; margin-bottom: 0; z-index: 5; }
 .welcome { display: grid; grid-template-columns: 1.3fr .7fr; gap: 6vw; align-items: end; }

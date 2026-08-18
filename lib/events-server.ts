@@ -14,11 +14,11 @@ import {
 } from "./integrations/providers";
 
 /**
- * "ok" — synced fine. "not_connected" — user never linked this provider (or
- * unlinked it), a normal state, not an error. "needs_reconnect" — a
+ * "ok" - synced fine. "not_connected" - user never linked this provider (or
+ * unlinked it), a normal state, not an error. "needs_reconnect" - a
  * connection exists but its token is dead (revoked grant, refresh
  * rejected, or the provider itself returned 401/403) and nothing will
- * sync again until the user reconnects. "error" — a transient failure
+ * sync again until the user reconnects. "error" - a transient failure
  * (network, 5xx); worth retrying, not worth alarming the user about.
  */
 export type CalendarProviderStatus = "ok" | "not_connected" | "needs_reconnect" | "error";
@@ -73,7 +73,7 @@ const CANDIDATE_WINDOW_DAYS_AHEAD = 14;
 
 /**
  * Organizer+title keys the user has already dismissed ("not going") on a
- * past calendar-sourced candidate — see candidateSuppressionKey in
+ * past calendar-sourced candidate - see candidateSuppressionKey in
  * lib/events.ts for why this catches near-duplicate future invites that
  * aren't flagged as a formal recurring series.
  */
@@ -121,7 +121,7 @@ async function fetchProviderEvents(
  * Pulls, filters, and upserts calendar-derived event candidates across
  * every connected provider with calendar access. Upserting on
  * (workspace_id, external_id) makes repeated calls idempotent instead of
- * creating duplicate rows per fetch — see the migration's unique index.
+ * creating duplicate rows per fetch - see the migration's unique index.
  * Best-effort per provider: one provider failing (expired grant, outage)
  * does not block candidates from the other, but each provider's own status
  * is still reported back so the UI can tell "nothing new" apart from
@@ -264,7 +264,7 @@ export async function fetchGoingEventWindows(supabase: SupabaseClient, userId: s
 /**
  * The server-side entry point for passive presence (see resolveCurrentEvent
  * in lib/events.ts). Called from the encounter save route so Capture and
- * Quick Follow-up — the only two flows that create an Encounter — both
+ * Quick Follow-up - the only two flows that create an Encounter - both
  * inherit it automatically through one choke point, without either mobile
  * screen needing its own copy of this decision.
  */
@@ -280,7 +280,7 @@ export async function resolveCurrentEventIdForUser(
 /**
  * Anonymous visitors (a card scan, a guest exchange submission) never have
  * their own session, so the only "who's at an event right now" we can know
- * is the card owner's — if they're currently checked in somewhere, that's
+ * is the card owner's - if they're currently checked in somewhere, that's
  * where this visit is happening. Best-effort: any failure just means no
  * event, never a broken save.
  */

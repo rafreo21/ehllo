@@ -73,7 +73,7 @@ Business web at `/business` is a separate product surface and is not governed by
 
 ## Experience architecture
 
-### 1. Home — act now
+### 1. Home - act now
 
 Home answers only:
 
@@ -88,7 +88,7 @@ Permanent content is limited to:
 
 When a recording is active, Start Capture becomes a compact active-recording state with Return and Pause. Remove journey explainers, promotional cards, permanent metric cards, and duplicated capability descriptions.
 
-### 2. Capture landing — start, resume, or review
+### 2. Capture landing - start, resume, or review
 
 The landing screen contains:
 
@@ -102,7 +102,7 @@ The landing is an active-work queue, not an archive. Completed and reviewed capt
 
 Only one recording may be active at a time. Starting another recording while one is active opens a recovery sheet that returns the user to the current recording.
 
-### 3. Recording preflight — bottom sheet
+### 3. Recording preflight - bottom sheet
 
 Recording begins from a bottom sheet containing:
 
@@ -114,7 +114,7 @@ Recording begins from a bottom sheet containing:
 
 Only consent is required. Advanced storage details remain hidden unless requested.
 
-### 4. Live Capture — one focused recording surface
+### 4. Live Capture - one focused recording surface
 
 Live Capture prioritizes:
 
@@ -136,7 +136,7 @@ While recording or paused, mobile shows a persistent mini-recorder throughout th
 
 Consumer web may show an observational state such as “Recording on Raf’s phone,” but must not remotely stop the phone recording in the initial implementation.
 
-### 6. Add People — one reusable bottom sheet
+### 6. Add People - one reusable bottom sheet
 
 Capture, Review, and manual follow-up creation use the same Add People sheet:
 
@@ -147,13 +147,13 @@ Capture, Review, and manual follow-up creation use the same Add People sheet:
 
 A capture may remain temporarily unassigned. A person is required before participant-specific follow-ups, sharing, or assigning another person a commitment.
 
-### 7. Processing — resilient and transparent
+### 7. Processing - resilient and transparent
 
 Processing communicates independent stages: recording saved, transcript ready, speakers identified, commitments found, and follow-ups prepared.
 
 Users may leave while work continues. Partial failure is recoverable. A transcription failure must never destroy the recording or capture.
 
-### 8. Review — exception-first approval
+### 8. Review - exception-first approval
 
 Replace the long Context → Connect → Follow-up → Review sequence with one concise review screen containing:
 
@@ -167,7 +167,7 @@ Replace the long Context → Connect → Follow-up → Review sequence with one 
 
 AI drafts; the user reviews and approves. Nothing is sent automatically.
 
-Follow-ups chosen during processing remain pending — invisible to the follow-up queue, reminders, and notifications — until the user approves the review. Approving the review is a distinct action from choosing to share a guest link: a user can activate their own private follow-ups without ever creating a public recording link.
+Follow-ups chosen during processing remain pending - invisible to the follow-up queue, reminders, and notifications - until the user approves the review. Approving the review is a distinct action from choosing to share a guest link: a user can activate their own private follow-ups without ever creating a public recording link.
 
 ### 9. Speaker identification
 
@@ -177,7 +177,7 @@ Speaker labels remain stable throughout transcript, summary, and commitments. Un
 
 History contains completed captures; the capture landing contains active drafts and items needing review. History supports search and sort in one aligned, sticky control row.
 
-### 11. Follow-ups — operational queue
+### 11. Follow-ups - operational queue
 
 Follow-ups is the single home for commitments requiring action. Notifications alert users; they do not duplicate the queue.
 
@@ -237,15 +237,15 @@ Scan is launched contextually. A successful scan opens the public card, allows s
 
 Notifications are alerts about work, not a second follow-up system.
 
-- A bell in Home (mobile) or the app header (consumer web) opens the notification centre — a chronological list of alerts, distinct from the Follow-ups queue of work to perform.
+- A bell in Home (mobile) or the app header (consumer web) opens the notification centre - a chronological list of alerts, distinct from the Follow-ups queue of work to perform.
 - Notification records are Supabase-backed (`public.notifications`), shared by iOS, Android, and consumer web, not device-local history.
 - Four notification types: transcript/review ready, follow-up due, follow-up overdue, shared meeting update (a guest committing to their own follow-up). Each is an independent, user-configurable preference.
-- Follow-up notifications only ever reference a *reviewed* encounter — an unreviewed (draft) encounter never produces a due/overdue/shared-update notification on any channel. See the follow-up gating note under Review.
+- Follow-up notifications only ever reference a *reviewed* encounter - an unreviewed (draft) encounter never produces a due/overdue/shared-update notification on any channel. See the follow-up gating note under Review.
 - Follow-up due dates schedule device reminders when permitted; mobile also keeps a lightweight local echo (AsyncStorage) purely to fire the OS-level banner, but the notification centre itself always reads the shared Supabase records.
 - Badges count unresolved (unread) notifications, not every historical event.
 - Settings contain one coherent Device Notifications area for permission, timing, per-type toggles, and reminder preferences, shared in shape (not in per-device state) between mobile and web.
 - Email reminders remain a separate delivery-channel preference, not a duplicate settings section.
-- Remote push delivery is implemented server-side: a dispatcher (`lib/push-dispatch-server.ts`) sends a real Expo push for all four notification types, respecting each per-type preference, recording per-token delivery status/error (no secrets) for debugging, and deactivating a token the moment Expo reports it as unregistered. Every dispatch is best-effort — a failed or unconfigured push never blocks the notification row from being created, and never fails the request that triggered it (an encounter save, the reminder cron, or a guest committing to a follow-up).
+- Remote push delivery is implemented server-side: a dispatcher (`lib/push-dispatch-server.ts`) sends a real Expo push for all four notification types, respecting each per-type preference, recording per-token delivery status/error (no secrets) for debugging, and deactivating a token the moment Expo reports it as unregistered. Every dispatch is best-effort - a failed or unconfigured push never blocks the notification row from being created, and never fails the request that triggered it (an encounter save, the reminder cron, or a guest committing to a follow-up).
 - Staging and production now have environment-specific EAS project IDs. A signed-in physical device registers its Expo push token only after notification permission and the Device Notifications preference are both enabled; registration is retried whenever the app returns to the foreground. Settings only reports "background alerts are on" after the current device has successfully registered. Local scheduled notifications and the in-app Supabase-backed centre remain available even when remote registration fails.
 
 ### 19. Settings and Connected Accounts
@@ -296,7 +296,7 @@ Every flow must include:
 - Accessible labels, focus order, touch targets, contrast, and keyboard behaviour
 - Optimistic interaction only when safe, with visible recovery when synchronization fails
 - Clear cross-device synchronization state
-- Bottom sheets for focused mobile choices, confirmations, and recoverable success/error feedback when appropriate—not for every passive message
+- Bottom sheets for focused mobile choices, confirmations, and recoverable success/error feedback when appropriate-not for every passive message
 - No mocked or placeholder logic in a completed feature
 
 ## Missing foundations required for the target product

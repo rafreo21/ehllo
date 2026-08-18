@@ -33,7 +33,7 @@ function phoneNumber(value: string) {
 
 /**
  * HTTPS / Contacts-safe hrefs for vCard export.
- * Do not use native app schemes here — phone address books ignore or break them.
+ * Do not use native app schemes here - phone address books ignore or break them.
  */
 export function contactMethodVcardHref(method: ContactMethodLike): string | null {
   const value = method.value.trim();

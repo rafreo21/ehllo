@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   const supabase = await createApiSupabaseClient(request);
 
   // A token Expo previously issued to a different install must be released
-  // before this device can claim it — the active-token unique index would
+  // before this device can claim it - the active-token unique index would
   // otherwise reject the upsert below.
   await supabase
     .from("push_tokens")

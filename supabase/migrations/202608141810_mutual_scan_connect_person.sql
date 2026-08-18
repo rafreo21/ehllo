@@ -112,7 +112,7 @@ begin
           v_card.workspace_id,
           'connection_added',
           coalesce(v_scanner_display_name, 'Someone') || ' connected with you',
-          'You''re now connected on ehllo — add a follow-up or view their card.',
+          'You''re now connected on ehllo - add a follow-up or view their card.',
           'connection_added:' || v_card.workspace_id::text || ':' || v_workspace_id::text
         from public.workspace_memberships owner_membership
         where owner_membership.workspace_id = v_card.workspace_id

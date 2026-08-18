@@ -45,7 +45,7 @@ export function foldVcardLine(line: string) {
 function appendEmbeddedImage(lines: string[], property: string, image: VcardEmbeddedImage) {
   const type = vcardImageType(image.mimeType);
   // RFC 2426 defines only "b" (RFC 2047 shorthand) as a valid ENCODING value for
-  // vCard 3.0 — "ENCODING=BASE64" is not spec-valid syntax at all, which is why it
+  // vCard 3.0 - "ENCODING=BASE64" is not spec-valid syntax at all, which is why it
   // silently failed to decode on iOS Contacts.
   lines.push(foldVcardLine(`${property};ENCODING=b;TYPE=${type}:${image.base64}`));
 }

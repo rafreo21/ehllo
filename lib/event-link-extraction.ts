@@ -56,7 +56,7 @@ function locationFromJsonLdValue(location: unknown): string {
 /**
  * Reads structured schema.org Event data (name/startDate/endDate/location)
  * out of any JSON-LD block on the page. This is the one source trusted for
- * dates and location — free-text guessing from prose is deliberately not
+ * dates and location - free-text guessing from prose is deliberately not
  * attempted, per "don't invent missing information": a paste-link import
  * with a blank date/location is better than one with a wrong one.
  */
@@ -81,7 +81,7 @@ function extractFromJsonLd(html: string, now = new Date()): Partial<ExtractedEve
     for (const candidate of candidates) {
       const type = candidate["@type"];
       // Matches "Event" and its schema.org subtypes (SocialEvent, BusinessEvent,
-      // MusicEvent, Festival's sibling types, etc. — all end in "Event" except
+      // MusicEvent, Festival's sibling types, etc. - all end in "Event" except
       // Festival itself, handled by name below), which real event platforms
       // (Eventbrite, Meetup, etc.) use instead of the bare "Event" type.
       const isEventType = (value: unknown) =>
@@ -115,7 +115,7 @@ function extractFromJsonLd(html: string, now = new Date()): Partial<ExtractedEve
 /**
  * Extracts what it confidently can from a pasted event page's HTML: title
  * from JSON-LD/og:title/<title>, location/dates only from JSON-LD. Missing
- * fields come back empty/null rather than guessed — the caller (the "Add
+ * fields come back empty/null rather than guessed - the caller (the "Add
  * event" flow) is expected to ask the user to fill in whatever's missing,
  * not silently invent it.
  */

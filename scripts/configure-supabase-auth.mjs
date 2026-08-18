@@ -106,7 +106,7 @@ async function main() {
   if (!useSupabaseEmail && !resendApiKey) {
     console.error("Missing RESEND_API_KEY.");
     console.error("");
-    console.error("Skip Vercel — set this up directly on Resend:");
+    console.error("Skip Vercel - set this up directly on Resend:");
     console.error("  1. Sign up: https://resend.com/signup");
     console.error("  2. Create API key: https://resend.com/api-keys");
     console.error(`  3. Add to .env.${environment}.local: RESEND_API_KEY=re_...`);
@@ -154,7 +154,7 @@ async function main() {
     uri_allow_list: REDIRECT_URLS,
     external_email_enabled: true,
     mailer_secure_email_change_enabled: false,
-    // A fresh project defaults to 8 — the client (and the email template
+    // A fresh project defaults to 8 - the client (and the email template
     // above) hard-codes an expectation of exactly 6 digits.
     mailer_otp_length: 6,
   };

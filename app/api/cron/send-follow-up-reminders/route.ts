@@ -41,7 +41,7 @@ export async function GET(request: Request) {
   const todayStart = startOfTodayIso();
 
   // Email and in-app/push notifications are independent preferences, so this
-  // scans every active user rather than only those with email reminders on —
+  // scans every active user rather than only those with email reminders on -
   // the per-user branches below decide each channel separately.
   const { data: users, error: usersError } = await service
     .from("users")
@@ -127,7 +127,7 @@ export async function GET(request: Request) {
 
     if (!qualifying.length) continue;
 
-    // In-app/push: one row per (user, type, encounter, action) ever — the
+    // In-app/push: one row per (user, type, encounter, action) ever - the
     // dedupe_key unique index makes this safe to run daily without spamming
     // the notification centre as an item stays due or overdue.
     if (membership?.workspace_id) {

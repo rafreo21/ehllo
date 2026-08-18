@@ -16,7 +16,7 @@ const resend = resendApiKey ? new Resend(resendApiKey) : null;
 // "Unexpected status code returned from hook: <status>". Without an explicit
 // log line the real provider failure is unrecoverable after the fact, which is
 // exactly what made a total sign-in outage undiagnosable. Never log the token,
-// the API key, or the hook secret — only the delivery failure itself.
+// the API key, or the hook secret - only the delivery failure itself.
 function logFailure(stage: string, action: string, error: unknown) {
   const detail = error as { name?: string; statusCode?: number; message?: string } | null;
   console.error(
@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     // A signature failure means this project's auth hook secret and this
-    // function's SEND_EMAIL_HOOK_SECRET have drifted apart — rerun
+    // function's SEND_EMAIL_HOOK_SECRET have drifted apart - rerun
     // `npm run configure:supabase-auth` against this environment.
     logFailure("verify", "unknown", error);
     const message = error instanceof Error ? error.message : "Webhook verification failed";

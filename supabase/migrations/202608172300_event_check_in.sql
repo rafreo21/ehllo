@@ -4,7 +4,7 @@ begin;
 -- when now fell inside its window, and when two windows overlapped the one that
 -- started most recently won (see resolveCurrentEvent in lib/events.ts). That is
 -- a guess, and it is the value used to tag scanned cards, reciprocal exchanges,
--- captured encounters and the follow-ups that come out of them — so a wrong
+-- captured encounters and the follow-ups that come out of them - so a wrong
 -- guess attributes real relationships to the wrong event, silently.
 --
 -- checked_in_at records the user actually saying "I'm here". It outranks the

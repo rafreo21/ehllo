@@ -153,7 +153,7 @@ export default function CardToolsScreen() {
       await task();
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       if (options?.successMessage?.trim()) {
-        // Close the open tool sheet before showing the confirmation sheet —
+        // Close the open tool sheet before showing the confirmation sheet -
         // two RN <Modal> instances visible at once hangs on iOS, which is
         // why this confirmation never appeared even though it was wired up.
         setActiveSheet('none');

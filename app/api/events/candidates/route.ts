@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   }
 
   // syncCalendarCandidates upserts every structurally-worthy calendar entry
-  // it finds, including ones the user already decided on a previous fetch —
+  // it finds, including ones the user already decided on a previous fetch -
   // exclude those here so "candidates" only ever means "awaiting a decision".
   const { data: decided } = await supabase
     .from("event_attendance")

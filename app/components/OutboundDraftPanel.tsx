@@ -53,7 +53,7 @@ export function OutboundDraftPanel({
   }, []);
 
   // A proposed action is still awaiting review confirmation and must not be
-  // externally sendable — outbound drafting stays locked until then.
+  // externally sendable - outbound drafting stays locked until then.
   if (
     action.owner !== "me"
     || action.status === "completed"

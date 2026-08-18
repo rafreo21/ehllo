@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { FollowUpItem } from '@/features/follow-ups/follow-up-api';
 
-// v2: FollowUpItem gained eventId/eventTitle — bump so caches written before
+// v2: FollowUpItem gained eventId/eventTitle - bump so caches written before
 // that schema change don't silently serve stale rows missing the fields.
 export const FOLLOW_UPS_CACHE_KEY = 'aftermeet.mobile.follow-ups-cache.v2';
 export const FOLLOW_UPS_QUEUE_KEY = 'aftermeet.mobile.follow-ups-queue.v1';
@@ -86,7 +86,7 @@ export async function setCachedFollowUpStatus(
 }
 
 // Forces queued items' status to reflect local intent even if a fresh
-// server fetch hasn't caught up yet — prevents a completed-while-offline
+// server fetch hasn't caught up yet - prevents a completed-while-offline
 // item from flickering back to open the moment a background poll returns
 // stale server data before the queue has flushed.
 export function applyFollowUpQueueToItems(items: FollowUpItem[], queue: FollowUpQueueEntry[]): FollowUpItem[] {

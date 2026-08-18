@@ -24,7 +24,7 @@ APK="$ROOT/android/app/build/outputs/apk/debug/app-debug.apk"
 MARKER="$ROOT/android/.dev-client-configured"
 VARIANT_MARKER="$ROOT/android/.variant-configured"
 
-# Switching variants always needs a clean prebuild — package name/app name
+# Switching variants always needs a clean prebuild - package name/app name
 # are baked into the native manifest, not just the JS bundle.
 if [[ ! -f "$VARIANT_MARKER" || "$(cat "$VARIANT_MARKER" 2>/dev/null)" != "$APP_VARIANT" ]]; then
   REBUILD=1

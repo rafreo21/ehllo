@@ -30,7 +30,7 @@ export type FollowUpItem = {
   startedAt: string;
   contactMethods?: FollowUpContactMethod[];
   eventId?: string;
-  /** The linked event's title, if any — populated by the API route (see app/api/follow-ups/route.ts), not here. */
+  /** The linked event's title, if any - populated by the API route (see app/api/follow-ups/route.ts), not here. */
   eventTitle?: string;
 };
 
@@ -43,15 +43,15 @@ export type FollowUpContactMethod = {
 
 /**
  * Includes both the host's own actions (owner "me") and actions assigned to
- * the other party (owner "guest") so the host can track — and confirm — the
+ * the other party (owner "guest") so the host can track - and confirm - the
  * whole meeting's follow-through in one place, not just their own half.
  * Includes completed actions too (bounded by the 250-encounter query limit
- * upstream) — the client buckets open vs. completed into the Current/Past
+ * upstream) - the client buckets open vs. completed into the Current/Past
  * tabs via filterFollowUpsByScope, so this must return both.
  *
  * Excludes actions belonging to an unreviewed ("draft") encounter. A user can
  * choose follow-ups while transcription is still running, but nothing may
- * become actionable — visible in the queue, reminder-eligible, or sendable —
+ * become actionable - visible in the queue, reminder-eligible, or sendable -
  * until the encounter has been reviewed and approved. This is the single
  * choke point both the follow-ups API and the reminder cron read through, so
  * gating here is sufficient to keep pending follow-ups pending everywhere.

@@ -8,7 +8,7 @@ import ExpoAudioSegmentStitcher from '../../modules/expo-audio-segment-stitcher'
  * ending with the current/latest take.
  *
  * Falls back to the latest segment (rather than throwing) if stitching
- * fails — losing the earlier audio is preferable to losing the whole save,
+ * fails - losing the earlier audio is preferable to losing the whole save,
  * especially since the full transcript already covers every segment
  * regardless of what happens to the audio file.
  */

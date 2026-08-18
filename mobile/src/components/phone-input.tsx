@@ -28,7 +28,7 @@ export function PhoneInput({ label, value, onChange, placeholder }: PhoneInputPr
   // apart from a bare dial code (it needs >=4 remaining digits to trust a
   // match), so round-tripping every keystroke through it corrupts the
   // number. Only re-parse when `value` changes for a reason other than our
-  // own onChange echoing back — e.g. the initial fetched value.
+  // own onChange echoing back - e.g. the initial fetched value.
   const lastEmitted = useRef<string | null>(value || null);
 
   useEffect(() => {

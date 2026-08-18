@@ -92,7 +92,7 @@ function MethodRow({
     if (activeIndex.value === -1) {
       return { transform: [{ translateY: withSpring(0) }, { scale: 1 }], zIndex: 0, elevation: 0 };
     }
-    // Another row is being dragged — shift out of the way if this row sits
+    // Another row is being dragged - shift out of the way if this row sits
     // between its start and where it would currently land.
     const target = targetIndexFor(activeIndex.value, dragY.value);
     let shift = 0;

@@ -15,7 +15,7 @@ import {
   type FollowUpChannel,
 } from '@/features/follow-ups/follow-up-channels';
 
-// Longer than mobileFetch's default — transcribing a long recording
+// Longer than mobileFetch's default - transcribing a long recording
 // genuinely takes a while server-side, and this is the one call site where
 // the default 45s would fire false-positive timeouts on real, still-working
 // requests.
@@ -98,7 +98,7 @@ export type EncounterPayload = {
   contactId?: string;
   exchangeId?: string;
   campaignId?: string;
-  /** The event this meeting happened at, if any — see events-api.ts. Optional context, never required. */
+  /** The event this meeting happened at, if any - see events-api.ts. Optional context, never required. */
   eventId?: string;
   startedAt: string;
   endedAt: string;
@@ -669,7 +669,7 @@ export async function saveEncounter(
       contactId: encounter.contactId ?? null,
       exchangeId: encounter.exchangeId ?? null,
       campaignId: encounter.campaignId ?? null,
-      // Omitted (not `?? null`) when unset — see lib/encounters.ts on the
+      // Omitted (not `?? null`) when unset - see lib/encounters.ts on the
       // server for why: this must NOT clear a passively-attached event on a
       // routine re-save that has no opinion about it. `eventId: ''` (the
       // correction flow's "No event") is a real value and is still sent.

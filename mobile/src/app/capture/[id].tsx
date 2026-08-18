@@ -165,7 +165,7 @@ export default function CaptureDetailScreen() {
         // A recording that skipped AI summarization earlier (see
         // capture/new.tsx) can reach this review screen with an empty
         // sharedSummary and no explanation. Generate a real summary from the
-        // saved transcript rather than leaving the field blank — raw
+        // saved transcript rather than leaving the field blank - raw
         // transcript text is only used as a last resort if this call fails.
         const cleanTranscript = normalizeTranscriptForExtraction(nextEncounter.transcript.trim());
         if (!nextEncounter.sharedSummary.trim() && cleanTranscript) {
@@ -242,7 +242,7 @@ export default function CaptureDetailScreen() {
    * Saves with optimistic-concurrency protection: if this encounter changed
    * on another device since it was loaded here, the server rejects the
    * write (409) instead of silently overwriting it. On conflict, the server
-   * record wins — reload it and surface a clear, recoverable message rather
+   * record wins - reload it and surface a clear, recoverable message rather
    * than losing either device's edit silently.
    */
   async function saveWithConflictGuard(next: EncounterPayload): Promise<EncounterPayload | null> {
@@ -250,7 +250,7 @@ export default function CaptureDetailScreen() {
     try {
       const result = await saveEncounter(session.access_token, next, { expectedUpdatedAt: encounter?.updatedAt });
       // Picks up the server's passive-presence guess on first save (see
-      // resolveCurrentEventIdForUser) without a separate refetch — next.eventId
+      // resolveCurrentEventIdForUser) without a separate refetch - next.eventId
       // stays authoritative whenever the client sent an explicit opinion.
       const saved = {
         ...next,
@@ -345,7 +345,7 @@ export default function CaptureDetailScreen() {
   }
 
   // A still-proposed action is awaiting review confirmation and cannot jump
-  // straight to completed — it has to be activated (open) first, same as
+  // straight to completed - it has to be activated (open) first, same as
   // the server-side transition table enforces.
   function canToggleAction(status: EncounterPayload['actions'][number]['status']) {
     return status !== 'proposed';

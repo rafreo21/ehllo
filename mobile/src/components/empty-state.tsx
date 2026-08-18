@@ -12,7 +12,7 @@ type EmptyStateProps = {
   copy?: string;
   onPress?: () => void;
   bordered?: boolean;
-  /** Renders as an explicit button below the copy instead of making the whole card tappable — use for gates like "Sign in to see X" rather than plain "tap card to do X" empty states. */
+  /** Renders as an explicit button below the copy instead of making the whole card tappable - use for gates like "Sign in to see X" rather than plain "tap card to do X" empty states. */
   primaryLabel?: string;
   onPrimary?: () => void;
   secondaryLabel?: string;

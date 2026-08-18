@@ -20,7 +20,7 @@ export async function flushPendingTranscriptions(accessToken: string): Promise<v
   if (!isOnline()) return;
 
   // The `hasLocalAudio && short transcript` heuristic is the authoritative
-  // filter here, not `transcriptPending` alone — if the app is killed in the
+  // filter here, not `transcriptPending` alone - if the app is killed in the
   // narrow window after recordingUri is persisted but before the failure is
   // even caught, transcriptPending never gets set. This self-heals that gap.
   const candidates = await listPendingTranscriptionDrafts();

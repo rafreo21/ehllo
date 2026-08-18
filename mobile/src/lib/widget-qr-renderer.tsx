@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
-// react-native-svg's Svg node — enough of its surface for our toDataURL call.
+// react-native-svg's Svg node - enough of its surface for our toDataURL call.
 type SvgRef = { toDataURL: (callback: (base64: string) => void) => void };
 
 type QueueItem = {
@@ -19,7 +19,7 @@ let notify: (() => void) | null = null;
 
 /**
  * The `qrcode` npm package's toDataURL resolves to a canvas-based renderer
- * that doesn't exist in Hermes/React Native — it throws silently there. This
+ * that doesn't exist in Hermes/React Native - it throws silently there. This
  * renders QR PNGs through react-native-svg's real native rasterizer instead
  * (the same one react-native-qrcode-svg uses on-screen), off-screen.
  * Requires <WidgetQrRenderer /> to be mounted once, e.g. in the root layout.
@@ -66,7 +66,7 @@ export function WidgetQrRenderer() {
     // renderer instead sits at normal (0,0) and hides via opacity + a 1x1
     // clipped container, so it always goes through a real layout/paint pass.
     // A single requestAnimationFrame isn't reliably enough time for a freshly
-    // mounted/changed 512x512 QR matrix to finish native layout — wait two.
+    // mounted/changed 512x512 QR matrix to finish native layout - wait two.
     const raf1 = requestAnimationFrame(() => {
       raf2 = requestAnimationFrame(() => {
         svgRef.current?.toDataURL((base64: string) => {
@@ -80,7 +80,7 @@ export function WidgetQrRenderer() {
     });
 
     // Safety net: never let a stuck native rasterization hang the caller
-    // forever — reject after a generous timeout so syncAllWidgets can still
+    // forever - reject after a generous timeout so syncAllWidgets can still
     // finish (without a QR image) instead of silently stalling indefinitely.
     const timeout = setTimeout(() => {
       if (cancelled) return;

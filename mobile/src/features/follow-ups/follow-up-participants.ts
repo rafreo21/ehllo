@@ -23,7 +23,7 @@ export function participantKey(name: string, email: string) {
  * Prefers the canonical `encounter_participants` list (carried on each
  * FollowUpItem since every action for an encounter embeds the same list).
  * Falls back to reconstructing from open actions only for encounters
- * captured before participants existed as a first-class table — that
+ * captured before participants existed as a first-class table - that
  * fallback loses a person once their last action completes, which the
  * canonical path fixes.
  */

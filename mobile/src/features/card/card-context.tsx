@@ -188,7 +188,7 @@ export function CardProvider({ children }: PropsWithChildren) {
       return responsePayload?.card ? libraryPayloadToMobileCard(responsePayload.card) : payload;
     }
 
-    // Captured from the original argument, before any server round-trip —
+    // Captured from the original argument, before any server round-trip -
     // the server can't read a device-local file://content:// URI and blanks
     // any image field it doesn't recognize (see resolveCardImageForPublish
     // in lib/card-assets.ts), so persistPayload's response below is not a
@@ -235,7 +235,7 @@ export function CardProvider({ children }: PropsWithChildren) {
             await dequeueCardDelete(entry.cardId);
             await clearSyncFailure(syncFailureKey.cardDelete(entry.cardId));
           } catch (caught) {
-            // Offline or the request failed — stays queued for the next foreground sync.
+            // Offline or the request failed - stays queued for the next foreground sync.
             await recordSyncFailure(syncFailureKey.cardDelete(entry.cardId), caught);
           }
         }
@@ -261,7 +261,7 @@ export function CardProvider({ children }: PropsWithChildren) {
       }
 
       // Re-check session right before this call (not just at the top of sync)
-      // — a sign-out or a sign-in-in-progress token swap between here and the
+      // - a sign-out or a sign-in-in-progress token swap between here and the
       // dirty-card reconciliation above would otherwise fire this RPC with a
       // stale/missing session, which fails as a permission error since anon
       // has no grant on it.
@@ -295,7 +295,7 @@ export function CardProvider({ children }: PropsWithChildren) {
         const nextActiveId = remotePrimary?.id || getActiveCardId(remoteCards, activeCardIdRef.current);
         await persistCards(remoteCards, nextActiveId);
         if (!remotePrimary && nextActiveId) {
-          // Pre-migration workspace with no server-side primary yet — adopt this
+          // Pre-migration workspace with no server-side primary yet - adopt this
           // device's current pick as the canonical one so other devices see it.
           try {
             await supabase.rpc('set_primary_card', { p_card_id: nextActiveId });
@@ -496,7 +496,7 @@ export function CardProvider({ children }: PropsWithChildren) {
         archived = true;
         await clearSyncFailure(syncFailureKey.cardDelete(id));
       } catch (caught) {
-        // Offline or the request failed — queue it and retry on the next foreground sync
+        // Offline or the request failed - queue it and retry on the next foreground sync
         // instead of blocking the local delete on connectivity.
         await recordSyncFailure(syncFailureKey.cardDelete(id), caught);
       }
@@ -504,7 +504,7 @@ export function CardProvider({ children }: PropsWithChildren) {
     if (archived) {
       await dequeueCardDelete(id);
     } else if (session) {
-      // No session means this card never had a server copy to begin with —
+      // No session means this card never had a server copy to begin with -
       // nothing to queue. With a session, the archive above failed or was
       // skipped for connectivity, so remember to retry it later.
       await enqueueCardDelete({ cardId: id, cardLabel: target.label || target.name || 'Untitled card' });

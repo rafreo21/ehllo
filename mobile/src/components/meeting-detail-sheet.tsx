@@ -17,7 +17,7 @@ type MeetingDetailSheetProps = {
   encounter: EncounterPayload | null;
   recordingUri?: string | null;
   followUps: FollowUpItem[];
-  /** The linked event's title, if any — event is an activator here: with nothing linked, the meta row is unchanged. */
+  /** The linked event's title, if any - event is an activator here: with nothing linked, the meta row is unchanged. */
   eventTitle?: string;
   eventLocation?: string;
   onClose: () => void;

@@ -26,7 +26,7 @@ export const FOLLOW_UP_CHANNELS: { id: FollowUpChannel; label: string }[] = [
 /**
  * "Other" stays a valid stored value (existing records use it, and the
  * server-side channel set still accepts it) but is no longer offered as a
- * new choice — picking a specific channel is what used to double as picking
+ * new choice - picking a specific channel is what used to double as picking
  * a template, so an intentionally vague option adds confusion, not coverage.
  */
 export const SELECTABLE_FOLLOW_UP_CHANNELS = FOLLOW_UP_CHANNELS.filter((channel) => channel.id !== 'other');

@@ -2,7 +2,7 @@
 // vinext's Vercel build bundles app routes via Vite/Rolldown into the
 // function's _ssr/*.mjs chunks; Nitro's own file-trace step never analyzes
 // those (it only traces its own runtime/_libs graph), so native packages
-// referenced only from those chunks — sharp, @resvg/resvg-js — never land
+// referenced only from those chunks - sharp, @resvg/resvg-js - never land
 // in the deployed function's node_modules despite being marked `external`,
 // causing "Cannot find package 'sharp'" at runtime. Trace and copy them by
 // hand, using @vercel/nft so the real dependency graph (including whichever
@@ -19,7 +19,7 @@ const rootDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 const functionDir = join(rootDir, ".vercel/output/functions/__server.func");
 
 if (!existsSync(functionDir)) {
-  console.log("No Vercel function output at .vercel/output — skipping native dep copy.");
+  console.log("No Vercel function output at .vercel/output - skipping native dep copy.");
   process.exit(0);
 }
 

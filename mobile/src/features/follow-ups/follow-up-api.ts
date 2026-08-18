@@ -30,7 +30,7 @@ export type FollowUpItem = {
   startedAt: string;
   contactMethods: ContactMethod[];
   eventId?: string;
-  /** The linked event's title, if any — event is an activator: absent means nothing about the follow-up's copy changes. */
+  /** The linked event's title, if any - event is an activator: absent means nothing about the follow-up's copy changes. */
   eventTitle?: string;
 };
 

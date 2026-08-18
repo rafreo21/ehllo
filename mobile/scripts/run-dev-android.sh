@@ -22,7 +22,7 @@ if adb devices | grep -v '^List' | grep -q 'device$'; then
   adb reverse "tcp:$METRO_PORT" "tcp:$METRO_PORT"
 else
   echo ""
-  echo "No USB device yet — Metro will still start."
+  echo "No USB device yet - Metro will still start."
   echo "When the phone is plugged in, run:  npm run android:dev:connect"
   lan_ip="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
   if [[ -n "$lan_ip" ]]; then

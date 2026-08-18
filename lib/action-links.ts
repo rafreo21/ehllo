@@ -135,7 +135,7 @@ function gmailComposeLink(to: string, subject: string, body: string) {
 
 export function buildRequestEmailLink(context: ActionLinkContext, channel: EncounterAction["channel"]): string {
   const label = channelLabel(channel);
-  const subject = `Quick ask — your ${label}`;
+  const subject = `Quick ask - your ${label}`;
   const body = `Hi ${context.personName || "there"},\n\nCould you share your ${label} so I can follow up there?\n\nThanks!`;
   return gmailComposeLink(context.personEmail, subject, body);
 }

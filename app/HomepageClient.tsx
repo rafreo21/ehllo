@@ -39,7 +39,7 @@ export default function HomepageClient({ includeDraftReviewLink = false }: Homep
     <section className="study section draft-reveal" id="lifecycle">
       <div className="section-label">01 / From meeting to next move</div>
       <div className="draft-story-grid">
-        <div><h2>One conversation.<br/><em>A relationship remembered.</em></h2><p className="lede">ehllo turns the moment you meet into context you can use—without turning the conversation into CRM admin.</p></div>
+        <div><h2>One conversation.<br/><em>A relationship remembered.</em></h2><p className="lede">ehllo turns the moment you meet into context you can use-without turning the conversation into CRM admin.</p></div>
         <LifecycleDemo/>
       </div>
       <div className="draft-path" aria-label="Meeting to next move lifecycle">{["Meeting", "Encounter", "Person", "Context", "Next move"].map((item, index) => <div className="draft-reveal-item" style={{transitionDelay: `${index * 70}ms`}} key={item}><span>0{index + 1}</span><strong>{item}</strong>{index < 4 && <ArrowRightIcon size={15}/>}</div>)}</div>

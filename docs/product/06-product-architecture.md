@@ -271,17 +271,17 @@ An implementation may use append-only timeline-event records for performance or 
 
 Proposed route contract:
 
-- `/app` — Home
-- `/app/people` — People
-- `/app/people/:personId` — Person
-- Global Capture overlay — primary Capture Encounter experience
-- `/app/capture` — deep-link, recovery, and full-page fallback
-- `/app/inbox` — Inbox
-- `/app/card` — My Card
-- `/p/:cardSlug` — Public Card
-- `/p/:cardSlug/connect` — Return details
-- `/app/reviews/:reviewId` — AI Review
-- `/app/settings` — Settings
+- `/app` - Home
+- `/app/people` - People
+- `/app/people/:personId` - Person
+- Global Capture overlay - primary Capture Encounter experience
+- `/app/capture` - deep-link, recovery, and full-page fallback
+- `/app/inbox` - Inbox
+- `/app/card` - My Card
+- `/p/:cardSlug` - Public Card
+- `/p/:cardSlug/connect` - Return details
+- `/app/reviews/:reviewId` - AI Review
+- `/app/settings` - Settings
 
 Routes describe user intent. The eventual database identifiers and public slug policy remain implementation decisions.
 

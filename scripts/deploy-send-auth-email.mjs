@@ -43,7 +43,7 @@ async function main() {
   });
 
   // A project that has never had this function deployed has nothing to PATCH
-  // onto — creating it goes through the collection endpoint instead.
+  // onto - creating it goes through the collection endpoint instead.
   if (response.status === 404) {
     response = await fetch(`https://api.supabase.com/v1/projects/${PROJECT_REF}/functions`, {
       method: "POST",

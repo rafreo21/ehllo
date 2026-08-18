@@ -46,7 +46,7 @@ const EARLY_CHECK_IN_GRACE_MS = 60 * 60 * 1000;
  * Whether "I'm here" should be offered yet. Deliberately wider than
  * isEventCurrentlyHappening: arriving before the scheduled start is normal at
  * a conference, and the button has to exist before you can press it. Checking
- * in is what then opens the attribution window early — see resolveCurrentEvent.
+ * in is what then opens the attribution window early - see resolveCurrentEvent.
  */
 export function canCheckInToEvent(event: EventItem, now = new Date()): boolean {
   if (event.status === 'cancelled' || event.attendanceStatus === 'not_going') return false;
@@ -99,7 +99,7 @@ export function canRejoinEvent(event: EventItem, now = new Date()): boolean {
  *
  * Upcoming stays strictly "going, not finished". Past holds the rest, but as
  * named groups rather than one undifferentiated pile, because a declined
- * event next Thursday has not happened — filing it under a flat "Past" would
+ * event next Thursday has not happened - filing it under a flat "Past" would
  * make the product state something untrue, and it is exactly the row a user
  * needs to find when they change their mind.
  *
@@ -147,12 +147,12 @@ export type HomeEventCardState =
   | { type: 'candidate'; event: EventItem };
 
 /**
- * Picks the single most relevant thing for Home to show — never more than
+ * Picks the single most relevant thing for Home to show - never more than
  * one card, per the "Home stays quiet unless something's actually
  * relevant" design. Priority: an event happening right now beats an
  * upcoming going-event beats an undecided calendar candidate. When more
  * than one going-event is happening right now (an overlap), the one that
- * started most recently wins — same tie-break as the server's
+ * started most recently wins - same tie-break as the server's
  * resolveCurrentEvent, so Home always agrees with what a captured
  * encounter actually gets tagged to.
  */

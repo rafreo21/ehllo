@@ -45,7 +45,7 @@ export function parseLinkedInOpenGraphTitle(title: string) {
   const cleaned = title.replace(/\s*\|\s*LinkedIn\s*$/i, "").trim();
   if (!cleaned || /^(sign in|log in|join linkedin|linkedin)$/i.test(cleaned)) return null;
 
-  const segments = cleaned.split(/\s+[-–—]\s+/);
+  const segments = cleaned.split(/\s+[-–-]\s+/);
   const namePart = segments[0]?.trim() ?? cleaned;
   const headline = segments.slice(1).join(" - ").trim();
   const { firstName, lastName } = splitFullName(namePart);

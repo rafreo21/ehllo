@@ -25,7 +25,7 @@ const POSTGRES_UNIQUE_VIOLATION = "23505";
  * Inserts a notification, relying on the (user_id, dedupe_key) unique
  * constraint to make creation at-most-once per event. Works with either the
  * per-request RLS-scoped client (self-triggered events) or the service-role
- * client (cron and guest-triggered events) — both simply insert a row.
+ * client (cron and guest-triggered events) - both simply insert a row.
  */
 export async function createNotification(
   supabase: SupabaseClient,
@@ -57,7 +57,7 @@ export async function createNotification(
 }
 
 /**
- * A missing key means the type has never been explicitly disabled — every
+ * A missing key means the type has never been explicitly disabled - every
  * notification type defaults to enabled so preferences never need a
  * migration when a new type is added.
  */

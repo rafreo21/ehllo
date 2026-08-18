@@ -10,7 +10,7 @@ const POLL_MS = 30_000;
 
 // Pushes this device's own pending count (so other devices can see it) and
 // reads back the aggregate from every other device on the account. A
-// device only ever reports its own count and reads a sum — the actual
+// device only ever reports its own count and reads a sum - the actual
 // pending items themselves never leave the device they're queued on.
 export function useOtherDevicesPendingCount(myPendingCount: number) {
   const { session } = useAuth();
@@ -30,7 +30,7 @@ export function useOtherDevicesPendingCount(myPendingCount: number) {
         const count = await readOtherDevicesPendingCount(supabase);
         if (active) setOtherCount(count);
       } catch {
-        // Best-effort status ping — never worth surfacing an error for.
+        // Best-effort status ping - never worth surfacing an error for.
       }
     }
 

@@ -56,7 +56,7 @@ export function canTransitionFollowUp(from: FollowUpStatus, to: FollowUpStatus) 
 /**
  * A proposed follow-up only activates once its encounter's review is
  * confirmed (encounterStatus leaves "draft"). That bulk activation happens
- * in the encounter save route, not here — so this route must refuse to
+ * in the encounter save route, not here - so this route must refuse to
  * touch a still-proposed action while the parent encounter is still a
  * draft, even though "proposed" -> "open" is otherwise a valid transition.
  */

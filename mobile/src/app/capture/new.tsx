@@ -422,7 +422,7 @@ export default function CaptureWizardScreen() {
       setGenerationStatus('error');
       setGenerationError(message);
       showCaptureError(message);
-      // AI summarization genuinely failed (network/API error) — fall back to
+      // AI summarization genuinely failed (network/API error) - fall back to
       // the raw transcript rather than leaving the summary blank, but only
       // as a last resort here, not as the default path for short transcripts.
       setDraft((current) => current.sharedSummary.trim() ? current : { ...current, sharedSummary: clean });
@@ -434,7 +434,7 @@ export default function CaptureWizardScreen() {
   const handleTranscriptFinalized = useCallback((transcriptValue: string) => {
     const clean = normalizeTranscriptForExtraction(transcriptValue.trim());
     if (!clean) return;
-    // Any real transcript content — even a short one — goes through actual
+    // Any real transcript content - even a short one - goes through actual
     // AI summarization rather than a raw-text passthrough, so the share
     // summary reads like a real summary instead of a transcript dump.
     // generateMeetingContext only falls back to the raw transcript itself
@@ -515,13 +515,13 @@ export default function CaptureWizardScreen() {
   }, [draftReady, isTranscribing, recorder.recordingState, recorder.recordingUri, updateDraft]);
 
   // serverTranscribePhase/serverTranscribeError are hook-local React state
-  // only — without this, a killed-and-reopened app has no memory that a
+  // only - without this, a killed-and-reopened app has no memory that a
   // recording's transcription needs retrying.
   useEffect(() => {
     if (!draftReady) return;
     if (recorder.serverTranscribePhase === 'failed') {
       // Persisting hook-local transcription state to the draft's external
-      // storage — a legitimate effect, not derivable-during-render state.
+      // storage - a legitimate effect, not derivable-during-render state.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       updateDraft({
         transcriptPending: true,
@@ -553,7 +553,7 @@ export default function CaptureWizardScreen() {
       try {
         await recorder.stopRecording();
       } catch {
-        // Best-effort: still safe to leave — the native service keeps the
+        // Best-effort: still safe to leave - the native service keeps the
         // audio file either way, and the draft is saved locally below.
       }
     }
@@ -573,7 +573,7 @@ export default function CaptureWizardScreen() {
     else router.replace('/capture');
   }, [captureHasProgress, recorder]);
 
-  // Recording keeps going in the background once you navigate away — the
+  // Recording keeps going in the background once you navigate away - the
   // persistent notification (Android) and the floating ActiveCaptureBanner
   // (both platforms) already track it and let you stop from anywhere or
   // come back here later. Leaving this screen must not stop the recording
@@ -634,11 +634,11 @@ export default function CaptureWizardScreen() {
     void (async () => {
       try {
         // A specific draftId means a draft was just written by the caller
-        // (e.g. beginFreshCapture) moments before navigating here — it must
+        // (e.g. beginFreshCapture) moments before navigating here - it must
         // exist. Racing that read against a timeout and silently minting a
         // fresh encounterId on a loss orphaned the real draft and created a
         // second, duplicate "in progress" entry. Only the callerless
-        // fallback path (no draftId — recovering "whatever was last open")
+        // fallback path (no draftId - recovering "whatever was last open")
         // is safe to give up on after a timeout.
         const stored = params.draftId
           ? await readCaptureDraft(String(params.draftId))
@@ -940,7 +940,7 @@ export default function CaptureWizardScreen() {
     }
     // Stop the recorder before gating on people, not after. Recording must
     // actually stop the moment the user asks to finish, regardless of
-    // whether the people list is valid yet — otherwise the mic keeps
+    // whether the people list is valid yet - otherwise the mic keeps
     // running in the background while they add someone, activeRecording
     // stays true, and the "Recording in progress" leave-guard keeps firing
     // even though the user already asked to stop and is just filling in
@@ -960,7 +960,7 @@ export default function CaptureWizardScreen() {
 
   // Stopping from the floating banner (or the capture list's active-capture
   // card) navigates here with autoFinish=1 instead of calling
-  // recorder.stopRecording directly — this makes "stop from anywhere" run
+  // recorder.stopRecording directly - this makes "stop from anywhere" run
   // the exact same validate-then-advance path as tapping "End recording" in
   // the wizard, so the user lands in review instead of a stranded step-0
   // draft. If people haven't been gathered yet, continueFromInteraction
@@ -971,7 +971,7 @@ export default function CaptureWizardScreen() {
     if (params.autoFinish !== '1') return;
     autoFinishRef.current = true;
     // continueFromInteraction can call setState synchronously in its first
-    // branch (showCaptureError) before its first await — deferring outside
+    // branch (showCaptureError) before its first await - deferring outside
     // this effect's commit phase avoids the cascading-render lint error and
     // matches React's guidance for effects that trigger state updates.
     const timer = setTimeout(() => {
@@ -1026,7 +1026,7 @@ export default function CaptureWizardScreen() {
     }
 
     if (!isOnline()) {
-      // The draft is already saved continuously as it's edited — the only
+      // The draft is already saved continuously as it's edited - the only
       // thing this step needs a network for is the server-side commit.
       // Skip it and send the user back to the list, where this draft
       // already shows as ready to review; they can retry once back online.
@@ -1040,7 +1040,7 @@ export default function CaptureWizardScreen() {
       let recording = await readLocalRecordingMetadata(draft.encounterId);
       let recordingUri = draft.recordingUri || recorder.recordingUri;
       // An interruption (or a deliberate resume) can leave prior takes
-      // archived as separate files — combine them into one before this
+      // archived as separate files - combine them into one before this
       // capture is saved, so upload/playback never has to know it happened.
       const priorSegments = draft.recordingSegments.length ? draft.recordingSegments : recorder.recordingSegments;
       if (recordingUri && priorSegments.length) {

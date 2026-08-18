@@ -76,7 +76,7 @@ const phases: Phase[] = [
       { id: "flow", title: "Design the end-to-end clickable flow", detail: "Card → return details → meeting note → AI extraction → reviewed follow-up.", priority: "Critical" },
       { id: "test-five", title: "Usability-test with five target users", detail: "Observe without coaching; record where users hesitate or misunderstand.", priority: "Critical" },
       { id: "concierge", title: "Launch a five-user concierge pilot", detail: "Manually help process notes and drafts while measuring real follow-through.", priority: "Critical", gate: true },
-      { id: "two-weeks", title: "Run the pilot for two full weeks", detail: "The behavior must repeat across multiple meetings—not just during onboarding.", priority: "Critical" },
+      { id: "two-weeks", title: "Run the pilot for two full weeks", detail: "The behavior must repeat across multiple meetings-not just during onboarding.", priority: "Critical" },
       { id: "charge", title: "Ask pilot users to pay", detail: "A small real payment is stronger evidence than positive feedback.", priority: "Critical" },
       { id: "decision", title: "Make a build / revise / stop decision", detail: "Use observed behavior and payment, not enthusiasm alone.", priority: "Critical", gate: true },
     ],
@@ -86,7 +86,7 @@ const phases: Phase[] = [
     number: "04",
     emoji: "✂️",
     title: "MVP scope",
-    subtitle: "Define the smallest complete product—not a feature collection.",
+    subtitle: "Define the smallest complete product-not a feature collection.",
     items: [
       { id: "stories", title: "Write MVP user stories and acceptance criteria", detail: "Cover onboarding, sharing, capture, context, draft review, reminders, and deletion.", priority: "Critical" },
       { id: "card", title: "Public profile card, QR, and vCard", detail: "Mobile-first, accessible, fast, and usable without a recipient account.", priority: "Critical" },
@@ -390,7 +390,7 @@ export default function HubPage() {
                     <section className="foundation-summary" aria-labelledby="foundation-summary-title">
                       <div className="foundation-summary-head">
                         <span>Working foundation</span>
-                        <h4 id="foundation-summary-title">Who ehllo is for—and the outcome it owns.</h4>
+                        <h4 id="foundation-summary-title">Who ehllo is for-and the outcome it owns.</h4>
                       </div>
                       <dl>
                         <div><dt>Initial segment</dt><dd>Independent consultants and fractional professionals with frequent external meetings and relationship-driven revenue.</dd></div>
@@ -451,7 +451,7 @@ export default function HubPage() {
         <div className="gate-grid">
           <p><strong>01</strong> One segment repeatedly describes the same painful workflow.</p>
           <p><strong>02</strong> At least three pilot users log multiple real meetings for two weeks.</p>
-          <p><strong>03</strong> Users complete follow-ups—not merely generate drafts.</p>
+          <p><strong>03</strong> Users complete follow-ups-not merely generate drafts.</p>
           <p><strong>04</strong> At least some pilot users agree to pay for continued use.</p>
         </div>
       </section>

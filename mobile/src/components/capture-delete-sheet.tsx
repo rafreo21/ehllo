@@ -14,7 +14,7 @@ type CaptureDeleteSheetProps = {
   // Everything below defaults to the original "delete a saved capture"
   // wording so the existing call site is unaffected. The discard-draft
   // confirmation (capture/index.tsx) overrides these to reuse this same
-  // sheet — same warning animation, same Keep/Confirm button pair — with
+  // sheet - same warning animation, same Keep/Confirm button pair - with
   // copy that fits discarding an in-progress, unsaved draft instead.
   heading?: string;
   cancelLabel?: string;

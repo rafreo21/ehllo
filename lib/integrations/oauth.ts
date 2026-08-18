@@ -32,7 +32,7 @@ export function googleAuthorizeUrl(requestUrl: string, state: string, loginHint?
     prompt: "select_account consent",
     state,
   });
-  // Pre-selects the account tied to this ehllo login — the user can still
+  // Pre-selects the account tied to this ehllo login - the user can still
   // pick a different Google account via the chooser, but this saves them
   // from Google silently defaulting to whichever account the device's
   // browser last used, which may not be the one they meant to connect.

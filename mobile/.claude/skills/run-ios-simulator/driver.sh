@@ -53,7 +53,7 @@ cmd_run() {
   local udid
   udid="$(cmd_boot "$name")"
   cd "$MOBILE_DIR"
-  # ios/ reflects whichever variant it was last prebuilt for — the bundle ID
+  # ios/ reflects whichever variant it was last prebuilt for - the bundle ID
   # is baked into Info.plist, so switching variants needs a clean prebuild.
   local variant_marker="$MOBILE_DIR/ios/.variant-configured"
   if [ ! -f "$variant_marker" ] || [ "$(cat "$variant_marker" 2>/dev/null)" != "$APP_VARIANT" ]; then

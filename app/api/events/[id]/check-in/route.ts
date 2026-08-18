@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createApiSupabaseClient, resolveApiUser } from "../../../../../lib/auth/api-request";
 
 /**
- * "I'm here" — the user confirming which event they are physically at.
+ * "I'm here" - the user confirming which event they are physically at.
  *
  * Presence was previously inferred from the clock alone, and when two RSVPs
  * overlapped the event that started most recently won. That decision drives
@@ -14,7 +14,7 @@ import { createApiSupabaseClient, resolveApiUser } from "../../../../../lib/auth
  *
  * You can only be in one place, so checking in anywhere clears every other
  * open check-in for this user. `checkedIn: false` withdraws it without
- * claiming you have left the event entirely — that is what left_at is for,
+ * claiming you have left the event entirely - that is what left_at is for,
  * and it stays independent.
  */
 export async function POST(
@@ -63,7 +63,7 @@ export async function POST(
     .from("event_attendance")
     .update({
       checked_in_at: checkingIn ? now : null,
-      // Arriving supersedes a previous "I've left" for the same event — coming
+      // Arriving supersedes a previous "I've left" for the same event - coming
       // back should not require undoing that separately.
       ...(checkingIn ? { left_at: null } : {}),
       updated_at: now,

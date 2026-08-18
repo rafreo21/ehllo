@@ -86,7 +86,7 @@ export function buildTailoredRequestEmail(input: {
   methodType: MissingMethodType;
   followUpTitle?: string;
   followUpChannel?: string;
-  /** The linked event's title, if any — event is an activator: omit it and the opener is unchanged. */
+  /** The linked event's title, if any - event is an activator: omit it and the opener is unchanged. */
   eventTitle?: string;
 }) {
   const greeting = input.personName.trim()

@@ -1,7 +1,7 @@
 begin;
 
 -- Delivery tracking for the server-side Expo push dispatcher. No secrets are
--- stored here — only Expo's own ticket status/error code and a timestamp,
+-- stored here - only Expo's own ticket status/error code and a timestamp,
 -- enough to debug "why didn't this device get a push" without exposing
 -- anything sensitive.
 alter table public.push_tokens

@@ -8,7 +8,7 @@ import { getSupabase } from '@/lib/supabase';
 import { colors, spacing, fonts } from '@/theme/tokens';
 
 export default function AuthCallbackScreen() {
-  // useLocalSearchParams only sees query params, not a #fragment — Google's
+  // useLocalSearchParams only sees query params, not a #fragment - Google's
   // redirect lands with tokens in the fragment (see auth-session-url.ts), so
   // this needs the raw incoming URL, not expo-router's parsed params.
   const url = Linking.useLinkingURL();

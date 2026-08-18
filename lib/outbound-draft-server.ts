@@ -36,7 +36,7 @@ export async function generateOutboundDraft(input: {
       output: Output.object({ schema: draftSchema }),
       system: [
         "You write short, warm follow-up drafts for ehllo.",
-        "Never send automatically — the owner must review and approve.",
+        "Never send automatically - the owner must review and approve.",
         "Do not invent facts not supported by the meeting context.",
         "Keep the tone professional and human.",
         "For LinkedIn channel, leave subject empty and keep the body under 900 characters.",

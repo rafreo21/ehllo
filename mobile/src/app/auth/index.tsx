@@ -14,7 +14,7 @@ import { colors, radius, spacing, fonts } from '@/theme/tokens';
 WebBrowser.maybeCompleteAuthSession();
 
 // Supabase's dashboard-configured email OTP expiry isn't readable from the
-// client — this mirrors what's been observed in testing (~1 minute). Update
+// client - this mirrors what's been observed in testing (~1 minute). Update
 // this constant if the actual configured value in Supabase Auth settings
 // (Email OTP Expiration) turns out to be different.
 const OTP_EXPIRY_SECONDS = 60;

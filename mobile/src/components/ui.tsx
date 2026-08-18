@@ -109,7 +109,7 @@ export function ScreenFrame({
 }
 
 /**
- * The selectable pill used for a small set of mutually exclusive choices —
+ * The selectable pill used for a small set of mutually exclusive choices -
  * the Owner selector in Add follow-up, and the Events filter. Same shape and
  * states in both so a pill always means "pick one of these".
  */

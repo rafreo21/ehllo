@@ -30,7 +30,7 @@ export type ActionContactContext = {
   userName?: string;
   audienceParticipants?: FollowUpParticipant[];
   audienceMode?: 'group' | 'individual';
-  /** The linked event's title, if any — event is an activator: when unset, the email opener is unchanged. */
+  /** The linked event's title, if any - event is an activator: when unset, the email opener is unchanged. */
   eventTitle?: string;
 };
 
@@ -182,7 +182,7 @@ export async function openMeetingCompose(
       : [];
 
   // The system's generic "insert event" intent can't carry attendee emails,
-  // so only take this fast path when there's nobody to prefill as a guest —
+  // so only take this fast path when there's nobody to prefill as a guest -
   // otherwise fall through to meetingActionCandidates, which knows how to
   // reach attendee-aware candidates first.
   if (Platform.OS === 'android' && attendeeEmails.length === 0) {

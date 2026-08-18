@@ -23,7 +23,7 @@ export type CardVcardInput = {
   methods: CardVcardMethod[];
   showCompanyDetails?: boolean;
   scannedAt?: Date;
-  /** The card owner's currently-happening event, if any — an activator: omit it and the note is unchanged. */
+  /** The card owner's currently-happening event, if any - an activator: omit it and the note is unchanged. */
   eventTitle?: string | null;
   profilePhoto?: VcardEmbeddedImage | null;
   companyLogoPhoto?: VcardEmbeddedImage | null;
@@ -310,7 +310,7 @@ export function foldVcardLine(line: string) {
 function appendEmbeddedImage(lines: string[], property: string, image: VcardEmbeddedImage) {
   const type = vcardImageType(image.mimeType);
   // RFC 2426 defines only "b" (RFC 2047 shorthand) as a valid ENCODING value for
-  // vCard 3.0 — "ENCODING=BASE64" is not spec-valid syntax at all, which is why it
+  // vCard 3.0 - "ENCODING=BASE64" is not spec-valid syntax at all, which is why it
   // silently failed to decode on iOS Contacts.
   lines.push(foldVcardLine(`${property};ENCODING=b;TYPE=${type}:${image.base64}`));
 }
@@ -355,7 +355,7 @@ export async function fetchVcardImage(url: string): Promise<VcardEmbeddedImage |
 
     // Re-encode through sharp: strips EXIF/ICC-profile metadata and any orientation
     // flag, and forces a plain baseline sRGB JPEG. iOS Contacts' PHOTO decoder has been
-    // seen to silently drop images it can't handle (no error, just no photo shown) —
+    // seen to silently drop images it can't handle (no error, just no photo shown) -
     // camera-original files carry metadata a stricter embedded decoder may choke on.
     const sharp = await loadSharp();
     const normalized = await sharp(buffer)

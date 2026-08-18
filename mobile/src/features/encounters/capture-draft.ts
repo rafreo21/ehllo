@@ -36,7 +36,7 @@ export type CaptureWizardDraft = {
   durationSeconds: number;
   recordingUri: string;
   /**
-   * Prior takes from before an interruption forced a new file — `recordingUri`
+   * Prior takes from before an interruption forced a new file - `recordingUri`
    * is always the latest/current segment. Stitched into one file at save
    * time (see audio-segment-stitch.ts) so upload/playback code downstream
    * never needs to know a recording was ever split.
@@ -377,7 +377,7 @@ export function captureDraftToRemote(
 /**
  * A draft can end up stuck showing `sessionStatus: 'recording'|'paused'`
  * with no in-memory session actually backing it (app was killed, or the
- * interruption watchdog never got a chance to run) — the persisted status
+ * interruption watchdog never got a chance to run) - the persisted status
  * never got a chance to reconcile. Left as-is, it looks like a phantom still
  * -live recording indefinitely. Call this for any draft NOT covered by the
  * live in-memory `activeCaptureController` before treating it as stale.

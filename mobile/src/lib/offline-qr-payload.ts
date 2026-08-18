@@ -18,7 +18,7 @@ export type OfflineQrPayload = {
  * Offline QR still shows the center logo, so never drop below 'Q': at 'L'/'M' the
  * logo's occlusion of the center modules can make the code unscannable. 'Q'/'H'
  * tolerate 25-30% damage, which is safe for a centered logo badge. This does cost
- * some capacity versus 'L' — the tier fallback below (full -> lean -> methods ->
+ * some capacity versus 'L' - the tier fallback below (full -> lean -> methods ->
  * minimal) absorbs that by shrinking content, same as it always has.
  */
 const ECC_LEVELS: QrErrorCorrection[] = ['Q', 'H'];
@@ -80,7 +80,7 @@ export function buildOfflineQrPayload(card: MobileCard, cardUrl: string, eventTi
 /**
  * Best-effort enrichment: try embedding a tiny real thumbnail (instead of just a photo
  * URL) alongside every contact method. Returns null if there's no photo, the download/
- * resize fails, or the result doesn't fit — callers should fall back to `buildOfflineQrPayload`.
+ * resize fails, or the result doesn't fit - callers should fall back to `buildOfflineQrPayload`.
  */
 export async function tryBuildOfflineQrPayloadWithPhoto(
   card: MobileCard,
@@ -93,7 +93,7 @@ export async function tryBuildOfflineQrPayloadWithPhoto(
     return null;
   }
 
-  // Must fit at 'Q' or 'H', same invariant as the logo-bearing tiers above — a
+  // Must fit at 'Q' or 'H', same invariant as the logo-bearing tiers above - a
   // payload that only fits at 'L' would force the logo below its safe ECC budget.
   // buildVcardPhotoThumbnail shrinks the thumbnail across attempts until this passes.
   const embeddedPhoto = await buildVcardPhotoThumbnail(photoUrl, (candidate) => {

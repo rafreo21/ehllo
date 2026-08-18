@@ -19,7 +19,7 @@ export const spacing = { x1: 4, x2: 8, x3: 12, x4: 16, x5: 20, x6: 24, x8: 32 };
 
 /**
  * Airbnb Cereal ships as six separate families rather than one family with
- * weight variants — each .otf declares its own name (AirbnbCereal_W_Bd,
+ * weight variants - each .otf declares its own name (AirbnbCereal_W_Bd,
  * _Bk, _Md …). React Native can only pick a face by family name, so
  * fontWeight cannot select between them and every text style has to name the
  * family it wants. These keys mirror the weights the app already uses.

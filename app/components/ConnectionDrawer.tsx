@@ -109,7 +109,7 @@ export function ConnectionDrawer({
       setLinkCopied(true);
       window.setTimeout(() => setLinkCopied(false), 2000);
     } catch {
-      // Clipboard access can fail (permissions, insecure context) — the
+      // Clipboard access can fail (permissions, insecure context) - the
       // link is still visible/selectable in the modal as a fallback.
     }
   }
@@ -121,7 +121,7 @@ export function ConnectionDrawer({
     [followUps],
   );
   const followUpPreview = useMemo(() => openFollowUps.slice(0, 2), [openFollowUps]);
-  // Quick Follow-up creates a placeholder encounter just to hold its task —
+  // Quick Follow-up creates a placeholder encounter just to hold its task -
   // no conversation happened, so it shouldn't read as a "Meeting" in History.
   const recordedMeetings = useMemo(
     () => meetings.filter((meeting) => (meeting.durationSeconds ?? 0) > 0 || meeting.recording),

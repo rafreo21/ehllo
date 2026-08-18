@@ -11,7 +11,7 @@ function createId() {
   });
 }
 
-// A stable, random per-install identifier — not tied to hardware, just
+// A stable, random per-install identifier - not tied to hardware, just
 // enough to tell "this device" apart from "some other device" for the
 // cross-device pending-sync status ping.
 export async function getDeviceId(): Promise<string> {

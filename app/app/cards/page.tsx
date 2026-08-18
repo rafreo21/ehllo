@@ -617,7 +617,7 @@ function createCard(seed: Partial<LibraryCard> = {}) {
             </div>
             <div className="card-tool-content review-tab-panel" role="tabpanel">
             {shareTool === "qr" ? <section className="card-tool-section card-tool-qr-section">
-            <div className="inline-qr-head"><span><QrCodeIcon size={22} weight="bold" /></span><div><h2 className="qr-scan-title">Let someone scan this card</h2><p>{qrMode === "online" ? "They only need their phone camera. No app or account required." : "Works with no internet — this scans straight into their contacts app."}</p></div></div>
+            <div className="inline-qr-head"><span><QrCodeIcon size={22} weight="bold" /></span><div><h2 className="qr-scan-title">Let someone scan this card</h2><p>{qrMode === "online" ? "They only need their phone camera. No app or account required." : "Works with no internet - this scans straight into their contacts app."}</p></div></div>
             <ol className="scan-steps">
               <li><span>1</span>Open the camera</li>
               <li><span>2</span>Point at the QR</li>

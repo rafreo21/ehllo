@@ -2,7 +2,7 @@ import * as Updates from 'expo-updates';
 import { useEffect } from 'react';
 
 /**
- * Checks for, downloads, and applies a newer OTA update on launch — without
+ * Checks for, downloads, and applies a newer OTA update on launch - without
  * this, expo-updates' default behavior only downloads in the background and
  * needs a second cold start before it's actually running, which reads as
  * "the update never arrived."
@@ -17,7 +17,7 @@ export function AppUpdateManager() {
         await Updates.fetchUpdateAsync();
         await Updates.reloadAsync();
       } catch {
-        // No network, no update server reachable, etc. — keep running the
+        // No network, no update server reachable, etc. - keep running the
         // current bundle rather than blocking startup on this.
       }
     })();

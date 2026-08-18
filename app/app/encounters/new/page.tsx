@@ -83,7 +83,7 @@ type SpeechRecognitionLike = {
   stop: () => void;
 };
 
-// Compressed formats only — raw PCM/WAV hits the shared 25MB Whisper cap
+// Compressed formats only - raw PCM/WAV hits the shared 25MB Whisper cap
 // (lib/encounter-transcription-server.ts) after ~5 minutes of recording.
 const PREFERRED_RECORDING_MIME_TYPES = [
   "audio/webm;codecs=opus",

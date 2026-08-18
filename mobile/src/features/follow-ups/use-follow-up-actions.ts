@@ -166,7 +166,7 @@ export function useFollowUpActions(
           await dequeueFollowUpAction(item.encounterId, item.actionId);
         } catch (error) {
           if (error instanceof FollowUpConflictError) await dequeueFollowUpAction(item.encounterId, item.actionId);
-          // Keep queued; retry on the next foreground/reconnect sync — same as card sync failures.
+          // Keep queued; retry on the next foreground/reconnect sync - same as card sync failures.
         }
       }
       onUpdated?.();
@@ -198,7 +198,7 @@ export function useFollowUpActions(
           await dequeueFollowUpAction(item.encounterId, item.actionId);
         } catch (error) {
           if (error instanceof FollowUpConflictError) await dequeueFollowUpAction(item.encounterId, item.actionId);
-          // Keep queued; retry on the next foreground/reconnect sync — same as card sync failures.
+          // Keep queued; retry on the next foreground/reconnect sync - same as card sync failures.
         }
       }
       onUpdated?.();

@@ -130,7 +130,7 @@ function buildExtractionPrompt(
     personHints?.personEmail ? `Primary email hint: ${personHints.personEmail}` : "",
     personHints?.personPhone ? `Primary phone hint: ${personHints.personPhone}` : "",
     eventContext?.title
-      ? `Event this was captured at: ${eventContext.title}${eventContext.location ? ` (${eventContext.location})` : ""}. Mention it naturally in the summary or follow-up only if it adds real value — do not force it into every sentence, and never invent event details beyond what's given here.`
+      ? `Event this was captured at: ${eventContext.title}${eventContext.location ? ` (${eventContext.location})` : ""}. Mention it naturally in the summary or follow-up only if it adds real value - do not force it into every sentence, and never invent event details beyond what's given here.`
       : "",
   ].filter(Boolean);
 

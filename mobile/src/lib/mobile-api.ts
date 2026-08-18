@@ -4,7 +4,7 @@ import { getSupabase } from '@/lib/supabase';
 
 // RN's fetch polyfill throws a TypeError specifically for connectivity
 // failures, while every deliberate domain error in this codebase throws a
-// plain Error — so `instanceof TypeError` is a reliable signal without
+// plain Error - so `instanceof TypeError` is a reliable signal without
 // depending on fragile message text. isOnline() is layered on top so that
 // if we already know we're offline, any error at that call site counts too.
 export function isNetworkError(error: unknown): boolean {
@@ -13,7 +13,7 @@ export function isNetworkError(error: unknown): boolean {
   return error instanceof Error && /(network request failed|fetch failed|internet connection appears to be offline)/i.test(error.message);
 }
 
-// Plain fetch() has no timeout — a request that hangs server-side (or a
+// Plain fetch() has no timeout - a request that hangs server-side (or a
 // dropped connection that never surfaces as an error) leaves the caller
 // awaiting forever. That's exactly what left a capture stuck at "Preparing
 // review" indefinitely with no way to cancel it. Every mobileFetch call now

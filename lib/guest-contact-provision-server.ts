@@ -3,7 +3,7 @@ import "server-only";
 import { normalizeEmailForMatching } from "./contact-identity";
 import { createServiceSupabaseClient } from "./supabase/service";
 
-// Typo-tolerant on purpose — this only decides whether an account already
+// Typo-tolerant on purpose - this only decides whether an account already
 // exists, it never changes what gets stored for a new signup.
 async function findAuthUserIdByEmail(
   admin: NonNullable<ReturnType<typeof createServiceSupabaseClient>>,
@@ -28,7 +28,7 @@ async function findAuthUserIdByEmail(
 /**
  * Creates a bare auth.users row for someone who was manually added as a
  * contact, if they don't already have an ehllo account. Deliberately
- * stops there — provision_personal_workspace() already creates their
+ * stops there - provision_personal_workspace() already creates their
  * workspace/card/draft card the moment they actually sign in, so duplicating
  * that here would risk drifting out of sync with the real onboarding path.
  */

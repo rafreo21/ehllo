@@ -16,8 +16,8 @@ type AppleWalletButtonProps = {
 };
 
 /**
- * A custom black pill — Apple's icon glyph plus real text, laid out with
- * flexbox rather than a fixed-aspect-ratio image — so it can fill the same
+ * A custom black pill - Apple's icon glyph plus real text, laid out with
+ * flexbox rather than a fixed-aspect-ratio image - so it can fill the same
  * width as the Share button without stretching or distorting anything.
  * Same shape/sizing as GoogleWalletButton's view mode.
  */

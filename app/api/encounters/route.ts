@@ -75,7 +75,7 @@ function splitParticipantName(name: string) {
 }
 
 // People typed manually into a capture only ever land in encounter_participants,
-// which nothing outside that one encounter's detail view ever reads — they were
+// which nothing outside that one encounter's detail view ever reads - they were
 // invisible in Connections. Upserting them into contacts (already merged into
 // the Connections list on both clients) closes that gap: existing contacts are
 // matched by email and left as the source of truth, new ones are created with
@@ -83,7 +83,7 @@ function splitParticipantName(name: string) {
 // re-saving the same encounter doesn't spawn duplicates.
 //
 // A genuinely new contact with an email also gets a bare guest account (if
-// they don't already have one) and a one-time "you were added" email —
+// they don't already have one) and a one-time "you were added" email -
 // provision_personal_workspace() takes over the rest of onboarding the
 // moment they actually sign in, so this only ever needs to create the
 // auth.users row and point them at /auth.
@@ -137,7 +137,7 @@ async function syncParticipantsToContacts(
           newGuestNames.push(participant.name.trim());
         }
       } catch {
-        // Best-effort — the contact is already saved either way.
+        // Best-effort - the contact is already saved either way.
       }
     } else {
       await supabase.from("contacts").upsert({
@@ -276,7 +276,7 @@ export async function POST(request: Request) {
   }
 
   // The client only sends eventId when it has an opinion (an explicit pick,
-  // or "" to clear it via the correction flow) — see encounterToApiBody.
+  // or "" to clear it via the correction flow) - see encounterToApiBody.
   // Otherwise: a brand-new encounter gets the passive-presence guess
   // (Capture and Quick Follow-up both funnel through this one route, so
   // neither needs its own copy of this decision); an existing encounter
@@ -353,7 +353,7 @@ export async function POST(request: Request) {
   await syncEncounterParticipants(supabase, body.id, user.workspaceId, participants);
   const newGuestNames = await syncParticipantsToContacts(supabase, user.workspaceId, user.id, user.displayName || "Someone you met", participants);
 
-  // The encounter is reviewable — and its transcript actually has content —
+  // The encounter is reviewable - and its transcript actually has content -
   // the first time it is saved. This is the single place both mobile and
   // consumer web funnel through, so it is the one spot to raise
   // "review ready": one row per encounter, regardless of which client saved

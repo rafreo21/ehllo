@@ -47,7 +47,7 @@ function anthropicClient() {
   return createAnthropic({ apiKey: anthropicApiKey() });
 }
 
-/** Claude Opus 5 and later reject non-default temperature — omit it when routed to Claude. */
+/** Claude Opus 5 and later reject non-default temperature - omit it when routed to Claude. */
 export function textTemperature(value: number) {
   return usesClaudeText() ? undefined : value;
 }
