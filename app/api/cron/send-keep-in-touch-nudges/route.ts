@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import {
   buildKeepInTouchEmail,
   keepInTouchBody,
+  keepInTouchNoAddressBody,
   keepInTouchTitle,
   type KeepInTouchThreshold,
 } from "../../../../lib/keep-in-touch-email";
@@ -87,14 +88,12 @@ export async function GET(request: Request) {
         .from("people_connections")
         .select("id, person_name, person_email, connected_at")
         .eq("workspace_id", workspaceId)
-        .neq("person_email", "")
         .gte("connected_at", oldestRelevant)
         .limit(200),
       service
         .from("card_exchanges")
         .select("id, visitor_name, visitor_email, created_at")
         .eq("workspace_id", workspaceId)
-        .neq("visitor_email", "")
         .gte("created_at", oldestRelevant)
         .limit(200),
     ]);
@@ -126,8 +125,10 @@ export async function GET(request: Request) {
     // connection row so actionId points at something People can open.
     const byPerson = new Map<string, NudgeCandidate>();
     for (const candidate of rawCandidates) {
-      const key = candidate.personEmail.trim().toLowerCase();
-      if (!key) continue;
+      // With no address there is nothing to collapse on, so key on the row
+      // itself. Skipping these is what removed them from the queue before.
+      const address = candidate.personEmail.trim().toLowerCase();
+      const key = address || `${candidate.source}:${candidate.sourceId}`;
       const existing = byPerson.get(key);
       if (!existing) {
         byPerson.set(key, candidate);
@@ -149,18 +150,27 @@ export async function GET(request: Request) {
 
       // Already engaged - a real encounter with this person after they
       // connected means they don't need a nudge to reach out.
-      const { data: existingEncounter } = await service
-        .from("encounters")
-        .select("id")
-        .eq("workspace_id", workspaceId)
-        .ilike("person_email", candidate.personEmail)
-        .gt("created_at", candidate.connectedAt)
-        .limit(1)
-        .maybeSingle();
-      if (existingEncounter) continue;
+      //
+      // Only checkable when we have an address. ilike against "" matches every
+      // encounter that also lacks one, so running this on a blank address would
+      // silently suppress exactly the people this change is meant to surface.
+      const hasAddress = candidate.personEmail.trim() !== "";
+      if (hasAddress) {
+        const { data: existingEncounter } = await service
+          .from("encounters")
+          .select("id")
+          .eq("workspace_id", workspaceId)
+          .ilike("person_email", candidate.personEmail)
+          .gt("created_at", candidate.connectedAt)
+          .limit(1)
+          .maybeSingle();
+        if (existingEncounter) continue;
+      }
 
       const title = keepInTouchTitle(threshold, candidate.personName);
-      const body = keepInTouchBody(threshold, candidate.personName);
+      const body = hasAddress
+        ? keepInTouchBody(threshold, candidate.personName)
+        : keepInTouchNoAddressBody(threshold, candidate.personName);
       const dedupeKey = `keep_in_touch:${candidate.source}:${candidate.sourceId}:${threshold}`;
 
       try {
@@ -184,7 +194,9 @@ export async function GET(request: Request) {
           actionId: `${candidate.source}:${candidate.sourceId}`,
         });
 
-        if (user.reminder_emails_enabled && user.primary_email?.trim()) {
+        // The reminder email goes to the user, not the connection, so it is
+        // still worth sending; only its copy changes.
+        if (hasAddress && user.reminder_emails_enabled && user.primary_email?.trim()) {
           const { subject, html } = buildKeepInTouchEmail(threshold, candidate.personName, appUrl);
           const result = await sendEmail({ to: user.primary_email.trim(), subject, html });
           if (result.ok) emailsSent += 1;

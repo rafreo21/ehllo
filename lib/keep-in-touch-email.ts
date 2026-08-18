@@ -25,6 +25,19 @@ export function keepInTouchBody(threshold: KeepInTouchThreshold, personName: str
   return `You connected with ${name} ${THRESHOLD_COPY[threshold].timeframe} - a quick hello goes a long way.`;
 }
 
+/**
+ * The same nudge for someone whose address is missing.
+ *
+ * The cron used to filter these out with .neq("person_email", ""), which turned
+ * a blank field into the person disappearing from the follow-up queue entirely.
+ * A gap in what we know is a reason to ask for it, never a reason to forget the
+ * person: the whole point of recording a connection is being reminded of it.
+ */
+export function keepInTouchNoAddressBody(threshold: KeepInTouchThreshold, personName: string) {
+  const name = personName.trim() || "them";
+  return `You connected with ${name} ${THRESHOLD_COPY[threshold].timeframe}. Add an email or phone number and you can follow up from here.`;
+}
+
 export function buildKeepInTouchEmail(threshold: KeepInTouchThreshold, personName: string, appUrl: string) {
   const name = personName.trim() || "them";
   const subject = keepInTouchTitle(threshold, name);

@@ -49,8 +49,19 @@ async function syncEncounterParticipants(
   workspaceId: string,
   participants: EncounterParticipant[],
 ) {
-  await supabase.from("encounter_participants").delete().eq("encounter_id", encounterId);
-  if (!participants.length) return;
+  // Delete-then-insert with neither result checked, and no transaction to hold
+  // the two together: if the insert failed, the participants were already gone
+  // and the route still answered ok. That is silent data loss on the record the
+  // whole encounter hangs off, so both halves are checked and the caller is told.
+  const { error: clearError } = await supabase
+    .from("encounter_participants").delete().eq("encounter_id", encounterId);
+  if (clearError) {
+    console.error("[encounters] could not clear participants before rewriting them", {
+      encounterId, code: clearError.code, message: clearError.message,
+    });
+    return { ok: false as const, error: clearError.message };
+  }
+  if (!participants.length) return { ok: true as const };
 
   const rows = participants.map((participant, index) => ({
     id: participant.id,
@@ -64,7 +75,21 @@ async function syncEncounterParticipants(
     is_primary: index === 0,
     sort_order: index,
   }));
-  await supabase.from("encounter_participants").insert(rows);
+  const { error: insertError } = await supabase.from("encounter_participants").insert(rows);
+  if (insertError) {
+    // The delete has already happened and cannot be undone from here. Say so
+    // loudly, with the names, so the loss is recoverable from the log rather
+    // than only discovered by the person whose guests vanished.
+    console.error("[encounters] participants were cleared but could not be rewritten", {
+      encounterId,
+      participantCount: rows.length,
+      participantNames: rows.map((row) => row.display_name),
+      code: insertError.code,
+      message: insertError.message,
+    });
+    return { ok: false as const, error: insertError.message };
+  }
+  return { ok: true as const };
 }
 
 function splitParticipantName(name: string) {
@@ -350,7 +375,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "The encounter was saved on this device but could not sync." }, { status: 500 });
   }
 
-  await syncEncounterParticipants(supabase, body.id, user.workspaceId, participants);
+  const participantSync = await syncEncounterParticipants(supabase, body.id, user.workspaceId, participants);
+  if (!participantSync.ok) {
+    return NextResponse.json(
+      { error: "We saved the meeting but couldn’t save who was there. Open it and add them again." },
+      { status: 500 },
+    );
+  }
   const newGuestNames = await syncParticipantsToContacts(supabase, user.workspaceId, user.id, user.displayName || "Someone you met", participants);
 
   // The encounter is reviewable - and its transcript actually has content -
