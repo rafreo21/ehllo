@@ -29,6 +29,12 @@ export type ActivityEntry = {
   detail: string;
   /** Optional: what to try, for testers. */
   testing?: string;
+  /**
+   * Optional: somewhere to see the change rather than read about it - a design
+   * spec, a rendered template. Only worth attaching when looking at it explains
+   * more than the sentence can.
+   */
+  link?: { href: string; label: string };
 };
 
 export type IssueStatus = "fixed" | "in-progress" | "open" | "monitoring";
@@ -51,6 +57,20 @@ export const ACTIVITY_UPDATED = "18 August 2026";
 export const ACTIVITY_TZ_OFFSET = "+01:00";
 
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
+  {
+    date: "2026-08-18",
+    time: "22:10",
+    title: "Wallet passes rebuilt for both phones",
+    impact: "improvement",
+    detail:
+      "Your card in Apple Wallet and Google Wallet has been rebuilt around the person rather than the product. The photo fills the card, your name is the heading, and the colour you picked in the card editor now drives the whole pass with text that stays readable on it - it was fixed to white before, which was unreadable on any light colour, including ehllo's own default. On Android the brand mark had been replaced by your own photo, so the same picture appeared twice and the logo appeared nowhere; the largest line on the card read \"ehllo Card\" instead of your name. Both fixed. The QR code is chunkier on both platforms, so it scans from further away.",
+    testing:
+      "Add to Apple Wallet, and Save to Google Wallet, on a card with a photo. Change the card colour and add it again.",
+    link: {
+      href: "https://claude.ai/code/artifact/5da4bca6-e5b6-4002-9b8e-b65f7843593b",
+      label: "See the pass spec and design",
+    },
+  },
   {
     date: "2026-08-18",
     time: "20:40",
@@ -337,6 +357,26 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
 ];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
+  {
+    title: "Wallet pass text was unreadable on light card colours",
+    time: "22:10",
+    status: "fixed",
+    detail:
+      "The Apple pass always drew its text in white. On a light card colour that is close to invisible - and ehllo's default colour is a light green, so the default card was the worst case. It only looked fine on darker colours.",
+    resolution:
+      "The pass now picks dark or light text from the card colour, using the same rule the rest of the app already used for exactly this. Worth noting how it was missed: every card I checked happened to be a dark colour.",
+    reportedOn: "2026-08-18",
+  },
+  {
+    title: "Android pass showed the brand where the name should be",
+    time: "22:10",
+    status: "fixed",
+    detail:
+      "On Google Wallet the biggest line on the card read \"ehllo Card\", with the person's own name shrunk into the small line above it. The profile photo was also being used as the logo as well as the banner, so the same picture appeared twice and the ehllo mark did not appear at all. Empty fields printed a single blank space, which rendered as labelled empty rows.",
+    resolution:
+      "All of it corrected in Google's own layout rather than by copying Apple's - an earlier attempt rearranged the Android card to match the iPhone one, which was the wrong instinct and was reverted.",
+    reportedOn: "2026-08-18",
+  },
   {
     title: "Only one account per device could receive push notifications",
     time: "20:40",

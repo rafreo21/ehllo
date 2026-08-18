@@ -121,23 +121,13 @@ export async function buildAppleWalletPass(card: WalletCardPayload, certs: Apple
           .png()
           .toBuffer();
 
-        // PassKit draws the primary field - the person's name, in white - directly
-        // on top of the strip. Over an unknown photograph that is a coin toss: a
-        // pale shirt or a bright window and the name disappears. A scrim weighted
-        // to the lower half guarantees the contrast without dimming the face.
-        const scrim = Buffer.from(
-          `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`
-          + `<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1">`
-          + `<stop offset="0.42" stop-color="#000" stop-opacity="0"/>`
-          + `<stop offset="1" stop-color="#000" stop-opacity="0.58"/>`
-          + `</linearGradient></defs>`
-          + `<rect width="${width}" height="${height}" fill="url(#s)"/></svg>`,
-        );
-
+        // No scrim. It was added so the white name could be read on top of the
+        // band, and primaryFields is empty now - nothing is drawn over the strip,
+        // so a gradient would only be darkening the photograph for nothing.
         files[name] = await sharp({
           create: { width, height, channels: 4, background: stripBackground },
         })
-          .composite([{ input: photo }, { input: scrim }])
+          .composite([{ input: photo }])
           .png()
           .toBuffer();
       }));

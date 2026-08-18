@@ -4,6 +4,7 @@ import { join } from "node:path";
 import QRCode from "qrcode";
 
 import { EHLLO_LOGO_PNG_BASE64 } from "./ehllo-logo-base64.ts";
+import { EHLLO_MARK_SVG } from "./ehllo-mark-svg.ts";
 import { loadSharp, sharpAvailable } from "./sharp-runtime.ts";
 
 import type { CardVcardInput } from "./vcard-export.ts";
@@ -185,7 +186,7 @@ export async function buildWalletLogoBuffers() {
     throw new Error("Wallet pass images require sharp, which isn't available in this local dev sandbox. Test this against a Vercel preview instead.");
   }
   const sharp = await loadSharp();
-  const markBuffer = await loadEhlloMarkForWallet();
+  const markBuffer = loadEhlloMarkForWallet();
   const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
   const [icon, icon2x, logo, logo2x] = await Promise.all([
     sharp(markBuffer).resize(29, 29, { fit: "contain", background: transparent }).png().toBuffer(),
@@ -209,18 +210,11 @@ export async function buildWalletLogoBuffers() {
  * loadEhlloLogoBuffer so the QR centre mark, which is composited onto a white plate
  * and does not need transparency, keeps working exactly as it does now.
  */
-let walletMarkPromise: Promise<Buffer> | null = null;
-async function loadEhlloMarkForWallet() {
-  if (!walletMarkPromise) {
-    walletMarkPromise = (async () => {
-      try {
-        const svg = await readFile(join(process.cwd(), "public", "ehllo-logo.svg"));
-        if (svg.length > 0) return svg;
-      } catch {
-        // fall through to the raster mark
-      }
-      return loadEhlloLogoBuffer();
-    })();
-  }
-  return walletMarkPromise;
+/**
+ * The inline SVG, not a file read. public/ is CDN-served and absent from the
+ * serverless filesystem, so reading it there fails every time and falls through -
+ * which is exactly how this shipped the square mark once already.
+ */
+function loadEhlloMarkForWallet() {
+  return Buffer.from(EHLLO_MARK_SVG, "utf8");
 }

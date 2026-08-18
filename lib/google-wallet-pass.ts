@@ -1,5 +1,6 @@
 import { createSign } from "node:crypto";
 
+import { shortenCardUrlForQr } from "./apple-wallet-pass.ts";
 import type { GoogleWalletConfig, WalletCardPayload } from "./wallet-config";
 
 /** Hostnames allowed to initiate save links (Google expects domain names, not full origins). */
@@ -33,17 +34,22 @@ function signJwt(payload: Record<string, unknown>, config: GoogleWalletConfig) {
   return `${encoded}.${signer.sign(config.privateKey, "base64url")}`;
 }
 
-/** Pass list icon and header logo - profile first, then company mark, then hosted ehllo mark. */
+/**
+ * The pass logo: the ehllo mark.
+ *
+ * This preferred the profile photo, and heroImage is the profile photo too - so the
+ * same picture appeared as a small badge at the top and again full-width, and the
+ * brand appeared nowhere on the pass. Google's own pattern for that row is a logo
+ * plus the issuer name, so the mark belongs here and the photograph belongs in the
+ * ehllo-mark-round.png is the SVG pre-rendered to a transparent-cornered circle and
+ * committed, rather than rasterised by a route: Google fetches logos over the
+ * network, so a static file cannot fail at request time, and ehllo-mark.png is the
+ * square export with the green flattened in.
+ */
 export function resolveGoogleWalletLogoUrl(card: WalletCardPayload) {
-  const profile = card.profileImageUrl?.trim();
-  if (profile) return profile;
-
-  const companyVisible = card.showCompany !== false && card.companyLogoUrl?.trim();
-  if (companyVisible) return companyVisible;
-
   try {
     const origin = new URL(card.cardUrl).origin.replace(/\/+$/, "");
-    return `${origin}/ehllo-mark.png`;
+    return `${origin}/ehllo-mark-round.png`;
   } catch {
     return "";
   }
@@ -93,38 +99,90 @@ async function googleWalletAccessToken(config: GoogleWalletConfig) {
   return result.access_token;
 }
 
+/** Occupation as the label, company as the value - collapsing sensibly when only one is set. */
+function roleCompanyModule(role: string, company: string) {
+  if (role && company) return [{ id: "role_company", header: role, body: company }];
+  if (role) return [{ id: "role_company", header: "Occupation", body: role }];
+  if (company) return [{ id: "role_company", header: "Company", body: company }];
+  return [];
+}
+
 /** Create or refresh the object first, then return a reference-only save URL. */
 export async function prepareGoogleWalletSaveUrl(card: WalletCardPayload, config: GoogleWalletConfig) {
   const classId = `${config.issuerId}.${config.classSuffix}`;
   const objectId = `${config.issuerId}.${card.slug}`;
-  const companyVisible = card.showCompany !== false && card.company.trim();
-  const companyLabel = companyVisible || " ";
+  const company = card.showCompany !== false ? card.company.trim() : "";
+  const role = card.role.trim();
+  const localized = (value: string) => ({ defaultValue: { language: "en-US", value } });
+
   const genericObject: Record<string, unknown> = {
     id: objectId,
     classId,
     state: "ACTIVE",
     hexBackgroundColor: card.themeColor.startsWith("#") ? card.themeColor : `#${card.themeColor}`,
-    cardTitle: { defaultValue: { language: "en-US", value: card.fullName } },
-    header: { defaultValue: { language: "en-US", value: "ehllo Card" } },
-    subheader: {
-      defaultValue: { language: "en-US", value: card.role || companyLabel.trim() || "Digital card" },
+    // Google's pattern for the top row is a logo beside the issuer name, with
+    // `header` carrying the value the pass is actually about. These were inverted:
+    // "ehllo Card" sat in the large slot while the person's own name was shrunk into
+    // cardTitle. The brand goes where the brand goes, the person goes in the header.
+    cardTitle: localized("ehllo"),
+    header: localized(card.fullName),
+    // Google draws the subheader above the header as a label for it, and "Digital
+    // Card" is what it says - the occupation is not a label for a person's name, it
+    // belongs in the row below with the company.
+    subheader: localized("Digital Card"),
+    barcode: {
+      type: "QR_CODE",
+      // Five characters shorter, which takes the code from 33x33 to 29x29 - bigger
+      // modules in a box the wallet sizes itself, so it scans from further away.
+      // app/c/[slug] resolves both forms; the URL people see is unchanged.
+      value: shortenCardUrlForQr(card.cardUrl),
+      // No alternate text. Google prints it under the code, and "Scan to connect"
+      // restates what a QR on a business card obviously is.
+      alternateText: "",
     },
-    barcode: { type: "QR_CODE", value: card.cardUrl, alternateText: "Scan to connect" },
+    // Sentence case, not shouted: these sat as NAME / JOB TITLE / COMPANY beside a
+    // normally-cased "About", which read like three different authors.
+    //
+    // Each row is omitted when empty. Role and company used to fall back to a single
+    // space, which is not nothing - it renders a labelled blank row in the details
+    // view, so an incomplete card looked broken rather than incomplete.
+    // One row carrying both: the occupation labels the company, which is Google's
+    // header/body convention used the way it reads best - "Product Designer" over
+    // "Studio Nine".
+    //
+    // The id stays "role_company" whatever the job title is. A class template
+    // references a field by id, so deriving the id from the occupation would mean the
+    // template resolved for one person and silently rendered nothing for everyone
+    // else.
+    //
+    // When only one of the two exists there is no label/value pair to make, so the
+    // field names itself rather than showing a header with nothing under it. Omitted
+    // entirely when both are blank - never a labelled empty row.
     textModulesData: [
-      { id: "name", header: "NAME", body: card.fullName },
-      { id: "role", header: "JOB TITLE", body: card.role || " " },
-      { id: "company", header: "COMPANY", body: companyLabel },
+      ...roleCompanyModule(role, company),
       { id: "bio", header: "About", body: card.bio || "Tap to open my ehllo card." },
     ],
     linksModuleData: {
       uris: [{ uri: card.cardUrl, description: "Open ehllo card", id: "card_link" }],
     },
   };
+  // contentDescription is what a screen reader announces in place of the image, and
+  // Google's own pass-builder example carries it on both. Without it the two images
+  // on the pass are unlabelled, which on a pass whose whole purpose is identifying a
+  // person is the wrong thing to leave silent.
   if (card.profileImageUrl?.trim()) {
-    genericObject.heroImage = { sourceUri: { uri: card.profileImageUrl.trim() } };
+    genericObject.heroImage = {
+      sourceUri: { uri: card.profileImageUrl.trim() },
+      contentDescription: localized(`${card.fullName}'s photo`),
+    };
   }
   const logoUrl = resolveGoogleWalletLogoUrl(card);
-  if (logoUrl) genericObject.logo = { sourceUri: { uri: logoUrl } };
+  if (logoUrl) {
+    genericObject.logo = {
+      sourceUri: { uri: logoUrl },
+      contentDescription: localized("ehllo"),
+    };
+  }
 
   const token = await googleWalletAccessToken(config);
   const resourceUrl = `https://walletobjects.googleapis.com/walletobjects/v1/genericObject/${encodeURIComponent(objectId)}`;

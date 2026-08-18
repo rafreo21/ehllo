@@ -47,7 +47,11 @@ test("google wallet jwt origins use hostnames", async () => {
       profileImageUrl: "https://cdn.example.com/profile.png",
       companyLogoUrl: "",
     }),
-    "https://cdn.example.com/profile.png",
+    // The brand mark, even though a profile photo is present and this used to prefer
+    // it. heroImage is already the photo, so preferring it here put the same picture
+    // on the pass twice and left the brand off it entirely. The round variant is a
+    // committed file rather than a rendered route, so it cannot 404 at request time.
+    "https://aftermeet-beta.vercel.app/ehllo-mark-round.png",
   );
 
   process.env.NEXT_PUBLIC_APP_URL = previous;

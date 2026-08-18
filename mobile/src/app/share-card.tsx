@@ -212,6 +212,13 @@ export default function ShareCardScreen() {
           </Pressable>
         </View>
         <View style={styles.headerCopy}>
+          {/* The page had a title until two changes took it apart: one removed
+              "Scan to connect", and the small-caps sweep then removed the eyebrow
+              beneath it, leaving an empty container. With nothing here the next
+              line - the person's own name - became the first text on the screen
+              and read as the heading. styles.title was left defined and unused,
+              which is the style this was always meant to use. */}
+          <Text style={styles.title}>Scan to connect</Text>
         </View>
       </View>
       <Body style={styles.cardLine}>

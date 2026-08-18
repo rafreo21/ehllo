@@ -158,6 +158,19 @@ export function ActivityLogClient() {
                     {entry.testing}
                   </p>
                 ) : null}
+                {entry.link ? (
+                  <p className="mb-4">
+                    <a
+                      href={entry.link.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#d5d9d3] px-3.5 py-1.5 text-[13px] font-bold text-[#163300] transition-colors hover:bg-[#f2f5f0] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#163300]"
+                    >
+                      {entry.link.label}
+                      <span aria-hidden="true">&rarr;</span>
+                    </a>
+                  </p>
+                ) : null}
               </li>
             ))}
           </ol>
