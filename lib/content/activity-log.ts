@@ -53,6 +53,32 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "16:40",
+    title: "Invitations are visible, answerable and revocable",
+    impact: "new",
+    detail:
+      "Invited is now its own filter in Events and has a card on Home with a count, answerable in place. Inviting means picking someone you have met rather than retyping their address, the guest list shows two until you ask for more, and revoking an invitation now also withdraws it from the other person - including the notification, which used to linger and point at an invitation that no longer existed.",
+    testing: "Invite an address belonging to another ehllo account, check their Home and Events, then revoke it and check both are gone.",
+  },
+  {
+    date: "2026-08-18",
+    time: "16:55",
+    title: "You can open a meeting the other person recorded",
+    impact: "new",
+    detail:
+      "A meeting in your history that someone else captured used to be a row that did nothing. It now opens with the summary they shared and the audio, and says when the audio expires. Their transcript and private notes never cross, and nothing appears at all until they have actually shared that meeting.",
+    testing: "One account records a meeting and approves the guest view; the other opens it from the connection's history.",
+  },
+  {
+    date: "2026-08-18",
+    time: "17:05",
+    title: "Reminders for invitations you have not answered",
+    impact: "new",
+    detail:
+      "An unanswered invitation now reminds you in the app and on your device the day before the event, not only by email. It respects your notification settings and stops once you answer.",
+  },
+  {
+    date: "2026-08-18",
     time: "15:12",
     title: "Follow-ups can see how to reach someone",
     impact: "fix",
