@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { ArrowRight, EnvelopeSimple } from 'phosphor-react-native';
-import { useEffect, useState } from 'react';
-import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Keyboard, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BrandMark } from '@/components/brand-mark';
 import { GoogleIcon } from '@/components/provider-icons';
@@ -68,17 +68,40 @@ export default function AuthScreen() {
     setMessage('');
     const result = await signIn(email);
     setLoading(false);
-    if (result.error) return setMessage(result.error);
+    if (result.error) {
+      autoSubmittedFor.current = '';
+      return setMessage(result.error);
+    }
     setSecondsLeft(OTP_EXPIRY_SECONDS);
     setStep('code');
     setCodeSentAt((current) => current + 1);
     setMessage('Check your email for your 6-digit sign-in code.');
   }
 
-  async function submitCode() {
+  // iOS's number-pad has no return key, and on a 4.7" screen the keypad covers
+  // "Verify and continue" - so a correctly typed code had no way to be
+  // submitted at all. Submitting as soon as six digits are in removes the
+  // reach entirely, and is what people expect from a one-time code anyway.
+  // The ref guards against the paste-then-edit case firing twice.
+  const autoSubmittedFor = useRef('');
+
+  function handleCodeChange(next: string) {
+    setCode(next);
+    const digits = next.replace(/\D/g, '');
+    if (digits.length < 6 || loading) return;
+    if (autoSubmittedFor.current === digits) return;
+    autoSubmittedFor.current = digits;
+    Keyboard.dismiss();
+    void submitCode(digits);
+  }
+
+  async function submitCode(overrideCode?: string) {
     setLoading(true);
     setMessage('');
-    const result = await verifyEmailCode(email, code);
+    // The auto-submit path passes the digits directly: setCode has not
+    // committed yet when onChangeText fires, so reading state here would
+    // verify the previous five-digit value.
+    const result = await verifyEmailCode(email, overrideCode ?? code);
     setLoading(false);
     if (result.error) return setMessage(result.error);
     void consumeAuthReturnPath().then((path) => {
@@ -154,7 +177,7 @@ export default function AuthScreen() {
               placeholderTextColor={colors.muted}
               textContentType={Platform.OS === 'ios' ? 'oneTimeCode' : undefined}
               value={code}
-              onChangeText={setCode}
+              onChangeText={handleCodeChange}
               style={[styles.input, styles.codeInput]}
             />
           </View>
