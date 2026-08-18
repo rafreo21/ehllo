@@ -38,6 +38,7 @@ const NOTIFICATION_TYPE_ROWS: { type: NotificationType; icon: typeof Bell; label
   { type: 'connection_added', icon: UsersThree, label: 'New connections', hint: 'Someone connects with you by scanning your card' },
   { type: 'keep_in_touch', icon: HandWaving, label: 'Keep in touch nudges', hint: 'A gentle reminder to reach out after you connect' },
   { type: 'contact_request', icon: EnvelopeSimple, label: 'Contact requests', hint: 'Someone asks you for a phone number or email' },
+  { type: 'follow_up_completed', icon: CheckCircle, label: 'Follow-up completed', hint: 'The other person ticks off a follow-up you share' },
 ];
 
 export default function NotificationPreferencesScreen() {

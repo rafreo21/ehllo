@@ -59,6 +59,26 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-19",
+    time: "01:10",
+    title: "Completing a follow-up now tells the other person",
+    impact: "new",
+    detail:
+      "A follow-up is an agreement between two people, and ticking one off used to be silent on both sides - the person waiting had no way to know except by opening the app and noticing. Both parties are told now, in the app and in the bell, and it has its own switch in notification settings so you can keep it without keeping everything else. Alongside that: if someone recorded a follow-up about you, you can now mark it done yourself. Until now only the person who wrote it could, which left the wrong person holding the only switch.",
+    testing:
+      "Have one account complete a shared follow-up and watch the other account's bell.",
+  },
+  {
+    date: "2026-08-19",
+    time: "01:10",
+    title: "The web app stops handing back a previous account's data",
+    impact: "fix",
+    detail:
+      "The web app keeps your cards, contacts and meetings in the browser so screens load instantly. None of it was tied to an account, so it survived signing out, signing in as someone else, and even a full server-side reset - the browser simply handed the old data back, which is why cleared data appeared to come back on the web. It is now cleared automatically when a different account signs in.",
+    testing:
+      "Sign out on the web, sign in as a different account, and check the card and contacts are not the previous account's.",
+  },
+  {
+    date: "2026-08-19",
     time: "00:20",
     title: "“We don’t have their email” — when we did",
     impact: "fix",

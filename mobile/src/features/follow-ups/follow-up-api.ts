@@ -68,6 +68,28 @@ function mapContactMethods(value: unknown): ContactMethod[] {
   });
 }
 
+/**
+ * Marks a follow-up somebody else recorded about you as done.
+ *
+ * Separate from the ordinary status calls because the row is in their workspace,
+ * not yours: this goes through a function that matches on your own address, and it
+ * notifies them, which is the point - nothing in their app changes otherwise.
+ */
+export async function completeFollowUpAddressedToMe(accessToken: string, actionId: string) {
+  const response = await mobileFetch('/api/follow-ups/addressed/complete', accessToken, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: actionId }),
+  });
+  const payload = await readMobileApiJson<{ ok?: boolean; error?: string }>(
+    response,
+    'Could not update this follow-up.',
+  );
+  if (!response.ok || !payload.ok) {
+    throw new Error(payload.error || 'Could not update this follow-up.');
+  }
+}
+
 export async function fetchFollowUps(
   accessToken: string,
   connection?: { connectionId: string; sourceId: string; email?: string; exchangeId?: string },

@@ -15,7 +15,7 @@ import { LinkButton } from "./Button";
 import { EncounterDrawerView } from "./EncounterDrawerView";
 import { BROWSER_NOTIFICATION_CHANGE_EVENT, BROWSER_NOTIFICATION_KEY } from "./NotificationPreferences";
 
-type NotificationType = "review_ready" | "follow_up_due" | "follow_up_overdue" | "shared_meeting_update" | "connection_added" | "keep_in_touch" | "contact_request";
+import type { NotificationType } from "../../lib/notifications-server";
 
 type NotificationAlert = {
   id: string;
@@ -57,6 +57,7 @@ function iconForType(type: NotificationType): IconComponent {
     case "connection_added": return UsersThreeIcon;
     case "keep_in_touch": return HandWavingIcon;
     case "contact_request": return EnvelopeSimpleIcon;
+    case "follow_up_completed": return CheckIcon;
     default: return BellIcon;
   }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { purgeWebLocalDataIfAccountChanged } from "../../lib/web-local-data";
 import type { IconComponent } from "../../lib/icon-component";
 import { useCallback, useEffect, useState, type ComponentType, type MouseEvent, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
@@ -64,10 +65,16 @@ export function AppShell({ children }: AppShellProps) {
   useEffect(() => {
     if (hydratedConsumerUser === user.email) return;
     hydratedConsumerUser = user.email;
+    // Before pulling anything down, throw away a previous account's copy. The web
+    // keeps cards, contacts and encounters in localStorage so screens render
+    // instantly, and none of it was scoped to a person - so it survived signing out,
+    // signing in as somebody else, and a full server-side purge. Hydrating on top of
+    // that merges the two rather than replacing one.
+    purgeWebLocalDataIfAccountChanged(user.id || user.email);
     void hydrateContactsFromServer();
     void hydrateEncountersFromServer();
     void hydrateCardLibraryFromServer();
-  }, [user.email]);
+  }, [user.email, user.id]);
   const label = user.displayName || user.email.split("@")[0] || "ehllo user";
   const initials = label.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
 

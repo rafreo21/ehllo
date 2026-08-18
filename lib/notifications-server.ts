@@ -20,6 +20,7 @@ export const NOTIFICATION_TYPES = [
   "connection_added",
   "keep_in_touch",
   "contact_request",
+  "follow_up_completed",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

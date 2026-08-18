@@ -7,7 +7,8 @@ export type NotificationType =
   | 'shared_meeting_update'
   | 'connection_added'
   | 'keep_in_touch'
-  | 'contact_request';
+  | 'contact_request'
+  | 'follow_up_completed';
 
 export type NotificationRecord = {
   id: string;
@@ -67,6 +68,7 @@ export async function fetchNotificationPreferences(accessToken: string): Promise
     connection_added: true,
     keep_in_touch: true,
     contact_request: true,
+    follow_up_completed: true,
   };
 }
 
@@ -89,6 +91,8 @@ export function notificationDeepLink(notification: NotificationRecord): string |
   // this lands on People, where the person who asked can be found - a tap that
   // arrives somewhere useful beats a notification that cannot be opened at all.
   if (notification.type === 'contact_request') return '/connections';
+  // Straight to the follow-up that was ticked off, when we know which one.
+  if (notification.type === 'follow_up_completed') return '/settings/follow-ups';
   if (notification.type === 'keep_in_touch') {
     const [source, sourceId] = notification.actionId.split(':');
     if ((source === 'met' || source === 'inbound') && sourceId) {

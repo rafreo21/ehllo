@@ -22,9 +22,24 @@ test("a type switched off stays off, and does not drag the others with it", () =
   }
 });
 
-test("the list covers the types the app actually sends", () => {
-  for (const type of ["connection_added", "keep_in_touch", "contact_request"]) {
+test("the list covers every type the app actually dispatches", () => {
+  // Named rather than counted. A hard-coded length fails whenever a type is added,
+  // which teaches people to edit the number instead of checking the list - and the
+  // bug this guards against was a list that lagged behind reality, not one that grew.
+  for (const type of [
+    "review_ready",
+    "follow_up_due",
+    "follow_up_overdue",
+    "shared_meeting_update",
+    "connection_added",
+    "keep_in_touch",
+    "contact_request",
+    "follow_up_completed",
+  ]) {
     assert.ok(NOTIFICATION_TYPES.includes(type), `${type} missing from NOTIFICATION_TYPES`);
   }
-  assert.equal(NOTIFICATION_TYPES.length, 7);
+});
+
+test("no type is listed twice", () => {
+  assert.equal(new Set(NOTIFICATION_TYPES).size, NOTIFICATION_TYPES.length);
 });

@@ -5,6 +5,7 @@ import { useCard } from '@/features/card/card-context';
 import type { FollowUpItem } from '@/features/follow-ups/follow-up-api';
 import {
   completeFollowUp,
+  completeFollowUpAddressedToMe,
   dismissFollowUp,
   FollowUpConflictError,
   reopenFollowUp,
@@ -148,11 +149,28 @@ export function useFollowUpActions(
     onUpdated?: () => void,
   ) => {
     if (!accessToken) return;
-    // A commitment somebody else made to you lives in their workspace, so writing
-    // to it is not ours to do - the row-level policy would refuse it anyway, and
-    // the honest reason is clearer than a permission error. Guarded at the single
-    // place every screen goes through rather than per screen.
-    if (item.addressedToMe) return;
+    // A commitment somebody else made to you lives in their workspace, so the
+    // ordinary status call cannot write it. It is still yours to finish, though -
+    // you are the one who does the thing - so it goes through the route that is
+    // allowed to, which also tells the person waiting on it.
+    if (item.addressedToMe) {
+      const key = `${item.encounterId}-${item.actionId}`;
+      setCompletingId(key);
+      try {
+        await completeFollowUpAddressedToMe(accessToken, item.actionId);
+        onUpdated?.();
+      } catch (error) {
+        // Same shape as every other failure here: the caller decides how to show it,
+        // and it is never swallowed.
+        console.error('[follow-ups] could not complete a follow-up addressed to me', {
+          actionId: item.actionId,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      } finally {
+        setCompletingId('');
+      }
+      return;
+    }
     const key = `${item.encounterId}-${item.actionId}`;
     setCompletingId(key);
     try {
