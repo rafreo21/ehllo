@@ -6,6 +6,7 @@ import { Bell as BellIcon } from "react-feather";
 import { Calendar as CalendarCheckIcon } from "react-feather";
 import { Check as CheckIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
 import { RotateCcw as ClockCounterClockwiseIcon } from "react-feather";
 import { Share2 as ShareNetworkIcon } from "react-feather";
 import { Users as UsersThreeIcon } from "react-feather";
@@ -14,7 +15,7 @@ import { LinkButton } from "./Button";
 import { EncounterDrawerView } from "./EncounterDrawerView";
 import { BROWSER_NOTIFICATION_CHANGE_EVENT, BROWSER_NOTIFICATION_KEY } from "./NotificationPreferences";
 
-type NotificationType = "review_ready" | "follow_up_due" | "follow_up_overdue" | "shared_meeting_update" | "connection_added" | "keep_in_touch";
+type NotificationType = "review_ready" | "follow_up_due" | "follow_up_overdue" | "shared_meeting_update" | "connection_added" | "keep_in_touch" | "contact_request";
 
 type NotificationAlert = {
   id: string;
@@ -55,6 +56,7 @@ function iconForType(type: NotificationType): IconComponent {
     case "shared_meeting_update": return ShareNetworkIcon;
     case "connection_added": return UsersThreeIcon;
     case "keep_in_touch": return HandWavingIcon;
+    case "contact_request": return EnvelopeSimpleIcon;
     default: return BellIcon;
   }
 }

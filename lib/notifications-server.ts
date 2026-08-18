@@ -6,7 +6,8 @@ export type NotificationType =
   | "follow_up_overdue"
   | "shared_meeting_update"
   | "connection_added"
-  | "keep_in_touch";
+  | "keep_in_touch"
+  | "contact_request";
 
 export type NotificationRow = {
   id: string;

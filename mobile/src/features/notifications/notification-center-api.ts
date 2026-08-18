@@ -6,7 +6,8 @@ export type NotificationType =
   | 'follow_up_overdue'
   | 'shared_meeting_update'
   | 'connection_added'
-  | 'keep_in_touch';
+  | 'keep_in_touch'
+  | 'contact_request';
 
 export type NotificationRecord = {
   id: string;
@@ -65,6 +66,7 @@ export async function fetchNotificationPreferences(accessToken: string): Promise
     shared_meeting_update: true,
     connection_added: true,
     keep_in_touch: true,
+    contact_request: true,
   };
 }
 
@@ -83,6 +85,10 @@ export async function updateNotificationPreferences(
 
 export function notificationDeepLink(notification: NotificationRecord): string | null {
   if (notification.type === 'connection_added') return '/connections';
+  // Somebody asked you for a detail. There is no incoming-requests screen yet, so
+  // this lands on People, where the person who asked can be found - a tap that
+  // arrives somewhere useful beats a notification that cannot be opened at all.
+  if (notification.type === 'contact_request') return '/connections';
   if (notification.type === 'keep_in_touch') {
     const [source, sourceId] = notification.actionId.split(':');
     if ((source === 'met' || source === 'inbound') && sourceId) {

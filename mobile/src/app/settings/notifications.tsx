@@ -37,6 +37,7 @@ const NOTIFICATION_TYPE_ROWS: { type: NotificationType; icon: typeof Bell; label
   { type: 'shared_meeting_update', icon: ShareNetwork, label: 'Shared meeting updates', hint: 'A guest commits to their own follow-up' },
   { type: 'connection_added', icon: UsersThree, label: 'New connections', hint: 'Someone connects with you by scanning your card' },
   { type: 'keep_in_touch', icon: HandWaving, label: 'Keep in touch nudges', hint: 'A gentle reminder to reach out after you connect' },
+  { type: 'contact_request', icon: EnvelopeSimple, label: 'Contact requests', hint: 'Someone asks you for a phone number or email' },
 ];
 
 export default function NotificationPreferencesScreen() {

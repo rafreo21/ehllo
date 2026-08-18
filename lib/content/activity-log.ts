@@ -53,6 +53,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "20:40",
+    title: "Push notifications work on the second account, not just the first",
+    impact: "fix",
+    detail:
+      "If two accounts had ever used the same device, only one of them could receive push notifications - the first to register kept them, and every later attempt was refused and discarded without a word. That is why notifications could be switched on everywhere and still only one device was actually registered. Contact requests also have their own notification setting now, so you can keep them without keeping shared-meeting updates.",
+    testing:
+      "Sign in on the account that was not getting push, open the app, and check Settings - notifications should register.",
+  },
+  {
+    date: "2026-08-18",
     time: "19:55",
     title: "Asking someone for a detail now actually reaches them",
     impact: "fix",
@@ -327,6 +337,26 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
 ];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
+  {
+    title: "Only one account per device could receive push notifications",
+    time: "20:40",
+    status: "fixed",
+    detail:
+      "Notifications were turned on across iOS and Android, and the server held exactly one registered device. Any account that was not the first to register on a given device was silently refused - so it looked like the setting had not taken, on a device where it had.",
+    resolution:
+      "The phone gets one push token per app install regardless of who is signed in, and only one account was allowed to hold it. The release step that should have handed it over skipped anything on the same device. Confirmed against the real database before and after the fix, using a test that rolls itself back. The registration also now records why it failed, instead of failing silently - which is what made this cost a round of guessing in the first place.",
+    reportedOn: "2026-08-18",
+  },
+  {
+    title: "Nowhere to answer a contact request",
+    time: "20:40",
+    status: "open",
+    detail:
+      "You can ask someone for a phone number or email, and they are now notified. But there is still no screen listing requests you have received and no way to share or decline from inside ehllo - the notification tells you, and then the trail stops.",
+    resolution:
+      "Being straight that this is unfinished rather than filed as done: the request, the record and the notification all work; the reply does not exist yet. It needs a real screen, not a patch.",
+    reportedOn: "2026-08-18",
+  },
   {
     title: "A requested contact detail notified nobody",
     time: "19:55",

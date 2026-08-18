@@ -120,7 +120,7 @@ export async function POST(request: Request) {
         // yet. Worth recording, because "they never got it" and "they have no
         // account" look identical from the requester's side.
         console.warn("[contact-requests] nobody to notify for this address", { requestId: data.id });
-      } else if (notificationTypeEnabled(target?.notification_preferences, "shared_meeting_update")) {
+      } else if (notificationTypeEnabled(target?.notification_preferences, "contact_request")) {
         const requesterName = user.displayName?.trim() || user.email?.trim() || "Someone";
         const title = `${requesterName} asked for your ${fieldType.replace(/_/g, " ")}`;
         const noticeBody = body?.followUpTitle?.trim()
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
         const created = await createNotification(service, {
           userId: targetUserId,
           workspaceId: targetWorkspaceId,
-          type: "shared_meeting_update",
+          type: "contact_request",
           title,
           body: noticeBody,
           encounterId: body?.encounterId?.trim() || undefined,
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
         if (created) {
           await dispatchPushForUser(service, {
             userId: targetUserId,
-            type: "shared_meeting_update",
+            type: "contact_request",
             title,
             body: noticeBody,
             encounterId: body?.encounterId?.trim() || undefined,
