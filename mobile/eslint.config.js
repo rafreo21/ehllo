@@ -12,7 +12,7 @@ module.exports = defineConfig([
     // app bundle, so Buffer/process/require are genuinely available to them.
     // Without this they were reported as undefined globals - eleven errors that
     // described the lint config rather than the code.
-    files: ['plugins/**/*.js', 'scripts/**/*.js', 'scripts/**/*.mjs'],
+    files: ['app.config.js', 'plugins/**/*.js', 'scripts/**/*.js', 'scripts/**/*.mjs'],
     languageOptions: {
       globals: {
         Buffer: 'readonly',

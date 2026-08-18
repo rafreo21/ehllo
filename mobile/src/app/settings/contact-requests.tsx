@@ -33,6 +33,9 @@ function fieldLabel(fieldType: string) {
 export default function ContactRequestsScreen() {
   const { session } = useAuth();
   const { card } = useCard();
+  // Read the one field the loader needs, so the callback can be memoized on it
+  // rather than on the whole card object.
+  const cardMethods: { type: string; value: string }[] = card?.methods ?? [];
   const [requests, setRequests] = useState<IncomingContactRequest[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState('');
@@ -49,7 +52,7 @@ export default function ContactRequestsScreen() {
         for (const request of next) {
           if (seeded[request.id] !== undefined) continue;
           // Pre-fill from the card, so answering is usually one tap.
-          const method = card?.methods?.find((candidate: { type: string; value: string }) => candidate.type === request.fieldType);
+          const method = cardMethods.find((candidate) => candidate.type === request.fieldType);
           seeded[request.id] = method?.value ?? '';
         }
         return seeded;
@@ -59,7 +62,7 @@ export default function ContactRequestsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [session?.access_token, card]);
+  }, [session?.access_token, cardMethods]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
