@@ -43,7 +43,7 @@ export function ConnectionDeleteSheet({
         ) : null}
       </View>
       <Body>
-        Remove {name || 'this connection'} from your connections? Their card stays live online. You just won't see them in your list or shared directory anymore.
+        Remove {name || 'this connection'} from your connections? Their card stays live online. You just won’t see them in your list or shared directory anymore.
       </Body>
     </BottomSheet>
   );

@@ -41,6 +41,9 @@ export function FollowUpDetailDrawer({
 
   useEffect(() => {
     const cached = readEncounters().find((item) => item.id === encounterId);
+    // Seeding from cache in this commit is the entire point - it is what makes the
+    // drawer open with content instead of a spinner while the fetch runs.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (cached) setEncounter(cached);
     void fetch(`/api/encounters/${encodeURIComponent(encounterId)}`)
       .then(async (response) => {

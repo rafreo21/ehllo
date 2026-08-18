@@ -1,6 +1,6 @@
 import "server-only";
 
-import { allDayInstantIso } from "../events";
+import { allDayInstantIso, selectCalendarsToImport } from "../events";
 import { buildPlainEmailRaw } from "./email";
 import type { IntegrationProvider } from "./types";
 
@@ -106,6 +106,10 @@ export type RawCalendarEvent = {
   cancelled: boolean;
 };
 
+type GoogleCalendarListEntriesResponse = {
+  items?: Array<{ id?: string; primary?: boolean; selected?: boolean; accessRole?: string }>;
+};
+
 type GoogleCalendarListResponse = {
   items?: Array<{
     id?: string;
@@ -121,10 +125,18 @@ type GoogleCalendarListResponse = {
 };
 
 /**
- * Lists events in a rolling window from the user's primary Google Calendar.
+ * Lists events in a rolling window across the account's calendars.
  * Reuses the same `calendar.events` scope already granted for
  * createGoogleCalendarEvent - no new consent screen for an already-connected
  * account. Cancelled entries are still listed so a cancellation propagates.
+ *
+ * Only `primary` used to be read, so an event kept on a work or side calendar
+ * never arrived and nothing anywhere said why. selectCalendarsToImport decides
+ * which calendars qualify and why; Google's generated Holidays/Birthdays
+ * calendars are excluded there rather than here. A single calendar failing is
+ * skipped rather than failing the whole sync - one broken share should not cost
+ * you every other event - but a rejected *token* still throws, because that
+ * needs reconnecting rather than retrying.
  *
  * All-day entries used to be dropped here, on the reasoning that an all-day
  * block "rarely represents a single attendable gathering". That is backwards for
@@ -132,8 +144,29 @@ type GoogleCalendarListResponse = {
  * they are the events this product exists for. Worse, the drop was silent - an
  * event simply never appeared, with nothing anywhere saying why.
  */
-export async function listGoogleCalendarEvents(
+async function listGoogleCalendarIds(accessToken: string): Promise<string[]> {
+  const response = await fetch(
+    "https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=reader&maxResults=250",
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (response.status === 401 || response.status === 403) {
+    throw new CalendarProviderAuthError("Google Calendar rejected this token.");
+  }
+  // A calendar list we cannot read is not fatal: primary is always readable by
+  // the granted scope, so fall back to it rather than returning nothing.
+  if (!response.ok) return ["primary"];
+  const payload = await response.json() as GoogleCalendarListEntriesResponse;
+  const ids = selectCalendarsToImport(
+    (payload.items ?? []).flatMap((item) => item.id
+      ? [{ id: item.id, primary: item.primary, selected: item.selected, accessRole: item.accessRole }]
+      : []),
+  );
+  return ids.length ? ids : ["primary"];
+}
+
+async function listGoogleEventsForCalendar(
   accessToken: string,
+  calendarId: string,
   input: { timeMinIso: string; timeMaxIso: string },
 ): Promise<RawCalendarEvent[]> {
   const params = new URLSearchParams({
@@ -145,7 +178,7 @@ export async function listGoogleCalendarEvents(
     maxResults: "250",
   });
   const response = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/primary/events?${params.toString()}`,
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params.toString()}`,
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
   if (response.status === 401 || response.status === 403) {
@@ -182,6 +215,33 @@ export async function listGoogleCalendarEvents(
       cancelled: false,
     }];
   });
+}
+
+export async function listGoogleCalendarEvents(
+  accessToken: string,
+  input: { timeMinIso: string; timeMaxIso: string },
+): Promise<RawCalendarEvent[]> {
+  const calendarIds = await listGoogleCalendarIds(accessToken);
+
+  // The same meeting can sit on more than one calendar the person can see, and
+  // downstream keys events on externalId, so first copy wins - calendarIds puts
+  // primary first, which makes that the primary calendar's copy.
+  const byExternalId = new Map<string, RawCalendarEvent>();
+  for (const calendarId of calendarIds) {
+    let events: RawCalendarEvent[];
+    try {
+      events = await listGoogleEventsForCalendar(accessToken, calendarId, input);
+    } catch (caught) {
+      // A dead token means every calendar will fail and the connection needs
+      // attention, so that propagates. One unreadable calendar does not.
+      if (caught instanceof CalendarProviderAuthError) throw caught;
+      continue;
+    }
+    for (const event of events) {
+      if (!byExternalId.has(event.externalId)) byExternalId.set(event.externalId, event);
+    }
+  }
+  return [...byExternalId.values()];
 }
 
 type MicrosoftCalendarViewResponse = {

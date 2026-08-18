@@ -53,6 +53,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "18:40",
+    title: "Events from every calendar, and two silent data-loss traps removed",
+    impact: "fix",
+    detail:
+      "ehllo only ever read your main calendar, so anything kept on a work or side calendar never appeared. It now reads all of them, while deliberately leaving out the Holidays, Birthdays and Week Numbers calendars Google subscribes you to without asking. Separately, older versions of two internal operations were still in place alongside the current ones; reaching one of them would have quietly dropped a visitor's phone number and the record of which event you met at, or skipped the check that stops one device overwriting another's card edits. They are gone.",
+    testing:
+      "An event on a second calendar should now show up. Holidays and birthdays should not.",
+  },
+  {
+    date: "2026-08-18",
     time: "17:55",
     title: "All-day events now reach your events list",
     impact: "fix",
@@ -287,6 +297,16 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
 ];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
+  {
+    title: "Events on a second calendar never appeared",
+    time: "18:40",
+    status: "fixed",
+    detail:
+      "Only your primary calendar was read. Anything on a separate work, personal or shared calendar was never fetched, so it could not appear no matter how the list was filtered. This was the gap left open when all-day events were fixed earlier today.",
+    resolution:
+      "All readable calendars are now included, with Google's auto-subscribed Holidays, Birthdays and Week Numbers calendars excluded so they cannot bury real events. Twelve calendars maximum per sync, primary first, so a heavily-subscribed account cannot be cut off from its own main calendar.",
+    reportedOn: "2026-08-18",
+  },
   {
     title: "An event in your calendar never appeared in ehllo",
     time: "17:55",

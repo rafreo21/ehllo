@@ -338,3 +338,55 @@ export function allDayInstantIso(date: string | undefined) {
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return "";
   return `${date}T00:00:00.000Z`;
 }
+
+/** One entry from Google's calendarList, reduced to what the import decision needs. */
+export type CalendarListEntry = {
+  id: string;
+  primary?: boolean;
+  selected?: boolean;
+  accessRole?: string;
+};
+
+/**
+ * Whether a calendar's events belong in ehllo.
+ *
+ * Only the primary calendar used to be read, so an event kept on a work or side
+ * calendar never appeared and nothing said why. Reading every calendar instead
+ * is wrong in the other direction: Google auto-subscribes accounts to Holidays,
+ * Birthdays and Week Numbers, and importing those would bury real events under
+ * hundreds of entries nobody chose.
+ *
+ * The dividing line is that those generated calendars all live on
+ * `group.v.calendar.google.com` - note the `.v.`, which is what separates them
+ * from genuinely shared calendars on `group.calendar.google.com`. Beyond that,
+ * `selected: false` means the person has hidden the calendar in Google's own UI,
+ * which is a clear enough statement of intent to respect, and a
+ * `freeBusyReader` grant cannot read event details at all so there is nothing to
+ * fetch.
+ */
+export function shouldImportCalendar(entry: CalendarListEntry): boolean {
+  if (!entry.id) return false;
+  if (entry.primary) return true;
+  if (entry.id.includes("group.v.calendar.google.com")) return false;
+  if (entry.selected === false) return false;
+  if (entry.accessRole === "freeBusyReader" || entry.accessRole === "none") return false;
+  return true;
+}
+
+/** Bounds how many calendars one sync will read, so a heavily-subscribed account cannot blow the provider quota. */
+export const MAX_CALENDARS_PER_SYNC = 12;
+
+/**
+ * Picks the calendars to read, primary first.
+ *
+ * Primary is sorted to the front so that if the cap truncates anything, it is
+ * never the calendar most people keep everything in.
+ */
+export function selectCalendarsToImport(
+  entries: CalendarListEntry[],
+  limit = MAX_CALENDARS_PER_SYNC,
+): string[] {
+  const keep = entries.filter(shouldImportCalendar);
+  keep.sort((left, right) => Number(Boolean(right.primary)) - Number(Boolean(left.primary)));
+  return keep.slice(0, limit).map((entry) => entry.id);
+}

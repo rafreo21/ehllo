@@ -31,6 +31,9 @@ export default function SettingsScreen() {
   // repeat taps from duplicate events at the touch layer.
   const lastNavRef = useRef(0);
   function navigate(href: Parameters<typeof router.push>[0]) {
+    // Only ever called from a press handler, never during render, so reading the
+    // clock here is not the render-time impurity the rule is looking for.
+    // eslint-disable-next-line react-hooks/purity
     const now = Date.now();
     if (now - lastNavRef.current < 700) return;
     lastNavRef.current = now;

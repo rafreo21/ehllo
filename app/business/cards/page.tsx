@@ -408,6 +408,10 @@ export default function CardsPage() {
   }, []);
 
   useEffect(() => {
+    // loadRecentConnection resolves its own loading state on the signed-out path,
+    // which has to land in this commit so the panel does not flash a spinner it
+    // is never going to finish.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadRecentConnection();
   }, [loadRecentConnection]);
 

@@ -217,9 +217,14 @@ export default function FollowupsPage() {
     () => flatFollowUpRows.slice((page - 1) * FOLLOWUPS_PAGE_SIZE, page * FOLLOWUPS_PAGE_SIZE),
     [flatFollowUpRows, page],
   );
+  /* eslint-disable react-hooks/set-state-in-effect -- these resets have to land in
+     the same commit as the filter change. Deferred, the list paints once with the
+     new filter and the old page index, which shows an empty page 5 of a
+     one-page result before correcting itself. */
   useEffect(() => { setPage(1); }, [query, channelFilter, sort, scope]);
   useEffect(() => { setPage((current) => Math.min(current, totalPages)); }, [totalPages]);
   useEffect(() => { setSelectedIds(new Set()); }, [page, query, channelFilter, sort, scope]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const selectableRows = useMemo(() => pagedFollowUpRows.filter(({ action }) => !isFollowUpTerminal(action.status)), [pagedFollowUpRows]);
   const pageAllSelected = selectableRows.length > 0 && selectableRows.every(({ action }) => selectedIds.has(action.id));

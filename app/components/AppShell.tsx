@@ -1,5 +1,6 @@
 "use client";
 
+import type { IconComponent } from "../../lib/icon-component";
 import { useCallback, useEffect, useState, type ComponentType, type MouseEvent, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Home as HouseIcon } from "react-feather";
@@ -38,7 +39,7 @@ function deriveActive(pathname: string): AppShellActive {
 
 // "scan" alone still renders a Phosphor icon (QrCode has no react-feather
 // equivalent), so it alone keeps the `weight="bold"` prop in renderNavItem below.
-const consumerNav: ReadonlyArray<readonly [string, string, ComponentType<any>, string]> = [
+const consumerNav: ReadonlyArray<readonly [string, string, IconComponent, string]> = [
   ["home", "/app", HouseIcon, "Home"],
   ["cards", "/app/cards", IdentificationCardIcon, "My Cards"],
   ["people", "/app/people", UsersThreeIcon, "Connections"],

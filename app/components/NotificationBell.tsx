@@ -1,5 +1,6 @@
 "use client";
 
+import type { IconComponent } from "../../lib/icon-component";
 import { useCallback, useEffect, useRef, useState, type ComponentType } from "react";
 import { Bell as BellIcon } from "react-feather";
 import { Calendar as CalendarCheckIcon } from "react-feather";
@@ -46,7 +47,7 @@ function isUrgent(dueAt: string): boolean {
 
 // "keep_in_touch" alone still renders a Phosphor icon (HandWaving has no
 // react-feather equivalent), so it alone keeps the `weight="bold"` prop below.
-function iconForType(type: NotificationType): ComponentType<any> {
+function iconForType(type: NotificationType): IconComponent {
   switch (type) {
     case "review_ready": return CheckCircleIcon;
     case "follow_up_due": return CalendarCheckIcon;

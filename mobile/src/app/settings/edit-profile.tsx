@@ -36,6 +36,9 @@ export default function EditProfileScreen() {
     // this gate, opening this screen signed out always failed with a raw
     // "permission denied" error instead of showing anything useful.
     if (!session?.access_token) {
+      // Resolved in this commit on purpose: deferring it flashes a spinner that
+      // is never going to finish.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       return;
     }

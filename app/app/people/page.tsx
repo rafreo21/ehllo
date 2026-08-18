@@ -94,9 +94,14 @@ export default function ConnectionsPage() {
     () => visibleConnections.slice((page - 1) * CONNECTIONS_PAGE_SIZE, page * CONNECTIONS_PAGE_SIZE),
     [visibleConnections, page],
   );
+  /* eslint-disable react-hooks/set-state-in-effect -- these resets have to land in
+     the same commit as the filter change. Deferred, the list paints once with the
+     new filter and the old page index, which shows an empty page 5 of a
+     one-page result before correcting itself. */
   useEffect(() => { setPage(1); }, [query, sort]);
   useEffect(() => { setPage((current) => Math.min(current, totalPages)); }, [totalPages]);
   useEffect(() => { setSelectedIds(new Set()); }, [page, query, sort]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const pageAllSelected = pagedConnections.length > 0 && pagedConnections.every((connection) => selectedIds.has(connection.id));
 

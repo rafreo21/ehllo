@@ -94,6 +94,10 @@ export function ConnectionDrawer({
   }, []);
 
   useEffect(() => {
+    // Clearing per-connection view state has to happen in the same commit as the
+    // connection change, or the drawer paints the previous person's expanded
+    // history and open card modal before resetting.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowAllHistory(false);
     setCardModalOpen(false);
     setLinkCopied(false);

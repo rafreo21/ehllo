@@ -1,5 +1,6 @@
 "use client";
 
+import type { IconComponent } from "../../../../lib/icon-component";
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft as ArrowLeftIcon } from "react-feather";
@@ -77,7 +78,7 @@ const PHOSPHOR_METHOD_TYPES = new Set<MethodType>([
   "x", "threads", "snapchat", "tiktok", "whatsapp", "discord", "skype", "telegram", "paypal",
 ]);
 
-const methodMeta: Record<MethodType, { category: string; name: string; placeholder: string; label: string; Icon: ComponentType<any> }> = {
+const methodMeta: Record<MethodType, { category: string; name: string; placeholder: string; label: string; Icon: IconComponent }> = {
   email: { category: "General", name: "Email", placeholder: "you@example.com", label: "Work", Icon: EnvelopeSimpleIcon },
   phone: { category: "General", name: "Phone", placeholder: "+44 7700 900000", label: "Mobile", Icon: PhoneIcon },
   website: { category: "General", name: "Company URL", placeholder: "https://yourcompany.com", label: "Visit our website", Icon: GlobeIcon },
@@ -286,7 +287,7 @@ export default function CardEditor() {
   const initials = draft.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
   const previewTheme = useMemo(() => themeSurfaceStyle(draft.theme), [draft.theme]);
   const coverBadgeStyle = useMemo(() => themeCoverBadgeStyle(draft.theme), [draft.theme]);
-  const EditingMethodIcon: ComponentType<any> = editing ? methodMeta[editing.type].Icon : PlusIcon;
+  const EditingMethodIcon: IconComponent = editing ? methodMeta[editing.type].Icon : PlusIcon;
   const addedMethodTypes = new Set(draft.methods.map((method) => method.type));
   const showCompanyDetails = draft.showCompanyDetails !== false;
   const visibleMethods = showCompanyDetails

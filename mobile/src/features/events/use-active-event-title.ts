@@ -12,6 +12,9 @@ export function useActiveEventTitle(accessToken: string | undefined): string | u
 
   useEffect(() => {
     if (!accessToken) {
+      // Clearing on sign-out has to land in this commit, or a stale event title
+      // stays attached to whatever gets shared next.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveEventTitle(undefined);
       return;
     }

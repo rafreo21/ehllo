@@ -51,6 +51,9 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
   const saveGenerationRef = useRef(0);
 
   useEffect(() => {
+    // Synchronous on purpose: deferring this shows the previously opened meeting's
+    // recap under the new meeting's header for a frame.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setEncounter(null);
     setReviewTab("recap");

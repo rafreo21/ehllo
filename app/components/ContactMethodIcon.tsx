@@ -1,3 +1,4 @@
+import type { IconComponent } from "../../lib/icon-component";
 import { Calendar as CalendarBlankIcon } from "react-feather";
 import { MessageCircle as ChatCircleDotsIcon } from "react-feather";
 import { DollarSign as CurrencyDollarIcon } from "react-feather";
@@ -30,7 +31,7 @@ const PHOSPHOR_METHOD_TYPES = new Set([
   "x", "threads", "snapchat", "tiktok", "whatsapp", "discord", "skype", "telegram", "paypal",
 ]);
 
-const METHOD_ICONS: Record<string, ComponentType<any>> = {
+const METHOD_ICONS: Record<string, IconComponent> = {
   email: EnvelopeSimpleIcon,
   phone: PhoneIcon,
   website: GlobeIcon,

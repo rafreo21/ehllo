@@ -63,6 +63,10 @@ function MethodRow({
     return Math.max(0, Math.min(total - 1, raw));
   }
 
+  /* eslint-disable react-hooks/immutability -- dragY and activeIndex are
+     Reanimated shared values, whose documented API is assignment to `.value` on
+     the UI thread. They are not React state and reassigning them does not
+     render, so the immutability rule does not apply to them. */
   const pan = Gesture.Pan()
     .activeOffsetY([-8, 8])
     .onStart(() => {
@@ -79,6 +83,7 @@ function MethodRow({
       activeIndex.value = -1;
       if (to !== from) runOnJS(onDragEnd)(from, to);
     });
+  /* eslint-enable react-hooks/immutability */
 
   const animatedStyle = useAnimatedStyle(() => {
     const isActive = activeIndex.value === index;
