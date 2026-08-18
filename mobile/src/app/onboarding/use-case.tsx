@@ -33,13 +33,14 @@ export default function OnboardingUseCaseScreen() {
         title="How will you use ehllo?"
         // Team is not available yet, so there is only one real answer here.
         // Dismissing accepts it and moves on rather than stranding the user on
-        // an empty route with no way forward.
+        // an empty route with no way forward. That is also why there is no
+        // ghost action: with one answer available, a third button could only
+        // repeat what this and the primary already do.
         onClose={continueFlow}
         footer={
           <>
             <Button onPress={continueFlow} loading={saving}>Just for me</Button>
             <Button variant="secondary" disabled>For my team or company · Soon</Button>
-            <Button variant="ghost" onPress={continueFlow}>Decide later</Button>
           </>
         }>
         <View style={styles.illustration}>
