@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import {
   ACTIVITY_ENTRIES,
+  ACTIVITY_TZ_OFFSET,
   KNOWN_ISSUES,
   type ActivityImpact,
   type IssueStatus,
@@ -55,6 +56,15 @@ function formatDay(iso: string) {
   const date = new Date(`${iso}T00:00:00Z`);
   if (Number.isNaN(date.getTime())) return iso;
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+}
+
+/** Machine-readable, so the timestamp is not only decoration. */
+function stamp(iso: string, time: string) {
+  return `${iso}T${time}:00${ACTIVITY_TZ_OFFSET}`;
+}
+
+function formatStamp(iso: string, time: string) {
+  return `${formatDay(iso)} · ${time}`;
 }
 
 type Tab = "changes" | "issues";
@@ -125,7 +135,12 @@ export function ActivityLogClient() {
                   className={`absolute -start-[6.5px] mt-1.5 h-3 w-3 rounded-full border border-white ${IMPACT_DOT[entry.impact]}`}
                   aria-hidden
                 />
-                <time className="text-sm font-normal leading-none text-[#454745]">{formatDay(entry.date)}</time>
+                <time
+                  dateTime={stamp(entry.date, entry.time)}
+                  className="text-sm font-normal leading-none text-[#454745]"
+                >
+                  {formatStamp(entry.date, entry.time)}
+                </time>
                 <h3 className="my-2 flex flex-wrap items-center gap-2 text-lg font-bold text-[#163300]">
                   {entry.title}
                   <span
@@ -154,8 +169,11 @@ export function ActivityLogClient() {
                   className={`absolute -start-[6.5px] mt-1.5 h-3 w-3 rounded-full border border-white ${STATUS_DOT[issue.status]}`}
                   aria-hidden
                 />
-                <time className="text-sm font-normal leading-none text-[#454745]">
-                  Reported {formatDay(issue.reportedOn)}
+                <time
+                  dateTime={stamp(issue.reportedOn, issue.time)}
+                  className="text-sm font-normal leading-none text-[#454745]"
+                >
+                  Reported {formatStamp(issue.reportedOn, issue.time)}
                 </time>
                 <h3 className="my-2 flex flex-wrap items-center gap-2 text-lg font-bold text-[#163300]">
                   {issue.title}
