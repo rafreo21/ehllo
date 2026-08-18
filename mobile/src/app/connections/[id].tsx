@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ConnectionCardSheet } from '@/components/connection-card-sheet';
 import { BottomSheet } from '@/components/bottom-sheet';
+import { SharedMeetingSheet } from '@/components/shared-meeting-sheet';
 import { fetchConnectionThread, type ConnectionThreadItem } from '@/features/connections/connection-thread-api';
 import { ConnectionDeleteSheet } from '@/components/connection-delete-sheet';
 import { FollowUpCell } from '@/components/follow-up-cell';
@@ -93,6 +94,9 @@ export default function ConnectionDetailScreen() {
   // Three pills rather than one long list. History mixes conversations with
   // event activity, and past a handful of rows the two are hard to read apart.
   const [historyFilter, setHistoryFilter] = useState<'all' | 'meetings' | 'events'>('all');
+  // A meeting the other person recorded. Opens the same view their emailed
+  // guest link opens, so both sides read the same thing.
+  const [sharedMeetingId, setSharedMeetingId] = useState<string | null>(null);
   const [followUpsSheetOpen, setFollowUpsSheetOpen] = useState(false);
   const [activeMeeting, setActiveMeeting] = useState<EncounterPayload | null>(null);
   const [meetingRecordingUri, setMeetingRecordingUri] = useState<string | null>(null);
@@ -413,7 +417,11 @@ export default function ConnectionDetailScreen() {
           copy: (local ? local.sharedSummary : item.summary || '').trim(),
           eventTitle: item.eventTitle || '',
           eventLocation: item.eventLocation || '',
-          encounterId: local?.id ?? '',
+          // The thread's id, not the local record's. Falling back to the local
+          // copy meant a meeting the other person recorded carried no id at all,
+          // so the row had nothing to open - which is exactly why tapping it did
+          // nothing.
+          encounterId: item.id ?? local?.id ?? '',
           mine: Boolean(item.mine),
           meeting: local,
         };
@@ -588,10 +596,15 @@ export default function ConnectionDetailScreen() {
                   visibleHistory.slice(0, 2).map((item) => (
                     <Pressable
                       key={item.id}
-                      accessibilityRole={item.meeting ? 'button' : 'text'}
-                      disabled={!item.meeting}
-                      onPress={() => item.meeting ? void openMeeting(item.meeting) : undefined}
-                      style={({ pressed }) => [styles.meetingCell, pressed && item.meeting && styles.pressed]}>
+                      // Theirs opens the shared view, yours opens your own. Only
+                      // rows that are neither - an invitation, an email - stay flat.
+                      accessibilityRole={item.meeting || item.kind === 'meeting' ? 'button' : 'text'}
+                      disabled={!item.meeting && item.kind !== 'meeting'}
+                      onPress={() => {
+                        if (item.meeting) { void openMeeting(item.meeting); return; }
+                        if (item.kind === 'meeting' && item.encounterId) setSharedMeetingId(item.encounterId);
+                      }}
+                      style={({ pressed }) => [styles.meetingCell, pressed && styles.pressed]}>
                       <View style={[styles.timelineMarker, item.kind === 'completed' && styles.timelineMarkerCompleted]}>
                         {timelineIcon(item.kind)}
                       </View>
@@ -696,7 +709,8 @@ export default function ConnectionDetailScreen() {
               accessibilityRole="button"
               onPress={() => {
                 setMeetingsSheetOpen(false);
-                if (item.meeting) void openMeeting(item.meeting);
+                if (item.meeting) { void openMeeting(item.meeting); return; }
+                if (item.kind === 'meeting' && item.encounterId) setSharedMeetingId(item.encounterId);
               }}
               style={({ pressed }) => [styles.meetingCell, styles.meetingCellSheet, pressed && styles.pressed]}>
               <View style={[styles.timelineMarker, item.kind === 'completed' && styles.timelineMarkerCompleted]}>
@@ -716,6 +730,13 @@ export default function ConnectionDetailScreen() {
           ))}
         </View>
       </BottomSheet>
+
+      <SharedMeetingSheet
+        visible={Boolean(sharedMeetingId)}
+        encounterId={sharedMeetingId}
+        accessToken={accessToken}
+        onClose={() => setSharedMeetingId(null)}
+      />
 
       <MeetingDetailSheet
         visible={Boolean(activeMeeting)}
