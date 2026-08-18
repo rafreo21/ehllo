@@ -180,11 +180,41 @@ export async function POST(request: Request) {
     );
   }
 
-  await supabase.from("card_methods").delete().eq("card_id", saved.id);
+  // Replace-by-delete-then-insert, with the destructive half previously
+  // unchecked. Two ways that went wrong, both quiet:
+  //
+  //   delete fails, insert runs   the unique arc on (card_id, method_type)
+  //                               rejects it, and the user is told saving
+  //                               failed with no hint that the clear-out was
+  //                               the real cause
+  //   delete works, insert fails  the card is left with no contact methods at
+  //                               all - published, and unreachable
+  //
+  // There is no transaction to hold the two halves together, so the least this
+  // can do is check both and name which one broke.
+  const { error: clearMethodsError } = await supabase
+    .from("card_methods").delete().eq("card_id", saved.id);
+  if (clearMethodsError) {
+    console.error("[cards] could not clear contact methods before rewriting them", {
+      cardId: saved.id, code: clearMethodsError.code, message: clearMethodsError.message,
+    });
+    return NextResponse.json({ error: "We couldn’t save this card’s contact methods." }, { status: 500 });
+  }
+
   const methodRows = methodsForUpsert(saved.id, body.methods);
   if (methodRows.length) {
     const { error: methodError } = await supabase.from("card_methods").insert(methodRows);
     if (methodError) {
+      // The delete already happened and cannot be undone from here, so the card
+      // is now method-less. Log what they were, so it is recoverable from the
+      // log rather than only from the user retyping them.
+      console.error("[cards] methods were cleared but could not be rewritten", {
+        cardId: saved.id,
+        methodCount: methodRows.length,
+        methodTypes: methodRows.map((row) => row.method_type),
+        code: methodError.code,
+        message: methodError.message,
+      });
       return NextResponse.json({ error: "We couldn’t save this card’s contact methods." }, { status: 500 });
     }
   }
