@@ -53,6 +53,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "18:25",
+    title: "Add to Apple Wallet works again, and Google Calendar stops asking to reconnect",
+    impact: "fix",
+    detail:
+      "Tapping Add to Apple Wallet opened a blank page instead of the Wallet sheet - the pass was answering with an error and no content at all. Separately, opening an event could claim your Google Calendar needed reconnecting when it was perfectly fine, which sent you looking for a Reconnect button that Connected accounts was right not to show. Both were ours, both from changes made earlier today, and both are fixed.",
+    testing:
+      "Add to Apple Wallet on a published card, and open an event. Neither should mention reconnecting.",
+  },
+  {
+    date: "2026-08-18",
     time: "18:40",
     title: "Events from every calendar, and two silent data-loss traps removed",
     impact: "fix",
@@ -297,6 +307,26 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
 ];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
+  {
+    title: "Add to Apple Wallet opened a blank page",
+    time: "18:25",
+    status: "fixed",
+    detail:
+      "The button opened a link rather than the Add to Wallet sheet, and the link was completely empty. Every Apple Wallet pass in the app and on the web was affected, not just one card.",
+    resolution:
+      "A comment had been placed between `return` and the response it was returning, which in JavaScript silently turns it into a bare return - so the pass was never sent and the page had nothing to show. Ours, introduced earlier today. The lint rule that catches exactly this was switched on afterwards and confirmed to catch it, so it cannot happen again quietly.",
+    reportedOn: "2026-08-18",
+  },
+  {
+    title: "\"Reconnect your Google Calendar\" on a healthy connection",
+    time: "18:25",
+    status: "fixed",
+    detail:
+      "Opening an event said Google Calendar needed reconnecting. The connection was fine - a live token, refreshing normally - and Connected accounts correctly showed Disconnect rather than Reconnect, so there was no Reconnect button to be found anywhere.",
+    resolution:
+      "This morning's change to read every calendar added a request that needs a permission ehllo had never asked for. It was refused, and the refusal was misread as a dead connection. Failing to list your calendars now quietly falls back to your main one, exactly as before, and can no longer cast doubt on the connection itself. The extra permission is now requested, so reconnecting once unlocks your other calendars.",
+    reportedOn: "2026-08-18",
+  },
   {
     title: "Events on a second calendar never appeared",
     time: "18:40",

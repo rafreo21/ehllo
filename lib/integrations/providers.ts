@@ -7,6 +7,9 @@ import type { IntegrationProvider } from "./types";
 /** A 401/403 from the provider means the access token itself was rejected - distinct from a 5xx/network blip, since the former means the connection needs reconnecting, not just retrying. */
 export class CalendarProviderAuthError extends Error {}
 
+/** A 403 for one calendar: that calendar is unreadable, which says nothing about the token. Only a 403 on every calendar does. */
+export class CalendarPermissionError extends Error {}
+
 export async function sendGoogleEmail(accessToken: string, input: { to: string; subject: string; body: string }) {
   const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
     method: "POST",
@@ -144,16 +147,30 @@ type GoogleCalendarListResponse = {
  * they are the events this product exists for. Worse, the drop was silent - an
  * event simply never appeared, with nothing anywhere saying why.
  */
+/**
+ * The calendars worth reading, or just ["primary"] when we cannot enumerate.
+ *
+ * Enumeration is an enhancement and must never be able to fail the sync or
+ * question the connection. calendarList.list needs `calendar.readonly`, which
+ * `calendar.events` alone does not cover - so on an account connected before
+ * that scope was requested, this call returns 403. Treating that as a dead token
+ * (as the first version of this did) told people to reconnect a perfectly valid
+ * connection, and sent them looking for a Reconnect button that the accounts
+ * screen was right not to show, because refreshing the token there succeeded.
+ *
+ * So: every failure here degrades to the primary calendar. Once the scope is
+ * granted the enumeration simply starts working, with no further change.
+ */
 async function listGoogleCalendarIds(accessToken: string): Promise<string[]> {
-  const response = await fetch(
-    "https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=reader&maxResults=250",
-    { headers: { Authorization: `Bearer ${accessToken}` } },
-  );
-  if (response.status === 401 || response.status === 403) {
-    throw new CalendarProviderAuthError("Google Calendar rejected this token.");
+  let response: Response;
+  try {
+    response = await fetch(
+      "https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=reader&maxResults=250",
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+  } catch {
+    return ["primary"];
   }
-  // A calendar list we cannot read is not fatal: primary is always readable by
-  // the granted scope, so fall back to it rather than returning nothing.
   if (!response.ok) return ["primary"];
   const payload = await response.json() as GoogleCalendarListEntriesResponse;
   const ids = selectCalendarsToImport(
@@ -181,9 +198,13 @@ async function listGoogleEventsForCalendar(
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params.toString()}`,
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
-  if (response.status === 401 || response.status === 403) {
+  // 401 is unambiguous: the token itself is rejected. 403 is not - it also means
+  // "you cannot read this particular calendar", which must not condemn the whole
+  // connection. The caller decides, once it knows whether every calendar failed.
+  if (response.status === 401) {
     throw new CalendarProviderAuthError("Google Calendar rejected this token.");
   }
+  if (response.status === 403) throw new CalendarPermissionError("Google Calendar refused this calendar.");
   if (!response.ok) throw new Error("Google Calendar rejected this request.");
   const payload = await response.json() as GoogleCalendarListResponse;
 
@@ -227,19 +248,29 @@ export async function listGoogleCalendarEvents(
   // downstream keys events on externalId, so first copy wins - calendarIds puts
   // primary first, which makes that the primary calendar's copy.
   const byExternalId = new Map<string, RawCalendarEvent>();
+  let refusedEvery = true;
   for (const calendarId of calendarIds) {
     let events: RawCalendarEvent[];
     try {
       events = await listGoogleEventsForCalendar(accessToken, calendarId, input);
     } catch (caught) {
-      // A dead token means every calendar will fail and the connection needs
-      // attention, so that propagates. One unreadable calendar does not.
+      // A rejected token propagates immediately - every calendar will fail and
+      // the connection genuinely needs attention. Anything else is one calendar's
+      // problem and must not cost the person their other events.
       if (caught instanceof CalendarProviderAuthError) throw caught;
+      if (!(caught instanceof CalendarPermissionError)) refusedEvery = false;
       continue;
     }
+    refusedEvery = false;
     for (const event of events) {
       if (!byExternalId.has(event.externalId)) byExternalId.set(event.externalId, event);
     }
+  }
+
+  // Refused on every single calendar is the one case where a 403 does mean the
+  // grant is gone, so surface it rather than reporting an empty calendar.
+  if (refusedEvery && calendarIds.length > 0) {
+    throw new CalendarProviderAuthError("Google Calendar refused every calendar.");
   }
   return [...byExternalId.values()];
 }

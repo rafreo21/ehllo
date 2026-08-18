@@ -47,6 +47,12 @@ export type ConnectedAccountRow = {
 export const GOOGLE_INTEGRATION_SCOPES = [
   "https://www.googleapis.com/auth/gmail.send",
   "https://www.googleapis.com/auth/calendar.events",
+  // Reading events needs calendar.events; *listing which calendars exist* needs
+  // this one, and nothing else grants it. Without it only the primary calendar
+  // can be found, which is why events kept on a work or side calendar never
+  // appeared. Accounts connected before this was requested keep working - the
+  // importer falls back to primary - and gain the rest when they reconnect.
+  "https://www.googleapis.com/auth/calendar.readonly",
   "https://www.googleapis.com/auth/drive.file",
   "https://www.googleapis.com/auth/userinfo.email",
 ];

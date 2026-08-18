@@ -82,10 +82,15 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
 
   try {
     const pass = await buildAppleWalletPass(card, readAppleWalletCerts()!);
-    return // A Node Buffer is not a BodyInit. Handing over its bytes is, and copying
+    // A Node Buffer is not a BodyInit. Handing over its bytes is, and copying
     // into a fresh Uint8Array avoids shipping the whole pooled ArrayBuffer
     // that Buffer may be a view into.
-    new NextResponse(new Uint8Array(pass), {
+    //
+    // The comment sits above the `return`, not after it. Below it, JavaScript's
+    // automatic semicolon insertion turned this into a bare `return;` and left
+    // the response unreachable, so every Apple Wallet pass answered 500 with an
+    // empty body - a blank page instead of the Add to Wallet sheet.
+    return new NextResponse(new Uint8Array(pass), {
       headers: {
         "Content-Type": "application/vnd.apple.pkpass",
         "Content-Disposition": `attachment; filename="${normalized}.pkpass"`,
