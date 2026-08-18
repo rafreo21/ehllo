@@ -144,9 +144,9 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     backgroundColor: colors.surface,
   },
-  chipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
+  chipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
   chipText: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
-  chipTextActive: { color: colors.white },
+  chipTextActive: { color: colors.ink },
   customRow: {
     flexDirection: 'row',
     alignItems: 'center',

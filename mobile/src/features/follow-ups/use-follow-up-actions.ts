@@ -148,6 +148,11 @@ export function useFollowUpActions(
     onUpdated?: () => void,
   ) => {
     if (!accessToken) return;
+    // A commitment somebody else made to you lives in their workspace, so writing
+    // to it is not ours to do - the row-level policy would refuse it anyway, and
+    // the honest reason is clearer than a permission error. Guarded at the single
+    // place every screen goes through rather than per screen.
+    if (item.addressedToMe) return;
     const key = `${item.encounterId}-${item.actionId}`;
     setCompletingId(key);
     try {
@@ -180,6 +185,8 @@ export function useFollowUpActions(
     onUpdated?: () => void,
   ) => {
     if (!accessToken) return;
+    // Not ours to write: see markComplete.
+    if (item.addressedToMe) return;
     const key = `${item.encounterId}-${item.actionId}`;
     setCompletingId(key);
     try {
@@ -213,6 +220,8 @@ export function useFollowUpActions(
     onUpdated?: () => void,
   ) => {
     if (!accessToken) return;
+    // Not ours to write: see markComplete.
+    if (item.addressedToMe) return;
     const key = `${item.encounterId}-${item.actionId}`;
     setCompletingId(key);
     try {
@@ -252,6 +261,8 @@ export function useFollowUpActions(
     onUpdated?: () => void,
   ) => {
     if (!accessToken) return;
+    // Not ours to write: see markComplete.
+    if (item.addressedToMe) return;
     const key = `${item.encounterId}-${item.actionId}`;
     setCompletingId(key);
     try {

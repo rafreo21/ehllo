@@ -32,6 +32,12 @@ export type FollowUpItem = {
   eventId?: string;
   /** The linked event's title, if any - event is an activator: absent means nothing about the follow-up's copy changes. */
   eventTitle?: string;
+  /**
+   * A commitment the other person made to you, during their capture in their
+   * workspace. Yours to see and act on in your own life, but not yours to
+   * complete on their behalf - so anything that writes has to leave these alone.
+   */
+  addressedToMe?: boolean;
 };
 
 export class FollowUpConflictError extends Error {
@@ -73,14 +79,37 @@ export async function fetchFollowUps(
   if (connection?.exchangeId?.trim()) params.set('exchangeId', connection.exchangeId.trim());
   const query = params.toString();
   const response = await mobileFetch(`/api/follow-ups${query ? `?${query}` : ''}`, accessToken);
-  const payload = await readMobileApiJson<{ followUps?: Record<string, unknown>[]; error?: string }>(
+  const payload = await readMobileApiJson<{
+    followUps?: Record<string, unknown>[];
+    addressedToMe?: Record<string, unknown>[];
+    error?: string;
+  }>(
     response,
     'Could not read follow-ups from ehllo.',
   );
   if (!response.ok) {
     throw new Error(payload.error || 'Could not load follow-ups.');
   }
-  return sortFollowUps((payload.followUps ?? []).map((row) => ({
+  const addressedToMe: FollowUpItem[] = (payload.addressedToMe ?? []).map((row) => ({
+    encounterId: String(row.encounterId ?? ''),
+    actionId: String(row.id ?? ''),
+    title: String(row.note ?? ''),
+    channel: row.channel as FollowUpItem['channel'],
+    dueAt: String(row.dueAt ?? row.createdAt ?? ''),
+    status: 'open' as FollowUpItem['status'],
+    effectiveState: undefined,
+    owner: 'guest' as FollowUpItem['owner'],
+    personName: String(row.fromName ?? ''),
+    personEmail: String(row.fromEmail ?? ''),
+    participants: [],
+    contactMethods: [],
+    encounterTitle: String(row.meetingTitle ?? ''),
+    startedAt: String(row.meetingAt ?? ''),
+    eventTitle: typeof row.eventTitle === 'string' && row.eventTitle ? row.eventTitle : undefined,
+    addressedToMe: true,
+  }));
+
+  return sortFollowUps([...addressedToMe, ...(payload.followUps ?? []).map((row) => ({
     encounterId: String(row.encounterId ?? ''),
     actionId: String(row.actionId ?? ''),
     groupId: typeof row.groupId === 'string' ? row.groupId : undefined,
@@ -108,7 +137,7 @@ export async function fetchFollowUps(
     contactMethods: mapContactMethods(row.contactMethods),
     eventId: typeof row.eventId === 'string' ? row.eventId : undefined,
     eventTitle: typeof row.eventTitle === 'string' ? row.eventTitle : undefined,
-  })));
+  }))]);
 }
 
 async function updateFollowUpStatus(

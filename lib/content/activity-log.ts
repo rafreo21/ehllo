@@ -53,6 +53,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "19:10",
+    title: "Follow-ups the other person owes you now reach you",
+    impact: "fix",
+    detail:
+      "When someone recorded a commitment to you during their own capture, you could read it in the shared history and do nothing with it - it never appeared in your Follow-ups. It does now, marked as theirs rather than yours, and it cannot be ticked off on their behalf. History was already syncing both ways; this was the half that was not. Also: the person field on Add follow-up no longer sits in a much roomier box than the rows beneath it, and \"When should you do this?\" uses the same light pill as everywhere else instead of a dark one.",
+    testing:
+      "Have the other account record a follow-up for you during their capture, then open your Follow-ups.",
+  },
+  {
+    date: "2026-08-18",
     time: "18:25",
     title: "Add to Apple Wallet works again, and Google Calendar stops asking to reconnect",
     impact: "fix",
@@ -307,6 +317,16 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
 ];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
+  {
+    title: "Follow-ups did not carry across between two connected accounts",
+    time: "19:10",
+    status: "fixed",
+    detail:
+      "History synced both ways between two people, but follow-ups did not. A commitment one person recorded for the other stayed with whoever recorded it, so the person it was actually addressed to never had it in their own list.",
+    resolution:
+      "Ours, and worth being plain about: the server has been returning these all along and the app was throwing them away one line before use. Nothing consumed the field. Now mapped into your Follow-ups, shown as owed by the other person, and blocked from being completed on their behalf at the single place every screen writes through.",
+    reportedOn: "2026-08-18",
+  },
   {
     title: "Add to Apple Wallet opened a blank page",
     time: "18:25",

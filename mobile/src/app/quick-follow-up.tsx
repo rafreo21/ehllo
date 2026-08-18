@@ -733,8 +733,8 @@ const styles = StyleSheet.create({
   label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800' },
   linkHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   personTrigger: {
-    minHeight: 72,
-    padding: spacing.x5,
+    minHeight: 54,
+    padding: spacing.x3,
     borderRadius: radius.large,
     backgroundColor: colors.surface,
     flexDirection: 'row',
