@@ -82,7 +82,10 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
 
   try {
     const pass = await buildAppleWalletPass(card, readAppleWalletCerts()!);
-    return new NextResponse(pass, {
+    return // A Node Buffer is not a BodyInit. Handing over its bytes is, and copying
+    // into a fresh Uint8Array avoids shipping the whole pooled ArrayBuffer
+    // that Buffer may be a view into.
+    new NextResponse(new Uint8Array(pass), {
       headers: {
         "Content-Type": "application/vnd.apple.pkpass",
         "Content-Disposition": `attachment; filename="${normalized}.pkpass"`,

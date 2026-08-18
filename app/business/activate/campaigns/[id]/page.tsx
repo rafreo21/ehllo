@@ -63,13 +63,19 @@ export default function CampaignDetailPage() {
     );
   }
 
+  // The guard above narrows `campaign` for the JSX, but not inside these
+  // functions: a closure could be called later, so TypeScript will not carry the
+  // narrowing in. Capturing it once after the guard is the honest fix - an
+  // assertion would only hide the same question.
+  const activeCampaign = campaign;
+
   function setActive() {
-    writeActiveCampaignId(campaign.id);
-    setActiveCampaignId(campaign.id);
+    writeActiveCampaignId(activeCampaign.id);
+    setActiveCampaignId(activeCampaign.id);
   }
 
   function archive() {
-    archiveCampaign(campaign.id);
+    archiveCampaign(activeCampaign.id);
     window.location.href = "/business/activate/campaigns";
   }
 

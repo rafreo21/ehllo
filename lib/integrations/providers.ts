@@ -149,7 +149,10 @@ export async function listGoogleCalendarEvents(
   if (!response.ok) throw new Error("Google Calendar rejected this request.");
   const payload = await response.json() as GoogleCalendarListResponse;
 
-  return (payload.items ?? []).flatMap((item) => {
+  // Annotated so the cancelled and active branches unify as RawCalendarEvent.
+  // Left inferred, TypeScript widens each branch separately and then rejects the
+  // callback against flatMap's signature.
+  return (payload.items ?? []).flatMap((item): RawCalendarEvent[] => {
     if (!item.id) return [];
     if (item.status === "cancelled") return [{
       externalId: item.id, title: item.summary?.trim() ?? "", location: "", startsAt: "", endsAt: "",
@@ -216,7 +219,7 @@ export async function listMicrosoftCalendarEvents(
   if (!response.ok) throw new Error("Outlook Calendar rejected this request.");
   const payload = await response.json() as MicrosoftCalendarViewResponse;
 
-  return (payload.value ?? []).flatMap((item) => {
+  return (payload.value ?? []).flatMap((item): RawCalendarEvent[] => {
     if (!item.id) return [];
     if (item.isCancelled) return [{
       externalId: item.id, title: item.subject?.trim() ?? "", location: "", startsAt: "", endsAt: "",

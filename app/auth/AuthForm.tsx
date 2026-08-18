@@ -92,12 +92,14 @@ export function AuthForm({
 
       const { data: provisioned, error: provisionError } = await supabase
         .rpc("provision_personal_workspace")
-        .single<ProvisionResult>();
+        .single();
 
-      let onboardingStatus = provisioned?.onboarding_status;
+      // Cast rather than a type argument: this client is loosely typed, so
+      // .single() is an untyped call and cannot take one.
+      let onboardingStatus = (provisioned as ProvisionResult | null)?.onboarding_status;
       if (provisionError || !onboardingStatus) {
-        const { data: context } = await supabase.rpc("get_my_app_context").single<ProvisionResult>();
-        onboardingStatus = context?.onboarding_status;
+        const { data: context } = await supabase.rpc("get_my_app_context").single();
+        onboardingStatus = (context as ProvisionResult | null)?.onboarding_status;
       }
 
       if (!onboardingStatus) {

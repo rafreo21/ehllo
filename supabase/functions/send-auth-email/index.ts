@@ -40,19 +40,58 @@ function subjectFor(action: string) {
   return "Your ehllo sign-in code";
 }
 
-function htmlFor(action: string, token: string) {
-  const intro =
-    action === "recovery"
-      ? "Enter this code to reset your password:"
-      : action === "signup"
-        ? "Enter this code to confirm your email:"
-        : "Enter this 6-digit code in ehllo to sign in:";
+function introFor(action: string) {
+  if (action === "recovery") return "Enter this code to reset your password:";
+  if (action === "signup") return "Enter this code to confirm your email:";
+  return "Enter this 6-digit code in ehllo to sign in:";
+}
 
-  return `<h2>${subjectFor(action)}</h2>
-<p>${intro}</p>
-<p style="font-size:32px;font-weight:700;letter-spacing:8px;margin:20px 0">${token}</p>
-<p>This code expires shortly and can only be used once.</p>
-<p>If you didn't request this, you can ignore this email.</p>`;
+/**
+ * Plain-text alternative, sent alongside the HTML.
+ *
+ * An HTML-only message is a long-standing spam signal and Apple Mail weights it
+ * heavily - sign-in codes were landing in iCloud junk. A multipart message with a
+ * real text part is what a legitimate transactional sender looks like.
+ */
+function textFor(action: string, token: string) {
+  return [
+    subjectFor(action),
+    "",
+    introFor(action),
+    "",
+    token,
+    "",
+    "This code expires shortly and can only be used once.",
+    "If you didn't request this, you can ignore this email.",
+    "",
+    "ehllo",
+  ].join("\n");
+}
+
+/**
+ * A complete HTML document rather than a fragment.
+ *
+ * This previously began at <h2> with no doctype, html, head or body, which
+ * filters read as malformed. Together with the missing text part and a body that
+ * was nothing but a large spaced-out number, it had the shape of the phishing mail
+ * these filters are built to catch.
+ */
+function htmlFor(action: string, token: string) {
+  return `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>${subjectFor(action)}</title></head>
+<body style="margin:0;padding:24px;background:#f2f5f0;font-family:Arial,Helvetica,sans-serif;color:#163300">
+<div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;padding:28px">
+<p style="margin:0 0 18px;font-size:18px;font-weight:700">ehllo</p>
+<h2 style="margin:0 0 10px;font-size:20px">${subjectFor(action)}</h2>
+<p style="margin:0 0 6px;font-size:15px;line-height:22px">${introFor(action)}</p>
+<p style="font-size:30px;font-weight:700;letter-spacing:6px;margin:18px 0;color:#163300">${token}</p>
+<p style="margin:0 0 6px;font-size:14px;line-height:20px;color:#454745">This code expires shortly and can only be used once.</p>
+<p style="margin:0;font-size:14px;line-height:20px;color:#454745">If you didn't request this, you can ignore this email.</p>
+</div>
+<p style="max-width:480px;margin:16px auto 0;font-size:12px;line-height:18px;color:#667363">Sent by ehllo because a sign-in was requested for this address.</p>
+</body>
+</html>`;
 }
 
 // Resend refuses external recipients until a sender domain is verified. That
@@ -125,6 +164,7 @@ Deno.serve(async (req) => {
         to: [send.to],
         subject: subjectFor(action),
         html: htmlFor(action, send.token),
+        text: textFor(action, send.token),
       }));
     } catch (thrown) {
       error = thrown;

@@ -268,6 +268,16 @@ export const KNOWN_ISSUES: KnownIssue[] = [
     reportedOn: "2026-08-18",
   },
   {
+    title: "Sign-in codes landing in junk",
+    time: "18:20",
+    status: "in-progress",
+    detail:
+      "Sign-in code emails were going to the junk folder, reliably on iCloud addresses.",
+    resolution:
+      "Two causes. The sending service is not listed in our domain's SPF record while our DMARC policy is set to quarantine, so mail that fails the check is sent to junk by instruction - that needs a DNS change. The emails were also HTML-only and not a complete document, both long-standing spam signals; they now carry a plain-text alternative and proper structure.",
+    reportedOn: "2026-08-18",
+  },
+  {
     title: "No web release went out for twelve hours",
     time: "14:45",
     status: "fixed",

@@ -90,7 +90,10 @@ function extractLinks(documentLike: {
   let companyWebsite = "";
   let personalWebsite = "";
 
-  for (const node of documentLike.querySelectorAll("a[href^='mailto:'], a[href^='tel:'], a[href^='http']")) {
+  // Array.from rather than a for..of: querySelectorAll is typed ArrayLike here
+  // (these run against scraped fragments as well as a live document), and
+  // ArrayLike has no iterator.
+  for (const node of Array.from(documentLike.querySelectorAll("a[href^='mailto:'], a[href^='tel:'], a[href^='http']"))) {
     const href = node.getAttribute?.("href") ?? "";
     if (!email && href.startsWith("mailto:")) email = clean(href.replace(/^mailto:/i, "").split("?")[0]);
     if (!phone && href.startsWith("tel:")) phone = clean(href.replace(/^tel:/i, "").split("?")[0]);
