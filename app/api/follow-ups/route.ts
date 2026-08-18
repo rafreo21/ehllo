@@ -168,6 +168,33 @@ export async function GET(request: Request) {
     }
   }
 
+  // The people you have actually connected with, keyed by name.
+  //
+  // The chain above reads the encounter participant, then the CRM contact, and
+  // stops. Neither necessarily holds an email: a participant captured during a
+  // meeting often has only a name, and contactId points at the contacts table,
+  // not at people_connections. So a follow-up for somebody you scanned - whose
+  // email ehllo already knows, whose card publishes it, who signed up with it -
+  // could still report "we don't have their email", and the request sheet
+  // offered nothing but "Not now".
+  //
+  // Matched on name because that is what a participant reliably carries. Used
+  // last, so anything actually recorded against the encounter still wins.
+  const connectionEmailByName = new Map<string, string>();
+  {
+    const { data: connectionRows } = await supabase
+      .from("people_connections")
+      .select("person_name, person_email")
+      .eq("workspace_id", user.workspaceId);
+    for (const row of connectionRows ?? []) {
+      const name = String((row as { person_name?: string }).person_name ?? "").trim().toLowerCase();
+      const email = String((row as { person_email?: string }).person_email ?? "").trim();
+      if (name && email.includes("@") && !connectionEmailByName.has(name)) {
+        connectionEmailByName.set(name, email);
+      }
+    }
+  }
+
   // "Where we met" / follow-up email opener context - event is an activator,
   // so this map only ever adds a title for encounters that actually have one.
   const eventIds = [...new Set(encounters.map((encounter) => encounter.eventId).filter((id): id is string => Boolean(id)))];
@@ -194,7 +221,12 @@ export async function GET(request: Request) {
       ? item.participants.find((candidate) => candidate.id === item.participantId)
       : undefined;
     const contact = item.contactId ? contactsById.get(item.contactId) : undefined;
-    return [participant?.email ?? "", contact?.email ?? "", item.personEmail];
+    return [
+      participant?.email ?? "",
+      contact?.email ?? "",
+      item.personEmail,
+      connectionEmailByName.get(item.personName.trim().toLowerCase()) ?? "",
+    ];
   }));
 
   const followUps = ordered.map((item) => {
@@ -202,7 +234,12 @@ export async function GET(request: Request) {
       ? item.participants.find((candidate) => candidate.id === item.participantId)
       : undefined;
     const contact = item.contactId ? contactsById.get(item.contactId) : undefined;
-    const knownEmail = [participant?.email, contact?.email, item.personEmail]
+    const knownEmail = [
+      participant?.email,
+      contact?.email,
+      item.personEmail,
+      connectionEmailByName.get(item.personName.trim().toLowerCase()),
+    ]
       .map((value) => value?.trim().toLowerCase() || "")
       .find(Boolean) || "";
 
@@ -211,8 +248,10 @@ export async function GET(request: Request) {
       contactMethods: mergeMethods(
         participantMethods(participant),
         contact ? contactMethods(contact) : [],
-        item.personEmail.trim()
-          ? [{ id: `${item.actionId}-email`, type: "email" as const, value: item.personEmail.trim(), label: "Email" }]
+        // knownEmail rather than item.personEmail, so an address we hold only on
+        // the connection still reaches the sheet as a usable method.
+        knownEmail
+          ? [{ id: `${item.actionId}-email`, type: "email" as const, value: knownEmail, label: "Email" }]
           : [],
         // Last, so anything captured about this person wins over the card - but
         // every method the card publishes and nobody typed still gets through.

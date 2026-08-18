@@ -58,6 +58,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
+    date: "2026-08-19",
+    time: "00:20",
+    title: "“We don’t have their email” — when we did",
+    impact: "fix",
+    detail:
+      "Asking someone for a contact detail from the Follow-ups page could report that we had no email for them and offer nothing but Not now, even for people you had connected with, whose card publishes their address, and who signed up with it. The follow-up only checked the meeting record and your contacts, and never looked at the connection itself - which is exactly where the address was. It now does, so the request and mail options appear, and any other details their card publishes come through with it.",
+    testing:
+      "Open a follow-up for someone you scanned, ask for a contact method, and check the sheet offers Request via ehllo and the mail option.",
+  },
+  {
     date: "2026-08-18",
     time: "23:55",
     title: "All seven notification switches now stay where you put them",
