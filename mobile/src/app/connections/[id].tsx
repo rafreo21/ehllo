@@ -1,11 +1,11 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { CaretRight, CheckCircle, IdentificationCard, Microphone, Plus, Trash,
-} from 'phosphor-react-native';
+import { CalendarBlank, CaretRight, CheckCircle, EnvelopeSimple, IdentificationCard, ListChecks, Microphone, Plus, Trash } from 'phosphor-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ConnectionCardSheet } from '@/components/connection-card-sheet';
 import { BottomSheet } from '@/components/bottom-sheet';
+import { fetchConnectionThread, type ConnectionThreadItem } from '@/features/connections/connection-thread-api';
 import { ConnectionDeleteSheet } from '@/components/connection-delete-sheet';
 import { FollowUpCell } from '@/components/follow-up-cell';
 import { FollowUpMissingSheet } from '@/components/follow-up-missing-sheet';
@@ -53,6 +53,18 @@ import { formatMeetingDate } from '@/lib/due-date';
 import { describeError } from '@/lib/friendly-error';
 import { useAppInsets } from '@/lib/safe-area';
 import { colors, radius, spacing, fonts } from '@/theme/tokens';
+
+/**
+ * The thread mixes kinds, so the marker has to say which without a label:
+ * a conversation, a commitment, an invitation, a message.
+ */
+function timelineIcon(kind: 'meeting' | 'completed' | 'follow_up' | 'invite' | 'email') {
+  if (kind === 'completed') return <CheckCircle size={17} color={colors.ink} weight="fill" />;
+  if (kind === 'follow_up') return <ListChecks size={17} color={colors.ink} weight="fill" />;
+  if (kind === 'invite') return <CalendarBlank size={17} color={colors.ink} weight="fill" />;
+  if (kind === 'email') return <EnvelopeSimple size={17} color={colors.ink} weight="fill" />;
+  return <Microphone size={17} color={colors.ink} weight="fill" />;
+}
 
 export default function ConnectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -260,6 +272,33 @@ export default function ConnectionDetailScreen() {
   // Quick Follow-up creates a placeholder encounter just to hold its task, but
   // notes-only Capture also has zero duration. Hide only the actual placeholder
   // so a notes capture remains a conversation with its event context.
+  // The thread is the spine of this page: the server decides which items exist
+  // and whose they are, so A and B are looking at the same conversation rather
+  // than at two private lists that happen to overlap.
+  //
+  // Best effort on purpose. If it cannot load - offline, or not yet deployed -
+  // the page falls back to the caller's own cached meetings, which is what it
+  // showed before. Degrading to your own half is acceptable; showing nothing is
+  // not.
+  const [thread, setThread] = useState<ConnectionThreadItem[]>([]);
+
+  useEffect(() => {
+    const connectionId = connection?.sourceId;
+    if (!accessToken || !connectionId || connection?.source !== 'met') {
+      void Promise.resolve().then(() => setThread([]));
+      return;
+    }
+    let cancelled = false;
+    void Promise.resolve().then(() => fetchConnectionThread(accessToken, connectionId)
+      .then((loaded) => {
+        if (!cancelled) setThread(loaded.items);
+      })
+      .catch(() => {
+        if (!cancelled) setThread([]);
+      }));
+    return () => { cancelled = true; };
+  }, [accessToken, connection?.sourceId, connection?.source]);
+
   const recordedMeetings = useMemo(
     () => meetings.filter(isConversationEncounter),
     [meetings],
@@ -268,22 +307,108 @@ export default function ConnectionDetailScreen() {
     () => new Map(myEvents.map((event) => [event.id, event])),
     [myEvents],
   );
-  const timeline = useMemo(() => recordedMeetings
+  const localTimeline = useMemo(() => recordedMeetings
     .map((meeting) => {
       const event = meeting.eventId ? eventById.get(meeting.eventId) : undefined;
       return {
         id: `meeting-${meeting.id}`,
-        kind: 'meeting' as 'meeting' | 'completed',
+        kind: 'meeting' as 'meeting' | 'completed' | 'follow_up' | 'invite' | 'email',
         occurredAt: meeting.startedAt,
         title: meeting.title.trim() || 'Meeting',
         copy: meeting.sharedSummary.trim(),
         eventTitle: event?.title || '',
         eventLocation: event?.location || '',
         encounterId: meeting.id,
+        mine: true,
         meeting,
       };
     })
     .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt)), [eventById, recordedMeetings]);
+
+  const meetingById = useMemo(
+    () => new Map(recordedMeetings.map((meeting) => [meeting.id, meeting])),
+    [recordedMeetings],
+  );
+
+  const timeline = useMemo(() => {
+    // "met" is the connection itself and is already the page's subject, so it is
+    // not repeated as a row here.
+    const items = thread.filter((item) => item.kind !== 'met');
+    if (!items.length) return localTimeline;
+
+    return items
+      .map((item, index) => {
+        // Owned meetings join their local record so they still open with the
+        // recording and notes. The thread decides the list; the local copy only
+        // supplies fidelity for the half that is already yours.
+        const local = item.kind === 'meeting' && item.mine && item.id
+          ? meetingById.get(item.id)
+          : undefined;
+
+        if (item.kind === 'follow_up') {
+          return {
+            id: `follow-up-${item.id ?? index}`,
+            kind: 'follow_up' as const,
+            occurredAt: item.at ?? '',
+            title: (item.note || 'Follow-up').trim(),
+            copy: item.forMe ? 'Yours to do' : `For ${item.guestName || 'them'}`,
+            eventTitle: '',
+            eventLocation: '',
+            encounterId: '',
+            mine: Boolean(item.mine),
+            meeting: undefined,
+          };
+        }
+
+        if (item.kind === 'event_invite') {
+          return {
+            id: `invite-${item.eventId ?? index}`,
+            kind: 'invite' as const,
+            occurredAt: item.at ?? '',
+            title: item.direction === 'outbound'
+              ? `You invited them to ${item.eventTitle || 'an event'}`
+              : `They invited you to ${item.eventTitle || 'an event'}`,
+            copy: item.status && item.status !== 'invited' ? item.status : '',
+            eventTitle: '',
+            eventLocation: '',
+            encounterId: '',
+            mine: Boolean(item.mine),
+            meeting: undefined,
+          };
+        }
+
+        if (item.kind === 'email') {
+          return {
+            id: `email-${item.at ?? index}-${index}`,
+            kind: 'email' as const,
+            occurredAt: item.at ?? '',
+            title: item.subject || (item.direction === 'outbound' ? 'You emailed them' : 'They emailed you'),
+            copy: item.direction === 'outbound' ? 'Sent' : 'Received',
+            eventTitle: item.eventTitle || '',
+            eventLocation: '',
+            encounterId: '',
+            mine: Boolean(item.mine),
+            meeting: undefined,
+          };
+        }
+
+        return {
+          id: `meeting-${item.id ?? index}`,
+          kind: 'meeting' as const,
+          occurredAt: item.at ?? '',
+          title: (local?.title || item.title || 'Meeting').trim() || 'Meeting',
+          // Theirs shows only what they shared. An unshared meeting still
+          // appears - you were both there - with nothing pretending to be a summary.
+          copy: (local ? local.sharedSummary : item.summary || '').trim(),
+          eventTitle: item.eventTitle || '',
+          eventLocation: item.eventLocation || '',
+          encounterId: local?.id ?? '',
+          mine: Boolean(item.mine),
+          meeting: local,
+        };
+      })
+      .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt));
+  }, [thread, localTimeline, meetingById]);
 
   async function confirmDelete() {
     if (!accessToken || !connection) return;
@@ -432,13 +557,12 @@ export default function ConnectionDetailScreen() {
                   timeline.slice(0, 2).map((item) => (
                     <Pressable
                       key={item.id}
-                      accessibilityRole="button"
+                      accessibilityRole={item.meeting ? 'button' : 'text'}
+                      disabled={!item.meeting}
                       onPress={() => item.meeting ? void openMeeting(item.meeting) : undefined}
-                      style={({ pressed }) => [styles.meetingCell, pressed && styles.pressed]}>
+                      style={({ pressed }) => [styles.meetingCell, pressed && item.meeting && styles.pressed]}>
                       <View style={[styles.timelineMarker, item.kind === 'completed' && styles.timelineMarkerCompleted]}>
-                        {item.kind === 'completed'
-                          ? <CheckCircle size={17} color={colors.ink} weight="fill" />
-                          : <Microphone size={17} color={colors.ink} weight="fill" />}
+                        {timelineIcon(item.kind)}
                       </View>
                       <View style={styles.meetingCopy}>
                         <Text style={styles.meetingTitle} numberOfLines={1}>
@@ -545,9 +669,7 @@ export default function ConnectionDetailScreen() {
               }}
               style={({ pressed }) => [styles.meetingCell, styles.meetingCellSheet, pressed && styles.pressed]}>
               <View style={[styles.timelineMarker, item.kind === 'completed' && styles.timelineMarkerCompleted]}>
-                {item.kind === 'completed'
-                  ? <CheckCircle size={17} color={colors.ink} weight="fill" />
-                  : <Microphone size={17} color={colors.ink} weight="fill" />}
+                {timelineIcon(item.kind)}
               </View>
               <View style={styles.meetingCopy}>
                 <Text style={styles.meetingTitle} numberOfLines={1}>{item.title}</Text>
