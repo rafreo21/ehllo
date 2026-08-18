@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2022",
     "lib": [
       "dom",
       "dom.iterable",
@@ -43,6 +43,10 @@
     ".next",
     ".vercel",
     "dist",
-    "extension"
+    "extension",
+    "supabase/functions",
+    "worker",
+    "db",
+    "scripts"
   ]
 }

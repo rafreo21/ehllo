@@ -53,6 +53,15 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "15:12",
+    title: "Follow-ups can see how to reach someone",
+    impact: "fix",
+    detail:
+      "A follow-up said you had no phone number for someone whose card publishes one, and the sheet fell back to \"Not now\" because it could not see an address either. Follow-ups only read details typed during a capture, never the person's own card. They now read both, merged, so a phone published on a card and an email typed in a capture both come through.",
+    testing: "Open a follow-up for someone whose card lists a phone or LinkedIn. The request and mail-app options should appear.",
+  },
+  {
+    date: "2026-08-18",
     time: "14:24",
     title: "The Wallet card was redesigned",
     impact: "improvement",
@@ -191,11 +200,21 @@ export const KNOWN_ISSUES: KnownIssue[] = [
   {
     title: "Calendar option appeared to do nothing",
     time: "13:20",
-    status: "in-progress",
+    status: "fixed",
     detail:
       "Turning on \"add to my calendar\" when creating an event had no effect: the event was created but never reached the calendar.",
     resolution:
-      "The app was updated ahead of the server. Fixed, and takes effect on the next staging release.",
+      "Two causes, and the second was hiding the first. The app had been updated ahead of the server - and the server could not be updated, because a scheduled job set to run every fifteen minutes is not allowed on our current hosting plan and its rejection failed every deployment. The schedule is now daily, pushes flush when you open Events so nothing waits for it, and the deployment is live.",
+    reportedOn: "2026-08-18",
+  },
+  {
+    title: "No web release went out for twelve hours",
+    time: "14:45",
+    status: "fixed",
+    detail:
+      "Every web change made during the day sat undeployed. A scheduled job had been set to run every fifteen minutes, which our hosting plan does not allow, and that single rejection failed the entire deployment rather than just the job - so nothing shipped, and a fix that had already been written looked like it had not worked.",
+    resolution:
+      "The schedule is daily now, which the plan allows, and the work it does also happens when you open Events so nothing waits a day for it. Deployment restored and everything from today is live.",
     reportedOn: "2026-08-18",
   },
   {

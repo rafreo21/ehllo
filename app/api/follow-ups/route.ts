@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { createApiSupabaseClient, resolveApiUser } from "../../../lib/auth/api-request";
 import { encounterFromApi } from "../../../lib/encounters";
 import { fetchParticipantsByEncounter } from "../../../lib/encounter-participants-server";
@@ -31,11 +33,89 @@ function participantMethods(
   participant: { id: string; email: string; phone: string; linkedIn: string } | undefined,
 ): FollowUpContactMethod[] {
   if (!participant) return [];
-  return [
-    participant.email.trim() ? { id: `${participant.id}-email`, type: "email" as const, value: participant.email.trim(), label: "Email" } : null,
-    participant.phone.trim() ? { id: `${participant.id}-phone`, type: "phone" as const, value: participant.phone.trim(), label: "Phone" } : null,
-    participant.linkedIn.trim() ? { id: `${participant.id}-linkedin`, type: "linkedin" as const, value: participant.linkedIn.trim(), label: "LinkedIn" } : null,
-  ].filter((method): method is FollowUpContactMethod => method !== null);
+  const candidates: Array<FollowUpContactMethod | null> = [
+    participant.email.trim() ? { id: `${participant.id}-email`, type: "email", value: participant.email.trim(), label: "Email" } : null,
+    participant.phone.trim() ? { id: `${participant.id}-phone`, type: "phone", value: participant.phone.trim(), label: "Phone" } : null,
+    participant.linkedIn.trim() ? { id: `${participant.id}-linkedin`, type: "linkedin", value: participant.linkedIn.trim(), label: "LinkedIn" } : null,
+  ];
+  return candidates.filter((method): method is FollowUpContactMethod => method !== null);
+}
+
+/**
+ * Contact methods from the person's own published card, keyed by their address.
+ *
+ * This was the missing source, and it is the one that matters most. A card is
+ * where someone actually publishes how to reach them - Raphael's card carries a
+ * phone, a LinkedIn and a website - but follow-ups only ever read the contacts
+ * table and encounter_participants, both of which are populated from what the
+ * *other* person happened to type during a capture. So a follow-up for someone
+ * whose card lists a phone number reported that no phone number existed, and the
+ * sheet degraded to "Not now" because it could not see an address either.
+ */
+async function cardMethodsByEmail(supabase: SupabaseClient, emails: string[]) {
+  const wanted = [...new Set(emails.map((value) => value.trim().toLowerCase()).filter(Boolean))];
+  const byEmail = new Map<string, FollowUpContactMethod[]>();
+  if (!wanted.length) return byEmail;
+
+  // Which published card belongs to each address.
+  const { data: owners, error: ownersError } = await supabase
+    .from("card_methods")
+    .select("card_id, value, cards!inner(status)")
+    .eq("method_type", "email");
+  if (ownersError) {
+    console.error("[follow-ups] could not resolve cards for contact methods", {
+      code: ownersError.code, message: ownersError.message,
+    });
+    return byEmail;
+  }
+
+  const cardIdByEmail = new Map<string, string>();
+  for (const row of (owners ?? []) as unknown as Array<{ card_id: string; value: string; cards: { status: string } | null }>) {
+    if (row.cards?.status !== "published") continue;
+    const email = row.value.trim().toLowerCase();
+    if (wanted.includes(email) && !cardIdByEmail.has(email)) cardIdByEmail.set(email, row.card_id);
+  }
+  if (!cardIdByEmail.size) return byEmail;
+
+  const { data: methods, error: methodsError } = await supabase
+    .from("card_methods")
+    .select("card_id, method_type, value, label, sort_order")
+    .in("card_id", [...cardIdByEmail.values()])
+    .order("sort_order", { ascending: true });
+  if (methodsError) {
+    console.error("[follow-ups] could not read card contact methods", {
+      code: methodsError.code, message: methodsError.message,
+    });
+    return byEmail;
+  }
+
+  for (const [email, cardId] of cardIdByEmail) {
+    const rows = ((methods ?? []) as Array<{ card_id: string; method_type: string; value: string; label: string | null }>)
+      .filter((row) => row.card_id === cardId && row.value.trim());
+    byEmail.set(email, rows.map((row) => ({
+      id: `${cardId}-${row.method_type}`,
+      type: row.method_type as FollowUpContactMethod["type"],
+      value: row.value.trim(),
+      label: row.label?.trim() || row.method_type,
+    })));
+  }
+  return byEmail;
+}
+
+/**
+ * Merge, never replace. The participant row often holds the address while the
+ * card holds the phone, so preferring one source wholesale loses whichever the
+ * other one had - which is how this looked like "no phone number" for someone
+ * who published one.
+ */
+function mergeMethods(...groups: FollowUpContactMethod[][]) {
+  const byType = new Map<string, FollowUpContactMethod>();
+  for (const group of groups) {
+    for (const method of group) {
+      if (!byType.has(method.type)) byType.set(method.type, method);
+    }
+  }
+  return [...byType.values()];
 }
 
 export async function GET(request: Request) {
@@ -107,21 +187,37 @@ export async function GET(request: Request) {
   const scoped = hasConnectionFilter
     ? followUpsForConnection(flattened, connectionInput)
     : flattened;
-  const followUps = sortFollowUps(scoped).map((item) => {
+  const ordered = sortFollowUps(scoped);
+
+  const cardMethods = await cardMethodsByEmail(supabase, ordered.flatMap((item) => {
     const participant = item.participantId
       ? item.participants.find((candidate) => candidate.id === item.participantId)
       : undefined;
-    const participantContactMethods = participantMethods(participant);
     const contact = item.contactId ? contactsById.get(item.contactId) : undefined;
+    return [participant?.email ?? "", contact?.email ?? "", item.personEmail];
+  }));
+
+  const followUps = ordered.map((item) => {
+    const participant = item.participantId
+      ? item.participants.find((candidate) => candidate.id === item.participantId)
+      : undefined;
+    const contact = item.contactId ? contactsById.get(item.contactId) : undefined;
+    const knownEmail = [participant?.email, contact?.email, item.personEmail]
+      .map((value) => value?.trim().toLowerCase() || "")
+      .find(Boolean) || "";
+
     return {
       ...item,
-      contactMethods: participantContactMethods.length
-        ? participantContactMethods
-        : contact
-          ? contactMethods(contact)
-          : item.personEmail.trim()
-            ? [{ id: `${item.actionId}-email`, type: "email" as const, value: item.personEmail.trim(), label: "Email" }]
-            : [],
+      contactMethods: mergeMethods(
+        participantMethods(participant),
+        contact ? contactMethods(contact) : [],
+        item.personEmail.trim()
+          ? [{ id: `${item.actionId}-email`, type: "email" as const, value: item.personEmail.trim(), label: "Email" }]
+          : [],
+        // Last, so anything captured about this person wins over the card - but
+        // every method the card publishes and nobody typed still gets through.
+        cardMethods.get(knownEmail) ?? [],
+      ),
       eventTitle: item.eventId ? eventTitlesById.get(item.eventId) : undefined,
     };
   });
