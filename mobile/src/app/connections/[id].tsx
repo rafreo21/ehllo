@@ -331,9 +331,17 @@ export default function ConnectionDetailScreen() {
   );
 
   const timeline = useMemo(() => {
+    // History is what happened between you: meetings, the context they carry, and
+    // events. Not follow-ups.
+    //
+    // A follow-up is a commitment somebody has to act on, not a record of
+    // something that occurred, and it belongs where it can be worked - the
+    // Follow-ups section, on whichever side it is addressed to. Listing it here
+    // as well made it read as a past event and gave it no action.
+    //
     // "met" is the connection itself and is already the page's subject, so it is
-    // not repeated as a row here.
-    const items = thread.filter((item) => item.kind !== 'met');
+    // not repeated as a row either.
+    const items = thread.filter((item) => item.kind !== 'met' && item.kind !== 'follow_up');
     if (!items.length) return localTimeline;
 
     return items

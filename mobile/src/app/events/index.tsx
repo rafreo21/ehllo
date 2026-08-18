@@ -78,7 +78,7 @@ function formatEventWhen(event: Pick<EventItem, 'startsAt'>) {
   return `${datePart} · ${timePart}`;
 }
 
-type EventFilterKey = 'upcoming' | 'attended' | 'notGoing' | 'didNotAttend' | 'cancelled';
+type EventFilterKey = 'upcoming' | 'attended' | 'invited' | 'notGoing' | 'didNotAttend' | 'cancelled';
 
 // Each filter explains its own emptiness. A shared "nothing here" would be
 // technically true and useless - not having declined anything is a different
@@ -86,6 +86,7 @@ type EventFilterKey = 'upcoming' | 'attended' | 'notGoing' | 'didNotAttend' | 'c
 const emptyFilterCopy: Record<EventFilterKey, { title: string; copy: string }> = {
   upcoming: { title: 'Nothing coming up', copy: 'Add an event, or connect your calendar in Settings.' },
   attended: { title: 'No events attended yet', copy: 'Events you went to show up here once they have finished.' },
+  invited: { title: 'No invitations', copy: 'Events someone invited you to appear here until you answer.' },
   notGoing: { title: 'Nothing declined', copy: "Events you say you're not going to stay here in case you change your mind." },
   didNotAttend: { title: 'Nothing missed', copy: 'Events you declined appear here after they have finished.' },
   cancelled: { title: 'Nothing cancelled', copy: 'Events cancelled by you or the organiser appear here.' },
@@ -211,7 +212,16 @@ export default function EventsScreen() {
   // has not happened yet is a different thing from one that has, and only the
   // first can be reversed. Empty groups render nothing at all.
   const upcomingCandidates = candidates
-    .filter((event) => isUpcomingEvent(event))
+    .filter((event) => isUpcomingEvent(event) && !event.invited)
+    .sort(compareEventsByStart);
+
+  // Invitations get their own pill rather than sitting inside Upcoming. Being
+  // invited is not the same as having a plan: it is a question addressed to you,
+  // and it was previously indistinguishable from a calendar suggestion in the
+  // same list. Answering still runs through the ordinary attendance path, so
+  // Going moves it to Upcoming and Not going to the declined list.
+  const invitedEvents = candidates
+    .filter((event) => event.invited && isUpcomingEvent(event))
     .sort(compareEventsByStart);
 
   // One pill per state rather than two tabs plus in-page headings: the
@@ -222,6 +232,7 @@ export default function EventsScreen() {
   const eventFilters = [
     { key: 'upcoming' as const, label: 'Upcoming', events: upcoming, count: upcoming.length + upcomingCandidates.length },
     { key: 'attended' as const, label: 'Attended', events: past.attended, count: past.attended.length },
+    { key: 'invited' as const, label: 'Invited', events: invitedEvents, count: invitedEvents.length },
     { key: 'notGoing' as const, label: 'Not going', events: past.notGoing, count: past.notGoing.length },
     { key: 'didNotAttend' as const, label: "Didn't attend", events: past.didNotAttend, count: past.didNotAttend.length },
     { key: 'cancelled' as const, label: 'Cancelled', events: past.cancelled, count: past.cancelled.length },
@@ -598,9 +609,13 @@ export default function EventsScreen() {
               <EventCard
                 key={event.id}
                 event={event}
-                variant="past"
+                // An invitation is undecided, so it gets the candidate card with
+                // Going and Not going rather than the read-only past card.
+                variant={activeFilter === 'invited' ? 'candidate' : 'past'}
                 busy={busyId === event.id}
-                onPress={() => setPastSheetEvent(event)}
+                onGoing={activeFilter === 'invited' ? (item) => void decide(item, 'going') : undefined}
+                onNotGoing={activeFilter === 'invited' ? (item) => void decide(item, 'not_going') : undefined}
+                onPress={activeFilter === 'invited' ? undefined : () => setPastSheetEvent(event)}
                 onResolveConflict={(item) => setConflictEvent(item)}
               />
             ))

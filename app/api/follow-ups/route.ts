@@ -222,5 +222,28 @@ export async function GET(request: Request) {
     };
   });
 
-  return NextResponse.json({ followUps }, { headers: { "Cache-Control": "private, no-store" } });
+  // Follow-ups somebody else recorded against this user's address.
+  //
+  // These live in the other person's workspace, so the query above cannot see
+  // them - it reads the caller's own encounters. Without this a commitment made
+  // to you during their capture never reached you: you could read it in the
+  // shared history and do nothing with it.
+  //
+  // Returned as a separate list rather than merged, because the shapes differ:
+  // these carry who owes it to you and are not yours to edit or complete on their
+  // behalf. The client decides how to present them.
+  const { data: addressed, error: addressedError } = await supabase.rpc("get_follow_ups_addressed_to_me");
+  if (addressedError) {
+    // Say why. A silently shorter list is indistinguishable from having nothing
+    // owed to you, which is exactly the failure this whole surface kept making.
+    console.error("[follow-ups] could not read follow-ups addressed to this user", {
+      code: addressedError.code,
+      message: addressedError.message,
+    });
+  }
+
+  return NextResponse.json(
+    { followUps, addressedToMe: addressed ?? [] },
+    { headers: { "Cache-Control": "private, no-store" } },
+  );
 }
