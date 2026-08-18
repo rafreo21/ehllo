@@ -25,10 +25,21 @@ export function pushDeliveryConfigured(): boolean {
  * the only state that should ever be described to the user as "push is on."
  */
 export async function registerPushToken(accessToken: string): Promise<boolean> {
+  // Every one of these exits used to return false and say nothing, and the caller
+  // discards the boolean too - so an account with no push token was
+  // indistinguishable from an account that had never tried, on device and in the
+  // logs alike. Someone can turn notifications on, believe it worked, and there is
+  // no way to find out where it stopped. Still best-effort: registration must
+  // never block app usage, so nothing here throws or changes the return.
+  const fail = (reason: string, extra?: Record<string, unknown>) => {
+    console.warn('[push-token] not registered', { reason, platform: Platform.OS, ...extra });
+    return false;
+  };
+
   const projectId = easProjectId();
-  if (!projectId) return false;
-  if (Platform.OS !== 'ios' && Platform.OS !== 'android') return false;
-  if (!await notificationPermissionGranted()) return false;
+  if (!projectId) return fail('no EAS project id in this build');
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') return fail('unsupported platform');
+  if (!await notificationPermissionGranted()) return fail('notification permission not granted');
 
   try {
     const tokenResponse = await Notifications.getExpoPushTokenAsync({ projectId });
@@ -45,10 +56,12 @@ export async function registerPushToken(accessToken: string): Promise<boolean> {
         deviceModel: Device.modelName || '',
       }),
     });
-    return response.ok;
-  } catch {
-    // Registration is best-effort - a missing/rotated token must never block app usage.
-    return false;
+    if (!response.ok) return fail('server rejected the token', { status: response.status });
+    return true;
+  } catch (caught) {
+    return fail('registration threw', {
+      message: caught instanceof Error ? caught.message : String(caught),
+    });
   }
 }
 

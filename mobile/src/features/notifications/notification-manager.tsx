@@ -57,7 +57,13 @@ export function NotificationManager() {
     }
 
     async function registerIfEnabled() {
-      if (!await deviceNotificationsEnabled()) return;
+      if (!await deviceNotificationsEnabled()) {
+        console.warn('[push-token] not registered', { reason: 'notifications are off for this device' });
+        return;
+      }
+      // registerPushToken already reports why it failed; this only records that the
+      // attempt happened at all, so "never tried" and "tried and failed" can be
+      // told apart.
       await registerPushToken(accessToken!);
     }
 
