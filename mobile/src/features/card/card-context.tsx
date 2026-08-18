@@ -447,7 +447,39 @@ export function CardProvider({ children }: PropsWithChildren) {
             expectedUpdatedAt: publishTarget.serverUpdatedAt,
           }),
         });
-        const publishPayload = await response.json().catch(() => null) as { cardId?: string; updatedAt?: string; error?: string } | null;
+        const publishPayload = await response.json().catch(() => null) as {
+          cardId?: string;
+          updatedAt?: string;
+          error?: string;
+          conflict?: boolean;
+          serverUpdatedAt?: string;
+        } | null;
+
+        // A stale concurrency token used to be a dead end. The server answers 409
+        // with "reload the latest card before saving again" and hands back
+        // serverUpdatedAt - and this threw the sentence away along with the token,
+        // so the app told you to reload and had no way to do it. Publishing then
+        // failed forever, which is what happens to anyone whose card was changed
+        // or reprovisioned server-side while the device held an older version.
+        //
+        // Adopt the server's token and stop there. Not an automatic retry: DEC-031
+        // is explicit that a stale client reloads rather than silently replacing
+        // newer trusted data, and the content is not ours to overwrite on the
+        // user's behalf. One more tap publishes, with nothing lost.
+        if (response.status === 409 && publishPayload?.serverUpdatedAt) {
+          const reloaded = normalizeCard({
+            ...publishTarget,
+            serverUpdatedAt: publishPayload.serverUpdatedAt,
+          });
+          await persistCards(
+            cardsRef.current.map((item) => (item.id === target.id ? reloaded : item)),
+            activeCardIdRef.current,
+          );
+          const conflictMessage = 'We reloaded the latest version of this card. Publish again to continue.';
+          setPublishError(conflictMessage);
+          return { ok: false, title: 'Card reloaded', message: conflictMessage };
+        }
+
         if (!response.ok) throw new Error(publishPayload?.error || 'We couldn’t publish this card.');
 
         const publishedCard = normalizeCard({

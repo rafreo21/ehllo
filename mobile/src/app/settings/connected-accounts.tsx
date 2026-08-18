@@ -41,9 +41,12 @@ const PROVIDERS: ProviderRow[] = [
   {
     id: 'microsoft',
     name: 'Microsoft',
-    description: 'One connection for Outlook, Calendar, and recording storage in OneDrive.',
+    // Not configured on this environment, so connecting only ever produced an
+    // error. Marking it coming soon says the same thing before the tap instead
+    // of after it, using the treatment LinkedIn and Apple already use.
+    description: 'Coming soon. One connection for Outlook, Calendar, and recording storage in OneDrive.',
     icon: <MicrosoftIcon size={20} />,
-    connectable: true,
+    connectable: false,
   },
   {
     id: 'linkedin',

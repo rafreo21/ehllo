@@ -771,9 +771,10 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     backgroundColor: colors.surface,
   },
-  chipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
+  // Light fill, matching ChoicePill and the Events filters.
+  chipActive: { backgroundColor: colors.accent, borderColor: colors.accentPressed },
   chipText: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
-  chipTextActive: { color: colors.white },
+  chipTextActive: { color: colors.ink },
   input: { fontFamily: fonts.regular,
     minHeight: 48,
     paddingHorizontal: spacing.x4,

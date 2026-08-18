@@ -1225,7 +1225,10 @@ const styles = StyleSheet.create({
   actionComposerToggleText: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '800' },
   choiceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2 },
   choiceChip: { paddingHorizontal: spacing.x3, paddingVertical: spacing.x2, borderRadius: radius.round, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface },
-  choiceChipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
+  // Light fill, matching ChoicePill and the Events filters. Selection is
+  // selection wherever it appears; inking these made a chip inside a form read
+  // as the screen's primary action.
+  choiceChipActive: { backgroundColor: colors.accent, borderColor: colors.accentPressed },
   choiceChipText: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
-  choiceChipTextActive: { color: colors.white },
+  choiceChipTextActive: { color: colors.ink },
 });

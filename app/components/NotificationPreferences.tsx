@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type ComponentType, useEffect, useState } from "react";
 import type { JSX } from "react";
 import { Bell as BellIcon } from "react-feather";
 import { Calendar as CalendarCheckIcon } from "react-feather";
@@ -33,7 +33,11 @@ const DEFAULT_TYPE_PREFERENCES: NotificationPreferenceMap = {
 // react-feather equivalent), so it alone keeps the `weight="bold"` prop below.
 type NotificationTypeRow = {
   type: NotificationType;
-  icon: (props: { size?: number; weight?: string }) => JSX.Element;
+  // ComponentType rather than a hand-written call signature. The mixed
+  // Phosphor/react-feather icons here are components with their own prop types,
+  // and the narrower signature matched neither - it only ever compiled because
+  // nothing typechecked this file.
+  icon: ComponentType<{ size?: number; weight?: string }>;
   label: string;
   hint: string;
 };

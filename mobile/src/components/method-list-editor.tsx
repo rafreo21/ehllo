@@ -17,7 +17,7 @@ const ROW_HEIGHT = 58 + spacing.x2;
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { PhoneInput } from '@/components/phone-input';
-import { Button } from '@/components/ui';
+import { Button, ChoicePill } from '@/components/ui';
 import {
   fieldLabel,
   labelSuggestions,
@@ -232,6 +232,28 @@ export function MethodListEditor({ methods, onChange }: MethodListEditorProps) {
         )}>
         {editing ? (
           <>
+            {/* Label first, then the value. You decide what the button says before
+                what it points at, and the suggestions answer that question - so
+                putting them under the value field meant reading the sheet
+                backwards. */}
+            <View style={styles.suggestions}>
+              {labelSuggestions(editing.type).map((suggestion) => (
+                <ChoicePill
+                  key={suggestion}
+                  label={suggestion}
+                  selected={editing.label.trim() === suggestion}
+                  onPress={() => setEditing({ ...editing, label: suggestion })}
+                />
+              ))}
+            </View>
+            <View style={styles.sheetField}>
+              <Text style={styles.sheetLabel}>Button label</Text>
+              <TextInput
+                value={editing.label}
+                onChangeText={(label) => setEditing({ ...editing, label })}
+                style={styles.sheetInput}
+              />
+            </View>
             <View style={styles.sheetField}>
               <Text style={styles.sheetLabel}>{fieldLabel(editing.type)}</Text>
               {editing.type === 'phone' || editing.type === 'whatsapp' ? (
@@ -249,24 +271,6 @@ export function MethodListEditor({ methods, onChange }: MethodListEditorProps) {
                   style={styles.sheetInput}
                 />
               )}
-            </View>
-            <View style={styles.sheetField}>
-              <Text style={styles.sheetLabel}>Button label</Text>
-              <TextInput
-                value={editing.label}
-                onChangeText={(label) => setEditing({ ...editing, label })}
-                style={styles.sheetInput}
-              />
-            </View>
-            <View style={styles.suggestions}>
-              {labelSuggestions(editing.type).map((suggestion) => (
-                <Pressable
-                  key={suggestion}
-                  onPress={() => setEditing({ ...editing, label: suggestion })}
-                  style={styles.suggestion}>
-                  <Text style={styles.suggestionText}>{suggestion}</Text>
-                </Pressable>
-              ))}
             </View>
           </>
         ) : null}

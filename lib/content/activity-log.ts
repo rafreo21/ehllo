@@ -71,6 +71,40 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   },
   {
     date: "2026-08-18",
+    time: "17:40",
+    title: "Sharing a card that is not published anymore pretends to work",
+    impact: "fix",
+    detail:
+      "Tapping Share on a draft opened the share screen as though a QR code existed, when a QR cannot be generated until the card is published. Share and Card tools now explain that first and take you straight to finishing the card.",
+    testing: "Create a card, leave it as a draft, and tap Share this card.",
+  },
+  {
+    date: "2026-08-18",
+    time: "17:45",
+    title: "A stuck sync item can be discarded",
+    impact: "fix",
+    detail:
+      "Pending sync offered Retry and nothing else, so a change queued against something that no longer exists retried forever and blocked everything behind it. You can now discard queued changes. Recordings waiting to transcribe are deliberately kept - they exist nowhere else yet.",
+    testing: "Settings, Pending sync, Discard pending changes.",
+  },
+  {
+    date: "2026-08-18",
+    time: "17:50",
+    title: "Selection looks the same everywhere",
+    impact: "improvement",
+    detail:
+      "Selected pills in the card field editor, the capture and follow-up flows now use the same light fill as the Events filters instead of a dark one that made a chip inside a form read as the screen's main action. The card field sheet also puts the button label above the value, since you choose what the button says before what it points at.",
+  },
+  {
+    date: "2026-08-18",
+    time: "17:55",
+    title: "Microsoft is marked coming soon",
+    impact: "improvement",
+    detail:
+      "Connecting Microsoft only ever produced an error because it is not configured yet. It now says so before the tap rather than after.",
+  },
+  {
+    date: "2026-08-18",
     time: "17:05",
     title: "Reminders for invitations you have not answered",
     impact: "new",

@@ -1903,9 +1903,12 @@ const styles = StyleSheet.create({
   commitmentAssignmentLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800' },
   commitmentAssignmentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2 },
   assignmentChip: { paddingHorizontal: spacing.x3, paddingVertical: spacing.x2, borderRadius: radius.round, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface },
-  assignmentChipSelected: { borderColor: colors.ink, backgroundColor: colors.ink },
+  // Light fill, matching ChoicePill and the Events filters. Selection is
+  // selection wherever it appears; inking these made a chip inside a form read
+  // as the screen's primary action.
+  assignmentChipSelected: { borderColor: colors.accentPressed, backgroundColor: colors.accent },
   assignmentChipText: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
-  assignmentChipTextSelected: { color: colors.white },
+  assignmentChipTextSelected: { color: colors.ink },
   commitmentCopy: { flex: 1, gap: 3 },
   commitmentOptionTitle: { color: colors.ink, fontSize: 13, lineHeight: 18, fontFamily: fonts.bold, fontWeight: '800' },
   commitmentMeta: { color: colors.muted, fontFamily: fonts.regular, fontSize: 11, lineHeight: 16, textTransform: 'capitalize' },
@@ -1919,9 +1922,10 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     backgroundColor: colors.surface,
   },
-  channelChipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
+  // Light fill, matching ChoicePill and the Events filters.
+  channelChipActive: { backgroundColor: colors.accent, borderColor: colors.accentPressed },
   channelText: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
-  channelTextActive: { color: colors.white },
+  channelTextActive: { color: colors.ink },
   success: { color: '#2F5711', fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   error: { color: colors.danger, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   syncMessage: { gap: spacing.x2, alignItems: 'flex-start' },

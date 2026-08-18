@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-nat
 
 import { CardDeleteSheet } from '@/components/card-delete-sheet';
 import { MakePrimarySheet } from '@/components/make-primary-sheet';
+import { PublishFirstSheet } from '@/components/publish-first-sheet';
 import { OnlyCardPrimarySheet } from '@/components/only-card-primary-sheet';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
@@ -41,6 +42,8 @@ export default function CardDetailScreen() {
   const [deleting, setDeleting] = useState(false);
   const [primarySheetOpen, setPrimarySheetOpen] = useState(false);
   const [onlyCardSheetOpen, setOnlyCardSheetOpen] = useState(false);
+  // Which gated door was tapped, so the sheet can name it.
+  const [publishFirst, setPublishFirst] = useState<'share' | 'tools' | null>(null);
   const [primaryBusy, setPrimaryBusy] = useState(false);
   const [errorSheetOpen, setErrorSheetOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -182,16 +185,33 @@ export default function CardDetailScreen() {
             />
           </Pressable>
 
-          <Button onPress={() => router.push(`/share-card?id=${selected.id}`)}>
+          {/* Both of these need a published card. Sharing a draft opened a share
+              screen as though a QR existed, when a QR cannot be generated until
+              the card is published. */}
+          <Button
+            onPress={() => (selected.status === 'published'
+              ? router.push(`/share-card?id=${selected.id}`)
+              : setPublishFirst('share'))}>
             <ShareNetwork size={18} color={colors.white} weight="bold" />
             Share this card
           </Button>
-          <Button variant="secondary" onPress={() => router.push(`/card-tools?id=${selected.id}`)}>
+          <Button
+            variant="secondary"
+            onPress={() => (selected.status === 'published'
+              ? router.push(`/card-tools?id=${selected.id}`)
+              : setPublishFirst('tools'))}>
             <Wrench size={18} color={colors.ink} weight="bold" />
             Card tools
           </Button>
         </ScrollView>
       </View>
+
+      <PublishFirstSheet
+        visible={Boolean(publishFirst)}
+        cardId={selected?.id ?? null}
+        action={publishFirst ?? 'share'}
+        onClose={() => setPublishFirst(null)}
+      />
 
       <OnlyCardPrimarySheet
         visible={onlyCardSheetOpen}

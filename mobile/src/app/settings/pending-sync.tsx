@@ -2,11 +2,12 @@ import { useFocusEffect } from 'expo-router';
 import { ArrowsClockwise, CalendarCheck, CheckCircle, IdentificationCard, ListChecks, Microphone, Scan } from 'phosphor-react-native';
 import LottieView from 'lottie-react-native';
 import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { Button, PageHeader, Panel, Screen } from '@/components/ui';
 import { PendingSyncSkeleton } from '@/components/skeleton';
 import { useAuth } from '@/features/auth/auth-context';
+import { discardPendingSync } from '@/features/sync/discard-pending-sync';
 import { readPendingSyncStatus, type PendingSyncStatus } from '@/features/sync/pending-sync-status';
 import { useOtherDevicesPendingCount } from '@/features/sync/use-other-devices-pending';
 import { requestForegroundSync } from '@/lib/background-sync';
@@ -39,6 +40,28 @@ export default function PendingSyncScreen() {
     return () => clearInterval(interval);
   }, [refresh]));
 
+  const [discarding, setDiscarding] = useState(false);
+
+  function confirmDiscard() {
+    Alert.alert(
+      'Discard pending changes?',
+      'Queued edits, scans and follow-up changes on this device will be thrown away. Recordings waiting to transcribe are kept.',
+      [
+        { text: 'Keep them', style: 'cancel' },
+        {
+          text: 'Discard',
+          style: 'destructive',
+          onPress: () => {
+            setDiscarding(true);
+            void discardPendingSync()
+              .then(() => refresh())
+              .finally(() => setDiscarding(false));
+          },
+        },
+      ],
+    );
+  }
+
   async function retryNow() {
     setRetrying(true);
     await requestForegroundSync();
@@ -67,6 +90,15 @@ export default function PendingSyncScreen() {
         <ArrowsClockwise size={18} color={colors.white} weight="bold" />
         Retry now
       </Button>
+      {/* The way out of a permanently stuck item. Retrying is right while a
+          failure is transient, but a change queued against server data that no
+          longer exists can never succeed, and until now there was nothing to do
+          but watch it fail. */}
+      {status.total > 0 ? (
+        <Button variant="ghost" loading={discarding} onPress={confirmDiscard}>
+          Discard pending changes
+        </Button>
+      ) : null}
       {!session ? <Text style={styles.note}>Sign in before queued work can sync.</Text> : null}
       {!online ? <Text style={styles.note}>Reconnect to the internet, then ehllo will retry automatically.</Text> : null}
     </View>
