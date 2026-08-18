@@ -59,6 +59,20 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "23:05",
+    title: "The ehllo badge holds its edge on every card colour",
+    impact: "improvement",
+    detail:
+      "The mark is a green circle, and ehllo's default card colour is also green - so on a default card the circle disappeared into the background and left the two figures floating with no edge. It now sits inside a thin white ring, which separates it from any colour behind it while keeping the brand green. A plain white badge would have fixed the green card by removing the green from every other one.",
+    testing:
+      "Add your card to either wallet on the default green colour, then on a dark one, and compare the logo.",
+    link: {
+      href: "https://claude.ai/code/artifact/5da4bca6-e5b6-4002-9b8e-b65f7843593b",
+      label: "See the pass spec and design",
+    },
+  },
+  {
+    date: "2026-08-18",
     time: "22:45",
     title: "Your wallet pass stops writing an About you never wrote",
     impact: "fix",
@@ -66,6 +80,10 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
       "If you had not filled in the About field, both wallet passes printed a line of our own text under your name as though you had written it. Now an empty About simply does not appear. The pass shows what is in your card editor and nothing else - the same is already true of your job title, company, photo and colour.",
     testing:
       "Add the card to either wallet with the About field empty, and check the back of the pass.",
+    link: {
+      href: "https://claude.ai/code/artifact/5da4bca6-e5b6-4002-9b8e-b65f7843593b",
+      label: "See the pass spec and design",
+    },
   },
   {
     date: "2026-08-18",
