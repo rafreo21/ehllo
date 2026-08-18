@@ -145,15 +145,14 @@ export function FollowUpsSheet({
 
 const styles = StyleSheet.create({
   tools: { gap: spacing.x3 },
-  search: {
+  search: { fontFamily: fonts.regular,
     minHeight: 48,
     paddingHorizontal: spacing.x4,
     borderWidth: 1,
     borderColor: colors.line,
     borderRadius: radius.medium,
     color: colors.ink,
-    backgroundColor: colors.canvas,
-  },
+    backgroundColor: colors.canvas, },
   sortRow: { flexDirection: 'row', gap: spacing.x2 },
   sortButton: { flex: 1, alignSelf: 'stretch' },
   list: { gap: spacing.x3 },

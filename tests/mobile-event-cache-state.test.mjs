@@ -53,6 +53,13 @@ describe("applyCachedCheckIn", () => {
     assert.equal(next.find((e) => e.id === "b").checkedInAt, null);
   });
 
+  it("records leaving the place you moved away from", () => {
+    // Offline must reach the same state the server does, or a capture made
+    // with no signal attributes to an event the user physically left.
+    const next = applyCachedCheckIn(events, "a", "2026-09-04T12:00:00.000Z");
+    assert.equal(next.find((e) => e.id === "b").leftAt, "2026-09-04T12:00:00.000Z");
+  });
+
   it("withdrawing a check-in leaves other events untouched", () => {
     const next = applyCachedCheckIn(events, "b", null);
     assert.equal(next.find((e) => e.id === "b").checkedInAt, null);

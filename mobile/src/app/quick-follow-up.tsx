@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
   chipText: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
   chipTextActive: { color: colors.white },
-  input: {
+  input: { fontFamily: fonts.regular,
     minHeight: 48,
     paddingHorizontal: spacing.x4,
     borderWidth: 1,
@@ -783,8 +783,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.small,
     backgroundColor: colors.surface,
     color: colors.ink,
-    fontSize: 16,
-  },
+    fontSize: 16, },
   inputMultiline: { minHeight: 92, paddingTop: spacing.x4 },
   error: {
     padding: spacing.x3,

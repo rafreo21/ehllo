@@ -1799,7 +1799,7 @@ const styles = StyleSheet.create({
   },
   recordingStorageText: { flex: 1, color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   recordingStorageAction: { color: colors.ink, fontSize: 12, fontFamily: fonts.extrabold, fontWeight: '900', textDecorationLine: 'underline' },
-  input: {
+  input: { fontFamily: fonts.regular,
     minHeight: 48,
     paddingHorizontal: spacing.x4,
     borderWidth: 1,
@@ -1807,8 +1807,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium,
     backgroundColor: colors.canvas,
     color: colors.ink,
-    fontSize: 15,
-  },
+    fontSize: 15, },
   textarea: { height: 140, maxHeight: 140, paddingTop: spacing.x3, textAlignVertical: 'top' },
   notesField: { height: 140, maxHeight: 140, paddingTop: spacing.x3, textAlignVertical: 'top' },
   transcriptField: { height: 220, maxHeight: 220, paddingTop: spacing.x3, textAlignVertical: 'top' },

@@ -1187,7 +1187,7 @@ const styles = StyleSheet.create({
   uploadFailedText: { color: colors.danger, fontFamily: fonts.regular, fontSize: 13, lineHeight: 20 },
   secondaryActionsRow: { flexDirection: 'row', gap: spacing.x2 },
   secondaryActionsRowItem: { flex: 1 },
-  input: {
+  input: { fontFamily: fonts.regular,
     minHeight: 48,
     paddingHorizontal: spacing.x4,
     borderWidth: 1,
@@ -1195,8 +1195,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium,
     backgroundColor: colors.canvas,
     color: colors.ink,
-    fontSize: 15,
-  },
+    fontSize: 15, },
   notesField: { height: 140, maxHeight: 140, paddingTop: spacing.x3, textAlignVertical: 'top' },
   privateNotesField: { height: 110, maxHeight: 110, paddingTop: spacing.x3, textAlignVertical: 'top' },
   summaryCopy: { color: colors.ink, fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, flex: 1 },

@@ -92,19 +92,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: fonts.semibold, fontWeight: '600',
   },
-  location: {
+  location: { fontFamily: fonts.regular,
     color: colors.muted,
-    fontSize: 14,
-  },
-  explanation: {
+    fontSize: 14, },
+  explanation: { fontFamily: fonts.regular,
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.medium,
     color: colors.muted,
     fontSize: 14,
     lineHeight: 20,
     marginTop: spacing.x2,
-    padding: spacing.x4,
-  },
+    padding: spacing.x4, },
   actions: {
     gap: spacing.x2,
     marginTop: spacing.x5,

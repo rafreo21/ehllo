@@ -259,3 +259,36 @@ describe("early check-in grace", () => {
     assert.equal(resolveCurrentEvent([early], new Date("2026-09-04T07:30:00.000Z")), null);
   });
 });
+
+
+describe("one place at a time, over time", () => {
+  const conference = { id: "conference", startsAt: "2026-09-04T09:00:00.000Z", endsAt: "2026-09-04T18:00:00.000Z", leftAt: null, checkedInAt: null };
+  const meetup = { id: "meetup", startsAt: "2026-09-04T13:00:00.000Z", endsAt: "2026-09-04T17:00:00.000Z", leftAt: null, checkedInAt: null };
+
+  it("does not hand you back to an event you walked out of", () => {
+    // 09:00 at the conference, 13:05 you walk to the meetup. Moving records
+    // leaving, so when the meetup ends at 17:00 the still-running conference
+    // must not silently reclaim you.
+    const walkedOut = { ...conference, checkedInAt: null, leftAt: "2026-09-04T13:05:00.000Z" };
+    const nowAt = { ...meetup, checkedInAt: "2026-09-04T13:05:00.000Z" };
+
+    assert.equal(resolveCurrentEvent([walkedOut, nowAt], new Date("2026-09-04T14:00:00.000Z")), "meetup");
+    assert.equal(resolveCurrentEvent([walkedOut, nowAt], new Date("2026-09-04T17:30:00.000Z")), null);
+  });
+
+  it("lets you go back to where you were", () => {
+    // Checking in again clears the recorded departure, so returning works.
+    const returned = { ...conference, leftAt: null, checkedInAt: "2026-09-04T17:20:00.000Z" };
+    const ended = { ...meetup, checkedInAt: null, leftAt: "2026-09-04T17:20:00.000Z" };
+    assert.equal(resolveCurrentEvent([returned, ended], new Date("2026-09-04T17:30:00.000Z")), "conference");
+  });
+
+  it("never reports two places at once", () => {
+    // Even if two check-ins somehow coexist, exactly one answer comes back.
+    const a = { ...conference, checkedInAt: "2026-09-04T09:10:00.000Z" };
+    const b = { ...meetup, checkedInAt: "2026-09-04T13:10:00.000Z" };
+    const at = resolveCurrentEvent([a, b], new Date("2026-09-04T14:00:00.000Z"));
+    assert.equal(at, "meetup");
+    assert.equal(typeof at, "string");
+  });
+});

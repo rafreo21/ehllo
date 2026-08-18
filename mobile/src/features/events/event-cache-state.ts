@@ -22,7 +22,13 @@ export function applyCachedCheckIn(events: EventItem[], eventId: string, checked
     if (event.id === eventId) {
       return { ...event, checkedInAt, ...(checkedInAt ? { leftAt: null } : {}) };
     }
-    return checkedInAt && event.checkedInAt ? { ...event, checkedInAt: null } : event;
+    // Arriving somewhere else is also leaving where you were. Only clearing the
+    // other check-in held one-place-at-a-time at this instant but not later: a
+    // longer event you walked out of would reclaim you through the time-window
+    // fallback once the newer one ended.
+    return checkedInAt && event.checkedInAt
+      ? { ...event, checkedInAt: null, leftAt: checkedInAt }
+      : event;
   });
 }
 

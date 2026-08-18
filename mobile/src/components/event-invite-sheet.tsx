@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   copy: { gap: spacing.x2 },
   eventTitle: { color: colors.ink, fontSize: 18, fontFamily: fonts.bold, fontWeight: '800' },
   hint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
-  input: { minHeight: 52, paddingHorizontal: spacing.x4, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, color: colors.ink, backgroundColor: colors.canvas },
+  input: { fontFamily: fonts.regular, minHeight: 52, paddingHorizontal: spacing.x4, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, color: colors.ink, backgroundColor: colors.canvas },
   error: { color: colors.danger, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
   privacy: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
   divider: { height: 1, backgroundColor: colors.line },

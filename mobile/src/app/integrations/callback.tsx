@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
-import { colors, spacing } from '@/theme/tokens';
+import { colors, spacing, fonts } from '@/theme/tokens';
 
 export default function IntegrationsCallbackScreen() {
   const params = useLocalSearchParams<{ integration?: string | string[] }>();
@@ -33,5 +33,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.canvas,
     padding: spacing.x5,
   },
-  message: { color: colors.muted, textAlign: 'center', lineHeight: 20 },
+  message: { fontFamily: fonts.regular, color: colors.muted, textAlign: 'center', lineHeight: 20 },
 });

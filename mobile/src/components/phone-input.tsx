@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 16,
   },
-  search: {
+  search: { fontFamily: fonts.regular,
     minHeight: 48,
     marginBottom: spacing.x3,
     paddingHorizontal: spacing.x4,
@@ -160,8 +160,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium,
     backgroundColor: colors.canvas,
     color: colors.ink,
-    fontSize: 15,
-  },
+    fontSize: 15, },
   countryList: { gap: spacing.x1 },
   countryRow: {
     flexDirection: 'row',

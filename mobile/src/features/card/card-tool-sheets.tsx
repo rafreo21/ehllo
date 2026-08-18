@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
   widgetConnectionsEmpty: { color: '#B8C4B3', fontFamily: fonts.regular, fontSize: 11, lineHeight: 16 },
   widgetConnectionRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
   widgetConnectionCopy: { flex: 1, gap: 1 },
-  widgetActionChip: {
+  widgetActionChip: { fontFamily: fonts.regular,
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -661,8 +661,7 @@ const styles = StyleSheet.create({
     color: colors.white,
     textAlign: 'center',
     lineHeight: 28,
-    overflow: 'hidden',
-  },
+    overflow: 'hidden', },
   widgetAvatarSmall: {
     width: 28,
     height: 28,

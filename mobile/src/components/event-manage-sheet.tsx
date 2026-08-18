@@ -76,7 +76,7 @@ export function EventManageSheet({ event, loading, error, onClose, onSave, onCan
 const styles = StyleSheet.create({
   field: { gap: spacing.x2 },
   label: { color: colors.ink, fontSize: 13, fontFamily: fonts.bold, fontWeight: '800' },
-  input: { minHeight: 52, paddingHorizontal: spacing.x4, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, color: colors.ink, backgroundColor: colors.canvas },
+  input: { fontFamily: fonts.regular, minHeight: 52, paddingHorizontal: spacing.x4, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, color: colors.ink, backgroundColor: colors.canvas },
   dateButton: { minHeight: 52, justifyContent: 'center', paddingHorizontal: spacing.x4, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, backgroundColor: colors.canvas },
   dateText: { color: colors.ink, fontSize: 14, fontFamily: fonts.medium, fontWeight: '700' },
   error: { color: colors.danger, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },

@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   toggleCopy: { flex: 1, gap: 2 },
   title: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
   hint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
-  input: {
+  input: { fontFamily: fonts.regular,
     minHeight: 48,
     paddingHorizontal: spacing.x4,
     borderWidth: 1,
@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium,
     backgroundColor: colors.canvas,
     color: colors.ink,
-    fontSize: 15,
-  },
+    fontSize: 15, },
   field: { height: 220, maxHeight: 220, paddingTop: spacing.x4, textAlignVertical: 'top' },
 });

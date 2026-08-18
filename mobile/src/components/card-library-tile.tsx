@@ -127,10 +127,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: fonts.bold, fontWeight: '800',
   },
-  cardDetail: {
+  cardDetail: { fontFamily: fonts.regular,
     color: colors.muted,
-    fontSize: 13,
-  },
+    fontSize: 13, },
   metaRow: {
     marginTop: spacing.x2,
     flexDirection: 'row',

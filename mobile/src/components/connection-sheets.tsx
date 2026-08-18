@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   form: { gap: spacing.x3 },
   field: { gap: 6 },
   fieldLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', letterSpacing: 0.4 },
-  fieldInput: {
+  fieldInput: { fontFamily: fonts.regular,
     minHeight: 46,
     paddingHorizontal: spacing.x3,
     borderRadius: radius.medium,
@@ -203,6 +203,5 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     backgroundColor: colors.surface,
     color: colors.ink,
-    fontSize: 15,
-  },
+    fontSize: 15, },
 });

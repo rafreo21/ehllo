@@ -1,7 +1,7 @@
 import { MagnifyingGlass, SortAscending } from 'phosphor-react-native';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 export function HistoryToolbar({
   query,
@@ -61,13 +61,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  searchInput: {
+  searchInput: { fontFamily: fonts.regular,
     minWidth: 0,
     flex: 1,
     paddingVertical: 0,
     color: colors.ink,
-    fontSize: 15,
-  },
+    fontSize: 15, },
   sortButton: {
     width: 48,
     height: 48,

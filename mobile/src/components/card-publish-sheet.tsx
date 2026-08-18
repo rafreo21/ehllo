@@ -4,7 +4,7 @@ import LottieView from 'lottie-react-native';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Body, Button } from '@/components/ui';
 import { useDeferredMount } from '@/lib/use-deferred-mount';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
 type CardPublishSheetProps = {
   visible: boolean;
@@ -90,10 +90,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.medium,
     backgroundColor: colors.surfaceMuted,
   },
-  detailText: {
+  detailText: { fontFamily: fonts.regular,
     color: colors.muted,
     fontSize: 13,
     lineHeight: 20,
-    textAlign: 'center',
-  },
+    textAlign: 'center', },
 });

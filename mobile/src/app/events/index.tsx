@@ -1065,7 +1065,7 @@ const styles = StyleSheet.create({
   linkStatusText: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
   fieldGroup: { gap: spacing.x2 },
   label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
-  input: {
+  input: { fontFamily: fonts.regular,
     borderWidth: 1,
     borderColor: colors.line,
     borderRadius: radius.medium,
@@ -1073,8 +1073,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.x3,
     color: colors.ink,
     fontSize: 15,
-    backgroundColor: colors.surface,
-  },
+    backgroundColor: colors.surface, },
   suggestionList: {
     borderWidth: 1,
     borderColor: colors.line,

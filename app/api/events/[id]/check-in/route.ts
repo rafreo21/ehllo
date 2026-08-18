@@ -39,9 +39,17 @@ export async function POST(
     // failure here cannot leave the user checked into two places at once, which
     // would make attribution ambiguous in exactly the situation check-in exists
     // to disambiguate.
+    //
+    // Arriving somewhere else is also leaving where you were, so record the
+    // departure rather than only forgetting the arrival. Clearing checked_in_at
+    // alone held "one place at a time" at this instant but not afterwards: walk
+    // from an all-day conference to an evening meetup, and once the meetup ends
+    // the conference is still running and un-left, so the time-window fallback
+    // hands you straight back to it hours after you walked out. left_at closes
+    // that window for good, and checking back in clears it again.
     const { error: clearError } = await supabase
       .from("event_attendance")
-      .update({ checked_in_at: null, updated_at: now })
+      .update({ checked_in_at: null, left_at: now, updated_at: now })
       .eq("user_id", user.id)
       .neq("event_id", id)
       .not("checked_in_at", "is", null);

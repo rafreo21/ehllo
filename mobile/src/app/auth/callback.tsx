@@ -5,7 +5,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { completeAuthSessionFromUrl } from '@/lib/auth-session-url';
 import { getSupabase } from '@/lib/supabase';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, spacing, fonts } from '@/theme/tokens';
 
 export default function AuthCallbackScreen() {
   // useLocalSearchParams only sees query params, not a #fragment — Google's
@@ -55,5 +55,5 @@ export default function AuthCallbackScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.x4, backgroundColor: colors.canvas, padding: spacing.x5 },
-  message: { color: colors.muted, textAlign: 'center', lineHeight: 20 },
+  message: { fontFamily: fonts.regular, color: colors.muted, textAlign: 'center', lineHeight: 20 },
 });
