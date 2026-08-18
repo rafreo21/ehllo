@@ -116,6 +116,17 @@ export default function FollowupsPage() {
   const [hydrated, setHydrated] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  // Commitments somebody else recorded that name you, from their own meeting. The
+  // page builds everything else from encounters in your workspace, and these are by
+  // definition not there - so without this the web simply never showed them, while
+  // mobile did.
+  const [addressedToMe, setAddressedToMe] = useState<{
+    id: string;
+    note: string;
+    fromName: string;
+    meetingTitle: string;
+    dueAt: string;
+  }[]>([]);
   const [retrying, setRetrying] = useState(false);
   const [scope, setScope] = useState<FollowUpScope>("current");
   const [query, setQuery] = useState(() => searchParams.get("person")?.trim() ?? "");
@@ -141,6 +152,20 @@ export default function FollowupsPage() {
         hydrateEncountersFromServer(),
       ]);
       setEncounters(nextEncounters);
+      // Best effort and deliberately outside the Promise.all: this is an addition to
+      // the page, and failing to load it must not take the whole list down with it.
+      void fetch("/api/follow-ups")
+        .then((response) => (response.ok ? response.json() : null))
+        .then((payload: { addressedToMe?: Record<string, unknown>[] } | null) => {
+          setAddressedToMe((payload?.addressedToMe ?? []).map((row) => ({
+            id: String(row.id ?? ""),
+            note: String(row.note ?? ""),
+            fromName: String(row.fromName ?? ""),
+            meetingTitle: String(row.meetingTitle ?? ""),
+            dueAt: String(row.dueAt ?? ""),
+          })));
+        })
+        .catch(() => undefined);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Couldn’t load your follow-ups. Check your connection and try again.");
     } finally {
@@ -387,6 +412,26 @@ export default function FollowupsPage() {
                     <small>{commitment.channel ? `${commitment.channel} · ` : ""}{commitment.dueAt ? `Due ${commitment.dueAt} · ` : ""}Shared {new Date(commitment.committedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</small>
                   </div>
                   <div className="inbox-actions"><Button size="small" variant="secondary" onClick={() => setActiveEncounterId(encounter.id)}>Review context</Button></div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+        {hydrated && scope === "current" && addressedToMe.length ? (
+          <section className="guest-commitments" aria-labelledby="addressed-to-me-heading">
+            <header>
+              <div><h2 id="addressed-to-me-heading">Recorded about you</h2></div>
+              <small>Someone noted these during their own meeting. They are not in your meetings, so they live here.</small>
+            </header>
+            <div className="inbox-list">
+              {addressedToMe.map((item) => (
+                <article className="inbox-item guest-commitment-item" key={item.id}>
+                  <CheckCircleIcon size={22} />
+                  <div>
+                    <h2>{item.note}</h2>
+                    <p>{item.fromName || "Someone"} <span className="owner-tag">Noted</span>{item.meetingTitle ? ` · ${item.meetingTitle}` : ""}</p>
+                    {item.dueAt ? <small>Due {new Date(item.dueAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</small> : null}
+                  </div>
                 </article>
               ))}
             </div>
