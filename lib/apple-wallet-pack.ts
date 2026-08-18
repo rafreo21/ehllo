@@ -3,6 +3,7 @@ import forge from "node-forge";
 import JSZip from "jszip";
 
 import { buildApplePassJson, walletIconBuffers } from "./apple-wallet-pass";
+import { loadSharp } from "./sharp-runtime.ts";
 import type { AppleWalletCerts, WalletCardPayload } from "./wallet-config";
 
 function sha1(content: Buffer | string) {
@@ -70,10 +71,29 @@ export async function buildAppleWalletPass(card: WalletCardPayload, certs: Apple
     ...(await walletIconBuffers()),
   };
 
+  // storeCard renders `strip` as a full-width banner across the top of the
+  // pass, which is what gives the Google version its "person first" reading.
+  // Apple's strip slots are 375x123 @1x and 750x246 @2x; anything else gets
+  // letterboxed or stretched, so crop to the exact aspect rather than handing
+  // over the raw upload.
   const profileImage = await fetchImageBuffer(card.profileImageUrl || "");
   if (profileImage) {
-    files["thumbnail.png"] = profileImage;
-    files["thumbnail@2x.png"] = profileImage;
+    try {
+      const sharp = await loadSharp();
+      const strip = (width: number, height: number) => sharp(profileImage)
+        .resize(width, height, { fit: "cover", position: "attention" })
+        .png()
+        .toBuffer();
+      const [strip1x, strip2x] = await Promise.all([strip(375, 123), strip(750, 246)]);
+      files["strip.png"] = strip1x;
+      files["strip@2x.png"] = strip2x;
+    } catch (error) {
+      // A pass without the banner is still a working pass. Never fail the
+      // whole download because one optional image could not be resized.
+      console.error("[apple-wallet] strip image failed, continuing without it", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   const manifest = Object.fromEntries(

@@ -25,6 +25,8 @@ export function buildApplePassJson(card: {
   showCompany?: boolean;
 }, certs: { passTypeId: string; teamId: string }) {
   const companyVisible = card.showCompany !== false && card.company.trim();
+  const subtitle = [card.role, companyVisible ? card.company : ""].filter(Boolean).join(" · ");
+
   return {
     formatVersion: 1,
     passTypeIdentifier: certs.passTypeId,
@@ -32,25 +34,24 @@ export function buildApplePassJson(card: {
     organizationName: "ehllo",
     description: `${card.fullName} · ehllo card`,
     serialNumber: `${card.slug}-${Date.now()}`,
-    logoText: companyVisible ? card.company : "ehllo",
+    // The wordmark already sits beside the logo, so the old headerFields entry
+    // ("CARD: ehllo") printed the brand a second time in the top-right corner
+    // and squeezed the name. One brand mark is enough.
+    logoText: "ehllo",
     foregroundColor: "rgb(255, 255, 255)",
     backgroundColor: hexToRgb(card.themeColor || "#9fe870"),
-    labelColor: "rgb(22, 51, 0)",
-    generic: {
-      headerFields: [
-        {
-          key: "card_type",
-          label: "CARD",
-          value: "ehllo",
-        },
-      ],
-      primaryFields: [{ key: "name", label: "NAME", value: card.fullName }],
-      secondaryFields: card.role
-        ? [{ key: "role", label: "JOB TITLE", value: card.role }]
+    labelColor: "rgba(255, 255, 255, 0.72)",
+    // storeCard rather than generic. generic renders the photo as a small
+    // thumbnail crowded against the name; storeCard gives the strip image the
+    // full width, which is the shape the Google pass gets right - person first,
+    // then who they are, then the code.
+    storeCard: {
+      headerFields: [],
+      primaryFields: [{ key: "name", label: "", value: card.fullName }],
+      secondaryFields: subtitle
+        ? [{ key: "subtitle", label: "", value: subtitle }]
         : [],
-      auxiliaryFields: companyVisible
-        ? [{ key: "company", label: "COMPANY", value: card.company }]
-        : [],
+      auxiliaryFields: [],
       backFields: [
         { key: "bio", label: "About", value: card.bio || "Scan the QR code to open my ehllo card." },
         { key: "link", label: "Card link", value: card.cardUrl },
@@ -66,3 +67,4 @@ export function buildApplePassJson(card: {
     ],
   };
 }
+
