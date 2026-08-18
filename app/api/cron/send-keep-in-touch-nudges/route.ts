@@ -99,7 +99,7 @@ export async function GET(request: Request) {
         .limit(200),
     ]);
 
-    const candidates: NudgeCandidate[] = [
+    const rawCandidates: NudgeCandidate[] = [
       ...(metRows ?? []).map((row) => ({
         source: "met" as const,
         sourceId: row.id as string,
@@ -115,6 +115,33 @@ export async function GET(request: Request) {
         connectedAt: row.created_at as string,
       })),
     ];
+
+    // One person can arrive twice: as a people_connections row, and as the
+    // card_exchanges row that produced it. record_connection now writes the
+    // reverse row for the exchange paths too, so that overlap is the normal
+    // case rather than a rarity - and dedupeKey below includes `source`, so an
+    // undeduped pair is two notifications, two pushes and two emails about the
+    // same person. Collapse on the address; keep the earliest meeting, because
+    // the nudge threshold is measured from when they actually met; prefer the
+    // connection row so actionId points at something People can open.
+    const byPerson = new Map<string, NudgeCandidate>();
+    for (const candidate of rawCandidates) {
+      const key = candidate.personEmail.trim().toLowerCase();
+      if (!key) continue;
+      const existing = byPerson.get(key);
+      if (!existing) {
+        byPerson.set(key, candidate);
+        continue;
+      }
+      const earliest = Date.parse(candidate.connectedAt) < Date.parse(existing.connectedAt)
+        ? candidate.connectedAt
+        : existing.connectedAt;
+      const preferred = existing.source === "met"
+        ? existing
+        : candidate.source === "met" ? candidate : existing;
+      byPerson.set(key, { ...preferred, connectedAt: earliest });
+    }
+    const candidates = [...byPerson.values()];
 
     for (const candidate of candidates) {
       const threshold = dueThreshold(candidate.connectedAt, now);
