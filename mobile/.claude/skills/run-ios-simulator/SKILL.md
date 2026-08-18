@@ -3,7 +3,7 @@ name: run-ios-simulator
 description: Build, run, and screenshot the ehllo mobile app (Expo/React Native) on the iOS Simulator. Use when asked to run the mobile app, start it on the simulator, build the iOS app, take a screenshot of the mobile UI, or verify a mobile change actually works.
 ---
 
-ehllo's mobile app lives in `mobile/` (Expo SDK 57, React Native 0.86, bundle id `com.aftermeet.app`). Drive it via `.claude/skills/run-ios-simulator/driver.sh`, which wraps `xcrun simctl` + `expo run:ios` for boot/build/launch/screenshot. All paths below are relative to `mobile/`.
+ehllo's mobile app lives in `mobile/` (Expo SDK 57, React Native 0.86, bundle ids `com.ehllo.app` and `com.ehllo.app.staging`). Drive it via `.claude/skills/run-ios-simulator/driver.sh`, which wraps `xcrun simctl` + `expo run:ios` for boot/build/launch/screenshot. All paths below are relative to `mobile/`.
 
 ## Prerequisites (macOS only - this app has no meaningful Linux/headless path)
 
@@ -53,7 +53,7 @@ If the simulator goes idle and the app backgrounds itself to the home screen, br
 |---|---|
 | `boot [device-name]` | Resolves a simulator by name and boots it if not already booted; prints the UDID |
 | `run [device-name]` | `expo run:ios --device <udid>` - pod install, xcodebuild, install, launch |
-| `foreground` | `simctl launch booted com.aftermeet.app` - re-launch the already-installed app |
+| `foreground` | `simctl launch booted <bundle-id>` - re-launch the already-installed app |
 | `screenshot <out.png>` | `simctl io booted screenshot` |
 | `full [device-name] <out.png>` | boot + run + sleep 20s (let bundling finish) + screenshot |
 
@@ -80,8 +80,37 @@ As of this writing, both currently fail on pre-existing issues unrelated to any 
 
 - **`pod install` crashes with `Encoding::CompatibilityError` in `unicode_normalize`** if the shell's locale is unset (bare `C` locale - check with `locale`; `LANG=""` is the tell). CocoaPods' Ruby code requires UTF-8. The driver exports `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8` itself; if you run `pod install` manually outside the driver, export these first.
 - **Outdated CocoaPods (e.g. 1.11.3 from an old Homebrew install) fails with `undefined method 'visionos' for #<Pod::Specification ...>`** - current RN/Expo podspecs (e.g. `react-native-safe-area-context.podspec`) set `s.visionos.deployment_target`, which only newer CocoaPods understands. Fix is `brew upgrade cocoapods` (confirmed working at 1.17.0), not a podspec edit.
-- **The app backgrounds itself to the home screen after sitting idle** in the simulator (observed after ~1 minute with no interaction). This isn't a crash - `driver.sh foreground` (i.e. `simctl launch booted com.aftermeet.app`) brings it back in front with state intact, no rebuild needed.
+- **The app backgrounds itself to the home screen after sitting idle** in the simulator (observed after ~1 minute with no interaction). This isn't a crash - `driver.sh foreground` (i.e. `simctl launch booted com.ehllo.app`) brings it back in front with state intact, no rebuild needed.
 - Device names in `boot`/`run` must match a string from `xcrun simctl list devicetypes` (e.g. "iPhone 17 Pro", "iPhone 16"); the match is a substring check against `xcrun simctl list devices available`, so pick something unambiguous.
+
+## Gotchas that cost real time
+
+- **Two apps are installed on the simulator**: `com.ehllo.app` ("ehllo") and
+  `com.ehllo.app.staging` ("ehllo Staging"), each with its own scheme -
+  `ehllo://` and `ehllo-staging://` respectively (see `scheme` in
+  `app.config.js`). `expo run:ios` builds and installs **one** of them, so a
+  deep link on the other scheme opens a different, older binary with its own
+  stale JS. The symptom is a screen that never changes no matter how many times
+  you reload, which reads exactly like a broken Fast Refresh. Check with
+  `xcrun simctl listapps booted | grep -iE 'ehllo|aftermeet'`, and confirm which
+  app is frontmost from the status-bar back-label in a screenshot.
+- **A long-lived Metro serves stale code.** A dev server left running for days
+  stops picking up file changes; edits land on disk, typecheck fine, and never
+  reach the app. Check its age with `ps -p $(lsof -ti:8081) -o etime,command`
+  and restart with `--clear` if it is not minutes old. Verify from disk first
+  (`grep` the file) so you are not debugging the bundler when the edit itself
+  failed.
+- **`simctl openurl` prompts "Open in <app>?"** on current iOS, and `simctl`
+  cannot tap. Return does not accept it - the dialog needs a real click. Read
+  the Simulator window rect via System Events, then click the scaled
+  coordinate:
+  ```bash
+  osascript -e 'tell application "System Events" to tell process "Simulator" \
+    to return {position, size} of first window'
+  osascript -e 'tell application "System Events" to click at {x, y}'
+  ```
+  Each unaccepted `openurl` queues another copy of the dialog, so avoid firing
+  it repeatedly while debugging.
 
 ## Troubleshooting
 
