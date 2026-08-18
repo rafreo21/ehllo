@@ -952,7 +952,6 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 12,
     fontFamily: fonts.bold, fontWeight: '800',
-    textTransform: 'uppercase',
     letterSpacing: 0.6,
   },
   liveTranscriptHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
@@ -987,7 +986,7 @@ const styles = StyleSheet.create({
   personCopy: { flex: 1, gap: 2 },
   personName: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
   personMeta: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
-  personBadge: { marginTop: 2, color: colors.ink, fontSize: 10, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  personBadge: { marginTop: 2, color: colors.ink, fontSize: 10, fontFamily: fonts.bold, fontWeight: '800' },
   personHistoryBadge: { marginTop: 2, color: colors.inkSoft, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800' },
   viewAllPeople: {
     flexDirection: 'row',
@@ -1039,7 +1038,6 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 11,
     fontFamily: fonts.bold, fontWeight: '800',
-    textTransform: 'uppercase',
   },
   personChoiceList: { gap: spacing.x2, marginTop: spacing.x3 },
   personChoice: {
@@ -1075,7 +1073,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
   },
   choiceCountText: { color: colors.ink, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '900' },
-  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800' },
   input: {
     minHeight: 48,
     paddingHorizontal: spacing.x4,
@@ -1098,7 +1096,6 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 11,
     fontFamily: fonts.bold, fontWeight: '800',
-    textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   methodRow: { flexDirection: 'row', gap: spacing.x2 },
@@ -1132,7 +1129,7 @@ const styles = StyleSheet.create({
   exchangeCardDisabled: { opacity: 0.55 },
   exchangeName: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
   exchangeMeta: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
-  exchangeSelected: { color: colors.ink, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '900', textTransform: 'uppercase' },
+  exchangeSelected: { color: colors.ink, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '900' },
   transcriptSheetHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13 },
   transcriptField: {
     minHeight: 220,

@@ -184,7 +184,6 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 11,
     fontFamily: fonts.bold, fontWeight: '800',
-    textTransform: 'uppercase',
   },
   status: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
   statusActive: { color: colors.ink, fontFamily: fonts.medium, fontWeight: '700' },

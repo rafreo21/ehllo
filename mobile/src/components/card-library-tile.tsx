@@ -120,7 +120,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: fonts.extrabold, fontWeight: '900',
     letterSpacing: 0.8,
-    textTransform: 'uppercase',
   },
   cardName: {
     color: colors.ink,

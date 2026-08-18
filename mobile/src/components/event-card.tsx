@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.accent,
   },
-  statusText: { color: colors.ink, fontSize: 10, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  statusText: { color: colors.ink, fontSize: 10, fontFamily: fonts.bold, fontWeight: '800' },
   suggested: { flexShrink: 0, color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.x2 },
   checkedInNote: { color: colors.muted, fontSize: 13, fontFamily: fonts.semibold, fontWeight: '600' },

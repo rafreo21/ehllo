@@ -121,7 +121,7 @@ export function PhoneInput({ label, value, onChange, placeholder }: PhoneInputPr
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing.x2 },
-  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800' },
   row: {
     flexDirection: 'row',
     alignItems: 'stretch',

@@ -332,5 +332,5 @@ const styles = StyleSheet.create({
   actionRow: { marginLeft: 40 + spacing.x3 },
   panelTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.bold, fontWeight: '800' },
   panelCopy: { marginTop: 6, color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 19 },
-  soon: { color: colors.muted, fontSize: 12, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  soon: { color: colors.muted, fontSize: 12, fontFamily: fonts.bold, fontWeight: '800' },
 });

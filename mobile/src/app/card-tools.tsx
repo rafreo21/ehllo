@@ -516,7 +516,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: fonts.bold, fontWeight: '800',
     letterSpacing: 0.4,
-    textTransform: 'uppercase',
     paddingHorizontal: spacing.x1,
     paddingTop: spacing.x2,
     paddingBottom: spacing.x1,

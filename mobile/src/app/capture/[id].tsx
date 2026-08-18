@@ -1175,7 +1175,7 @@ const styles = StyleSheet.create({
   shareToggleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
   linkCopy: { flex: 1, gap: 3 },
   linkHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 19 },
-  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800' },
   fieldGroup: { gap: spacing.x3 },
   detailToggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   fieldHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },

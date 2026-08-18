@@ -357,7 +357,7 @@ export function WidgetToolSheetContent({
                 <Text style={styles.widgetOptionSize}>{option.size}</Text>
               </View>
               <View style={styles.widgetConnectionsPreview}>
-                <Text style={[styles.widgetConnectionsEyebrow, { color: theme.backgroundColor }]}>RECENT CONNECTIONS</Text>
+                <Text style={[styles.widgetConnectionsEyebrow, { color: theme.backgroundColor }]}>Recent connections</Text>
                 {firstConnection ? (
                   <View style={styles.widgetConnectionRow}>
                     <View style={styles.widgetAvatarSmall}>

@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   authTitle: { fontFamily: fonts.regular, fontSize: 34, lineHeight: 36, letterSpacing: -1.2 },
   divider: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
   dividerLine: { flex: 1, height: 1, backgroundColor: colors.line },
-  dividerText: { color: colors.muted, fontSize: 12, fontFamily: fonts.medium, fontWeight: '700', textTransform: 'uppercase' },
+  dividerText: { color: colors.muted, fontSize: 12, fontFamily: fonts.medium, fontWeight: '700' },
   field: { minHeight: 54, paddingHorizontal: spacing.x4, flexDirection: 'row', alignItems: 'center', gap: spacing.x3, borderWidth: 1, borderColor: colors.line, borderRadius: radius.medium, backgroundColor: colors.surface },
   input: { flex: 1, color: colors.ink, fontFamily: fonts.regular, fontSize: 16 },
   codeInput: { letterSpacing: 8, fontSize: 24, fontFamily: fonts.medium, fontWeight: '700', textAlign: 'center' },

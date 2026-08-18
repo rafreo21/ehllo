@@ -322,7 +322,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: fonts.extrabold, fontWeight: '900',
     letterSpacing: 0.8,
-    textTransform: 'uppercase',
   },
   pickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2 },
   chip: {
@@ -337,7 +336,7 @@ const styles = StyleSheet.create({
   chipAdded: { opacity: 0.4 },
   chipText: { color: colors.ink, fontSize: 12, fontFamily: fonts.medium, fontWeight: '700' },
   sheetField: { gap: spacing.x2 },
-  sheetLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  sheetLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800' },
   sheetInput: {
     minHeight: 52,
     paddingHorizontal: spacing.x4,

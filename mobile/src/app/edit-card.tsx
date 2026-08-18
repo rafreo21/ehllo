@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
   photoHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 11 },
   removeImage: { color: colors.danger, fontSize: 11, fontFamily: fonts.medium, fontWeight: '700' },
   field: { gap: spacing.x2 },
-  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.6 },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', letterSpacing: 0.6 },
   input: {
     minHeight: 52,
     paddingHorizontal: spacing.x4,
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  statLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.medium, fontWeight: '700', textTransform: 'uppercase' },
+  statLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.medium, fontWeight: '700' },
   reviewOption: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   content: { gap: spacing.x4 },
   panel: { gap: spacing.x4 },
   field: { gap: spacing.x2 },
-  fieldLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', letterSpacing: 0.4, textTransform: 'uppercase' },
+  fieldLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', letterSpacing: 0.4 },
   fieldHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 16 },
   inputRow: {
     minHeight: 48,

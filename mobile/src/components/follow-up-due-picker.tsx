@@ -134,7 +134,7 @@ export function FollowUpDuePicker({ dueAt, onChange, label = 'When should you do
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing.x3 },
-  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2 },
   chip: {
     paddingHorizontal: spacing.x3,

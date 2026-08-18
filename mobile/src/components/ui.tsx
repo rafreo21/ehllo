@@ -386,11 +386,16 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     backgroundColor: colors.surface,
   },
-  choicePillSelected: { backgroundColor: colors.ink, borderColor: colors.ink },
+  // Light fill rather than the dark one. A pill row is a view switch, not the
+  // primary action on the screen, and inking the selected one made the filter
+  // read heavier than the events beneath it. The accent already carries
+  // selection elsewhere (the active tab, the check badge), and ink-on-accent
+  // keeps the contrast well clear.
+  choicePillSelected: { backgroundColor: colors.accent, borderColor: colors.accent },
   choicePillPressed: { opacity: 0.7 },
   choicePillText: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
-  choicePillTextSelected: { color: colors.white },
-  eyebrow: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
+  choicePillTextSelected: { color: colors.ink },
+  eyebrow: { color: colors.muted, fontSize: 12, fontFamily: fonts.medium, fontWeight: '700', letterSpacing: 0 },
   title: { color: colors.ink, fontSize: 40, lineHeight: 42, fontFamily: fonts.medium, fontWeight: '700', letterSpacing: -1.5 },
   body: { color: colors.muted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 22 },
   pageHeaderCaption: { color: colors.muted, fontFamily: fonts.regular, fontSize: 11, lineHeight: 15 },

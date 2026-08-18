@@ -758,7 +758,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: fonts.extrabold, fontWeight: '900',
     letterSpacing: 0.8,
-    textTransform: 'uppercase',
   },
   historyGroup: { gap: spacing.x3 },
   syncFooter: {
@@ -806,7 +805,7 @@ const styles = StyleSheet.create({
   personRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2, flex: 1 },
   personName: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '800' },
   when: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
-  draftMeta: { color: colors.muted, fontSize: 12, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  draftMeta: { color: colors.muted, fontSize: 12, fontFamily: fonts.bold, fontWeight: '800' },
   draftMetaInterrupted: { color: colors.warning },
   captureTitle: { color: colors.ink, fontSize: 18, fontFamily: fonts.bold, fontWeight: '800', lineHeight: 24 },
   summaryBlock: {
@@ -826,7 +825,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: fonts.extrabold, fontWeight: '900',
     letterSpacing: 0.8,
-    textTransform: 'uppercase',
   },
   blockCopy: { color: colors.ink, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
   blockCopyMuted: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
@@ -842,7 +840,6 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 11,
     fontFamily: fonts.bold, fontWeight: '800',
-    textTransform: 'uppercase',
   },
   statusChipInterrupted: { color: colors.warning },
   draftActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.x4 },

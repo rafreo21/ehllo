@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   blockTitle: { color: colors.ink, fontSize: 17, fontFamily: fonts.bold, fontWeight: '800' },
-  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800' },
   input: {
     minHeight: 48,
     paddingHorizontal: spacing.x4,
@@ -435,7 +435,6 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 11,
     fontFamily: fonts.bold, fontWeight: '800',
-    textTransform: 'uppercase',
   },
   addedActions: { flexDirection: 'row', gap: spacing.x2 },
   iconButton: {
@@ -474,5 +473,5 @@ const styles = StyleSheet.create({
   exchangeCardDisabled: { opacity: 0.55 },
   exchangeName: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
   exchangeMeta: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
-  exchangeSelected: { color: colors.ink, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '900', textTransform: 'uppercase' },
+  exchangeSelected: { color: colors.ink, fontSize: 11, fontFamily: fonts.extrabold, fontWeight: '900' },
 });

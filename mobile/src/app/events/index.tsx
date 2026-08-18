@@ -1060,7 +1060,7 @@ const styles = StyleSheet.create({
   linkStatusRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
   linkStatusText: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
   fieldGroup: { gap: spacing.x2 },
-  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  label: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800' },
   input: { fontFamily: fonts.regular,
     borderWidth: 1,
     borderColor: colors.line,

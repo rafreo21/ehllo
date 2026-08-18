@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     gap: spacing.x4,
   },
   badges: { flexDirection: 'row', alignItems: 'center', gap: spacing.x3 },
-  status: { color: colors.muted, fontSize: 12, fontFamily: fonts.bold, fontWeight: '800', textTransform: 'uppercase' },
+  status: { color: colors.muted, fontSize: 12, fontFamily: fonts.bold, fontWeight: '800' },
   primaryBadge: {
     flexDirection: 'row',
     alignItems: 'center',
