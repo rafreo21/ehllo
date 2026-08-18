@@ -110,11 +110,15 @@ export async function buildBrandedQrPngBuffer(payload: string, size = 1024) {
  * where sharp's native/wasm bindings can't load at all.
  */
 export async function buildBrandedQrDataUri(payload: string, size = 1024) {
-  const [qrSvg, logoBuffer] = await Promise.all([
-    QRCode.toString(payload, { ...QR_OPTIONS, type: "svg", width: size }),
+  const [qrPng, logoBuffer] = await Promise.all([
+    // A PNG rather than an SVG. resvg resolves one level of nested SVG but not
+    // two, so keeping this layer raster means the composed document is only
+    // ever one level deep. Email clients are unreliable with SVG as well, so
+    // raster is the safer answer everywhere this data URI ends up.
+    QRCode.toBuffer(payload, { ...QR_OPTIONS, width: size }),
     loadEhlloLogoBuffer(),
   ]);
-  const qrDataUri = `data:image/svg+xml;base64,${Buffer.from(qrSvg).toString("base64")}`;
+  const qrDataUri = `data:image/png;base64,${qrPng.toString("base64")}`;
 
   const logoSize = Math.round(size * 0.24);
   const badgePadding = Math.max(5, Math.round(size * 0.014));
@@ -134,6 +138,21 @@ export async function buildBrandedQrDataUri(payload: string, size = 1024) {
   ].join("");
 
   return `data:image/svg+xml;base64,${Buffer.from(composed).toString("base64")}`;
+}
+
+/**
+ * The branded QR flattened into a single PNG data URI.
+ *
+ * buildBrandedQrDataUri returns an SVG that itself embeds images. resvg
+ * resolves one level of that - an SVG data URI inside <image> renders fine -
+ * but not two, so when the virtual background and watch face documents
+ * embedded it, the QR modules and logo inside came back empty and every asset
+ * shipped with a blank badge. Compositing to a single raster first leaves the
+ * outer document only one level to resolve.
+ */
+export async function buildBrandedQrPngDataUri(payload: string, size = 1024) {
+  const png = await buildBrandedQrPngBuffer(payload, size);
+  return `data:image/png;base64,${png.toString("base64")}`;
 }
 
 export async function buildBrandedContactQrPngBuffer(input: CardVcardInput, size = 1024) {

@@ -1,4 +1,4 @@
-import { buildBrandedQrDataUri, buildBrandedQrPngBuffer } from "./branded-qr.ts";
+import { buildBrandedQrDataUri, buildBrandedQrPngBuffer, buildBrandedQrPngDataUri } from "./branded-qr.ts";
 import { resolveShareQrPayload } from "./contact-qr.ts";
 import { loadSharp, sharpAvailable } from "./sharp-runtime.ts";
 import { loadShareAssetFontsBase64, shareAssetFontStyles } from "./share-asset-fonts.ts";
@@ -60,7 +60,7 @@ async function buildVirtualBackgroundSvgDocument(profile: ShareAssetProfile) {
   const layout = buildVirtualBackgroundLayout(profile);
   const fonts = await loadShareAssetFontsBase64();
   const qrRenderSize = VIRTUAL_BG_PANEL.qrSize * 5;
-  const qrDataUri = await buildBrandedQrDataUri(resolveShareQrPayload(profile), qrRenderSize);
+  const qrDataUri = await buildBrandedQrPngDataUri(resolveShareQrPayload(profile), qrRenderSize);
   const width = VIRTUAL_BG_PANEL.canvasWidth;
   const height = VIRTUAL_BG_PANEL.canvasHeight;
 
@@ -171,7 +171,7 @@ export async function buildWatchFaceSvg(profile: ShareAssetProfile) {
   const qrX = Math.round((400 - qrDisplaySize) / 2);
   const qrY = 92;
   const fonts = await loadShareAssetFontsBase64();
-  const qrDataUri = await buildBrandedQrDataUri(resolveShareQrPayload(profile), qrRenderSize);
+  const qrDataUri = await buildBrandedQrPngDataUri(resolveShareQrPayload(profile), qrRenderSize);
 
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">`,
