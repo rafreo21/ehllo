@@ -1,17 +1,9 @@
-import {
-  Code,
-  ContactlessPayment,
-  Copy,
-  EnvelopeSimple,
-  LinkSimple,
-  Monitor,
-  SquaresFour,
-  Watch,
-} from 'phosphor-react-native';
+import { Code, ContactlessPayment, Copy, EnvelopeSimple, ImageSquare, LinkSimple, Monitor, SquaresFour, Watch } from 'phosphor-react-native';
 import { Platform, Image, StyleSheet, Text, View } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { router } from 'expo-router';
 
+import { BrandMark } from '@/components/brand-mark';
 import { BrandedQrPreview } from '@/components/branded-qr-preview';
 import { VirtualBackgroundPreviewBackground, WalletPreviewBackground } from '@/components/card-tool-preview-backgrounds';
 import { AppleWalletButton } from '@/components/apple-wallet-button';
@@ -108,28 +100,41 @@ export function WalletToolSheetContent({
           ? 'Your name, role, and a scannable link, ready for Apple Wallet.'
           : 'Your name, role, and a scannable link, ready for Google Wallet. While the issuer is in demo mode, passes may show a [TEST ONLY] prefix.'}
       </Body>
+      {/* Photo first, then who they are, then the code - the order someone reads
+          a person. The old layout led with three stacked NAME / JOB TITLE /
+          COMPANY labels, which spent the top third of the card naming its own
+          fields instead of showing the person, and pushed the photo out
+          entirely. Field labels belong on a Wallet pass, where the OS draws
+          them; they do not belong on a preview we lay out ourselves. */}
       <WalletPreviewBackground theme={card.theme} style={styles.walletPreview}>
-        <Text style={[styles.walletHeader, { color: theme.softColor }]}>ehllo Card</Text>
-        <View style={styles.walletFields}>
-          <View style={styles.walletField}>
-            <Text style={[styles.walletLabel, { color: theme.mutedColor }]}>NAME</Text>
-            <Text style={[styles.walletValue, { color: theme.color }]}>{card.name || 'Your name'}</Text>
-          </View>
-          {card.role ? (
-            <View style={styles.walletField}>
-              <Text style={[styles.walletLabel, { color: theme.mutedColor }]}>JOB TITLE</Text>
-              <Text style={[styles.walletValue, { color: theme.color }]}>{card.role}</Text>
-            </View>
-          ) : null}
-          {showCompany && card.company ? (
-            <View style={styles.walletField}>
-              <Text style={[styles.walletLabel, { color: theme.mutedColor }]}>COMPANY</Text>
-              <Text style={[styles.walletValue, { color: theme.color }]}>{card.company}</Text>
-            </View>
-          ) : null}
+        <View style={styles.walletBrandBar}>
+          <BrandMark size={26} />
+          <Text style={[styles.walletBrand, { color: theme.color }]}>ehllo</Text>
         </View>
-        <View style={styles.walletQrPreview}>
-          <BrandedQrPreview card={card} cardUrl={publicUrl} size={112} />
+
+        {card.photo?.trim() ? (
+          <Image source={{ uri: card.photo.trim() }} style={styles.walletPhoto} resizeMode="cover" />
+        ) : (
+          <View style={[styles.walletPhoto, styles.walletPhotoEmpty]}>
+            <ImageSquare size={26} color={colors.muted} weight="bold" />
+            <Text style={styles.walletPhotoEmptyText}>Add a photo to your card</Text>
+          </View>
+        )}
+
+        <View style={styles.walletBody}>
+          <Text style={[styles.walletName, { color: theme.color }]} numberOfLines={1}>
+            {card.name || 'Your name'}
+          </Text>
+          {card.role || (showCompany && card.company) ? (
+            <Text style={[styles.walletRole, { color: theme.mutedColor }]} numberOfLines={1}>
+              {[card.role, showCompany ? card.company : ''].filter(Boolean).join(' · ')}
+            </Text>
+          ) : null}
+
+          <View style={styles.walletQrTile}>
+            <BrandedQrPreview card={card} cardUrl={publicUrl} size={136} />
+            <Text style={styles.walletQrCaption}>Scan to connect</Text>
+          </View>
         </View>
       </WalletPreviewBackground>
       {Platform.OS === 'ios' ? (
@@ -531,21 +536,41 @@ export function cardToolShowCompany(card: MobileCard) {
 const styles = StyleSheet.create({
   sheetBody: { gap: spacing.x3 },
   note: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
+  // No padding on the frame: the photo has to reach the rounded edges, so each
+  // band pads itself instead.
   walletPreview: {
-    padding: spacing.x4,
-    gap: spacing.x3,
+    padding: 0,
+    overflow: 'hidden',
   },
-  walletHeader: { fontSize: 11, fontFamily: fonts.bold, fontWeight: '800' },
-  walletFields: { gap: spacing.x3 },
-  walletField: { gap: 2 },
-  walletLabel: { fontSize: 10, fontFamily: fonts.medium, fontWeight: '700', letterSpacing: 0.6 },
-  walletValue: { fontSize: 18, fontFamily: fonts.bold, fontWeight: '800' },
-  walletQrPreview: {
-    alignSelf: 'flex-start',
-    padding: spacing.x2,
+  walletBrandBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.x2,
+    paddingHorizontal: spacing.x4,
+    paddingVertical: spacing.x3,
+  },
+  walletPhoto: { width: '100%', aspectRatio: 4 / 3 },
+  walletPhotoEmpty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.x2,
+    backgroundColor: colors.surfaceMuted,
+  },
+  walletPhotoEmptyText: { color: colors.muted, fontSize: 12, fontFamily: fonts.regular },
+  walletBody: { paddingHorizontal: spacing.x4, paddingTop: spacing.x4, paddingBottom: spacing.x5, gap: 2 },
+  walletBrand: { fontSize: 17, fontFamily: fonts.bold, fontWeight: '800' },
+  walletName: { fontSize: 22, fontFamily: fonts.bold, fontWeight: '800', letterSpacing: -0.4 },
+  walletRole: { fontSize: 14, fontFamily: fonts.regular, marginTop: 2 },
+  walletQrTile: {
+    alignSelf: 'center',
+    alignItems: 'center',
+    gap: spacing.x2,
+    marginTop: spacing.x5,
+    padding: spacing.x3,
     borderRadius: radius.medium,
     backgroundColor: colors.white,
   },
+  walletQrCaption: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
   nfcQrPreview: {
     alignItems: 'center',
     gap: spacing.x2,
