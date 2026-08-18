@@ -168,7 +168,6 @@ export function FollowUpsScreen({ showBack = true, historyOnly = false }: { show
       <View style={styles.page}>
         <View style={styles.header}>
           <PageHeader
-            eyebrow={historyOnly ? 'History' : 'Follow-ups'}
             title={historyOnly ? 'Completed follow-ups' : 'Stay on top of next steps'}
             titleStyle={styles.title}
             onBack={() => router.back()}

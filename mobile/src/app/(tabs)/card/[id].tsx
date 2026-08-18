@@ -9,7 +9,7 @@ import { OnlyCardPrimarySheet } from '@/components/only-card-primary-sheet';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { MobileCardPreview } from '@/components/mobile-card';
-import { BackButton, Button, Eyebrow, HeaderActionButton } from '@/components/ui';
+import { BackButton, Button, HeaderActionButton } from '@/components/ui';
 import { cardDisplayLabel } from '@/features/card/card-display';
 import { useCard } from '@/features/card/card-context';
 import { describeError } from '@/lib/friendly-error';
@@ -139,7 +139,6 @@ export default function CardDetailScreen() {
             </View>
           </View>
           <View style={styles.headerCopy}>
-            <Eyebrow>Viewing</Eyebrow>
             <Text style={styles.detailTitle}>{cardDisplayLabel(selected)}</Text>
           </View>
         </View>

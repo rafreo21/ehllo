@@ -230,7 +230,6 @@ export function FooterBackButton({ onPress, style }: { onPress?: () => void; sty
 }
 
 export function PageHeader({
-  eyebrow,
   title,
   titleStyle,
   description,
@@ -239,7 +238,6 @@ export function PageHeader({
   rightAction,
   showBack = true,
 }: {
-  eyebrow?: string;
   title: string;
   titleStyle?: StyleProp<TextStyle>;
   description?: ReactNode;
@@ -255,7 +253,6 @@ export function PageHeader({
         {rightAction ? <View style={styles.pageHeaderAction}>{rightAction}</View> : null}
       </View>
       <View style={styles.pageHeaderCopy}>
-        {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
         <Text style={[styles.title, styles.pageHeaderTitle, titleStyle]}>{title}</Text>
         {description ? <Body>{description}</Body> : null}
         {caption ? <Text style={styles.pageHeaderCaption}>{caption}</Text> : null}

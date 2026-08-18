@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { BackButton, Body, Button, Eyebrow } from '@/components/ui';
+import { BackButton, Body, Button } from '@/components/ui';
 import { ConnectionSuccessSheet } from '@/components/connection-success-sheet';
 import { EmptyState } from '@/components/empty-state';
 import { ScanShareSkeleton } from '@/components/skeleton';
@@ -127,9 +127,8 @@ export default function ScannerScreen() {
           <View style={styles.previewHeader}>
             <BackButton onPress={() => router.back()} />
             <View style={styles.headerCopy}>
-              <Eyebrow>Scan</Eyebrow>
               <Text style={styles.previewTitle}>Add cards to your network</Text>
-              <Body>Scan someone’s ehllo QR code to save their card and open their connection.</Body>
+              <Body>Scan an ehllo QR code to save their card.</Body>
             </View>
           </View>
           <EmptyState

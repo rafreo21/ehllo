@@ -161,7 +161,6 @@ export default function NotificationCenterScreen() {
   return (
     <ScreenFrame>
       <PageHeader
-        eyebrow="Alerts"
         title="Notifications"
         onBack={goBack}
         rightAction={unreadCount ? (

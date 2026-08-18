@@ -16,7 +16,7 @@ import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import {
   ConnectionsListSkeleton,
 } from '@/components/skeleton';
-import { BackButton, Body, Eyebrow } from '@/components/ui';
+import { BackButton, Body } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { connectionAvatarUrl } from '@/features/connections/connection-public-card';
 import {
@@ -173,9 +173,8 @@ export function ConnectionsScreen({ showBack = true }: { showBack?: boolean }) {
           </View>
 
           <View style={styles.headerCopy}>
-            <Eyebrow>Connections</Eyebrow>
             <Text style={styles.title}>People you’ve met</Text>
-            <Body>Cards you saved and people who shared their details with you.</Body>
+            <Body>Cards you saved, and people who shared theirs.</Body>
           </View>
 
           {session && hasConnections ? (

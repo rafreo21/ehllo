@@ -20,7 +20,7 @@ import { BottomSheet } from '@/components/bottom-sheet';
 import { EmptyState } from '@/components/empty-state';
 import { CardToolErrorSheet } from '@/components/card-tool-error-sheet';
 import { CardToolSuccessSheet } from '@/components/card-tool-success-sheet';
-import { BackButton, Body, Button, Eyebrow, Panel } from '@/components/ui';
+import { BackButton, Body, Button, Panel } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import {
   BackgroundToolSheetContent,
@@ -253,7 +253,7 @@ export default function CardToolsScreen() {
         <BackButton onPress={() => router.back()} />
         <Panel style={{ marginTop: spacing.x4 }}>
           <Text style={styles.panelTitle}>Card not found</Text>
-          <Body>This card may have been deleted. Go back and choose another card.</Body>
+          <Body>This card may have been deleted.</Body>
           <Button onPress={() => router.replace('/(tabs)/card')}>Go to my cards</Button>
         </Panel>
       </View>
@@ -275,7 +275,6 @@ export default function CardToolsScreen() {
         <View style={styles.header}>
           <BackButton onPress={() => router.back()} />
           <View style={styles.headerCopy}>
-            <Eyebrow>Card tools</Eyebrow>
             <Text style={styles.title}>{card.label || card.name || 'Untitled card'}</Text>
             <Body style={styles.subtitle}>
               Share from your phone first. Wallet, NFC, and extras live below.

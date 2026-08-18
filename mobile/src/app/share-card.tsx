@@ -9,7 +9,7 @@ import { BrandedQrCode, type QrShareMode } from '@/components/branded-qr-code';
 import { AppleWalletButton } from '@/components/apple-wallet-button';
 import { GoogleWalletButton } from '@/components/google-wallet-button';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
-import { BackButton, Body, Button, Eyebrow, PillButton, ScreenFrame } from '@/components/ui';
+import { BackButton, Body, Button, PillButton, ScreenFrame } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
 import { showsCompanyDetails } from '@/features/card/company-display';
@@ -212,7 +212,6 @@ export default function ShareCardScreen() {
           </Pressable>
         </View>
         <View style={styles.headerCopy}>
-          <Eyebrow>Quick Share</Eyebrow>
         </View>
       </View>
       <Body style={styles.cardLine}>
@@ -340,7 +339,7 @@ export default function ShareCardScreen() {
             </Button>
           </View>
         }>
-        <Body>Confirm only after Google Wallet shows that the pass was added.</Body>
+        <Body>Confirm once Wallet shows the pass.</Body>
       </BottomSheet>
       <OutcomeSuccessSheet
         visible={walletSuccessOpen}

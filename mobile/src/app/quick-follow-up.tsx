@@ -296,11 +296,10 @@ export default function QuickFollowUpScreen() {
     <View style={[styles.safe, { paddingTop: insets.top + spacing.x2 }]}>
       <View style={styles.header}>
         <PageHeader
-          eyebrow="Quick follow-up"
           title="What needs to happen next?"
           onBack={() => router.back()}
         />
-        <Body>Create a reminder without recording a conversation. Nothing is sent automatically.</Body>
+        <Body>A reminder without a recording. Nothing auto-sends.</Body>
         {eventContext ? (
           <Text style={styles.eventContext}>
             At {eventContext.eventTitle}{eventContext.eventLocation ? ` · ${eventContext.eventLocation}` : ''}

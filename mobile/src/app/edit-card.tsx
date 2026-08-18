@@ -255,7 +255,6 @@ export default function EditCardScreen() {
       <View style={styles.page}>
         <View style={styles.header}>
           <PageHeader
-            eyebrow="Card editor"
             title={draft.label || 'Edit card'}
             titleStyle={styles.title}
           />
@@ -422,7 +421,7 @@ export default function EditCardScreen() {
             <View style={styles.stepContent}>
               <View style={styles.reviewIntro}>
                 <Text style={styles.reviewTitle}>Almost there</Text>
-                <Body>Preview your card below, then publish when you are ready to share.</Body>
+                <Body>Preview below, then publish when ready.</Body>
               </View>
 
               <View style={styles.previewWrap}>

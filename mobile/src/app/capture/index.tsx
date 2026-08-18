@@ -322,7 +322,6 @@ export function CaptureHomeScreen({ historyOnly = false }: { historyOnly?: boole
       <View style={styles.page}>
         <View style={styles.header}>
           <PageHeader
-            eyebrow={historyOnly ? 'History' : 'Capture'}
             title={historyOnly ? 'Previous captures' : 'Recordings & context'}
             titleStyle={styles.title}
             onBack={goBack}

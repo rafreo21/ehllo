@@ -487,7 +487,6 @@ export default function EventsScreen() {
   const header = (
     <View style={styles.fixedHeader}>
       <PageHeader
-        eyebrow="My events"
         title="Events"
         description="Captures made here keep their event context."
         caption={syncedAt ? formatSyncedAgo(syncedAt, now) : undefined}

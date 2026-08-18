@@ -11,7 +11,7 @@ import LottieView from 'lottie-react-native';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { BackButton, Body, Button, Eyebrow } from '@/components/ui';
+import { BackButton, Body, Button } from '@/components/ui';
 import { useCard } from '@/features/card/card-context';
 import {
   programNfcTag,
@@ -106,7 +106,6 @@ export default function ProgramNfcScreen() {
       <View style={styles.header}>
         <BackButton />
         <View style={styles.headerCopy}>
-          <Eyebrow>NFC setup</Eyebrow>
           <Text style={styles.headerTitle}>{card.label || card.name || 'My card'}</Text>
         </View>
       </View>

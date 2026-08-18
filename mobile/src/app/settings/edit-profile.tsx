@@ -79,7 +79,6 @@ export default function EditProfileScreen() {
     <Screen
       header={
         <PageHeader
-          eyebrow="My account"
           title="Edit profile"
           onBack={() => router.back()}
         />
@@ -102,7 +101,7 @@ export default function EditProfileScreen() {
       ) : (
         <View style={styles.content}>
           <Body>
-            Account details only. Your public card is edited from My Cards.
+            Account details. Cards live in My cards.
           </Body>
 
           <Panel style={styles.panel}>

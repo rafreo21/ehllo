@@ -75,7 +75,7 @@ export default function PendingSyncScreen() {
   return (
     <Screen
       footer={retryFooter}
-      header={<PageHeader eyebrow="Synchronization" title="Pending sync" description="Work saved on this device that has not reached ehllo yet." />}>
+      header={<PageHeader title="Pending sync" description="Saved here, not yet synced." />}>
       <Panel style={styles.summary}>
         <View style={styles.summaryIconWrap}>
           {showLottie ? (

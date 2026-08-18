@@ -1165,11 +1165,13 @@ export default function CaptureWizardScreen() {
       <View style={styles.page}>
         <View style={styles.header}>
           <PageHeader
-            eyebrow={draft.step === 0
+            // Was a category line above the title; it is guidance, so it reads as
+            // the description instead. One line either way.
+            description={draft.step === 0
               ? draft.captureMode === 'recording'
-                ? 'Get consent, then record'
-                : 'Write what mattered'
-              : 'Meeting context'}
+                ? 'Get their consent before you start recording.'
+                : 'Write what mattered while it is fresh.'
+              : undefined}
             title={draft.step === 0
               ? draft.captureMode === 'recording'
                 ? 'Record this conversation'
@@ -1261,7 +1263,7 @@ export default function CaptureWizardScreen() {
                 <PaperPlaneTilt size={18} color={colors.ink} weight="bold" />
                 <Text style={styles.blockTitle}>What happens next?</Text>
               </View>
-              <Body>Pick how you want to follow up, add any private notes, then save and review.</Body>
+              <Body>Choose follow-ups, add notes, then review.</Body>
               {isTranscribing || generationStatus === 'generating' ? (
                 <View style={styles.backgroundStatus}>
                   <ActivityIndicator size="small" color={colors.ink} />

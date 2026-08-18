@@ -52,7 +52,9 @@ export default function CardLibraryScreen() {
         <View style={styles.header}>
           <View style={styles.topBar}>
             <View style={styles.headerCopy}>
-              <Eyebrow>{syncing ? 'Syncing…' : 'My cards'}</Eyebrow>
+              {/* No standing category line. This appears only while a sync is
+                  actually running, so it costs no space the rest of the time. */}
+              {syncing ? <Eyebrow>Syncing…</Eyebrow> : null}
               <Title style={styles.title}>
                 {session ? 'Choose a card to open' : hasCards ? 'Your cards on this device' : 'Create your first card'}
               </Title>
@@ -60,8 +62,8 @@ export default function CardLibraryScreen() {
                 {session
                   ? 'Open a card to view, share, or set primary.'
                   : hasCards
-                    ? 'Sign in to publish and sync your cards across devices.'
-                    : 'Build your card locally, then sign in when you are ready to publish and share it.'}
+                    ? 'Sign in to publish and sync across devices.'
+                    : 'Build it here, then sign in to publish.'}
               </Body>
             </View>
             <HeaderActionButton

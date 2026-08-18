@@ -1,13 +1,11 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { CaretRight, CheckCircle, IdentificationCard, Microphone, Plus, Trash,
-  Handshake,
 } from 'phosphor-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ConnectionCardSheet } from '@/components/connection-card-sheet';
 import { BottomSheet } from '@/components/bottom-sheet';
-import { SharedHistorySheet } from '@/components/shared-history-sheet';
 import { ConnectionDeleteSheet } from '@/components/connection-delete-sheet';
 import { FollowUpCell } from '@/components/follow-up-cell';
 import { FollowUpMissingSheet } from '@/components/follow-up-missing-sheet';
@@ -18,7 +16,7 @@ import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { ConnectionDetailSkeleton } from '@/components/skeleton';
-import { BackButton, Body, Eyebrow, PillButton, Title } from '@/components/ui';
+import { BackButton, Body, PillButton, Title } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { loadConnectionLiveCard } from '@/features/connections/connection-card-loader';
 import {
@@ -80,7 +78,6 @@ export default function ConnectionDetailScreen() {
   const [saving, setSaving] = useState(false);
   const [cardSheetOpen, setCardSheetOpen] = useState(false);
   const [meetingsSheetOpen, setMeetingsSheetOpen] = useState(false);
-  const [sharedHistoryOpen, setSharedHistoryOpen] = useState(false);
   const [followUpsSheetOpen, setFollowUpsSheetOpen] = useState(false);
   const [activeMeeting, setActiveMeeting] = useState<EncounterPayload | null>(null);
   const [meetingRecordingUri, setMeetingRecordingUri] = useState<string | null>(null);
@@ -366,7 +363,6 @@ export default function ConnectionDetailScreen() {
           {connection ? (
             <View style={styles.headerCopy}>
               <Title style={styles.name}>{connection.name}</Title>
-              <Eyebrow>{connectionSourceLabel(connection.source)}</Eyebrow>
               <Body>{contextLine}</Body>
               {latestPlaceTitle ? (
                 <Text style={styles.eventContext}>
@@ -478,25 +474,6 @@ export default function ConnectionDetailScreen() {
                     })}
                   />
                 )}
-
-                {/* Deliberately its own row rather than another link in the
-                    header above. The list above is your private record of this
-                    person; this is the part they can see too, and the two must
-                    not read as one list. */}
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="See what you both can see"
-                  onPress={() => setSharedHistoryOpen(true)}
-                  style={({ pressed }) => [styles.sharedRow, pressed && styles.pressed]}>
-                  <View style={styles.sharedIcon}>
-                    <Handshake size={18} color={colors.ink} weight="bold" />
-                  </View>
-                  <View style={styles.sharedCopy}>
-                    <Text style={styles.sharedTitle}>What you both see</Text>
-                    <Text style={styles.sharedHint}>The meeting, invitations and emails between you. Your notes stay private.</Text>
-                  </View>
-                  <CaretRight size={16} color={colors.muted} weight="bold" />
-                </Pressable>
               </View>
 
               {openFollowUps.length ? (
@@ -587,14 +564,6 @@ export default function ConnectionDetailScreen() {
         </View>
       </BottomSheet>
 
-      <SharedHistorySheet
-        visible={sharedHistoryOpen}
-        connectionId={connection?.sourceId ?? null}
-        personName={connection?.name ?? ''}
-        accessToken={accessToken}
-        onClose={() => setSharedHistoryOpen(false)}
-      />
-
       <MeetingDetailSheet
         visible={Boolean(activeMeeting)}
         encounter={activeMeeting}
@@ -676,20 +645,6 @@ export default function ConnectionDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  sharedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.x3,
-    marginTop: spacing.x2,
-    padding: spacing.x4,
-    borderRadius: radius.medium,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface },
-  sharedIcon: { width: 34, height: 34, borderRadius: radius.round, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceMuted },
-  sharedCopy: { flex: 1, gap: 2 },
-  sharedTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
-  sharedHint: { color: colors.muted, fontSize: 12, lineHeight: 17, fontFamily: fonts.regular },
   safe: { flex: 1, backgroundColor: colors.canvas },
   page: { flex: 1 },
   header: { gap: spacing.x3, paddingHorizontal: spacing.x5 },

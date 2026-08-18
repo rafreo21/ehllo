@@ -165,7 +165,7 @@ export default function NotificationPreferencesScreen() {
     }
   }
 
-  const header = <PageHeader eyebrow="Settings" title="Notification preferences" />;
+  const header = <PageHeader title="Notification preferences" />;
 
   if (!session) {
     return (

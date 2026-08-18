@@ -162,8 +162,8 @@ export default function RecentScansScreen() {
 
   const header = (
     <>
-      <PageHeader eyebrow="Settings" title="Recent scans" />
-      <Body>Everyone who scanned your card. Already-saved people are marked.</Body>
+      <PageHeader title="Recent scans" />
+      <Body>Everyone who scanned your card.</Body>
     </>
   );
 

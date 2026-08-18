@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { QuickActionsFab } from '@/components/quick-actions-fab';
-import { Body, Button, Eyebrow, Panel, Screen, Title } from '@/components/ui';
+import { Body, Button, Panel, Screen, Title } from '@/components/ui';
 import { SettingsSkeleton } from '@/components/skeleton';
 import { useAuth } from '@/features/auth/auth-context';
 import { fetchConnectedAccounts, type ConnectedAccountStatus } from '@/features/integrations/integrations-api';
@@ -70,9 +70,8 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         header={
           <View style={styles.header}>
-            <Eyebrow>ehllo mobile</Eyebrow>
             <Title style={styles.title}>My Profile</Title>
-            <Body>Manage your account, synchronization and mobile capabilities.</Body>
+            <Body>Your account, sync and mobile settings.</Body>
           </View>
         }>
         <Pressable

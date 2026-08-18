@@ -180,9 +180,9 @@ export default function ConnectedAccountsScreen() {
 
   const header = (
     <>
-      <PageHeader eyebrow="Settings" title="Connected accounts" />
+      <PageHeader title="Connected accounts" />
       <Body>
-        Connect the accounts ehllo can use for approved outbound drafts, calendar scheduling, and future integrations.
+        Accounts ehllo can use for email and calendar.
       </Body>
     </>
   );

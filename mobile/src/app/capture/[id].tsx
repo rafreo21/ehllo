@@ -484,7 +484,7 @@ export default function CaptureDetailScreen() {
   if (loading) {
     return (
       <Screen edges={['top', 'bottom']} reserveTabBar={false}>
-        <PageHeader eyebrow="Previous capture" title="Loading capture" titleStyle={styles.title} />
+        <PageHeader title="Loading capture" titleStyle={styles.title} />
         <ConnectionDetailSkeleton />
       </Screen>
     );
@@ -493,7 +493,7 @@ export default function CaptureDetailScreen() {
   if (!session || !encounter) {
     return (
       <Screen edges={['top', 'bottom']} reserveTabBar={false}>
-        <PageHeader eyebrow="Previous" title="Meeting not available" titleStyle={styles.title} />
+        <PageHeader title="Meeting not available" titleStyle={styles.title} />
         <Body>{errorMessage || 'Sign in to view this meeting.'}</Body>
         {!session ? <Button onPress={() => router.push('/auth')}>Sign in</Button> : null}
         <Button variant="secondary" onPress={() => router.back()}>Go back</Button>
@@ -534,15 +534,21 @@ export default function CaptureDetailScreen() {
     </>
   );
 
+  const reviewStateLabel = isShared ? 'Guest view shared' : isReviewed ? 'Reviewed · private' : 'Pending review';
+
   const header = (
     <>
       <PageHeader
-        eyebrow={isShared ? 'Guest view shared' : isReviewed ? 'Reviewed · private' : 'Pending review'}
         title={encounter.personName || encounter.title}
         titleStyle={styles.title}
       />
 
-      <View style={styles.reviewStatusLine} accessibilityLabel={`${peopleCount} ${peopleCount === 1 ? 'person' : 'people'}, ${openActions.length} follow-ups`}>
+      {/* The review state used to sit above the title as its own line. It is
+          real status rather than a category, so it moved into the line that
+          already reports status instead of being deleted with the rest. */}
+      <View style={styles.reviewStatusLine} accessibilityLabel={`${reviewStateLabel}, ${peopleCount} ${peopleCount === 1 ? 'person' : 'people'}, ${openActions.length} follow-ups`}>
+        <Text style={styles.reviewStatusText}>{reviewStateLabel}</Text>
+        <View style={styles.reviewStatusDot} />
         <Text style={styles.reviewStatusText}>{peopleCount} {peopleCount === 1 ? 'person' : 'people'}</Text>
         <View style={styles.reviewStatusDot} />
         <Text style={styles.reviewStatusText}>

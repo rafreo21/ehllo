@@ -6,7 +6,7 @@ import { Keyboard, Platform, StyleSheet, Text, TextInput, View } from 'react-nat
 
 import { BrandMark } from '@/components/brand-mark';
 import { GoogleIcon } from '@/components/provider-icons';
-import { BackButton, Body, Button, Eyebrow, Screen, Title } from '@/components/ui';
+import { BackButton, Body, Button, Screen, Title } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { consumeAuthReturnPath } from '@/features/encounters/capture-draft';
 import { colors, radius, spacing, fonts } from '@/theme/tokens';
@@ -117,7 +117,6 @@ export default function AuthScreen() {
         <BrandMark size={44} />
       </View>
       <View style={styles.authHeaderCopy}>
-        <Eyebrow>Welcome</Eyebrow>
         <Title style={styles.authTitle}>
           {step === 'email' ? 'Sign in or sign up in seconds.' : 'Enter your sign-in code.'}
         </Title>
