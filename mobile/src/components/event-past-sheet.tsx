@@ -1,8 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
+import LottieView from 'lottie-react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Button } from '@/components/ui';
 import { canRejoinEvent } from '@/features/events/event-home-state';
+import { useDeferredMount } from '@/lib/use-deferred-mount';
 import type { EventItem } from '@/features/events/events-api';
 import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
@@ -43,6 +45,8 @@ export function EventPastSheet({
   onRecreate: (event: EventItem) => void;
   onRemove: (event: EventItem) => void;
 }) {
+  const showLottie = useDeferredMount(Boolean(event));
+
   if (!event) return null;
 
   const rejoinable = canRejoinEvent(event);
@@ -60,6 +64,21 @@ export function EventPastSheet({
   return (
     <BottomSheet visible title={event.title} onClose={onClose}>
       <View style={styles.body}>
+        {/* An event that can still be rejoined is a live thing; one that has
+            finished is a record. Different illustrations so the sheet reads
+            correctly before the words are. */}
+        <View style={styles.illustration}>
+          {showLottie ? (
+            <LottieView
+              source={rejoinable
+                ? require('@/assets/animations/event-synced.json')
+                : require('@/assets/animations/no-events.json')}
+              autoPlay
+              loop={false}
+              style={styles.lottie}
+            />
+          ) : null}
+        </View>
         {when ? <Text style={styles.when}>{when}</Text> : null}
         {event.location ? <Text style={styles.location}>{event.location}</Text> : null}
         <Text style={styles.explanation}>{explanation}</Text>
@@ -87,7 +106,16 @@ const styles = StyleSheet.create({
   body: {
     gap: spacing.x1,
   },
+  illustration: {
+    alignSelf: 'center',
+    width: 160,
+    height: 160,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lottie: { width: '100%', height: '100%' },
   when: {
+    textAlign: 'center',
     color: colors.ink,
     fontSize: 15,
     fontFamily: fonts.semibold, fontWeight: '600',

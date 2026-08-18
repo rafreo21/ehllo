@@ -526,10 +526,9 @@ export default function EventsScreen() {
                 ))}
                 {upcomingCandidates.length ? (
                   <View style={styles.eventGroup}>
-                    <View style={styles.eventGroupHeading}>
-                      <Text style={styles.eventGroupTitle}>Needs your response</Text>
-                      <Text style={styles.eventGroupCopy}>These are suggestions, not events you have confirmed.</Text>
-                    </View>
+                    {/* No heading: a suggestion card already shows Going /
+                        Not going, so naming the group only restated the
+                        buttons and crowded the top of the list. */}
                     {upcomingCandidates.map((event) => (
                       <EventCard
                         key={event.id}
@@ -1019,9 +1018,6 @@ const styles = StyleSheet.create({
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
   section: { gap: spacing.x4 },
   eventGroup: { gap: spacing.x2 },
-  eventGroupHeading: { gap: spacing.x1 },
-  eventGroupTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
-  eventGroupCopy: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
   pastGroup: {
     gap: spacing.x2,
   },
