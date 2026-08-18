@@ -43,7 +43,7 @@ import {
   sortConnections,
   type ConnectionItem,
 } from '@/features/connections/connections-api';
-import { resolveHomeEventCardState, type HomeEventCardState } from '@/features/events/event-home-state';
+import { isUpcomingEvent, resolveHomeEventCardState, type HomeEventCardState } from '@/features/events/event-home-state';
 import { fetchEventCandidates, fetchMyEvents, markEventLeft, setEventAttendance, setEventCheckIn, type EventItem } from '@/features/events/events-api';
 import { cacheEventAttendance, cacheEventCheckIn, cacheEventLeftAt } from '@/features/events/event-cache';
 import { fetchFollowUps, type FollowUpItem } from '@/features/follow-ups/follow-up-api';
@@ -201,6 +201,14 @@ export default function HomeScreen() {
   const homeEventCard = useMemo(
     () => resolveHomeEventCardState(goingEvents, eventCandidates, new Date()),
     [goingEvents, eventCandidates],
+  );
+
+  // Invitations waiting on an answer. Surfaced here rather than only inside
+  // Events, for the same reason follow-ups get a card on this screen: it is
+  // addressed to you and nothing happens until you answer it.
+  const invitedEvents = useMemo(
+    () => eventCandidates.filter((event) => event.invited && isUpcomingEvent(event)),
+    [eventCandidates],
   );
 
   async function dismissNudge(id: string) {
@@ -471,6 +479,41 @@ export default function HomeScreen() {
               />
             ) : null}
 
+            {/* Invitations, with a count, answerable here or tappable through to the
+                Invited pill in Events. Two at most: this screen is a queue of what
+                needs you, not a list of everything. */}
+            {session && invitedEvents.length ? (
+              <View style={styles.section}>
+                <View style={styles.sectionHead}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${invitedEvents.length} invitation${invitedEvents.length === 1 ? '' : 's'}. Open invited events`}
+                    onPress={() => navigate('/events?filter=invited')}
+                    style={styles.invitedHeadRow}>
+                    <Text style={styles.sectionTitle}>Invited</Text>
+                    <View style={styles.invitedBadge}>
+                      <Text style={styles.invitedBadgeText}>{invitedEvents.length}</Text>
+                    </View>
+                  </Pressable>
+                  {invitedEvents.length > 2 ? (
+                    <Pressable accessibilityRole="button" onPress={() => navigate('/events?filter=invited')}>
+                      <Text style={styles.viewAll}>View all</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+                {invitedEvents.slice(0, 2).map((event) => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    variant="candidate"
+                    busy={eventCardBusy}
+                    onGoing={(item) => void decideEventCandidate(item, 'going')}
+                    onNotGoing={(item) => void decideEventCandidate(item, 'not_going')}
+                  />
+                ))}
+              </View>
+            ) : null}
+
             {activeWorkItems.length ? (
               <View style={styles.activeWork}>
                 {activeWorkItems.map((item) => (
@@ -662,6 +705,16 @@ function HomeSkeleton() {
 }
 
 const styles = StyleSheet.create({
+  invitedHeadRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
+  invitedBadge: {
+    minWidth: 22,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.round,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accent },
+  invitedBadgeText: { color: colors.ink, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800' },
   safe: { flex: 1, backgroundColor: colors.canvas },
   fixedBar: {
     paddingHorizontal: spacing.x5,

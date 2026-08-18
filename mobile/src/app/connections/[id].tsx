@@ -16,7 +16,7 @@ import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { ConnectionDetailSkeleton } from '@/components/skeleton';
-import { BackButton, Body, PillButton, Title } from '@/components/ui';
+import { BackButton, Body, ChoicePill, PillButton, Title } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { loadConnectionLiveCard } from '@/features/connections/connection-card-loader';
 import {
@@ -90,6 +90,9 @@ export default function ConnectionDetailScreen() {
   const [saving, setSaving] = useState(false);
   const [cardSheetOpen, setCardSheetOpen] = useState(false);
   const [meetingsSheetOpen, setMeetingsSheetOpen] = useState(false);
+  // Three pills rather than one long list. History mixes conversations with
+  // event activity, and past a handful of rows the two are hard to read apart.
+  const [historyFilter, setHistoryFilter] = useState<'all' | 'meetings' | 'events'>('all');
   const [followUpsSheetOpen, setFollowUpsSheetOpen] = useState(false);
   const [activeMeeting, setActiveMeeting] = useState<EncounterPayload | null>(null);
   const [meetingRecordingUri, setMeetingRecordingUri] = useState<string | null>(null);
@@ -418,6 +421,13 @@ export default function ConnectionDetailScreen() {
       .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt));
   }, [thread, localTimeline, meetingById]);
 
+  const historyFilters = [
+    { key: 'all' as const, label: 'All', items: timeline },
+    { key: 'meetings' as const, label: 'Meetings', items: timeline.filter((item) => item.kind === 'meeting' || item.kind === 'completed') },
+    { key: 'events' as const, label: 'Events', items: timeline.filter((item) => item.kind === 'invite' || item.kind === 'email') },
+  ];
+  const visibleHistory = historyFilters.find((filter) => filter.key === historyFilter)?.items ?? timeline;
+
   async function confirmDelete() {
     if (!accessToken || !connection) return;
     setDeleting(true);
@@ -555,14 +565,27 @@ export default function ConnectionDetailScreen() {
               <View style={styles.section}>
                 <View style={styles.sectionHead}>
                   <Text style={styles.sectionTitle}>History</Text>
-                  {timeline.length > 2 ? (
+                  {visibleHistory.length > 2 ? (
                     <Pressable accessibilityRole="button" onPress={() => setMeetingsSheetOpen(true)}>
                       <Text style={styles.viewAll}>View all</Text>
                     </Pressable>
                   ) : null}
                 </View>
                 {timeline.length ? (
-                  timeline.slice(0, 2).map((item) => (
+                  <View style={styles.historyFilterRow}>
+                    {historyFilters.map((filter) => (
+                      <ChoicePill
+                        key={filter.key}
+                        label={filter.items.length ? `${filter.label} ${filter.items.length}` : filter.label}
+                        accessibilityLabel={`${filter.label}, ${filter.items.length} item${filter.items.length === 1 ? '' : 's'}`}
+                        selected={historyFilter === filter.key}
+                        onPress={() => setHistoryFilter(filter.key)}
+                      />
+                    ))}
+                  </View>
+                ) : null}
+                {visibleHistory.length ? (
+                  visibleHistory.slice(0, 2).map((item) => (
                     <Pressable
                       key={item.id}
                       accessibilityRole={item.meeting ? 'button' : 'text'}
@@ -667,7 +690,7 @@ export default function ConnectionDetailScreen() {
 
       <BottomSheet visible={meetingsSheetOpen} title="History" onClose={() => setMeetingsSheetOpen(false)}>
         <View style={styles.list}>
-          {timeline.map((item) => (
+          {visibleHistory.map((item) => (
             <Pressable
               key={item.id}
               accessibilityRole="button"
@@ -775,6 +798,7 @@ export default function ConnectionDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  historyFilterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2, marginBottom: spacing.x1 },
   safe: { flex: 1, backgroundColor: colors.canvas },
   page: { flex: 1 },
   header: { gap: spacing.x3, paddingHorizontal: spacing.x5 },

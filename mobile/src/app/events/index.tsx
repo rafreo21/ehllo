@@ -1,6 +1,6 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import * as Clipboard from 'expo-clipboard';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { ArrowsClockwise, CalendarBlank, CaretRight, LinkSimple, NotePencil, Plus, WarningCircle } from 'phosphor-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -119,7 +119,17 @@ export default function EventsScreen() {
     microsoft: 'not_connected',
   });
   const [syncedAt, setSyncedAt] = useState('');
-  const [activeFilter, setActiveFilter] = useState<EventFilterKey>('upcoming');
+  // Home links straight to a pill, so an invitation card there opens the list
+  // already filtered rather than dropping you on Upcoming to go hunting.
+  const { filter: filterParam } = useLocalSearchParams<{ filter?: string }>();
+  const initialFilter: EventFilterKey = filterParam === 'invited'
+    || filterParam === 'attended'
+    || filterParam === 'notGoing'
+    || filterParam === 'didNotAttend'
+    || filterParam === 'cancelled'
+    ? filterParam
+    : 'upcoming';
+  const [activeFilter, setActiveFilter] = useState<EventFilterKey>(initialFilter);
   const [inviteEvent, setInviteEvent] = useState<EventItem | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [invitationsLoading, setInvitationsLoading] = useState(false);
