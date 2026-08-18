@@ -99,6 +99,69 @@ async function googleWalletAccessToken(config: GoogleWalletConfig) {
   return result.access_token;
 }
 
+/**
+ * The class, carrying the one thing the console cannot set: the card-face template.
+ *
+ * Apple shows occupation and company on the front of the card. Android showed them
+ * only in the details view, behind a tap - not because we sent anything different,
+ * but because textModulesData reaches a Google pass's face only through
+ * classTemplateInfo.cardTemplateOverride. Same decision on both platforms - show what
+ * the person entered - was producing two different experiences.
+ *
+ * The class is otherwise empty and the Wallet console offers no template editor, so
+ * this is the only place it can be set. One row, one item: the role_company module,
+ * which is the occupation labelling the company. A reference to an id the object does
+ * not carry renders nothing, so a card with neither field simply shows no row.
+ *
+ * PATCH rather than PUT, so anything configured in the console that we do not model
+ * here - smart tap, callbacks, holder policy - survives being touched.
+ */
+async function ensureGoogleWalletCardTemplate(config: GoogleWalletConfig, token: string) {
+  const classId = `${config.issuerId}.${config.classSuffix}`;
+  const classTemplateInfo = {
+    cardTemplateOverride: {
+      cardRowTemplateInfos: [
+        {
+          oneItem: {
+            item: {
+              firstValue: {
+                fields: [{ fieldPath: "object.textModulesData['role_company']" }],
+              },
+            },
+          },
+        },
+      ],
+    },
+  };
+
+  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+  const url = `https://walletobjects.googleapis.com/walletobjects/v1/genericClass/${encodeURIComponent(classId)}`;
+
+  try {
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ classTemplateInfo }),
+    });
+    // Best effort by design. Without the template the pass still saves and still
+    // works - occupation and company just stay one tap away. A layout preference must
+    // never be the reason somebody cannot add their card.
+    if (!response.ok) {
+      const result = await response.json().catch(() => null) as { error?: { message?: string } } | null;
+      console.error("[google-wallet] card template not applied", {
+        classId,
+        status: response.status,
+        message: result?.error?.message ?? "",
+      });
+    }
+  } catch (caught) {
+    console.error("[google-wallet] card template patch threw", {
+      classId,
+      message: caught instanceof Error ? caught.message : String(caught),
+    });
+  }
+}
+
 /** Occupation as the label, company as the value - collapsing sensibly when only one is set. */
 function roleCompanyModule(role: string, company: string) {
   if (role && company) return [{ id: "role_company", header: role, body: company }];
@@ -187,6 +250,7 @@ export async function prepareGoogleWalletSaveUrl(card: WalletCardPayload, config
   }
 
   const token = await googleWalletAccessToken(config);
+  await ensureGoogleWalletCardTemplate(config, token);
   const resourceUrl = `https://walletobjects.googleapis.com/walletobjects/v1/genericObject/${encodeURIComponent(objectId)}`;
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
   const current = await fetch(resourceUrl, { headers });

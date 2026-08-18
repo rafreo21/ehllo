@@ -59,6 +59,20 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "23:30",
+    title: "Occupation and company show on the Android card, not just behind a tap",
+    impact: "fix",
+    detail:
+      "If you filled in your job title and company, they appeared on the front of the Apple pass but only in the details view on Android - you had to tap the pass to see them. Same card, same settings, two different experiences. They now show on the front of both. Company still follows the show company details switch in the card editor, and neither appears if you have not filled it in.",
+    testing:
+      "Fill in job title and company on your card, then add it to Google Wallet and look at the card without tapping it.",
+    link: {
+      href: "https://claude.ai/code/artifact/5da4bca6-e5b6-4002-9b8e-b65f7843593b",
+      label: "See the pass spec and design",
+    },
+  },
+  {
+    date: "2026-08-18",
     time: "23:05",
     title: "The ehllo badge holds its edge on every card colour",
     impact: "improvement",
