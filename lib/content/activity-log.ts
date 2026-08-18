@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "22:45",
+    title: "Your wallet pass stops writing an About you never wrote",
+    impact: "fix",
+    detail:
+      "If you had not filled in the About field, both wallet passes printed a line of our own text under your name as though you had written it. Now an empty About simply does not appear. The pass shows what is in your card editor and nothing else - the same is already true of your job title, company, photo and colour.",
+    testing:
+      "Add the card to either wallet with the About field empty, and check the back of the pass.",
+  },
+  {
+    date: "2026-08-18",
     time: "22:10",
     title: "Wallet passes rebuilt for both phones",
     impact: "improvement",

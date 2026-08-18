@@ -160,7 +160,9 @@ export async function prepareGoogleWalletSaveUrl(card: WalletCardPayload, config
     // entirely when both are blank - never a labelled empty row.
     textModulesData: [
       ...roleCompanyModule(role, company),
-      { id: "bio", header: "About", body: card.bio || "Tap to open my ehllo card." },
+      // Only if they wrote one. This fell back to "Tap to open my ehllo card." -
+      // words the person never typed, shown as their own About.
+      ...(card.bio.trim() ? [{ id: "bio", header: "About", body: card.bio.trim() }] : []),
     ],
     linksModuleData: {
       uris: [{ uri: card.cardUrl, description: "Open ehllo card", id: "card_link" }],

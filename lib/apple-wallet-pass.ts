@@ -116,7 +116,12 @@ export function buildApplePassJson(card: {
       backFields: [
         // Company is on the front now, so the back carries only what cannot go
         // there: a paragraph a column would truncate, and the URL the QR encodes.
-        { key: "bio", label: "About", value: card.bio || "Scan the QR code to open my ehllo card." },
+        //
+        // About appears only if the person wrote one. It used to fall back to
+        // "Scan the QR code to open my ehllo card." - words they never typed,
+        // printed under their name as though they had. The pass shows what the card
+        // editor holds and nothing else.
+        ...(card.bio.trim() ? [{ key: "bio", label: "About", value: card.bio.trim() }] : []),
         { key: "link", label: "Card link", value: card.cardUrl },
       ],
     },
