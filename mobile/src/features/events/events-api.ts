@@ -41,6 +41,10 @@ export type EventItem = {
    */
   attendanceStatus: EventAttendanceStatus;
   updatedAt: string;
+  /** Push state toward the connected calendar. 'conflict' means the calendar's copy diverged and was deliberately not applied here. */
+  syncState?: 'none' | 'pending' | 'synced' | 'failed' | 'conflict';
+  calendarPushEnabled?: boolean;
+  syncProvider?: 'google' | 'microsoft' | null;
 };
 
 function mapEvent(row: Record<string, unknown>): EventItem {
@@ -58,6 +62,9 @@ function mapEvent(row: Record<string, unknown>): EventItem {
     status: row.status === 'cancelled' ? 'cancelled' : 'scheduled',
     attendanceStatus: row.attendanceStatus === 'not_going' ? 'not_going' : 'going',
     updatedAt: String(row.updatedAt ?? ''),
+    syncState: (row.syncState as EventItem['syncState']) ?? 'none',
+    calendarPushEnabled: row.calendarPushEnabled === true,
+    syncProvider: (row.syncProvider as EventItem['syncProvider']) ?? null,
   };
 }
 
@@ -74,7 +81,7 @@ export class EventUpdateConflictError extends Error {
 export async function updateEvent(
   accessToken: string,
   eventId: string,
-  input: { title?: string; location?: string; startsAt?: string; endsAt?: string | null; status?: 'scheduled' | 'cancelled'; expectedUpdatedAt?: string },
+  input: { title?: string; location?: string; startsAt?: string; endsAt?: string | null; status?: 'scheduled' | 'cancelled'; expectedUpdatedAt?: string; addToCalendar?: boolean; resolveCalendarConflict?: boolean },
 ): Promise<{ event: EventItem; emailsSent: number; emailsFailed: number }> {
   const response = await mobileFetch(`/api/events/${encodeURIComponent(eventId)}`, accessToken, {
     method: 'PATCH',
@@ -153,7 +160,7 @@ export async function fetchEventCandidates(accessToken: string): Promise<EventCa
 /** Manually-added and pasted-link events are returned undecided so the same Going/Not going flow applies to every source. */
 export async function createEvent(
   accessToken: string,
-  input: { title: string; location?: string; startsAt: string; endsAt?: string; sourceUrl?: string },
+  input: { title: string; location?: string; startsAt: string; endsAt?: string; sourceUrl?: string; addToCalendar?: boolean },
 ): Promise<EventItem> {
   const response = await mobileFetch('/api/events', accessToken, {
     method: 'POST',
@@ -166,6 +173,19 @@ export async function createEvent(
   );
   if (!response.ok || !payload.ok || !payload.event) throw new Error(payload.error || 'Could not save this event.');
   return mapEvent(payload.event);
+}
+
+/**
+ * Answers a calendar disagreement in ehllo's favour: keep what is here and push
+ * it over the provider's copy.
+ *
+ * Separate from an ordinary edit on purpose. A normal update deliberately will
+ * not clear a conflict, so that nothing overwrites the other side while the two
+ * disagree; resolving one has to be someone actually choosing.
+ */
+export async function resolveEventCalendarConflict(accessToken: string, eventId: string): Promise<EventItem> {
+  const { event } = await updateEvent(accessToken, eventId, { resolveCalendarConflict: true });
+  return event;
 }
 
 export async function inviteEventGuest(accessToken: string, eventId: string, email: string) {

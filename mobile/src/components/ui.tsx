@@ -12,7 +12,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { router } from 'expo-router';
-import { ArrowLeft } from 'phosphor-react-native';
+import { ArrowLeft, Check } from 'phosphor-react-native';
 
 import { useAppInsets, useTabBarHeight } from '@/lib/safe-area';
 import { colors, radius, spacing, fonts } from '@/theme/tokens';
@@ -138,6 +138,52 @@ export function ChoicePill({
       <Text style={[styles.choicePillText, selected && styles.choicePillTextSelected]} numberOfLines={1}>
         {label}
       </Text>
+    </Pressable>
+  );
+}
+
+/**
+ * An opt-in row: label, one line of consequence, and a state you can see.
+ *
+ * A switch would say less. The hint carries what actually happens, and the
+ * disabled form carries why it cannot, because an option that is simply absent
+ * leaves the user guessing whether the feature exists at all.
+ */
+export function ToggleRow({
+  label,
+  hint,
+  value,
+  onChange,
+  disabled,
+  icon }: {
+  label: string;
+  hint?: string;
+  value: boolean;
+  onChange: (next: boolean) => void;
+  disabled?: boolean;
+  icon?: ReactNode;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value, disabled: Boolean(disabled) }}
+      accessibilityLabel={hint ? `${label}. ${hint}` : label}
+      disabled={disabled}
+      onPress={() => onChange(!value)}
+      style={({ pressed }) => [
+        styles.toggleRow,
+        value && !disabled && styles.toggleRowOn,
+        disabled && styles.toggleRowDisabled,
+        pressed && !disabled && styles.toggleRowPressed,
+      ]}>
+      {icon ? <View style={styles.toggleRowIcon}>{icon}</View> : null}
+      <View style={styles.toggleRowCopy}>
+        <Text style={[styles.toggleRowLabel, disabled && styles.toggleRowLabelDisabled]}>{label}</Text>
+        {hint ? <Text style={styles.toggleRowHint}>{hint}</Text> : null}
+      </View>
+      <View style={[styles.toggleRowMark, value && !disabled && styles.toggleRowMarkOn]}>
+        {value && !disabled ? <Check size={14} color={colors.ink} weight="bold" /> : null}
+      </View>
     </Pressable>
   );
 }
@@ -395,6 +441,33 @@ const styles = StyleSheet.create({
   choicePillPressed: { opacity: 0.7 },
   choicePillText: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium, fontWeight: '700' },
   choicePillTextSelected: { color: colors.ink },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.x3,
+    padding: spacing.x4,
+    borderRadius: radius.medium,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface },
+  toggleRowOn: { borderColor: colors.accentPressed, backgroundColor: colors.surface },
+  toggleRowDisabled: { backgroundColor: colors.canvas, borderColor: colors.line },
+  toggleRowPressed: { opacity: 0.8 },
+  toggleRowIcon: { width: 32, height: 32, borderRadius: radius.round, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceMuted },
+  toggleRowCopy: { flex: 1, gap: 2 },
+  toggleRowLabel: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
+  toggleRowLabelDisabled: { color: colors.muted },
+  toggleRowHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
+  toggleRowMark: {
+    width: 24,
+    height: 24,
+    borderRadius: radius.round,
+    borderWidth: 2,
+    borderColor: colors.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface },
+  toggleRowMarkOn: { backgroundColor: colors.accent, borderColor: colors.accentPressed },
   eyebrow: { color: colors.muted, fontSize: 12, fontFamily: fonts.medium, fontWeight: '700', letterSpacing: 0 },
   title: { color: colors.ink, fontSize: 40, lineHeight: 42, fontFamily: fonts.medium, fontWeight: '700', letterSpacing: -1.5 },
   body: { color: colors.muted, fontFamily: fonts.regular, fontSize: 15, lineHeight: 22 },

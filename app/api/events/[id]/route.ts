@@ -14,6 +14,8 @@ type UpdateBody = {
   status?: "scheduled" | "cancelled";
   expectedUpdatedAt?: string;
   addToCalendar?: boolean;
+  /** Resolve a calendar disagreement in ehllo's favour: keep these values and push them over the provider's. */
+  resolveCalendarConflict?: boolean;
 };
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -84,6 +86,32 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       conflict: true,
       event: latest ? eventFromRow(latest as EventRow) : undefined,
     }, { status: 409, headers: { "Cache-Control": "private, no-store" } });
+  }
+
+  // Resolving a conflict is the one thing allowed to clear it, and it has to be
+  // explicit: queueEventCalendarPush refuses to touch a conflicted row precisely
+  // so an ordinary edit cannot silently overwrite the provider while the two
+  // sides disagree. Answering "keep mine" is the user deciding, which is what
+  // DEC-031 asks for instead of last-writer-wins.
+  //
+  // There is no "use the calendar's version" counterpart because ehllo does not
+  // keep what the provider said - the importer declines the change rather than
+  // storing it. The sheet says so rather than offering a choice that cannot be
+  // honoured.
+  if (body.resolveCalendarConflict && current.sync_state === "conflict") {
+    const resolvedAt = new Date().toISOString();
+    await supabase
+      .from("events")
+      .update({
+        sync_state: "pending",
+        sync_conflict_at: null,
+        sync_attempt_count: 0,
+        sync_next_attempt_at: resolvedAt,
+        sync_last_error: "",
+        updated_at: resolvedAt,
+      })
+      .eq("id", id)
+      .eq("workspace_id", user.workspaceId);
   }
 
   // Only after the conditional update succeeded, so a write rejected for being

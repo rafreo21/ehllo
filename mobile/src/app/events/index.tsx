@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { EventCalendarConflictSheet } from '@/components/event-calendar-conflict-sheet';
 import { EmptyState } from '@/components/empty-state';
 import { EventCard } from '@/components/event-card';
 import { EventInviteSheet } from '@/components/event-invite-sheet';
@@ -16,7 +17,7 @@ import { MiniPromptCard } from '@/components/mini-prompt-card';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { SettingsSkeleton } from '@/components/skeleton';
-import { Button, ChoicePill, HeaderActionButton, PageHeader, Screen } from '@/components/ui';
+import { Button, ChoicePill, HeaderActionButton, PageHeader, Screen, ToggleRow } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { fetchAddressSuggestions, type AddressSuggestion } from '@/features/events/address-autocomplete';
 import {
@@ -28,6 +29,7 @@ import {
 } from '@/features/events/event-home-state';
 import {
   createEvent,
+  resolveEventCalendarConflict,
   extractEventFromLink,
   fetchEventCandidates,
   fetchEventInvitations,
@@ -46,7 +48,7 @@ import {
 } from '@/features/events/events-api';
 import { applyEventDateChange, resolveExtractedEventDates } from '@/features/events/event-form-state';
 import { cacheEventAttendance, cacheEventCheckIn, cacheEventLeftAt } from '@/features/events/event-cache';
-import { fetchConnectedAccounts } from '@/features/integrations/integrations-api';
+import { calendarProviderName, calendarPushProvider, fetchConnectedAccounts } from '@/features/integrations/integrations-api';
 import { readEnv } from '@/lib/env';
 import { isOnline } from '@/lib/connectivity';
 import { describeError } from '@/lib/friendly-error';
@@ -106,6 +108,9 @@ export default function EventsScreen() {
   const [busyId, setBusyId] = useState('');
   const [addOpen, setAddOpen] = useState(false);
   const [addPrefill, setAddPrefill] = useState<{ title: string; location: string } | null>(null);
+  const [calendarProvider, setCalendarProvider] = useState<'google' | 'microsoft' | null>(null);
+  const [conflictEvent, setConflictEvent] = useState<EventItem | null>(null);
+  const [resolvingConflict, setResolvingConflict] = useState(false);
   const [pastSheetEvent, setPastSheetEvent] = useState<EventItem | null>(null);
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [providerStatus, setProviderStatus] = useState<{ google: CalendarProviderStatus; microsoft: CalendarProviderStatus }>({
@@ -319,7 +324,43 @@ export default function EventsScreen() {
     }
   }
 
-  async function addEvent(input: { title: string; location: string; startsAt: string; endsAt: string; sourceUrl: string }) {
+  // Best-effort. A failure here means the toggle is offered as unavailable,
+  // which is the safe direction: the server re-checks health before queuing
+  // anything, so a false negative costs an opt-in, not a lost event.
+  useEffect(() => {
+    if (!accessToken) {
+      setCalendarProvider(null);
+      return;
+    }
+    let cancelled = false;
+    fetchConnectedAccounts(accessToken)
+      .then((status) => {
+        if (!cancelled) setCalendarProvider(calendarPushProvider(status));
+      })
+      .catch(() => {
+        if (!cancelled) setCalendarProvider(null);
+      });
+    return () => { cancelled = true; };
+  }, [accessToken]);
+
+  async function keepMyVersion() {
+    if (!accessToken || !conflictEvent) return;
+    setResolvingConflict(true);
+    setError('');
+    try {
+      await resolveEventCalendarConflict(accessToken, conflictEvent.id);
+      setConflictEvent(null);
+      setRefreshTitle('Calendar will be updated');
+      setRefreshMessage('Your version is queued and the calendar will match it shortly.');
+      if (isOnline()) await refresh();
+    } catch (caught) {
+      setError(describeError(caught, 'Could not update the calendar.'));
+    } finally {
+      setResolvingConflict(false);
+    }
+  }
+
+  async function addEvent(input: { title: string; location: string; startsAt: string; endsAt: string; sourceUrl: string; addToCalendar: boolean }) {
     if (!accessToken) return;
     const created = await createEvent(accessToken, {
       title: input.title,
@@ -327,6 +368,7 @@ export default function EventsScreen() {
       startsAt: input.startsAt,
       endsAt: input.endsAt || undefined,
       sourceUrl: input.sourceUrl || undefined,
+      addToCalendar: input.addToCalendar,
     });
     setCandidates((current) => [...current, created]);
     setActiveFilter(isUpcomingEvent(created) ? 'upcoming' : 'attended');
@@ -522,6 +564,7 @@ export default function EventsScreen() {
                     onCheckIn={canCheckInToEvent(event) ? (item) => void checkInToEvent(item) : undefined}
                     onInvite={(item) => void openInvitations(item)}
                     onManage={event.source !== 'calendar' ? (item) => { setManageError(''); setManageEvent(item); } : undefined}
+                    onResolveConflict={(item) => setConflictEvent(item)}
                   />
                 ))}
                 {upcomingCandidates.length ? (
@@ -559,6 +602,7 @@ export default function EventsScreen() {
                 variant="past"
                 busy={busyId === event.id}
                 onPress={() => setPastSheetEvent(event)}
+                onResolveConflict={(item) => setConflictEvent(item)}
               />
             ))
           ) : (
@@ -577,7 +621,16 @@ export default function EventsScreen() {
         onClose={() => { setAddOpen(false); setAddPrefill(null); }}
         onSubmit={addEvent}
         accessToken={accessToken}
+        calendarProvider={calendarProvider}
       />
+      <EventCalendarConflictSheet
+        visible={Boolean(conflictEvent)}
+        event={conflictEvent}
+        loading={resolvingConflict}
+        onKeepMine={() => void keepMyVersion()}
+        onClose={() => setConflictEvent(null)}
+      />
+
       <EventInviteSheet
         key={inviteEvent?.id ?? 'closed'}
         event={inviteEvent}
@@ -648,13 +701,16 @@ function AddEventSheet({
   onClose,
   onSubmit,
   accessToken,
+  calendarProvider,
 }: {
   visible: boolean;
   /** Recreating a finished event: name and place carry over, dates never do. */
   prefill?: { title: string; location: string } | null;
   onClose: () => void;
-  onSubmit: (input: { title: string; location: string; startsAt: string; endsAt: string; sourceUrl: string }) => Promise<void>;
+  onSubmit: (input: { title: string; location: string; startsAt: string; endsAt: string; sourceUrl: string; addToCalendar: boolean }) => Promise<void>;
   accessToken: string | null;
+  /** The calendar this event could be pushed to, or null when none is usable. */
+  calendarProvider: 'google' | 'microsoft' | null;
 }) {
   const [step, setStep] = useState<AddEventStep>('choose');
   const [cameFromLink, setCameFromLink] = useState(false);
@@ -665,6 +721,17 @@ function AddEventSheet({
   const [dateNotice, setDateNotice] = useState('');
   const [dateNeedsReview, setDateNeedsReview] = useState(false);
   const [iosPicker, setIosPicker] = useState<'start' | 'end' | null>(null);
+  // Defaults on when a calendar is connected and healthy, off when there is
+  // nothing to push to. Re-derived when the sheet opens so connecting an account
+  // and coming straight back does not leave a stale off state.
+  const [addToCalendar, setAddToCalendar] = useState(Boolean(calendarProvider));
+
+  useEffect(() => {
+    if (!visible) return;
+    // Deferred a microtask so this lands after the render that opened the sheet
+    // rather than during it (react-hooks/set-state-in-effect).
+    void Promise.resolve().then(() => setAddToCalendar(Boolean(calendarProvider)));
+  }, [visible, calendarProvider]);
 
   useEffect(() => {
     if (visible) {
@@ -776,7 +843,9 @@ function AddEventSheet({
         startsAt: form.start.toISOString(),
         endsAt: form.end ? form.end.toISOString() : '',
         sourceUrl: form.sourceUrl,
-      });
+      
+      addToCalendar: addToCalendar && Boolean(calendarProvider),
+    });
     } catch (caught) {
       setError(describeError(caught, 'Could not save this event.'));
     } finally {
@@ -851,6 +920,17 @@ function AddEventSheet({
             />
             <Text style={styles.linkStatusText}>Paste a link and we&apos;ll fill in what we can find.</Text>
           </View>
+          <ToggleRow
+            label={`Add to ${calendarProviderName(calendarProvider)}`}
+            hint={calendarProvider
+              ? 'Edits and cancellations here will follow it across.'
+              : 'Connect a calendar in Settings to turn this on.'}
+            value={addToCalendar && Boolean(calendarProvider)}
+            onChange={setAddToCalendar}
+            disabled={!calendarProvider}
+            icon={<CalendarBlank size={18} color={calendarProvider ? colors.ink : colors.muted} weight="bold" />}
+          />
+
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
         </View>
       ) : null}

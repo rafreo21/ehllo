@@ -46,6 +46,9 @@ export type EventRow = {
   cancelled_at: string | null;
   created_at: string;
   updated_at: string;
+  sync_state?: "none" | "pending" | "synced" | "failed" | "conflict";
+  calendar_push_enabled?: boolean;
+  sync_provider?: "google" | "microsoft" | null;
 };
 
 export type EventRecord = {
@@ -59,6 +62,10 @@ export type EventRecord = {
   organizerEmail: string;
   status: "scheduled" | "cancelled";
   updatedAt: string;
+  /** Push state toward the calendar. 'conflict' means the provider's copy diverged and was deliberately not applied. */
+  syncState: "none" | "pending" | "synced" | "failed" | "conflict";
+  calendarPushEnabled: boolean;
+  syncProvider: "google" | "microsoft" | null;
 };
 
 export function eventFromRow(row: EventRow): EventRecord {
@@ -73,6 +80,12 @@ export function eventFromRow(row: EventRow): EventRecord {
     organizerEmail: row.organizer_email,
     status: row.status ?? "scheduled",
     updatedAt: row.updated_at,
+    // Without these the client cannot tell a pushed event from an unpushed one,
+    // or show that the calendar disagrees - which is what made the conflict
+    // state unreachable when it was first added.
+    syncState: row.sync_state ?? "none",
+    calendarPushEnabled: row.calendar_push_enabled ?? false,
+    syncProvider: row.sync_provider ?? null,
   };
 }
 

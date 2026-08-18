@@ -1,4 +1,4 @@
-import { CalendarBlank, CaretRight, NotePencil, UserPlus } from 'phosphor-react-native';
+import { CalendarBlank, CaretRight, NotePencil, UserPlus, Warning } from 'phosphor-react-native';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PillButton } from '@/components/ui';
@@ -31,6 +31,7 @@ export function EventCard({
   onCheckIn,
   onInvite,
   onManage,
+  onResolveConflict,
 }: {
   event: EventItem;
   variant: EventCardVariant;
@@ -42,6 +43,8 @@ export function EventCard({
   onCheckIn?: (event: EventItem) => void;
   onInvite?: (event: EventItem) => void;
   onManage?: (event: EventItem) => void;
+  /** Opens the explanation when the calendar's copy of this event diverged. */
+  onResolveConflict?: (event: EventItem) => void;
 }) {
   const when = formatEventWhen(event.startsAt);
   const showCandidateActions = variant === 'candidate';
@@ -83,6 +86,17 @@ export function EventCard({
             ) : null}
             {variant === 'going' ? (
               <View style={styles.statusTag}><Text style={styles.statusText}>Going</Text></View>
+            ) : null}
+            {event.syncState === 'conflict' ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Calendar differs. See what happened."
+                hitSlop={8}
+                onPress={() => onResolveConflict?.(event)}
+                style={styles.conflictTag}>
+                <Warning size={11} color={colors.warning} weight="bold" />
+                <Text style={styles.conflictText}>Calendar differs</Text>
+              </Pressable>
             ) : null}
             {showCandidateActions ? (
               <Text style={styles.suggested} numberOfLines={1}>
@@ -226,6 +240,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
   },
   statusText: { color: colors.ink, fontSize: 10, fontFamily: fonts.bold, fontWeight: '800' },
+  // Warning-coloured rather than danger: the event is fine and nothing was
+  // lost, the two copies simply disagree and someone should decide.
+  conflictTag: {
+    flexShrink: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.x2,
+    paddingVertical: 3,
+    borderRadius: radius.round,
+    borderWidth: 1,
+    borderColor: colors.warning,
+    backgroundColor: colors.surface,
+  },
+  conflictText: { color: colors.warning, fontSize: 10, fontFamily: fonts.bold, fontWeight: '800' },
   suggested: { flexShrink: 0, color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.x2 },
   checkedInNote: { color: colors.muted, fontSize: 13, fontFamily: fonts.semibold, fontWeight: '600' },
