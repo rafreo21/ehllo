@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "23:55",
+    title: "All seven notification switches now stay where you put them",
+    impact: "fix",
+    detail:
+      "Turning on New connections, Keep in touch nudges or Contact requests appeared to work and then reverted as soon as you left the screen - only the first four switches survived. Saving your preferences rebuilt them from a list that had never been updated as those three were added, so they were dropped on the way to being saved. All seven persist now.",
+    testing:
+      "Turn all seven on in Settings, close the app, reopen it and check them.",
+  },
+  {
+    date: "2026-08-18",
     time: "23:30",
     title: "Occupation and company show on the Android card, not just behind a tap",
     impact: "fix",
@@ -399,6 +409,16 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
 ];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
+  {
+    title: "Push notifications are not being delivered at all",
+    time: "23:55",
+    status: "open",
+    detail:
+      "Notifications appear in the bell inside the app, but nothing arrives on the lock screen. Everything on our side is working - the request is recorded, the notification is created for the right person, and a push is attempted the moment it happens.",
+    resolution:
+      "Apple is refusing them: \"Could not find APNs credentials\". The project has no Apple push key uploaded, so every push has failed regardless of anyone's settings. Needs a key generated against the Apple developer account; no code change will help until then.",
+    reportedOn: "2026-08-18",
+  },
   {
     title: "Wallet pass text was unreadable on light card colours",
     time: "22:10",

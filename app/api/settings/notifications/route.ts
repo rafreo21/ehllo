@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
-import { notificationTypeEnabled, type NotificationType } from "../../../../lib/notifications-server";
-
-const NOTIFICATION_TYPES: NotificationType[] = [
-  "review_ready",
-  "follow_up_due",
-  "follow_up_overdue",
-  "shared_meeting_update",
-];
+import {
+  NOTIFICATION_TYPES,
+  notificationTypeEnabled,
+  type NotificationType,
+} from "../../../../lib/notifications-server";
 
 function readPreferences(raw: unknown) {
   return Object.fromEntries(

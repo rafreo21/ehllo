@@ -1,13 +1,28 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type NotificationType =
-  | "review_ready"
-  | "follow_up_due"
-  | "follow_up_overdue"
-  | "shared_meeting_update"
-  | "connection_added"
-  | "keep_in_touch"
-  | "contact_request";
+/**
+ * Every notification type, in the order they are shown in preferences.
+ *
+ * The single source. This existed as a hand-kept literal inside
+ * app/api/settings/notifications, and it was never updated as types were added -
+ * so saving preferences rebuilt the object from the original four and silently
+ * dropped connection_added, keep_in_touch and contact_request. Turning those on
+ * appeared to work and then reverted the moment the screen reloaded.
+ *
+ * Deriving the type from this array means adding a value here is the only step:
+ * a new type cannot be half-added again.
+ */
+export const NOTIFICATION_TYPES = [
+  "review_ready",
+  "follow_up_due",
+  "follow_up_overdue",
+  "shared_meeting_update",
+  "connection_added",
+  "keep_in_touch",
+  "contact_request",
+] as const;
+
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 export type NotificationRow = {
   id: string;
