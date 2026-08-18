@@ -321,3 +321,20 @@ export function decideCalendarPush(event: CalendarPushTarget): { action: Calenda
     ? { action: "update", reason: "local-change" }
     : { action: "create", reason: "first-push" };
 }
+
+/**
+ * Reads a provider's all-day date as an instant.
+ *
+ * Google represents an all-day entry as a plain `date` ("2026-08-28") rather
+ * than a `dateTime`, with an exclusive end - a single day on the 28th arrives as
+ * start 2026-08-28, end 2026-08-29. Midnight UTC for both keeps that a correct
+ * half-open interval. Returns "" for anything that is not a plain date, so a
+ * caller can treat it the same as a missing value.
+ *
+ * These entries were previously discarded outright, which meant a conference or
+ * meetup booked as a whole day never reached ehllo and nothing said why.
+ */
+export function allDayInstantIso(date: string | undefined) {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return "";
+  return `${date}T00:00:00.000Z`;
+}

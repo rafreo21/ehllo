@@ -1,5 +1,6 @@
 import "server-only";
 
+import { allDayInstantIso } from "../events";
 import { buildPlainEmailRaw } from "./email";
 import type { IntegrationProvider } from "./types";
 
@@ -123,9 +124,13 @@ type GoogleCalendarListResponse = {
  * Lists events in a rolling window from the user's primary Google Calendar.
  * Reuses the same `calendar.events` scope already granted for
  * createGoogleCalendarEvent - no new consent screen for an already-connected
- * account. Cancelled events and all-day entries (date, not dateTime) are
- * dropped: an all-day block rarely represents a single attendable gathering
- * and has no meaningful duration for the candidate filter.
+ * account. Cancelled entries are still listed so a cancellation propagates.
+ *
+ * All-day entries used to be dropped here, on the reasoning that an all-day
+ * block "rarely represents a single attendable gathering". That is backwards for
+ * ehllo: conferences, summits and meetups are usually entered as all-day, and
+ * they are the events this product exists for. Worse, the drop was silent - an
+ * event simply never appeared, with nothing anywhere saying why.
  */
 export async function listGoogleCalendarEvents(
   accessToken: string,
@@ -158,8 +163,12 @@ export async function listGoogleCalendarEvents(
       externalId: item.id, title: item.summary?.trim() ?? "", location: "", startsAt: "", endsAt: "",
       organizerEmail: item.organizer?.email?.trim() ?? "", attendeeEmails: [], isRecurring: Boolean(item.recurringEventId), cancelled: true,
     }];
-    const startsAt = item.start?.dateTime;
-    const endsAt = item.end?.dateTime;
+    // Google gives an all-day entry a plain `date` instead of `dateTime`, and its
+    // end is exclusive: one day on the 28th arrives as start 2026-08-28, end
+    // 2026-08-29. Reading both as midnight UTC keeps that a correct half-open
+    // interval, so duration-based filtering still works on them.
+    const startsAt = item.start?.dateTime ?? allDayInstantIso(item.start?.date);
+    const endsAt = item.end?.dateTime ?? allDayInstantIso(item.end?.date);
     if (!startsAt || !endsAt) return [];
     return [{
       externalId: item.id,

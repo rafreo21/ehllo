@@ -53,6 +53,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "17:55",
+    title: "All-day events now reach your events list",
+    impact: "fix",
+    detail:
+      "If a conference or meetup was in your calendar as a whole day rather than a set time, it never arrived in ehllo. All-day entries were being discarded on purpose, on the reasoning that a full-day block is rarely a real gathering - which is backwards for exactly the events this app is for. They import now. Also on that screen: on a failed publish, Try again is the first button with Close beneath it, and the Pending sync buttons have a visible edge and sit clear of the bottom of the screen.",
+    testing:
+      "An all-day event in the next two weeks should now appear. Note it still reads only your primary calendar - events on a secondary calendar are a separate gap.",
+  },
+  {
+    date: "2026-08-18",
     time: "17:30",
     title: "Publishing a card no longer dead-ends on \"reload the latest card\"",
     impact: "fix",
@@ -277,6 +287,16 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
 ];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
+  {
+    title: "An event in your calendar never appeared in ehllo",
+    time: "17:55",
+    status: "fixed",
+    detail:
+      "An event on the 28th was missing while one on the 29th showed up. The 29th was booked as a set time and the 28th as a whole day, and all-day entries were being dropped before they were ever saved - so this was never a filter on the list, the event simply was not there.",
+    resolution:
+      "All-day entries are imported. Still open and worth knowing: only your primary calendar is read, so anything on a second calendar will not appear yet.",
+    reportedOn: "2026-08-18",
+  },
   {
     title: "Could not publish a card: \"reload the latest card\" with nowhere to reload",
     time: "17:30",

@@ -95,7 +95,7 @@ export default function PendingSyncScreen() {
           longer exists can never succeed, and until now there was nothing to do
           but watch it fail. */}
       {status.total > 0 ? (
-        <Button variant="ghost" loading={discarding} onPress={confirmDiscard}>
+        <Button variant="ghost" style={styles.discardButton} loading={discarding} onPress={confirmDiscard}>
           Discard pending changes
         </Button>
       ) : null}
@@ -190,7 +190,8 @@ const styles = StyleSheet.create({
   rowDetail: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
   count: { minWidth: 28, height: 28, borderRadius: 14, textAlign: 'center', lineHeight: 28, overflow: 'hidden', backgroundColor: colors.accent, color: colors.ink, fontFamily: fonts.bold, fontWeight: '800' },
   countZero: { backgroundColor: colors.surfaceMuted, color: colors.muted },
-  retryFooter: { gap: spacing.x2 },
+  retryFooter: { gap: spacing.x2, paddingBottom: spacing.x2 },
+  discardButton: { borderWidth: 1, borderColor: colors.line },
   note: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   detailSection: { gap: spacing.x2 },
   detailHeading: { color: colors.ink, fontSize: 17, fontFamily: fonts.bold, fontWeight: '800', marginBottom: spacing.x1 },

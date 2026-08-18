@@ -43,14 +43,14 @@ export function CardPublishSheet({
       onClose={onClose}
       footer={
         <>
+          <Button onPress={onPrimary} loading={loading}>
+            {primaryLabel || (isSuccess ? 'Done' : 'Try again')}
+          </Button>
           {secondaryLabel && onSecondary ? (
             <Button variant="secondary" onPress={onSecondary} disabled={loading}>
               {secondaryLabel}
             </Button>
           ) : null}
-          <Button onPress={onPrimary} loading={loading}>
-            {primaryLabel || (isSuccess ? 'Done' : 'Try again')}
-          </Button>
         </>
       }>
       <View style={styles.iconWrap}>
