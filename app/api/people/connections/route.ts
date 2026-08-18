@@ -84,6 +84,7 @@ export async function POST(request: Request) {
     personName?: string;
     personRole?: string;
     personCompany?: string;
+    personEmail?: string;
   } | null;
   return NextResponse.json({
     ok: true,
@@ -92,5 +93,6 @@ export async function POST(request: Request) {
     personName: result?.personName,
     personRole: result?.personRole,
     personCompany: result?.personCompany,
+    personEmail: result?.personEmail,
   }, { headers: { "Cache-Control": "private, no-store" } });
 }

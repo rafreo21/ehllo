@@ -194,6 +194,7 @@ export async function registerScannedCard(
     personName?: string;
     personRole?: string;
     personCompany?: string;
+    personEmail?: string;
   };
   if (!response.ok) {
     const failure = new ScanFailureError(

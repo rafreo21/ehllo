@@ -36,14 +36,16 @@
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "staging",
-        "SENTRY_DISABLE_AUTO_UPLOAD": "false"
+        "SENTRY_DISABLE_AUTO_UPLOAD": "false",
+        "SENTRY_ALLOW_FAILURE": "true"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "production",
-        "SENTRY_DISABLE_AUTO_UPLOAD": "false"
+        "SENTRY_DISABLE_AUTO_UPLOAD": "false",
+        "SENTRY_ALLOW_FAILURE": "true"
       }
     }
   },
