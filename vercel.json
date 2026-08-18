@@ -25,7 +25,7 @@
     },
     {
       "path": "/api/cron/push-calendar-events",
-      "schedule": "*/15 * * * *"
+      "schedule": "25 3 * * *"
     }
   ]
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
+import { pushDueCalendarEvents } from "../../../../lib/events-calendar-push";
 import { eventFromRow, syncCalendarCandidates, type EventRow } from "../../../../lib/events-server";
 
 export async function GET(request: Request) {
@@ -16,6 +17,27 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createApiSupabaseClient(request);
+
+  // Drain any calendar pushes this user has waiting, before anything else.
+  //
+  // The cron is the safety net, not the mechanism: Vercel's Hobby plan allows
+  // only one cron run per day, so relying on it alone would leave a new event
+  // up to twenty four hours from reaching the calendar. Opening the events
+  // screen is the natural moment to flush it - the user is already waiting on a
+  // network round trip here, and their own due rows are almost always zero, so
+  // the query costs nothing in the common case.
+  //
+  // Bounded deliberately. This is somebody's screen load, not a worker, so a
+  // backlog drains a few at a time across visits rather than holding the
+  // response open. Failures keep their backoff and the cron still catches
+  // anything that never gets a visit.
+  const drained = await pushDueCalendarEvents(supabase, user, 3).catch((caught) => {
+    console.error("[event-candidates] calendar push drain failed", {
+      message: caught instanceof Error ? caught.message : String(caught),
+    });
+    return { processed: 0, failed: 0 };
+  });
+
   const { candidates: synced, providerStatus, syncedAt } = await syncCalendarCandidates(supabase, user);
 
   // Links and manually entered events use the same undecided attendance flow
@@ -113,5 +135,8 @@ export async function GET(request: Request) {
     ? { ...event, invited: true, invitedByName: invitedById.get(event.id) || "" }
     : event));
 
-  return NextResponse.json({ candidates: decorated, providerStatus, syncedAt }, { headers: { "Cache-Control": "private, no-store" } });
+  return NextResponse.json(
+    { candidates: decorated, providerStatus, syncedAt, calendarPushed: drained.processed, calendarPushFailed: drained.failed },
+    { headers: { "Cache-Control": "private, no-store" } },
+  );
 }
