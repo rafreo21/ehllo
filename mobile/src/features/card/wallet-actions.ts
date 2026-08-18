@@ -90,10 +90,28 @@ export async function addAppleWalletPass(slug: string, accessToken: string) {
   }
 
   const { readEnv } = await import('@/lib/env');
-  const env = readEnv();
-  const base = env?.publicCardBaseUrl;
+  const base = readEnv()?.publicCardBaseUrl;
   if (!base) throw new FriendlyError('ehllo API URL is not configured.');
 
+  // Ask the server for a short-lived pass URL and let iOS fetch it. iOS shows
+  // its own "Add to Apple Wallet" sheet only for a pass it downloaded itself;
+  // fetching the file here and handing it to the share sheet made Wallet one
+  // option in a list of many, which is not what "add to Wallet" means.
+  const linkResponse = await mobileFetch(
+    `/api/mobile/wallet/apple/${encodeURIComponent(slug)}`,
+    accessToken,
+    { method: 'POST' },
+  );
+  const link = await linkResponse.json().catch(() => ({}) as { passUrl?: string; error?: string });
+
+  if (linkResponse.ok && link.passUrl) {
+    await Linking.openURL(link.passUrl);
+    return;
+  }
+
+  // A server too old to mint links, or a configuration problem. Fall back to
+  // the download-and-share path so the pass is still reachable rather than
+  // failing outright.
   const downloadUrl = `${base}/api/mobile/wallet/apple/${encodeURIComponent(slug)}`;
   const path = `${FileSystem.cacheDirectory}${slug}.pkpass`;
   const result = await FileSystem.downloadAsync(downloadUrl, path, {
@@ -101,16 +119,16 @@ export async function addAppleWalletPass(slug: string, accessToken: string) {
   });
 
   if (result.status !== 200) {
-    // downloadAsync already wrote the error body to disk. Read that rather
-    // than issuing a second request, which could race a redeploy and report a
-    // different failure than the one that actually happened.
-    let message = '';
-    try {
-      const body = await FileSystem.readAsStringAsync(path);
-      message = (JSON.parse(body) as WalletJson).error ?? '';
-    } catch {
-      const response = await mobileFetch(`/api/mobile/wallet/apple/${encodeURIComponent(slug)}`, accessToken);
-      message = await readWalletError(response, '');
+    let message = link.error ?? '';
+    if (!message) {
+      try {
+        message = (JSON.parse(await FileSystem.readAsStringAsync(path)) as WalletJson).error ?? '';
+      } catch {
+        message = await readWalletError(
+          await mobileFetch(`/api/mobile/wallet/apple/${encodeURIComponent(slug)}`, accessToken),
+          '',
+        );
+      }
     }
     throw walletFailure(result.status, message || 'Apple Wallet is not available right now');
   }
@@ -125,8 +143,6 @@ export async function addAppleWalletPass(slug: string, accessToken: string) {
       mimeType: 'application/vnd.apple.pkpass',
     });
   } catch (error) {
-    // The pass downloaded and signed correctly; only the hand-off to Wallet
-    // failed. Say so, because the fix is entirely different from a server one.
     const detail = error instanceof Error ? error.message : String(error ?? '');
     throw new FriendlyError(`The pass was created but iOS would not open it${detail ? `: ${detail}` : '.'}`);
   }
