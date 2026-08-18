@@ -440,6 +440,16 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
 
 export const KNOWN_ISSUES: KnownIssue[] = [
   {
+    title: "Android gets no notifications, iOS does",
+    time: "01:55",
+    status: "open",
+    detail:
+      "Notifications arrive on iPhone and never on Android, even with every preference switched on. It is not the preferences and not the app: the notification channel and the permission request are both in place, and the same code registers on both platforms.",
+    resolution:
+      "Android needs Firebase before a phone can even be issued a push token, and it has never been set up for this app - which is why not one Android device has ever registered, while iPhones register fine. Needs a Firebase project for com.ehllo.app.staging, its google-services.json added to the app, and an FCM key uploaded to the build service. The app is already wired to pick the file up the moment it exists.",
+    reportedOn: "2026-08-19",
+  },
+  {
     title: "Push notifications are not being delivered at all",
     time: "23:55",
     status: "open",

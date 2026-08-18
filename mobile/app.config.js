@@ -15,6 +15,11 @@ const IS_STAGING = APP_VARIANT === "staging";
 // history are not orphaned during the brand migration.
 const BASE_BUNDLE_ID = "com.ehllo.app";
 const bundleId = IS_STAGING ? `${BASE_BUNDLE_ID}.staging` : BASE_BUNDLE_ID;
+
+// Present only once Firebase has been set up for this package. See the android block.
+const googleServicesFile = require("node:fs").existsSync(
+  require("node:path").join(__dirname, "google-services.json"),
+) ? "./google-services.json" : null;
 const EAS_PROJECT = IS_STAGING
   ? {
       slug: "aftermeet-staging",
@@ -84,6 +89,16 @@ module.exports = {
     },
     android: {
       package: bundleId,
+      // Android push needs Firebase: without google-services.json the app cannot
+      // obtain a push token at all, which is why push_tokens has never held a single
+      // Android row while iOS registers fine. The notification channel and the
+      // runtime permission are already handled in notification-service; this is the
+      // only missing piece.
+      //
+      // Referenced only when the file is actually present. Naming a file that does
+      // not exist fails the Android build outright, so this stays inert until the
+      // file is dropped in and then wires itself up with no further change.
+      ...(googleServicesFile ? { googleServicesFile } : {}),
       // Without these, @react-native-community/netinfo's native module can't
       // properly query the ConnectivityManager or register for connectivity
       // broadcasts - confirmed on-device: it silently reported a stale
