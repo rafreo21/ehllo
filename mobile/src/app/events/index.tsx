@@ -447,7 +447,7 @@ export default function EventsScreen() {
       <PageHeader
         eyebrow="My events"
         title="Events"
-        description="Confirm where you're going. Captures and follow-ups made there will keep the event context."
+        description="Captures made here keep their event context."
         caption={syncedAt ? formatSyncedAgo(syncedAt, now) : undefined}
         rightAction={accessToken ? (
           <View style={styles.headerActions}>
