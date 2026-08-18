@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scopedStorage as AsyncStorage } from '@/lib/scoped-storage';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 

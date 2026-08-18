@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scopedStorage as AsyncStorage } from '@/lib/scoped-storage';
 
 import { CARDS_STORAGE_KEY, DIRTY_CARDS_STORAGE_KEY } from '@/features/card/card-library';
 import type { MobileCard } from '@/features/card/types';

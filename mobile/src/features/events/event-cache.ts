@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scopedStorage as AsyncStorage } from '@/lib/scoped-storage';
 
 import type { EventItem } from '@/features/events/events-api';
 import { isEventCurrentlyHappening } from '@/features/events/event-home-state';

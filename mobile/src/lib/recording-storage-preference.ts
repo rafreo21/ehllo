@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scopedStorage as AsyncStorage } from '@/lib/scoped-storage';
 
 export type RecordingStorageDestination = 'local_only' | 'google_drive' | 'onedrive';
 

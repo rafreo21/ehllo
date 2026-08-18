@@ -11,6 +11,7 @@ import { describeOtpDeliveryError } from '@/lib/otp-delivery-error';
 import { completeAuthSessionFromUrl, readLaunchAuthUrl } from '@/lib/auth-session-url';
 import { readMobileAuthRedirectUris } from '@/lib/env';
 import { getSupabase } from '@/lib/supabase';
+import { purgeForeignScopes, purgeLegacyUnscopedKeys, setStorageScope } from '@/lib/scoped-storage';
 import { consumeAuthReturnPath, setAuthReturnPath } from '@/features/encounters/capture-draft';
 
 type AuthValue = {
@@ -66,6 +67,38 @@ export function AuthProvider({ children }: PropsWithChildren) {
       linking.remove();
     };
   }, [supabase]);
+
+  // Point every device-local store at this account before anything reads one.
+  // Device-local caches and queues used to be keyed by name alone, so a second
+  // account on the same device read the first account's cached cards, capture
+  // drafts and notification history, and replayed its queued scans, deletes and
+  // follow-ups under the new session.
+  //
+  // Scoping is what actually fixes that: two accounts can no longer name the
+  // same slot, so it holds however untidily someone switches - no clean
+  // sign-out needed, which matters because reinstalls and expired sessions skip
+  // sign-out entirely. Keyed on user id rather than a sign-out hook for exactly
+  // that reason.
+  const storageScopeRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const userId = session?.user?.id ?? null;
+    setStorageScope(userId);
+    if (!userId || storageScopeRef.current === userId) return;
+    storageScopeRef.current = userId;
+    // Housekeeping on top of the scope: drop namespaces belonging to other
+    // accounts now that we know which one is ours.
+    void purgeForeignScopes(userId);
+  }, [session?.user?.id]);
+
+  // The pre-scope keys are unreadable the moment this ships, but they are still
+  // one person's cached cards and capture drafts sitting on the device. Clear
+  // them once per install, without waiting for a sign-in that may never come:
+  // an app left signed out would otherwise keep the previous account's data at
+  // rest indefinitely.
+  useEffect(() => {
+    void purgeLegacyUnscopedKeys();
+  }, []);
 
   const provisionedForUserId = useRef<string | null>(null);
 
@@ -136,7 +169,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }
       return {};
     },
-    signOut: async () => { await supabase?.auth.signOut(); },
+    signOut: async () => {
+      await supabase?.auth.signOut();
+      // The scope is what protects the data; clearing it just stops the
+      // signed-out session writing into the account's namespace.
+      setStorageScope(null);
+    },
     completeUseCaseSelection: async () => {
       await supabase?.rpc('complete_use_case_selection');
     },

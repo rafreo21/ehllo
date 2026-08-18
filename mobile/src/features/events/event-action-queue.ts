@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scopedStorage as AsyncStorage } from '@/lib/scoped-storage';
 
 import type { EventAttendanceStatus } from '@/features/events/events-api';
 import { mergeEventActionQueue, type EventActionStateEntry } from '@/features/events/event-action-queue-state';

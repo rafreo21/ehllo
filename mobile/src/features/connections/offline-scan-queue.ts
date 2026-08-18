@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scopedStorage as AsyncStorage } from '@/lib/scoped-storage';
 import type { EventSnapshot } from '@/features/events/event-cache';
 
 export const OFFLINE_SCAN_QUEUE_KEY = 'aftermeet.mobile.offline-scan-queue.v1';

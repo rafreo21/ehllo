@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scopedStorage as AsyncStorage } from '@/lib/scoped-storage';
 
 export const CARD_DELETE_QUEUE_KEY = 'aftermeet.mobile.card-deletes-queue.v1';
 

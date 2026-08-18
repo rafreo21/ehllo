@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scopedStorage as AsyncStorage } from '@/lib/scoped-storage';
 
 const GOOGLE_WALLET_SAVED_PREFIX = 'aftermeet.google-wallet.saved.';
 

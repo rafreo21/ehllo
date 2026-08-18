@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scopedStorage as AsyncStorage } from '@/lib/scoped-storage';
 
 import type { QuickFollowUpItem, QuickFollowUpTarget } from '@/features/follow-ups/quick-follow-up-types';
 import type { EventSnapshot } from '@/features/events/event-cache';
