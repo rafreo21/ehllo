@@ -53,6 +53,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-18",
+    time: "17:30",
+    title: "Publishing a card no longer dead-ends on \"reload the latest card\"",
+    impact: "fix",
+    detail:
+      "Publishing could fail with \"This card changed on another device. Reload the latest card\" and leave you stuck, because no screen anywhere offers a way to reload one. The app and the server each held half of the fix and neither could use it: the server sent the information needed to catch up, and the app read only the error sentence and threw the rest away. Now the app catches up on its own and the save goes through, and the publish step sends that same information so it can recover too.",
+    testing:
+      "Edit a published card and publish again - including right after an account reset, which is what surfaced this.",
+  },
+  {
+    date: "2026-08-18",
     time: "16:46",
     title: "The web app typechecks again, and it caught real breakage",
     impact: "fix",
@@ -267,6 +277,16 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
 ];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
+  {
+    title: "Could not publish a card: \"reload the latest card\" with nowhere to reload",
+    time: "17:30",
+    status: "fixed",
+    detail:
+      "After an account reset, publishing a card failed every time with a message telling you to reload the latest version first. There is no reload anywhere in the app, so there was no way forward - and each retry sent the same out-of-date information, so it could never clear on its own.",
+    resolution:
+      "Fixed on both sides. Worth being straight about this one: an earlier fix today was written for the publish step, but the failure happens one step earlier when the card is saved, so that fix never ran. The message was real, the instruction in it was impossible to follow, and the recovery existed on the server the whole time while the app discarded it.",
+    reportedOn: "2026-08-18",
+  },
   {
     title: "Three test files silently stopped running",
     time: "16:46",

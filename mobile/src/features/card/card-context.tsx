@@ -172,14 +172,32 @@ export function CardProvider({ children }: PropsWithChildren) {
     if (!accessToken) return card;
     const token = accessToken;
 
-    async function persistPayload(payload: MobileCard) {
+    async function persistPayload(payload: MobileCard, adoptedServerVersion = false): Promise<MobileCard> {
       const response = await mobileFetch('/api/cards', token, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(mobileCardToLibraryPayload(payload)),
       });
       if (!response.ok) {
-        const responsePayload = await response.json().catch(() => null) as { error?: string } | null;
+        const responsePayload = await response.json().catch(() => null) as {
+          error?: string;
+          conflict?: boolean;
+          serverUpdatedAt?: string;
+        } | null;
+        // A 409 here was a dead end, and it is the one that fires first - before
+        // the publish request is ever sent, which is why the recovery added to the
+        // publish response never ran. /api/cards has always returned
+        // serverUpdatedAt so a stale client can catch up; this handler read only
+        // `error` and threw the sentence, so nothing adopted the value, every
+        // attempt resent the same stale timestamp, and the message told the person
+        // to "reload the latest card" when no screen anywhere offers that.
+        //
+        // Adopt it and save once more. What gets written is what they have on
+        // screen, and the only thing out of date was our record of the server's
+        // version. Once only, so a genuine repeated conflict still surfaces.
+        if (response.status === 409 && responsePayload?.serverUpdatedAt && !adoptedServerVersion) {
+          return persistPayload({ ...payload, serverUpdatedAt: responsePayload.serverUpdatedAt }, true);
+        }
         throw new Error(responsePayload?.error || 'We couldn’t save this card.');
       }
       const responsePayload = await response.json().catch(() => null) as {

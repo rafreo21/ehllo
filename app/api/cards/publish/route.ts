@@ -90,12 +90,30 @@ export async function POST(request: Request) {
   if (error) {
     const limitReached = error.message.toLowerCase().includes("five active cards");
     const conflict = error.message.toLowerCase().includes("card_conflict");
+
+    // The clients' whole recovery path keys off serverUpdatedAt: adopt the value,
+    // then publish again. /api/cards has always returned it on a conflict and this
+    // route never did, so a publish conflict was unrecoverable by design - the
+    // message said "reload the latest card" while withholding the one field that
+    // makes reloading possible.
+    let serverUpdatedAt: string | null = null;
+    if (conflict) {
+      const { data: current } = await supabase
+        .from("cards")
+        .select("updated_at")
+        .eq("workspace_id", user.workspaceId)
+        .eq("slug", slug.toLowerCase())
+        .maybeSingle();
+      serverUpdatedAt = (current?.updated_at as string | null | undefined) ?? null;
+    }
+
     return NextResponse.json(
       {
         error: conflict
           ? "This card changed on another device. Reload the latest card before publishing again."
           : limitReached ? `You can publish a maximum of ${MAX_CARDS} cards.` : "We couldn’t publish this card.",
         ...(conflict ? { conflict: true } : {}),
+        ...(serverUpdatedAt ? { serverUpdatedAt } : {}),
       },
       { status: limitReached || conflict ? 409 : 500 },
     );
