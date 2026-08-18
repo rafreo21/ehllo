@@ -181,5 +181,35 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
   if (error) return NextResponse.json({ error: "We couldn’t revoke this invitation." }, { status: 500 });
   if (!data) return NextResponse.json({ error: "This invitation is no longer active." }, { status: 404 });
 
+  // Take the notification back too.
+  //
+  // Revoking already removes the event from their Invited list, because the
+  // candidates query excludes revoked rows. The notification it created did not
+  // go anywhere though, so they were left holding "someone invited you to X"
+  // pointing at an invitation that no longer exists - which is worse than never
+  // being told, because it sends them looking for something that is not there.
+  //
+  // Service client: the notification belongs to their workspace, not the
+  // inviter's. Best effort, since the revoke itself has already succeeded.
+  try {
+    const service = createServiceSupabaseClient();
+    if (service) {
+      const { error: noticeError } = await service
+        .from("notifications")
+        .delete()
+        .eq("dedupe_key", `event_invitation:${body.invitationId}`);
+      if (noticeError) {
+        console.error("[event-invitations] revoked, but could not withdraw the notification", {
+          invitationId: body.invitationId, code: noticeError.code, message: noticeError.message,
+        });
+      }
+    }
+  } catch (caught) {
+    console.error("[event-invitations] revoked, but withdrawing the notification threw", {
+      invitationId: body.invitationId,
+      message: caught instanceof Error ? caught.message : String(caught),
+    });
+  }
+
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "private, no-store" } });
 }

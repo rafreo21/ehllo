@@ -6,7 +6,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { fetchPeopleConnections } from '@/features/connections/connections-api';
 import { EventCalendarConflictSheet } from '@/components/event-calendar-conflict-sheet';
+import type { InvitablePerson } from '@/components/event-invite-sheet';
 import { EmptyState } from '@/components/empty-state';
 import { EventCard } from '@/components/event-card';
 import { EventInviteSheet } from '@/components/event-invite-sheet';
@@ -111,6 +113,10 @@ export default function EventsScreen() {
   const [addPrefill, setAddPrefill] = useState<{ title: string; location: string } | null>(null);
   const [calendarProvider, setCalendarProvider] = useState<'google' | 'microsoft' | null>(null);
   const [conflictEvent, setConflictEvent] = useState<EventItem | null>(null);
+  // People to invite from. Loaded once when the invite sheet is first opened -
+  // inviting is picking someone you have met, so retyping an address you already
+  // hold is the thing this removes.
+  const [peopleForInvite, setPeopleForInvite] = useState<InvitablePerson[]>([]);
   const [resolvingConflict, setResolvingConflict] = useState(false);
   const [pastSheetEvent, setPastSheetEvent] = useState<EventItem | null>(null);
   const [calendarConnected, setCalendarConnected] = useState(false);
@@ -425,6 +431,20 @@ export default function EventsScreen() {
     setInviteError('');
     if (!accessToken) return;
     setInvitationsLoading(true);
+
+    // Load the people list alongside the invitations, once. Best effort: if it
+    // fails you can still invite by typing an address, so a failure costs
+    // convenience rather than the feature.
+    if (!peopleForInvite.length) {
+      void fetchPeopleConnections(accessToken)
+        .then((people) => setPeopleForInvite(people.flatMap((person) => {
+          const email = (person.personEmail ?? '').trim();
+          if (!email) return [];
+          return [{ id: person.id, name: (person.personName ?? '').trim() || email, email }];
+        })))
+        .catch(() => setPeopleForInvite([]));
+    }
+
     try {
       setInvitations(await fetchEventInvitations(accessToken, event.id));
     } catch (caught) {
@@ -656,6 +676,7 @@ export default function EventsScreen() {
       />
 
       <EventInviteSheet
+        connections={peopleForInvite}
         key={inviteEvent?.id ?? 'closed'}
         event={inviteEvent}
         loading={inviteLoading}

@@ -6,11 +6,14 @@ import { Button } from '@/components/ui';
 import type { EventInvitation, EventItem } from '@/features/events/events-api';
 import { colors, radius, spacing, fonts } from '@/theme/tokens';
 
+export type InvitablePerson = { id: string; name: string; email: string };
+
 export function EventInviteSheet({
   event,
   loading,
   invitationsLoading,
   invitations,
+  connections,
   revokingInvitationId,
   error,
   onClose,
@@ -21,6 +24,12 @@ export function EventInviteSheet({
   loading: boolean;
   invitationsLoading: boolean;
   invitations: EventInvitation[];
+  /**
+   * People you have already met. Deliberately a minimal shape rather than a whole
+   * connection record: this sheet needs a name and an address, and taking more
+   * would tie it to whichever screen happens to own the fuller type.
+   */
+  connections: InvitablePerson[];
   revokingInvitationId: string;
   error: string;
   onClose: () => void;
@@ -28,6 +37,30 @@ export function EventInviteSheet({
   onRevoke: (invitation: EventInvitation) => void;
 }) {
   const [email, setEmail] = useState('');
+  const [peopleQuery, setPeopleQuery] = useState('');
+  const [showAllInvited, setShowAllInvited] = useState(false);
+  const [invitedQuery, setInvitedQuery] = useState('');
+
+  // Anyone already invited is not offered again - re-inviting the same address
+  // upserts the same row and reads as though nothing happened.
+  const invitedEmails = new Set(
+    invitations
+      .filter((invitation) => invitation.status !== 'revoked')
+      .map((invitation) => invitation.email.trim().toLowerCase()),
+  );
+  const invitable = connections.filter((person) => {
+    const address = (person.email || '').trim().toLowerCase();
+    if (!address || invitedEmails.has(address)) return false;
+    if (!peopleQuery.trim()) return true;
+    const needle = peopleQuery.trim().toLowerCase();
+    return person.name.toLowerCase().includes(needle) || address.includes(needle);
+  });
+
+  const visibleInvitations = showAllInvited
+    ? invitations.filter((invitation) => !invitedQuery.trim()
+      || invitation.email.toLowerCase().includes(invitedQuery.trim().toLowerCase()))
+    : invitations.slice(0, 2);
+
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
   return (
@@ -53,6 +86,47 @@ export function EventInviteSheet({
         Send invitation
       </Button>
       <Text style={styles.privacy}>Their RSVP is private. Your captures, recordings and notes stay private too.</Text>
+
+      {/* Invite by picking someone you have met, rather than retyping an address
+          you already hold. Typing one stays above for anyone not in the list. */}
+      {invitable.length ? (
+        <>
+          <View style={styles.divider} />
+          <Text style={styles.listTitle}>Invite someone you have met</Text>
+          {connections.length > 4 ? (
+            <TextInput
+              value={peopleQuery}
+              onChangeText={setPeopleQuery}
+              placeholder="Search your people"
+              placeholderTextColor={colors.muted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.input}
+            />
+          ) : null}
+          {invitable.slice(0, 4).map((person) => (
+            <Pressable
+              key={person.id}
+              accessibilityRole="button"
+              accessibilityLabel={`Invite ${person.name}`}
+              disabled={loading}
+              onPress={() => onInvite((person.email || '').trim().toLowerCase())}
+              style={({ pressed }) => [styles.personRow, pressed && styles.personRowPressed]}>
+              <View style={styles.personCopy}>
+                <Text style={styles.email} numberOfLines={1}>{person.name}</Text>
+                <Text style={styles.status} numberOfLines={1}>{person.email}</Text>
+              </View>
+              <Text style={styles.inviteAction}>Invite</Text>
+            </Pressable>
+          ))}
+          {invitable.length > 4 ? (
+            <Text style={styles.empty}>
+              {invitable.length - 4} more. Search to narrow the list.
+            </Text>
+          ) : null}
+        </>
+      ) : null}
+
       <View style={styles.divider} />
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>Invited guests</Text>
@@ -61,7 +135,27 @@ export function EventInviteSheet({
       {!invitationsLoading && invitations.length === 0 ? (
         <Text style={styles.empty}>No invitations sent yet.</Text>
       ) : null}
-      {invitations.map((invitation) => {
+      {/* Two at most until asked. A long guest list buries the invite field that
+          most people came here to use. */}
+      {invitations.length > 2 ? (
+        <Pressable accessibilityRole="button" onPress={() => setShowAllInvited((value) => !value)}>
+          <Text style={styles.inviteAction}>
+            {showAllInvited ? 'Show fewer' : `View all ${invitations.length}`}
+          </Text>
+        </Pressable>
+      ) : null}
+      {showAllInvited && invitations.length > 2 ? (
+        <TextInput
+          value={invitedQuery}
+          onChangeText={setInvitedQuery}
+          placeholder="Search invited guests"
+          placeholderTextColor={colors.muted}
+          autoCapitalize="none"
+          autoCorrect={false}
+          style={styles.input}
+        />
+      ) : null}
+      {visibleInvitations.map((invitation) => {
         const canRevoke = invitation.status !== 'revoked' && !invitation.claimedAt;
         const rsvpStatus = invitation.claimedAt
           ? 'Joined ehllo'
@@ -105,6 +199,17 @@ export function EventInviteSheet({
 }
 
 const styles = StyleSheet.create({
+  personRow: {
+    minHeight: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.x3,
+    paddingVertical: spacing.x2,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line },
+  personRowPressed: { opacity: 0.7 },
+  personCopy: { flex: 1, gap: 2 },
+  inviteAction: { color: colors.link, fontSize: 13, fontFamily: fonts.bold, fontWeight: '800' },
   copy: { gap: spacing.x2 },
   eventTitle: { color: colors.ink, fontSize: 18, fontFamily: fonts.bold, fontWeight: '800' },
   hint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
