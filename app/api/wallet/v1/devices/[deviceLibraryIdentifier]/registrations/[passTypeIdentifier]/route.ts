@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { createServiceSupabaseClient } from "@/lib/supabase/service";
-import { WALLET_PASS_REGISTRATIONS_TABLE } from "@/lib/wallet-pass-updates";
-import { readAppleWalletCerts } from "@/lib/wallet-config";
+import { createServiceSupabaseClient } from "@/lib/supabase/service.ts";
+import { WALLET_PASS_REGISTRATIONS_TABLE } from "@/lib/wallet-pass-updates.ts";
+import { readAppleWalletCerts } from "@/lib/wallet-config.ts";
 
 /**
  * Which of this device's passes have changed since it last asked.

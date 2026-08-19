@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { createServiceSupabaseClient } from "@/lib/supabase/service";
-import { passTokenFromRequest, verifyPassAuthenticationToken } from "@/lib/wallet-pass-auth";
-import { WALLET_PASS_REGISTRATIONS_TABLE } from "@/lib/wallet-pass-updates";
-import { readAppleWalletCerts } from "@/lib/wallet-config";
+import { createServiceSupabaseClient } from "@/lib/supabase/service.ts";
+import { passTokenFromRequest, verifyPassAuthenticationToken } from "@/lib/wallet-pass-auth.ts";
+import { WALLET_PASS_REGISTRATIONS_TABLE } from "@/lib/wallet-pass-updates.ts";
+import { readAppleWalletCerts } from "@/lib/wallet-config.ts";
 
 /**
  * PassKit registration, both directions.

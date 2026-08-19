@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { buildAppleWalletPass } from "@/lib/apple-wallet-pack";
-import { createServiceSupabaseClient } from "@/lib/supabase/service";
-import { WALLET_CARD_SELECT, walletCardFromRow } from "@/lib/wallet-card-loader";
-import { passTokenFromRequest, verifyPassAuthenticationToken } from "@/lib/wallet-pass-auth";
-import { readAppleWalletCerts } from "@/lib/wallet-config";
+import { buildAppleWalletPass } from "@/lib/apple-wallet-pack.ts";
+import { createServiceSupabaseClient } from "@/lib/supabase/service.ts";
+import { WALLET_CARD_SELECT, walletCardFromRow } from "@/lib/wallet-card-loader.ts";
+import { passTokenFromRequest, verifyPassAuthenticationToken } from "@/lib/wallet-pass-auth.ts";
+import { readAppleWalletCerts } from "@/lib/wallet-config.ts";
 
 /**
  * The current version of a pass, fetched by the device after an update push.
