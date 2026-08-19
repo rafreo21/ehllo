@@ -188,21 +188,30 @@ export async function buildWalletLogoBuffers() {
   const sharp = await loadSharp();
   const markBuffer = loadEhlloMarkForWallet();
   const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
-  const [icon, icon2x, logo, logo2x] = await Promise.all([
+  // Every asset at every scale. The strip already ships @3x; the logo and icon did
+  // not, so on a 3x device - which is every current iPhone - iOS upscaled them from
+  // @2x and they were the softest marks on an otherwise sharp pass. The mark is an
+  // SVG, so the extra scale costs a resize and nothing else.
+  const [icon, icon2x, icon3x, logo, logo2x, logo3x] = await Promise.all([
     sharp(markBuffer).resize(29, 29, { fit: "contain", background: transparent }).png().toBuffer(),
     sharp(markBuffer).resize(58, 58, { fit: "contain", background: transparent }).png().toBuffer(),
+    sharp(markBuffer).resize(87, 87, { fit: "contain", background: transparent }).png().toBuffer(),
     // 36, not 50. Apple draws the logo at whatever height it is given, up to 50, and
     // at 50 the badge stood as tall as the entire brand row and dwarfed the text
-    // beside it.
+    // beside it. The @2x and @3x below are that same 36pt at higher density, not a
+    // larger badge.
     sharp(markBuffer).resize(36, 36, { fit: "contain", background: transparent }).png().toBuffer(),
     sharp(markBuffer).resize(72, 72, { fit: "contain", background: transparent }).png().toBuffer(),
+    sharp(markBuffer).resize(108, 108, { fit: "contain", background: transparent }).png().toBuffer(),
   ]);
 
   return {
     "icon.png": icon,
     "icon@2x.png": icon2x,
+    "icon@3x.png": icon3x,
     "logo.png": logo,
     "logo@2x.png": logo2x,
+    "logo@3x.png": logo3x,
   };
 }
 

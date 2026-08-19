@@ -3,6 +3,7 @@ import forge from "node-forge";
 import JSZip from "jszip";
 
 import { buildApplePassJson, walletIconBuffers } from "./apple-wallet-pass";
+import { normalizeThemeColor, themeForegroundColor } from "./theme-contrast.ts";
 import { loadSharp } from "./sharp-runtime.ts";
 import type { AppleWalletCerts, WalletCardPayload } from "./wallet-config";
 
@@ -20,6 +21,20 @@ function themeRgb(themeColor: string) {
     b: parseInt(value.slice(4, 6), 16),
     alpha: 1,
   };
+}
+
+/**
+ * First and last initial, which is what a card without a photograph has to stand
+ * in for a face. Falls back to a single letter for a mononym and to nothing at
+ * all for a blank name, because two spaces rendered as "" is worse than an empty
+ * band. Diacritics are kept - "Ana Ortiz" and "Ana Ortíz" are different people.
+ */
+function initialsFor(fullName: string) {
+  const words = fullName.trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "";
+  const first = [...words[0]][0] ?? "";
+  const last = words.length > 1 ? ([...words[words.length - 1]][0] ?? "") : "";
+  return (first + last).toLocaleUpperCase();
 }
 
 async function fetchImageBuffer(url: string) {
@@ -121,26 +136,71 @@ export async function buildAppleWalletPass(card: WalletCardPayload, certs: Apple
           .png()
           .toBuffer();
 
-        // No scrim. It was added so the white name could be read on top of the
-        // band, and primaryFields is empty now - nothing is drawn over the strip,
-        // so a gradient would only be darkening the photograph for nothing.
+        // A scrim, because primaryFields carries the name again and PassKit draws
+        // it over this band. Without one the name is white text on whatever the
+        // photograph happens to be there - fine over a dark jacket, illegible over
+        // a bright window or a pale wall, and we do not get to choose which.
+        //
+        // Top-weighted and stopping short of the bottom, because that is where the
+        // name actually lands; darkening the whole frame would dim the face for no
+        // reason. Pure alpha over black, so it never tints the photograph.
+        const scrim = Buffer.from(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">`
+          + `<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1">`
+          + `<stop offset="0" stop-color="#000" stop-opacity="0.55"/>`
+          + `<stop offset="0.62" stop-color="#000" stop-opacity="0.10"/>`
+          + `<stop offset="1" stop-color="#000" stop-opacity="0"/>`
+          + `</linearGradient></defs>`
+          + `<rect width="${width}" height="${height}" fill="url(#s)"/></svg>`,
+        );
+
         files[name] = await sharp({
           create: { width, height, channels: 4, background: stripBackground },
         })
-          .composite([{ input: photo }])
+          .composite([{ input: photo }, { input: scrim }])
           .png()
           .toBuffer();
       }));
     } else {
-      // No photo is a normal state, not a broken one. A flat themed band keeps
-      // the card's proportions and its colour, so the pass still reads as a card
-      // rather than as one with a piece missing.
+      // No photo is a normal state, not a broken one - but a flat band spends the
+      // most prominent 123pt of the pass on nothing, so it carries the person's
+      // initials instead. Same job an avatar does everywhere else in the app: it
+      // stands in for a face without pretending to be one.
+      //
+      // Text comes from an SVG composite because that is the only way sharp draws
+      // type, and it depends on a font being present in the runtime. If none is -
+      // fontconfig is thin in a serverless image - the composite is what fails,
+      // not the pass: each scale falls back to the flat band this branch used to
+      // produce, so the worst case is exactly the old behaviour.
+      const initials = initialsFor(card.fullName);
+      const inkColor = themeForegroundColor(normalizeThemeColor(card.themeColor));
       await Promise.all(STRIP_SCALES.map(async ([name, width, height]) => {
-        files[name] = await sharp({
+        const band = () => sharp({
           create: { width, height, channels: 4, background: stripBackground },
-        })
-          .png()
-          .toBuffer();
+        });
+
+        if (initials) {
+          try {
+            // Sized off the band rather than fixed, so @2x and @3x scale with it
+            // instead of drifting. Letter-spacing opens up a two-letter monogram,
+            // which otherwise reads as one clenched word.
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">`
+              + `<text x="50%" y="50%" text-anchor="middle" dominant-baseline="central"`
+              + ` font-family="Helvetica Neue, Helvetica, Arial, sans-serif"`
+              + ` font-size="${Math.round(height * 0.44)}" font-weight="600"`
+              + ` letter-spacing="${Math.max(1, Math.round(height * 0.03))}"`
+              + ` fill="${inkColor}">${initials}</text></svg>`;
+            files[name] = await band()
+              .composite([{ input: Buffer.from(svg) }])
+              .png()
+              .toBuffer();
+            return;
+          } catch {
+            // Fall through to the plain band below.
+          }
+        }
+
+        files[name] = await band().png().toBuffer();
       }));
     }
   } catch (error) {

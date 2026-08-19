@@ -4,6 +4,7 @@ import { MAX_CARDS } from "../../../../lib/card-library";
 import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
 import { resolveCardImagesForPublish } from "../../../../lib/card-publish-images";
 import { createServiceSupabaseClient } from "../../../../lib/supabase/service";
+import { notifyWalletPassUpdated } from "../../../../lib/wallet-pass-updates";
 
 const slugPattern = /^card-[a-f0-9]{16}$|^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const themePattern = /^#[0-9a-f]{6}$/i;
@@ -124,6 +125,14 @@ export async function POST(request: Request) {
     .eq("id", data)
     .eq("workspace_id", user.workspaceId)
     .maybeSingle();
+  // Anyone already holding this card's Apple Wallet pass is now looking at stale
+  // details, so tell their devices to refetch. Awaited rather than fired and
+  // forgotten, because a promise left running after the response is returned is not
+  // guaranteed to finish in a serverless runtime - and the cost is one indexed
+  // SELECT for the overwhelmingly common case of a card nobody has registered a
+  // pass for, which returns before any network call happens. It never throws.
+  await notifyWalletPassUpdated(slug);
+
   return NextResponse.json({
     ok: true,
     cardId: data,

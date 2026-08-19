@@ -40,9 +40,13 @@ export function walletCardFromRow(row: WalletCardRow, request: Request): WalletC
     themeColor: row.theme_color ?? "#9fe870",
     cardUrl: cardUrlForSlug(row.slug, request),
     profileImageUrl: row.profile_image_url ?? "",
-    companyLogoUrl: row.company_logo_url ?? "",
     showCompany: row.show_company_details ?? true,
   };
 }
 
-export const WALLET_CARD_SELECT = "slug, full_name, job_title, company, bio, theme_color, profile_image_url, company_logo_url, show_company_details, status";
+// company_logo_url is deliberately absent. Neither wallet builder has ever read
+// it - Apple has no free image slot on a storeCard whose strip already carries the
+// photograph - so selecting it fetched a column on every pass request and dropped
+// it. The column itself stays, and the public card and share-assets endpoints still
+// use it; only this query stops asking for it.
+export const WALLET_CARD_SELECT = "slug, full_name, job_title, company, bio, theme_color, profile_image_url, show_company_details, status";
