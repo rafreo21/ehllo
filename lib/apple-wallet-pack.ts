@@ -95,7 +95,10 @@ export async function buildAppleWalletPass(card: WalletCardPayload, certs: Apple
   );
   const files: Record<string, Buffer> = {
     "pass.json": Buffer.from(passJson, "utf8"),
-    ...(await walletIconBuffers()),
+    // The wordmark takes the same colour the pass text does, so the brand stays
+    // legible on a light card and a dark one alike - which is what logoText used to
+    // get for free by rendering in foregroundColor.
+    ...(await walletIconBuffers(themeForegroundColor(normalizeThemeColor(card.themeColor)))),
   };
 
   // The designed card layout, expressed in the parts of a pass that Apple lets

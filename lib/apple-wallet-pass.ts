@@ -44,8 +44,8 @@ export function shortenCardUrlForQr(cardUrl: string) {
   return cardUrl.replace(/\/c\/card-([a-f0-9]{16})(?=$|[?#])/i, "/c/$1");
 }
 
-export async function walletIconBuffers() {
-  return buildWalletLogoBuffers();
+export async function walletIconBuffers(wordmarkColor?: string) {
+  return buildWalletLogoBuffers(wordmarkColor);
 }
 
 export function buildApplePassJson(card: {
@@ -110,7 +110,9 @@ export function buildApplePassJson(card: {
     // The wordmark already sits beside the logo, so the old headerFields entry
     // ("CARD: ehllo") printed the brand a second time in the top-right corner
     // and squeezed the name. One brand mark is enough.
-    logoText: "ehllo",
+    // No logoText. The wordmark lives inside logo.png now, because Apple renders this
+    // string at a fixed size that came out smaller than the header field beside it
+    // and offers no key to change it. Setting both would print the brand twice.
     // The colour the person picked when they made the card, and text that stays
     // readable on it. These were hardcoded to white, which only works on a dark
     // theme: ehllo's own default (#9FE870) and every other light choice rendered

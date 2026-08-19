@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 
 import { EHLLO_LOGO_PNG_BASE64 } from "./ehllo-logo-base64.ts";
 import { EHLLO_MARK_SVG } from "./ehllo-mark-svg.ts";
+import { ehlloWalletLogoSvg } from "./ehllo-wallet-logo-svg.ts";
 import { loadSharp, sharpAvailable } from "./sharp-runtime.ts";
 
 import type { CardVcardInput } from "./vcard-export.ts";
@@ -181,12 +182,15 @@ export async function buildBrandedContactQrDataUri(input: CardVcardInput, size =
  * left-aligns the logo, so a 50x50 circle lands flush against the edge where it
  * belongs, and the padding was only ever pushing it away from it.
  */
-export async function buildWalletLogoBuffers() {
+export async function buildWalletLogoBuffers(wordmarkColor?: string) {
   if (!sharpAvailable()) {
     throw new Error("Wallet pass images require sharp, which isn't available in this local dev sandbox. Test this against a Vercel preview instead.");
   }
   const sharp = await loadSharp();
   const markBuffer = loadEhlloMarkForWallet();
+  // Falls back to the wordmark's own near-black when no colour is supplied, which is
+  // what a caller that does not know the card's theme should get.
+  const logoBuffer = Buffer.from(ehlloWalletLogoSvg(wordmarkColor?.trim() || "#121212"), "utf8");
   const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
   // Every asset at every scale. The strip already ships @3x; the logo and icon did
   // not, so on a 3x device - which is every current iPhone - iOS upscaled them from
@@ -196,13 +200,17 @@ export async function buildWalletLogoBuffers() {
     sharp(markBuffer).resize(29, 29, { fit: "contain", background: transparent }).png().toBuffer(),
     sharp(markBuffer).resize(58, 58, { fit: "contain", background: transparent }).png().toBuffer(),
     sharp(markBuffer).resize(87, 87, { fit: "contain", background: transparent }).png().toBuffer(),
-    // 36, not 50. Apple draws the logo at whatever height it is given, up to 50, and
-    // at 50 the badge stood as tall as the entire brand row and dwarfed the text
-    // beside it. The @2x and @3x below are that same 36pt at higher density, not a
-    // larger badge.
-    sharp(markBuffer).resize(36, 36, { fit: "contain", background: transparent }).png().toBuffer(),
-    sharp(markBuffer).resize(72, 72, { fit: "contain", background: transparent }).png().toBuffer(),
-    sharp(markBuffer).resize(108, 108, { fit: "contain", background: transparent }).png().toBuffer(),
+    // The full lockup - badge and wordmark together - rather than the badge alone.
+    // Apple gives logoText no size control, and it rendered smaller than the header
+    // field beside it; the wordmark inside the image is the only way to set that
+    // type size ourselves, so pass.json drops logoText entirely.
+    //
+    // 150x50pt at 1x, under Apple's 160x50 ceiling. Height, not width, is what Apple
+    // constrains, and the aspect is preserved, so the badge stays the size it was
+    // while the wordmark rides along beside it.
+    sharp(logoBuffer).resize(150, 50, { fit: "contain", background: transparent }).png().toBuffer(),
+    sharp(logoBuffer).resize(300, 100, { fit: "contain", background: transparent }).png().toBuffer(),
+    sharp(logoBuffer).resize(450, 150, { fit: "contain", background: transparent }).png().toBuffer(),
   ]);
 
   return {
