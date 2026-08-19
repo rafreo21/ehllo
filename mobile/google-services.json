@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "114946611327",
+    "project_id": "aftermeet-503610",
+    "storage_bucket": "aftermeet-503610.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:114946611327:android:1b811ce132e69463c2c74a",
+        "android_client_info": {
+          "package_name": "com.ehllo.app.staging"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "114946611327-8jp7uf68vj0a7kdf6uorrca734mlpg1n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5eOEESYlw6ypP5jw_d14RCCGdnea7X9w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "114946611327-8jp7uf68vj0a7kdf6uorrca734mlpg1n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

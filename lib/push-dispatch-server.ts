@@ -5,6 +5,16 @@ import type { NotificationType } from "./notifications-server";
 const EXPO_PUSH_ENDPOINT = "https://exp.host/--/api/v2/push/send";
 const MAX_MESSAGES_PER_REQUEST = 100;
 
+/**
+ * Android delivers every notification through a channel. With no channelId Expo
+ * falls back to its own "Miscellaneous" channel, so remote pushes and the locally
+ * scheduled reminders land in two unrelated channels - confirmed on-device - and
+ * someone who silences one keeps receiving the other. Must stay in step with
+ * CHANNEL_ID in mobile/src/features/notifications/notification-service.ts, which
+ * is where the channel is actually created. Ignored by iOS.
+ */
+const ANDROID_CHANNEL_ID = "follow-ups";
+
 type PushToken = { id: string; expo_push_token: string };
 
 type ExpoTicket = {
@@ -54,6 +64,7 @@ export async function dispatchPushForUser(
       title: input.title,
       body: input.body || "",
       sound: "default" as const,
+      channelId: ANDROID_CHANNEL_ID,
       data: {
         type: input.type,
         route,

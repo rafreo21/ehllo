@@ -45,3 +45,10 @@ example
 # native module build output (e.g. mobile/modules/*/android/build)
 **/android/build/
 **/ios/build/
+
+# Firebase service account private keys. Real credentials - these can send push
+# to every device and act on the Firebase project. Uploaded to EAS once and used
+# from there; they must never reach the repo. google-services.json is the
+# opposite and is committed on purpose: it ships inside every APK.
+*-firebase-adminsdk-*.json
+service-account*.json
