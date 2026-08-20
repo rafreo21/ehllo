@@ -23,10 +23,17 @@ export function PublicAppDownloadPrompt({
   const playStoreUrl = getPlayStoreUrl();
   const appStoreUrl = getAppStoreUrl();
   const storesLive = hasPublishedMobileApp();
+  // Read off the live URL rather than threaded down as a prop. This is already a client
+  // component that reads the browser for detectMobilePlatform, and the alternative was
+  // passing `s` through the page and PublicCardClient to reach one href.
+  const scanSource = typeof window === "undefined"
+    ? undefined
+    : new URLSearchParams(window.location.search).get("s") ?? undefined;
   const webAuthHref = buildAuthHref({
     intent: "visitor",
     slug: slug ?? "",
     email: visitorEmail?.trim().toLowerCase(),
+    source: scanSource,
   });
 
   return (

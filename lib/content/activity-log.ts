@@ -59,6 +59,26 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "12:45",
+    title: "We can finally tell where a connection came from",
+    impact: "fix",
+    detail:
+      "We started recording which surface a connection came through - camera, card link, NFC tap, web - and then recorded almost nothing. Following someone's card to the website and signing up, which is the most valuable way anyone arrives, was never attributed at all: that path connects you by a different route that simply never wrote it down. And once a connection existed with no surface against it, there was no way to ever fill it in, because the only code that could write was skipped for people you already knew. So the column read as \"nobody scans from anywhere\" when the truth was \"we never wrote it down\". All three paths now record it through one shared piece of code, a blank can be filled by a later scan, and a surface once recorded is never overwritten - so it keeps answering where you met rather than where you last scanned. An NFC tag tapped by someone without the app now says NFC instead of disappearing into web.",
+    testing:
+      "Scan a card belonging to someone you are not yet connected to, from any surface. Scanning someone you already know fills in a blank if there is one and otherwise leaves it alone.",
+  },
+  {
+    date: "2026-08-20",
+    time: "12:10",
+    title: "Answer someone once, not once per time they asked",
+    impact: "improvement",
+    detail:
+      "Contact requests were listed one row per ask, so somebody who asks for your Instagram after every meeting filled the screen with fifteen identical rows - and you had to type the same handle fifteen times to clear them. Now it is one row per person: their name, what they asked for, and how many times. Answer it once and every one of their asks is closed, and they are told once rather than fifteen times. The list also stops at twenty people instead of twenty rows, so one persistent asker can no longer hide everybody else, and it says how many are still waiting behind it.",
+    testing:
+      "Settings › Contact requests, on the phone or the web. Ask for the same detail from a second account a few times, then answer it once - all of them should disappear together.",
+  },
+  {
+    date: "2026-08-20",
     time: "10:15",
     title: "You can answer a contact request on the web now",
     impact: "new",

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { normalizeConnectionSource, resolveStoredCardSlug } from "../../../../lib/card-slug";
 import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
+import { recordConnectionScanSource } from "../../../../lib/connection-scan-source";
 
 export async function GET(request: Request) {
   const user = await resolveApiUser(request);
@@ -127,17 +128,17 @@ export async function POST(request: Request) {
     personCompany?: string;
     personEmail?: string;
   } | null;
-  // First touch wins. scan_source records how a connection began, so a later scan of
-  // the same card from a different surface must not overwrite it - otherwise the column
-  // answers "where did I last scan them" rather than "where did we meet".
+  // First touch wins, and the rule lives in one place now: lib/connection-scan-source.ts.
+  // Three paths create connections - this one, the auth callback and visitor onboarding -
+  // and each used to decide this for itself, which on the web meant not at all.
+  //
+  // It deliberately no longer requires a brand new connection. That condition protected
+  // nothing the null check was not already protecting, and it made a null permanent: the
+  // only rows that can still be null are ones created before this column existed or by a
+  // path that never wrote one, and every one of them is a connection you already have -
+  // so the single path that could fill them in was the path being skipped.
   const source = normalizeConnectionSource(payload?.source);
-  if (source && !alreadyConnected && result?.connectionId) {
-    await supabase
-      .from("people_connections")
-      .update({ scan_source: source })
-      .eq("id", result.connectionId)
-      .is("scan_source", null);
-  }
+  await recordConnectionScanSource(supabase, result?.connectionId, source);
 
   return NextResponse.json({
     ok: true,

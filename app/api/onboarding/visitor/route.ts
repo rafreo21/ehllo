@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { parseVisitorIntent } from "../../../../lib/auth/visitor-intent";
+import { browserConnectionSource, recordConnectionScanSource } from "../../../../lib/connection-scan-source";
 import { createClient } from "../../../../lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -52,8 +53,13 @@ export async function POST(request: Request) {
     const { error } = await supabase.rpc("link_people_connection_from_exchange", { p_exchange_id: intent.exchangeId });
     logLinkFailure("link_people_connection_from_exchange", error);
   } else if (intent?.slug) {
-    const { error } = await supabase.rpc("link_people_connection_from_scan", { p_slug: intent.slug });
+    const { data, error } = await supabase.rpc("link_people_connection_from_scan", { p_slug: intent.slug });
     logLinkFailure("link_people_connection_from_scan", error);
+    // Same omission as the auth callback, same fix, same writer.
+    if (!error) {
+      const connectionId = (data as { connectionId?: string } | null)?.connectionId;
+      await recordConnectionScanSource(supabase, connectionId, browserConnectionSource(intent.source));
+    }
   } else if (intent?.shareToken) {
     const { error: linkError } = await supabase.rpc("link_people_connection_from_share_token", { p_share_token: intent.shareToken });
     logLinkFailure("link_people_connection_from_share_token", linkError);

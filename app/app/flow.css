@@ -1169,3 +1169,13 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
   .guest-recording-actions p { text-align:left; }
   .guest-follow-up > button,.guest-claim > a { width:100%; }
 }
+
+/* Contact requests grouped by person: the count of how many times one person has asked,
+   and the sheet that confirms an answer cleared all of them. */
+.request-count-pill { min-width: 26px; padding: 3px 9px; border-radius: 999px; background: var(--p-sky); color: var(--p-navy); font-size: 12px; font-weight: 600; text-align: center; }
+/* Bottom-anchored, not centred: .connections-modal-compact would have made these
+   centre-screen dialogs, and a sheet rising from the bottom edge is what the phone does
+   and what these were asked to be. The backdrop is already `place-items: end center`. */
+.request-shared-sheet { justify-items: center; text-align: center; }
+.request-shared-sheet h2 { margin: 0; font-size: 20px; }
+.request-shared-sheet button { width: 100%; }

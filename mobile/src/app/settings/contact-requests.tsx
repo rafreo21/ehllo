@@ -1,18 +1,20 @@
 import { useFocusEffect } from 'expo-router';
 import { EnvelopeSimple } from 'phosphor-react-native';
 import { useCallback, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { Button, PageHeader, Panel, Screen } from '@/components/ui';
+import { BottomSheet } from '@/components/bottom-sheet';
+import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
+import { Body, Button, PageHeader, Panel, Screen } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
 import { methodDisplayName, type MissingMethodType } from '@/features/follow-ups/channel-methods';
 import {
   answerContactRequest,
   fetchIncomingContactRequests,
-  type IncomingContactRequest,
+  type ContactRequestGroup,
 } from '@/features/follow-ups/contact-requests-api';
-import { colors, fonts, spacing } from '@/theme/tokens';
+import { colors, fonts, radius, spacing } from '@/theme/tokens';
 
 /**
  * Requests other people have made for your contact details.
@@ -20,6 +22,11 @@ import { colors, fonts, spacing } from '@/theme/tokens';
  * Asking worked, recording it worked, and the notification worked - and then the
  * trail stopped: there was nowhere to say yes or no, so every request sat pending
  * and the person who asked could not tell "hasn't seen it" from "would rather not".
+ *
+ * Grouped by person and detail, not by request. Somebody who asks for your Instagram
+ * after every meeting is one row wanting one answer, not fifteen rows wanting fifteen -
+ * and the earlier one-row-per-request list made you type the same handle fifteen times
+ * to clear them. One answer now closes the whole group.
  *
  * The value is pre-filled from your own card when you already publish that method,
  * because the common case is somebody asking for something you have simply not sent
@@ -30,59 +37,88 @@ function fieldLabel(fieldType: string) {
   return methodDisplayName(fieldType as MissingMethodType);
 }
 
+/** Mirrors relativeTime on the web screen, so the two surfaces read the same. */
+function relativeTime(iso: string) {
+  const parsed = new Date(iso).getTime();
+  if (!Number.isFinite(parsed)) return 'recently';
+  const minutes = Math.floor((Date.now() - parsed) / 60000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+/** How many times this person has asked, said the way a person would say it. */
+function askedCaption(group: ContactRequestGroup) {
+  if (group.count <= 1) return `Asked ${relativeTime(group.latestAt)}`;
+  return `Asked ${group.count} times · last ${relativeTime(group.latestAt)}`;
+}
+
 export default function ContactRequestsScreen() {
   const { session } = useAuth();
   const { card } = useCard();
-  const [requests, setRequests] = useState<IncomingContactRequest[]>([]);
-  const [values, setValues] = useState<Record<string, string>>({});
-  const [busyId, setBusyId] = useState('');
+  const [groups, setGroups] = useState<ContactRequestGroup[]>([]);
+  const [truncated, setTruncated] = useState(0);
+  const [active, setActive] = useState<ContactRequestGroup | null>(null);
+  const [shared, setShared] = useState<ContactRequestGroup | null>(null);
+  const [value, setValue] = useState('');
+  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [sheetError, setSheetError] = useState('');
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!session?.access_token) { setLoading(false); return; }
     try {
       const next = await fetchIncomingContactRequests(session.access_token);
-      setRequests(next);
-      setValues((current) => {
-        const seeded = { ...current };
-        for (const request of next) {
-          if (seeded[request.id] !== undefined) continue;
-          // Pre-fill from the card, so answering is usually one tap.
-          const method = (card?.methods ?? []).find((candidate) => candidate.type === request.fieldType);
-          seeded[request.id] = method?.value ?? '';
-        }
-        return seeded;
-      });
+      setGroups(next.groups);
+      setTruncated(next.truncated);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not load contact requests.');
     } finally {
       setLoading(false);
     }
-    // `session` and `card` whole, not a property or an inline default of either:
-    // the compiler infers the object as the dependency, and a narrower or freshly
-    // built one does not match, so it drops the memo entirely.
-  }, [session, card]);
+    // `session` whole, not a property or an inline default of it: the compiler infers
+    // the object as the dependency, and a narrower or freshly built one does not match,
+    // so it drops the memo entirely.
+  }, [session]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
-  async function answer(request: IncomingContactRequest, share: boolean) {
-    if (!session?.access_token) return;
-    const value = (values[request.id] ?? '').trim();
-    if (share && !value) {
-      setMessage(`Add your ${fieldLabel(request.fieldType)} before sharing it.`);
+  function openGroup(group: ContactRequestGroup) {
+    // Pre-filled from the card, so answering is usually one tap. Seeded here rather
+    // than on load: only the open group needs a value, and seeding the whole list meant
+    // holding a value per request that was thrown away unread.
+    const method = (card?.methods ?? []).find((candidate) => candidate.type === group.fieldType);
+    setValue(method?.value ?? '');
+    setSheetError('');
+    setActive(group);
+  }
+
+  async function answer(share: boolean) {
+    if (!session?.access_token || !active) return;
+    const trimmed = value.trim();
+    if (share && !trimmed) {
+      setSheetError(`Add your ${fieldLabel(active.fieldType)} before sharing it.`);
       return;
     }
-    setBusyId(request.id);
-    setMessage('');
+    setBusy(true);
+    setSheetError('');
     try {
-      await answerContactRequest(session.access_token, { id: request.id, share, value });
-      setRequests((current) => current.filter((item) => item.id !== request.id));
-      setMessage(share ? 'Shared. They have been told.' : 'Declined. They have been told.');
+      await answerContactRequest(session.access_token, { ids: active.ids, share, value: trimmed });
+      setGroups((current) => current.filter((item) => item.key !== active.key));
+      const answered = active;
+      setActive(null);
+      // Sharing gets its own sheet, because handing someone your number is a decision -
+      // and when it clears fifteen separate asks at once, saying so is the difference
+      // between a list that emptied for a reason and a list that looks broken.
+      if (share) setShared(answered);
+      else setMessage('Declined. They have been told.');
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Could not answer this request.');
+      setSheetError(error instanceof Error ? error.message : 'Could not answer this request.');
     } finally {
-      setBusyId('');
+      setBusy(false);
     }
   }
 
@@ -90,7 +126,7 @@ export default function ContactRequestsScreen() {
     <Screen header={<PageHeader title="Contact requests" description="People asking for a way to reach you." />}>
       {message ? <Text style={styles.message}>{message}</Text> : null}
 
-      {!loading && !requests.length ? (
+      {!loading && !groups.length ? (
         <Panel>
           <View style={styles.emptyWrap}>
             <EnvelopeSimple size={26} color={colors.muted} weight="bold" />
@@ -102,44 +138,114 @@ export default function ContactRequestsScreen() {
         </Panel>
       ) : null}
 
-      {requests.map((request) => (
-        <Panel key={request.id}>
-          <Text style={styles.field}>{fieldLabel(request.fieldType)}</Text>
-          {request.followUpTitle ? <Text style={styles.context}>For: {request.followUpTitle}</Text> : null}
-          <TextInput
-            style={styles.input}
-            value={values[request.id] ?? ''}
-            onChangeText={(text) => setValues((current) => ({ ...current, [request.id]: text }))}
-            placeholder={`Your ${fieldLabel(request.fieldType)}`}
-            placeholderTextColor={colors.muted}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <View style={styles.actions}>
-            <Button loading={busyId === request.id} onPress={() => void answer(request, true)}>Share it</Button>
-            <Button
-              variant="secondary"
-              disabled={busyId === request.id}
-              onPress={() => void answer(request, false)}>
-              Not this time
-            </Button>
+      {groups.map((group) => (
+        <Pressable
+          key={group.key}
+          accessibilityRole="button"
+          accessibilityLabel={`${group.requesterName} asked for your ${fieldLabel(group.fieldType)}`}
+          onPress={() => openGroup(group)}
+          style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
+          <View style={styles.rowCopy}>
+            <Text style={styles.rowTitle} numberOfLines={2}>
+              {group.requesterName} asked for your {fieldLabel(group.fieldType)}
+            </Text>
+            <Text style={styles.rowCaption}>{askedCaption(group)}</Text>
           </View>
-        </Panel>
+          {/* Only when it is more than one ask - a "1" beside a single request is noise,
+              and the caption already says when it arrived. */}
+          {group.count > 1 ? (
+            <View style={styles.countPill}>
+              <Text style={styles.countText}>{group.count}</Text>
+            </View>
+          ) : null}
+        </Pressable>
       ))}
+
+      {/* Said plainly rather than hidden, because a list that silently stops looks like
+          a list of everything. Answering clears whole people at a time, so the rest
+          surface next time this screen loads. */}
+      {!loading && truncated > 0 ? (
+        <Text style={styles.truncated}>
+          {truncated} more {truncated === 1 ? 'person is' : 'people are'} waiting. Answer these and they will appear here.
+        </Text>
+      ) : null}
+
+      <BottomSheet
+        visible={Boolean(active)}
+        title={active ? `Share your ${fieldLabel(active.fieldType)}?` : 'Share'}
+        onClose={() => { if (!busy) setActive(null); }}
+        footer={
+          <View style={styles.actions}>
+            <Button loading={busy} onPress={() => void answer(true)}>Share it</Button>
+            <Button variant="secondary" disabled={busy} onPress={() => void answer(false)}>Not this time</Button>
+          </View>
+        }>
+        {active ? (
+          <View style={styles.sheetBody}>
+            <Body>
+              {active.count > 1
+                ? `${active.requesterName} has asked ${active.count} times. Answer once and all ${active.count} are done - you will not be asked again.`
+                : `${active.requesterName} asked for it. Only this one detail is shared, and only with them.`}
+              {' '}Declining tells them too, so nobody is left waiting on an answer that is not coming.
+            </Body>
+            {active.followUpTitle ? <Text style={styles.context}>For: {active.followUpTitle}</Text> : null}
+            <TextInput
+              style={styles.input}
+              value={value}
+              onChangeText={setValue}
+              placeholder={`Your ${fieldLabel(active.fieldType)}`}
+              placeholderTextColor={colors.muted}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {sheetError ? <Text style={styles.sheetError}>{sheetError}</Text> : null}
+          </View>
+        ) : null}
+      </BottomSheet>
+
+      <OutcomeSuccessSheet
+        visible={Boolean(shared)}
+        title={shared ? `Shared with ${shared.requesterName}` : 'Shared'}
+        message={
+          shared
+            ? shared.count > 1
+              ? `Your ${fieldLabel(shared.fieldType)} is on its way, and all ${shared.count} of their requests are closed. They have been told.`
+              : `Your ${fieldLabel(shared.fieldType)} is on its way. They have been told.`
+            : ''
+        }
+        lottieSource={require('@/assets/animations/share.json')}
+        onClose={() => setShared(null)}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   message: { color: colors.ink, fontFamily: fonts.medium, fontSize: 13, marginBottom: spacing.x2 },
-  field: { color: colors.ink, fontSize: 16, fontFamily: fonts.bold, fontWeight: '800' },
-  context: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  row: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.x3,
+    borderRadius: radius.large, borderWidth: 1, borderColor: colors.line,
+    backgroundColor: colors.surface, paddingVertical: spacing.x3, paddingHorizontal: spacing.x4,
+  },
+  rowPressed: { backgroundColor: colors.surfaceMuted },
+  rowCopy: { flex: 1, gap: 2 },
+  rowTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
+  rowCaption: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
+  countPill: {
+    minWidth: 28, borderRadius: radius.round, backgroundColor: colors.accent,
+    paddingVertical: 4, paddingHorizontal: spacing.x2, alignItems: 'center',
+  },
+  countText: { color: colors.ink, fontFamily: fonts.bold, fontWeight: '800', fontSize: 12 },
+  truncated: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
+  sheetBody: { gap: spacing.x3 },
+  context: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
   input: {
-    marginTop: spacing.x3, minHeight: 48, borderRadius: 14, borderWidth: 1, borderColor: colors.line,
+    minHeight: 48, borderRadius: 14, borderWidth: 1, borderColor: colors.line,
     paddingHorizontal: spacing.x3, color: colors.ink, fontFamily: fonts.regular, fontSize: 15,
     backgroundColor: colors.surface,
   },
-  actions: { gap: spacing.x2, marginTop: spacing.x3 },
+  sheetError: { color: colors.danger, fontFamily: fonts.medium, fontSize: 13 },
+  actions: { gap: spacing.x2 },
   emptyWrap: { alignItems: 'center', gap: spacing.x2, paddingVertical: spacing.x3 },
   emptyTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
   emptyCopy: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18, textAlign: 'center' },

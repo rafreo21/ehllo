@@ -7,6 +7,7 @@ import {
   visitorOnboardingPath,
 } from "../../../lib/auth/visitor-intent";
 import { sanitizeIntendedDestination } from "../../../lib/auth/redirect";
+import { browserConnectionSource, recordConnectionScanSource } from "../../../lib/connection-scan-source";
 import { requirePublicSupabaseConfig } from "../../../lib/supabase/env";
 
 type ProvisionResult = {
@@ -60,8 +61,16 @@ async function linkVisitorConnections(
     const { error } = await supabase.rpc("link_people_connection_from_exchange", { p_exchange_id: intent.exchangeId });
     logLinkFailure("link_people_connection_from_exchange", error);
   } else if (intent.slug) {
-    const { error } = await supabase.rpc("link_people_connection_from_scan", { p_slug: intent.slug });
+    const { data, error } = await supabase.rpc("link_people_connection_from_scan", { p_slug: intent.slug });
     logLinkFailure("link_people_connection_from_scan", error);
+    // The surface, which this path never recorded. Somebody following a stranger's card
+    // to a browser and signing up is the most valuable arrival in the product, and it
+    // was the one with no attribution at all - so "which surface gets people
+    // connecting" could not see it. Defaults to web; an NFC tap says nfc.
+    if (!error) {
+      const connectionId = (data as { connectionId?: string } | null)?.connectionId;
+      await recordConnectionScanSource(supabase, connectionId, browserConnectionSource(intent.source));
+    }
   }
 }
 
