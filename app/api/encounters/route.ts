@@ -399,26 +399,75 @@ export async function POST(request: Request) {
         encounterTitle?: string;
         ownerName?: string;
       };
-      const service = waiting.granted?.length ? createServiceSupabaseClient() : null;
+      // Everybody who can now read it, not only whoever happened to ask. A meeting can have
+      // any number of people in it, and telling one of three that it was shared leaves the
+      // other two holding access they do not know about - which is the same as not sharing
+      // it, from where they are standing.
+      //
+      // Those who asked are told they were answered; the rest are simply told it exists.
+      // Deduplicated by user, so asking does not earn you two notifications.
+      const asked = new Map<string, string>();
       for (const person of waiting.granted ?? []) {
-        if (!service || !person.userId || !person.workspaceId) continue;
-        const title = `${waiting.ownerName ?? "Someone"} shared “${waiting.encounterTitle ?? "a meeting"}” with you`;
+        if (person.userId && person.workspaceId) asked.set(person.userId, person.workspaceId);
+      }
+
+      const { data: claimedRows } = await supabase
+        .from("encounter_participants")
+        .select("claimed_by_user_id")
+        .eq("encounter_id", body.id)
+        .not("claimed_by_user_id", "is", null);
+
+      const recipients = new Map<string, { workspaceId: string | null; didAsk: boolean }>();
+      for (const [userId, workspaceId] of asked) {
+        recipients.set(userId, { workspaceId, didAsk: true });
+      }
+      for (const row of (claimedRows ?? []) as Array<{ claimed_by_user_id: string }>) {
+        const claimedBy = row.claimed_by_user_id;
+        // Never the host themselves: they are the one who just shared it.
+        if (!claimedBy || claimedBy === user.id || recipients.has(claimedBy)) continue;
+        recipients.set(claimedBy, { workspaceId: null, didAsk: false });
+      }
+
+      const service = recipients.size ? createServiceSupabaseClient() : null;
+      const meetingTitle = waiting.encounterTitle ?? "a meeting";
+      const ownerName = waiting.ownerName ?? "Someone";
+
+      for (const [userId, info] of recipients) {
+        if (!service) break;
+        // A participant's workspace is not carried on the participant row, so it is resolved
+        // here. Notifications belong in the reader's own workspace, not the host's.
+        let workspaceId = info.workspaceId;
+        if (!workspaceId) {
+          const { data: membership } = await service
+            .from("workspace_memberships")
+            .select("workspace_id")
+            .eq("user_id", userId)
+            .eq("status", "active")
+            .limit(1)
+            .maybeSingle();
+          workspaceId = (membership?.workspace_id as string | undefined) ?? null;
+        }
+        if (!workspaceId) continue;
+
+        const type = info.didAsk ? "access_granted" as const : "shared_meeting_update" as const;
+        const title = info.didAsk
+          ? `${ownerName} shared “${meetingTitle}” with you`
+          : `${ownerName} shared the recap of “${meetingTitle}”`;
         const notificationBody = "Open it to read the recap.";
-        // Written into the requester's own workspace, with the service client, because it
-        // belongs to them and not to the host who triggered it.
+
         const created = await createNotification(service, {
-          userId: person.userId,
-          workspaceId: person.workspaceId,
-          type: "access_granted",
+          userId,
+          workspaceId,
+          type,
           title,
           body: notificationBody,
           encounterId: body.id,
-          dedupeKey: `access_granted:${body.id}:${person.userId}`,
+          dedupeKey: `${type}:${body.id}:${userId}`,
         });
         if (created) {
           await dispatchPushForUser(service, {
-            userId: person.userId,
-            type: "access_granted",
+            userId,
+            type,
             title,
             body: notificationBody,
             encounterId: body.id,

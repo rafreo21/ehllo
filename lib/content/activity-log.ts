@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "19:20",
+    title: "Everyone in a meeting is told when it is shared",
+    impact: "fix",
+    detail:
+      "Meetings can have any number of people in them, and sharing only told whoever had asked to see it. So three people in a room, one asks, and the other two quietly gain access nobody mentions - which from where they are standing is the same as not being shared with at all. Everyone who can now read it is told: the people who asked hear that they were answered, and the rest simply hear that it exists. Asking does not earn you two notifications.",
+    testing:
+      "Record a meeting with two or more people, share it, and check both of their accounts.",
+  },
+  {
+    date: "2026-08-20",
     time: "18:50",
     title: "You can ask for a meeting instead of hitting a wall",
     impact: "new",
