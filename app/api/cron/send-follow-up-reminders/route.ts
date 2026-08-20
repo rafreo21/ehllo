@@ -7,6 +7,7 @@ import { isFollowUpReminderEligible } from "../../../../lib/follow-up-lifecycle"
 import { createNotification, notificationTypeEnabled } from "../../../../lib/notifications-server";
 import { dispatchPushForUser } from "../../../../lib/push-dispatch-server";
 import { buildReminderDigestEmail, reminderQualifies } from "../../../../lib/reminder-email";
+import { reminderDigestDue } from "../../../../lib/reminder-schedule";
 import { sendEmail } from "../../../../lib/send-email";
 import { createServiceSupabaseClient } from "../../../../lib/supabase/service";
 
@@ -18,12 +19,14 @@ type ReminderUser = {
   reminder_emails_enabled: boolean;
   reminder_last_sent_at: string | null;
   notification_preferences: unknown;
+  reminder_times: string[] | null;
+  time_zone: string | null;
 };
 
-function startOfTodayIso() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-}
+// startOfTodayIso used to live here and compared against the server's midnight, which on
+// Vercel is UTC. That made "has it gone out today" somebody else's day for anyone not
+// living in UTC, on top of ignoring the chosen times entirely. Both are now decided by
+// reminderDigestDue, in the user's own zone.
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -38,14 +41,16 @@ export async function GET(request: Request) {
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://ehllo.io";
-  const todayStart = startOfTodayIso();
+  // One instant for the whole run, so two users are never judged against clocks a few
+  // seconds apart.
+  const now = new Date();
 
   // Email and in-app/push notifications are independent preferences, so this
   // scans every active user rather than only those with email reminders on -
   // the per-user branches below decide each channel separately.
   const { data: users, error: usersError } = await service
     .from("users")
-    .select("id, auth_user_id, primary_email, status, reminder_emails_enabled, reminder_last_sent_at, notification_preferences")
+    .select("id, auth_user_id, primary_email, status, reminder_emails_enabled, reminder_last_sent_at, notification_preferences, reminder_times, time_zone")
     .eq("status", "active")
     .limit(500);
 
@@ -54,12 +59,31 @@ export async function GET(request: Request) {
   }
 
   let scanned = 0;
+  let notDue = 0;
   let emailsSent = 0;
   let emailsFailed = 0;
   let notificationsCreated = 0;
 
   for (const user of (users ?? []) as ReminderUser[]) {
     scanned += 1;
+
+    // Their chosen times, in their zone, before any of the work below. This is the fix for
+    // being reminded at an hour you did not choose - and it gates the push notifications
+    // too, not only the email, because those were the ones arriving at the wrong time.
+    //
+    // The cron is the safety net rather than the mechanism: the plan allows one run a day,
+    // so it cannot fire at three local times. The device asks on open for the exact hour,
+    // and this catches whoever never opened the app.
+    const due = reminderDigestDue({
+      now,
+      timeZone: user.time_zone,
+      reminderTimes: user.reminder_times,
+      lastSentAt: user.reminder_last_sent_at,
+    });
+    if (!due.due) {
+      notDue += 1;
+      continue;
+    }
 
     const qualifying: FollowUpItem[] = [];
 
@@ -165,26 +189,38 @@ export async function GET(request: Request) {
       }
     }
 
-    // Email digest respects its own daily-once cadence, independent of
-    // whether in-app notifications were created above.
-    const emailEligible = user.reminder_emails_enabled
-      && user.primary_email?.trim()
-      && (!user.reminder_last_sent_at || user.reminder_last_sent_at < todayStart);
-    if (!emailEligible) continue;
+    // Cadence is decided once, above, for both channels. This used to keep its own
+    // separate daily-once rule against the server's midnight, which is how the email and
+    // the push could disagree about whether today had already happened.
+    const emailEligible = user.reminder_emails_enabled && user.primary_email?.trim();
 
-    const { subject, html } = buildReminderDigestEmail(qualifying, appUrl);
-    const result = await sendEmail({ to: user.primary_email.trim(), subject, html });
+    let stamp = false;
+    if (emailEligible) {
+      const { subject, html } = buildReminderDigestEmail(qualifying, appUrl);
+      const result = await sendEmail({ to: user.primary_email.trim(), subject, html });
+      if (result.ok) {
+        emailsSent += 1;
+        stamp = true;
+      } else {
+        // Left unstamped so it is retried, rather than counted as sent because we tried.
+        emailsFailed += 1;
+      }
+    } else {
+      // Stamped even with no email to send. This column is now what "already reminded
+      // today" is judged against for both channels, so leaving it untouched for anybody
+      // with email reminders off meant they read as never reminded on every single run.
+      stamp = true;
+    }
 
-    if (result.ok) {
-      emailsSent += 1;
+    if (stamp) {
       await service
         .from("users")
-        .update({ reminder_last_sent_at: new Date().toISOString() })
+        .update({ reminder_last_sent_at: now.toISOString() })
         .eq("id", user.id);
-    } else {
-      emailsFailed += 1;
     }
   }
 
-  return NextResponse.json({ ok: true, scanned, emailsSent, emailsFailed, notificationsCreated });
+  // notDue reported so a quiet run is legible: "nobody was due yet" and "the job did not
+  // work" used to look identical from the outside.
+  return NextResponse.json({ ok: true, scanned, notDue, emailsSent, emailsFailed, notificationsCreated });
 }

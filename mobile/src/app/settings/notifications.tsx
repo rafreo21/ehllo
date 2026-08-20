@@ -24,6 +24,7 @@ import {
 } from '@/features/notifications/push-token-service';
 import {
   fetchNotificationPreferences,
+  syncReminderTimesToAccount,
   updateNotificationPreferences,
   type NotificationPreferences,
   type NotificationType,
@@ -121,6 +122,13 @@ export default function NotificationPreferencesScreen() {
     if (!next.length) return;
     setReminderTimes(next);
     await setFollowUpReminderTimes(next);
+    // Sent to the account as well, so the digest the server sends honours these instead of
+    // going out at a fixed hour. Swallowed rather than surfaced: the phone's own reminders
+    // are already rescheduled by this point, and failing loudly would suggest the setting
+    // had not taken when it plainly had.
+    if (session?.access_token) {
+      void syncReminderTimesToAccount(session.access_token, next).catch(() => undefined);
+    }
     if (deviceEnabled && session?.access_token) {
       const followUps = await fetchFollowUps(session.access_token);
       await syncFollowUpNotifications(followUps);

@@ -85,6 +85,33 @@ export async function updateNotificationPreferences(
   if (!response.ok) throw new Error(payload.error || 'Could not update your notification preferences.');
 }
 
+/**
+ * Sends the chosen reminder times to the account.
+ *
+ * They have always lived only in AsyncStorage, which is right for the notifications this
+ * phone schedules for itself and wrong for the one digest the server sends: the server had
+ * no idea what you had chosen, so it went out at a fixed hour to everybody and you could
+ * be reminded at an hour you had explicitly not picked.
+ *
+ * Best effort on purpose. The device's own reminders are already set by the time this
+ * runs, so a failed sync must not undo a setting that has visibly taken effect - it only
+ * means the server digest lags behind until the next change.
+ */
+export async function syncReminderTimesToAccount(
+  accessToken: string,
+  reminderTimes: string[],
+): Promise<void> {
+  const response = await mobileFetch('/api/settings/notifications', accessToken, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reminderTimes }),
+  });
+  if (!response.ok) {
+    const payload = await readMobileApiJson<{ error?: string }>(response, 'Could not sync your reminder times.');
+    throw new Error(payload.error || 'Could not sync your reminder times.');
+  }
+}
+
 export function notificationDeepLink(notification: NotificationRecord): string | null {
   if (notification.type === 'connection_added') return '/connections';
   // Somebody asked you for a detail. There is no incoming-requests screen yet, so

@@ -49,6 +49,42 @@ export async function fetchIncomingContactRequests(accessToken: string): Promise
   return { groups, truncated: Number(payload.groupsTruncated ?? 0) || 0 };
 }
 
+/** A request you have already answered. */
+export type AnsweredContactRequest = {
+  id: string;
+  requesterName: string;
+  fieldType: string;
+  shared: boolean;
+  answeredAt: string;
+  /** Only ever present when you shared - a declined row holds nothing to show. */
+  sharedValue: string;
+};
+
+/**
+ * What you have already answered.
+ *
+ * Answered requests used to simply vanish, leaving no way to check what you had sent
+ * somebody or to tell "I declined that" from "I never saw it". Nothing new is recorded for
+ * this: answered_at and the value have been written all along and were never read.
+ */
+export async function fetchAnsweredContactRequests(accessToken: string): Promise<AnsweredContactRequest[]> {
+  const response = await mobileFetch('/api/contact-requests?history=1', accessToken);
+  const payload = await readMobileApiJson<{ history?: Record<string, unknown>[]; error?: string }>(
+    response,
+    'Could not load your answered requests.',
+  );
+  if (!response.ok) throw new Error(payload.error || 'Could not load your answered requests.');
+
+  return (payload.history ?? []).map((row) => ({
+    id: String(row.id ?? ''),
+    requesterName: String(row.requesterName ?? '').trim() || 'Someone',
+    fieldType: String(row.fieldType ?? ''),
+    shared: row.shared === true,
+    answeredAt: String(row.answeredAt ?? ''),
+    sharedValue: String(row.sharedValue ?? ''),
+  })).filter((row) => row.id);
+}
+
 /**
  * Answers a whole group. Declining is a real answer and is sent as one - the requester
  * is told either way, because silence is what made this feel broken. They are told once

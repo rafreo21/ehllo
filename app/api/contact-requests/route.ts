@@ -63,6 +63,49 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createApiSupabaseClient(request);
+
+  // History: what you have already answered. Answered requests used to simply vanish, so
+  // there was no way to check what you had sent somebody, or to tell "I declined that"
+  // from "I never saw it". Nothing new is recorded for this - answered_at and shared_value
+  // have been written all along; they were just never read.
+  if (url.searchParams.get("history") === "1") {
+    const { data: answered, error: answeredError } = await supabase
+      .from("contact_field_requests")
+      .select("id, field_type, status, answered_at, shared_value, workspace_id")
+      .eq("target_email", targetEmail)
+      .neq("status", "pending")
+      .order("answered_at", { ascending: false, nullsFirst: false })
+      .limit(50);
+
+    if (answeredError) {
+      return NextResponse.json({ error: "Could not load your answered requests." }, { status: 500 });
+    }
+
+    const answeredRows = (answered ?? []) as Array<{
+      id: string;
+      field_type: string;
+      status: string;
+      answered_at: string | null;
+      shared_value: string | null;
+      workspace_id: string | null;
+    }>;
+    const historyNames = await resolveRequesterNames(answeredRows.map((row) => row.workspace_id));
+
+    return NextResponse.json({
+      history: answeredRows.map((row) => ({
+        id: row.id,
+        requesterName: (row.workspace_id ? historyNames.get(row.workspace_id) : "")?.trim() || "Someone",
+        fieldType: row.field_type,
+        // 'fulfilled' and 'dismissed' are the table's words; the clients should not have to
+        // know them to render a sentence.
+        shared: row.status === "fulfilled",
+        answeredAt: row.answered_at,
+        // Only what you chose to send, and only when you sent it. A declined row never
+        // holds a value, and showing one would be a leak of a detail you withheld.
+        sharedValue: row.status === "fulfilled" ? row.shared_value : null,
+      })),
+    }, { headers: { "Cache-Control": "private, no-store" } });
+  }
   // High ceiling rather than a display limit. The old limit of 20 was applied to rows,
   // so one person asking fifteen times for the same detail consumed fifteen of them and
   // pushed other people's requests out of sight entirely - and being out of sight means

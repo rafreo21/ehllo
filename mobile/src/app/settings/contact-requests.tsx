@@ -5,13 +5,15 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
-import { Body, Button, PageHeader, Panel, Screen } from '@/components/ui';
+import { Body, Button, HeaderActionButton, PageHeader, Panel, Screen } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
 import { methodDisplayName, type MissingMethodType } from '@/features/follow-ups/channel-methods';
 import {
   answerContactRequest,
+  fetchAnsweredContactRequests,
   fetchIncomingContactRequests,
+  type AnsweredContactRequest,
   type ContactRequestGroup,
 } from '@/features/follow-ups/contact-requests-api';
 import { colors, fonts, radius, spacing } from '@/theme/tokens';
@@ -68,6 +70,9 @@ export default function ContactRequestsScreen() {
   const [message, setMessage] = useState('');
   const [sheetError, setSheetError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState<AnsweredContactRequest[] | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyError, setHistoryError] = useState('');
   // Arrived from a notification, so the sheet should already be up. A ref because it is a
   // one-shot intent, not state: re-opening on every focus would fight anyone who closed
   // it deliberately, and this screen reloads on every focus.
@@ -105,6 +110,19 @@ export default function ContactRequestsScreen() {
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
+  async function openHistory() {
+    setHistoryOpen(true);
+    // Fetched on demand. Most visits here are to answer something, and loading a history
+    // nobody opened would slow down the thing they came for.
+    if (history || !session?.access_token) return;
+    setHistoryError('');
+    try {
+      setHistory(await fetchAnsweredContactRequests(session.access_token));
+    } catch (error) {
+      setHistoryError(error instanceof Error ? error.message : 'Could not load your answered requests.');
+    }
+  }
+
   function openGroup(group: ContactRequestGroup) {
     // Pre-filled from the card, so answering is usually one tap. Seeded here rather
     // than on load: only the open group needs a value, and seeding the whole list meant
@@ -132,6 +150,16 @@ export default function ContactRequestsScreen() {
       // Sharing gets its own sheet, because handing someone your number is a decision -
       // and when it clears fifteen separate asks at once, saying so is the difference
       // between a list that emptied for a reason and a list that looks broken.
+      // Added to any history already loaded, so opening it straight after answering shows
+      // what just happened rather than a list that predates it.
+      setHistory((current) => (current ? [{
+        id: answered.ids[0] ?? answered.key,
+        requesterName: answered.requesterName,
+        fieldType: answered.fieldType,
+        shared: share,
+        answeredAt: new Date().toISOString(),
+        sharedValue: share ? trimmed : '',
+      }, ...current] : current));
       if (share) setShared(answered);
       else setMessage('Declined. They have been told.');
     } catch (error) {
@@ -142,7 +170,18 @@ export default function ContactRequestsScreen() {
   }
 
   return (
-    <Screen header={<PageHeader title="Contact requests" description="People asking for a way to reach you." />}>
+    <Screen
+      header={(
+        <PageHeader
+          title="Contact requests"
+          description="People asking for a way to reach you."
+          rightAction={(
+            <HeaderActionButton accessibilityLabel="Answered requests" onPress={() => void openHistory()}>
+              <Text style={styles.headerActionText}>History</Text>
+            </HeaderActionButton>
+          )}
+        />
+      )}>
       {message ? <Text style={styles.message}>{message}</Text> : null}
 
       {!loading && !groups.length ? (
@@ -223,6 +262,30 @@ export default function ContactRequestsScreen() {
         ) : null}
       </BottomSheet>
 
+      <BottomSheet
+        visible={historyOpen}
+        title="Answered"
+        onClose={() => setHistoryOpen(false)}
+        footer={<Button variant="secondary" onPress={() => setHistoryOpen(false)}>Close</Button>}>
+        {historyError ? <Text style={styles.sheetError}>{historyError}</Text> : null}
+        {!historyError && !history ? <Body>Loading…</Body> : null}
+        {history && !history.length ? (
+          <Body>Nothing answered yet. What you share or decline shows up here.</Body>
+        ) : null}
+        {history?.map((item) => (
+          <View key={item.id} style={styles.historyRow}>
+            <Text style={styles.rowTitle} numberOfLines={1}>
+              {item.shared ? 'Shared with' : 'Declined'} {item.requesterName}
+            </Text>
+            <Text style={styles.rowCaption} numberOfLines={1}>
+              {fieldLabel(item.fieldType)}
+              {item.sharedValue ? ` \u00b7 ${item.sharedValue}` : ''}
+              {item.answeredAt ? ` \u00b7 ${relativeTime(item.answeredAt)}` : ''}
+            </Text>
+          </View>
+        ))}
+      </BottomSheet>
+
       <OutcomeSuccessSheet
         visible={Boolean(shared)}
         title={shared ? `Shared with ${shared.requesterName}` : 'Shared'}
@@ -265,6 +328,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   sheetError: { color: colors.danger, fontFamily: fonts.medium, fontSize: 13 },
+  headerActionText: { color: colors.ink, fontFamily: fonts.bold, fontWeight: '800', fontSize: 13 },
+  historyRow: { gap: 2, paddingVertical: spacing.x2, borderBottomWidth: 1, borderBottomColor: colors.line },
   actions: { gap: spacing.x2 },
   emptyWrap: { alignItems: 'center', gap: spacing.x2, paddingVertical: spacing.x3 },
   emptyTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },

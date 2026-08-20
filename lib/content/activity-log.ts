@@ -59,6 +59,26 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "14:30",
+    title: "Reminders arrive at the times you picked",
+    impact: "fix",
+    detail:
+      "The times you choose were honoured by the reminders your phone sets for itself and ignored by the one daily summary we send from the server, which went out at the same hour to everybody - so you could be reminded at an hour you had specifically not picked. Your chosen times are now on your account, and the summary is judged against your own clock and your own day rather than the server's. It will not arrive before the earliest time you chose, and it will not arrive twice in one day.",
+    testing:
+      "Settings › Notifications, pick a single reminder time, and check nothing arrives before it.",
+  },
+  {
+    date: "2026-08-20",
+    time: "14:10",
+    title: "You can see what you have already answered",
+    impact: "new",
+    detail:
+      "Answering a contact request made it disappear, which left no way to check what you had sent somebody, or to tell \"I declined that\" from \"I never saw it\". There is a History button on Contact requests now: who asked, what for, whether you shared or declined, what you sent, and when. Nothing new is being recorded to do this - it was all being written already and simply never read back.",
+    testing:
+      "Settings › Contact requests, then History, top right.",
+  },
+  {
+    date: "2026-08-20",
     time: "13:40",
     title: "Answering a contact request now actually works",
     impact: "fix",
@@ -622,11 +642,11 @@ export const KNOWN_ISSUES: KnownIssue[] = [
   {
     title: "The daily reminder digest ignores your chosen reminder times",
     time: "10:20",
-    status: "open",
+    status: "fixed",
     detail:
-      "The reminder times you pick are honoured by the reminders the app schedules on your phone. The one daily summary we send from the server is not covered by them - it goes out at the same hour for everybody, so you can see a reminder at an hour you did not choose.",
+      "The reminder times you pick were honoured by the reminders the app schedules on your phone. The one daily summary we send from the server was not covered by them - it went out at the same hour for everybody, so you could see a reminder at an hour you did not choose.",
     resolution:
-      "Fixing it properly needs two things we do not store yet: your reminder times on the account rather than only on the device, and your time zone. Flagged rather than guessed at, because sending a summary in the wrong time zone is worse than sending it at a fixed hour.",
+      "One of the two things this was blocked on turned out to be there already: every account has had a time zone stored all along. Your chosen times now live on the account too, and the summary is judged against your own clock and your own day rather than the server's midnight - which was quietly wrong for anyone not living in UTC. The server can only wake once a day on our current plan, so it stays the safety net and the app handles the exact hour; a summary more than a day and a half late is sent regardless, because a reminder at the wrong hour still beats none at all.",
     reportedOn: "2026-08-19",
   },
   {
@@ -838,9 +858,11 @@ export const KNOWN_ISSUES: KnownIssue[] = [
   {
     title: "Two-device checks still outstanding",
     time: "14:30",
-    status: "monitoring",
+    status: "fixed",
     detail:
-      "Several fixes only fail when two different people are involved, which is exactly the case a single test account cannot reproduce. Scanning between two real accounts, and switching accounts on one device, are being verified on devices.",
+      "Several fixes only fail when two different people are involved, which is exactly the case a single test account cannot reproduce. Scanning between two real accounts, and asking somebody for a contact detail, were only ever checked by hand with two phones.",
+    resolution:
+      "A check that needs two phones does not get run, which is why this stayed open - and why answering a contact request was broken for two days without anyone noticing. Our automated staging run now creates two real accounts and does it properly: one scans the other's card, both sides are confirmed to see each other, the surface it came from is confirmed stored and confirmed not overwritten by a later scan, and one account asks the other for a detail three times, has it answered once, and is checked to have all three cleared. Sharing and declining are both checked, including that a decline never carries the value.",
     reportedOn: "2026-08-18",
   },
 ];

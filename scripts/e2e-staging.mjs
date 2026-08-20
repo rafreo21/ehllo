@@ -280,7 +280,114 @@ try {
   const publicPayload = await publicInvitation.json();
   assert.equal(publicPayload.invitation?.event?.status, "cancelled", "original guest link shows cancellation");
 
-  console.log(JSON.stringify({ ok: true, journey: "signup-card-qr-vcard-wallet-card-conflict-contact-conflict-capture-conflict-followup-conflict-event-invite-rsvp-claim-reschedule-event-conflict-cancel", cleanup: "pending" }));
+  // ---------------------------------------------------------------------------------
+  // Two accounts, which is the whole point of the pair above.
+  //
+  // "Two-device checks still outstanding" sat open for days because these paths were only
+  // ever exercised by hand, with two phones, and a check that needs two phones does not
+  // get run. Both cases below only fail when two different people are involved, so a single
+  // test account cannot reproduce either - which is exactly why they went unnoticed.
+  // ---------------------------------------------------------------------------------
+
+  // Scanning between two real accounts. The guest scans the host's published card.
+  const firstScan = await api("/api/people/connections", guest.token, {
+    method: "POST",
+    body: JSON.stringify({ slug: cardSlug, source: "nfc" }),
+  });
+  assert.equal(firstScan.alreadyConnected, false, "a first scan reports a new connection");
+  assert.equal(firstScan.source, "nfc", "the scanning surface is echoed back");
+  assert.ok(firstScan.connectionId, "a first scan returns the connection it made");
+
+  // Recorded against the row, which is the bit that silently did nothing for two days.
+  const { data: scannedRow } = await admin
+    .from("people_connections")
+    .select("scan_source")
+    .eq("id", firstScan.connectionId)
+    .maybeSingle();
+  assert.equal(scannedRow?.scan_source, "nfc", "the surface is stored, not just echoed");
+
+  // Scanning the same card again must say so rather than looking like nothing happened,
+  // and must not rewrite where the connection came from.
+  const secondScan = await api("/api/people/connections", guest.token, {
+    method: "POST",
+    body: JSON.stringify({ slug: cardSlug, source: "camera" }),
+  });
+  assert.equal(secondScan.alreadyConnected, true, "a repeat scan reports an existing connection");
+  const { data: rescannedRow } = await admin
+    .from("people_connections")
+    .select("scan_source")
+    .eq("id", firstScan.connectionId)
+    .maybeSingle();
+  assert.equal(rescannedRow?.scan_source, "nfc", "a later scan cannot overwrite where you met");
+
+  // Both sides, not just the scanner. A connection recorded on one side only is invisible
+  // to the person who was scanned.
+  const guestConnections = await api("/api/people/connections", guest.token);
+  assert.ok(
+    guestConnections.connections?.some((row) => row.name?.includes("E2E Host")),
+    "the scanner sees the person they scanned",
+  );
+  const hostConnections = await api("/api/people/connections", host.token);
+  assert.ok(
+    hostConnections.connections?.some((row) => row.name?.includes("E2E Guest")),
+    "the person scanned sees the scanner",
+  );
+
+  // Asking for a contact detail, and answering it. Every answer failed on a check
+  // constraint for two days while this went untested, and the log recorded it as working.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await api("/api/contact-requests", guest.token, {
+      method: "POST",
+      body: JSON.stringify({ targetEmail: hostEmail, fieldType: "instagram", followUpTitle: `Ask ${attempt + 1}` }),
+    });
+  }
+
+  const incoming = await api("/api/contact-requests", host.token);
+  const group = incoming.groups?.find((row) => row.fieldType === "instagram");
+  assert.ok(group, "the person asked sees the request");
+  // Three asks for one detail from one person is one thing to answer, not three.
+  assert.equal(group.count, 3, "repeat asks for the same detail group into one");
+  assert.equal(group.ids.length, 3, "the group carries every ask, so one answer clears them all");
+  assert.equal(group.requesterName, "E2E Guest", "the person asking is named rather than anonymous");
+
+  const answered = await api("/api/contact-requests/answer", host.token, {
+    method: "POST",
+    body: JSON.stringify({ ids: group.ids, share: true, value: "@e2e_host" }),
+  });
+  assert.equal(answered.ok, true, "sharing a requested detail succeeds");
+
+  const afterAnswer = await api("/api/contact-requests", host.token);
+  assert.ok(
+    !afterAnswer.groups?.some((row) => row.fieldType === "instagram"),
+    "one answer clears every ask in the group",
+  );
+
+  const history = await api("/api/contact-requests?history=1", host.token);
+  const answeredEntry = history.history?.find((row) => row.fieldType === "instagram");
+  assert.ok(answeredEntry, "an answered request is visible in history rather than vanishing");
+  assert.equal(answeredEntry.shared, true, "history records that it was shared");
+  assert.equal(answeredEntry.sharedValue, "@e2e_host", "history shows what was actually sent");
+  assert.equal(answeredEntry.requesterName, "E2E Guest", "history names who asked");
+
+  // Declining is a real answer and has to persist as one, without carrying the value.
+  await api("/api/contact-requests", guest.token, {
+    method: "POST",
+    body: JSON.stringify({ targetEmail: hostEmail, fieldType: "phone", followUpTitle: "Ask for a number" }),
+  });
+  const beforeDecline = await api("/api/contact-requests", host.token);
+  const phoneGroup = beforeDecline.groups?.find((row) => row.fieldType === "phone");
+  assert.ok(phoneGroup, "a second detail is asked for separately");
+  await api("/api/contact-requests/answer", host.token, {
+    method: "POST",
+    body: JSON.stringify({ ids: phoneGroup.ids, share: false }),
+  });
+  const declinedHistory = await api("/api/contact-requests?history=1", host.token);
+  const declinedEntry = declinedHistory.history?.find((row) => row.fieldType === "phone");
+  assert.ok(declinedEntry, "a decline is recorded, not discarded");
+  assert.equal(declinedEntry.shared, false, "history distinguishes a decline from a share");
+  assert.equal(declinedEntry.sharedValue, null, "a decline never carries a value");
+
+  console.log(JSON.stringify({ ok: true, journey: "signup-card-qr-vcard-wallet-card-conflict-contact-conflict-capture-conflict-followup-conflict-event-invite-rsvp-claim-reschedule-event-conflict-cancel-mutual-scan-scan-source-contact-request-roundtrip", cleanup: "pending" }));
 } finally {
   for (const id of createdAuthIds.reverse()) await admin.auth.admin.deleteUser(id);
   const { data: remaining } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });

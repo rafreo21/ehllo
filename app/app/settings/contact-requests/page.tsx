@@ -18,6 +18,16 @@ import { useToast } from "../../../components/ToastContext";
  * The wording deliberately matches the phone screen. Two surfaces describing the same
  * exchange in different words is how people come to distrust both.
  */
+type AnsweredRequest = {
+  id: string;
+  requesterName: string;
+  fieldType: string;
+  shared: boolean;
+  answeredAt: string | null;
+  /** Only ever present when you shared - a declined row holds nothing to show. */
+  sharedValue: string | null;
+};
+
 type RequestGroup = {
   key: string;
   requesterName: string;
@@ -90,6 +100,9 @@ export default function ContactRequestsPage() {
   // pre-filled from this; the web asked you to type a handle ehllo already knew, which
   // is the friction you actually feel - not the confirming tap.
   const [myMethods, setMyMethods] = useState<Record<string, string>>({});
+  const [history, setHistory] = useState<AnsweredRequest[] | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyError, setHistoryError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [active, setActive] = useState<RequestGroup | null>(null);
@@ -183,6 +196,22 @@ export default function ContactRequestsPage() {
     return () => document.removeEventListener("visibilitychange", refreshOnReturn);
   }, [load]);
 
+  async function openHistory() {
+    setHistoryOpen(true);
+    // Fetched on demand, not with the list. Most visits are here to answer something, and
+    // loading a history nobody opened would slow down the thing they came for.
+    if (history) return;
+    setHistoryError("");
+    try {
+      const response = await fetch("/api/contact-requests?history=1", { cache: "no-store" });
+      const payload = await response.json() as { history?: AnsweredRequest[]; error?: string };
+      if (!response.ok) throw new Error(payload.error || "Could not load your answered requests.");
+      setHistory(payload.history ?? []);
+    } catch (caught) {
+      setHistoryError(caught instanceof Error ? caught.message : "Could not load your answered requests.");
+    }
+  }
+
   function openRequest(group: RequestGroup) {
     setActive(group);
     // Pre-filled when my card already publishes it, so answering is one tap and no
@@ -218,6 +247,16 @@ export default function ContactRequestsPage() {
       setActive(null);
       // Sharing gets its own confirmation, because handing someone your number is worth
       // acknowledging. Declining does not need a celebration - a toast is the right size.
+      // Added to any history already loaded, so opening it straight after answering shows
+      // what just happened rather than a list that predates it.
+      setHistory((current) => (current ? [{
+        id: answered.ids[0] ?? answered.key,
+        requesterName: answered.requesterName,
+        fieldType: answered.fieldType,
+        shared: share,
+        answeredAt: new Date().toISOString(),
+        sharedValue: share ? value.trim() : null,
+      }, ...current] : current));
       if (share) setShared(answered);
       else showToast({ message: "Declined. They have been told.", tone: "success" });
     } catch (caught) {
@@ -235,6 +274,9 @@ export default function ContactRequestsPage() {
             <h1>Contact requests</h1>
             <p>People asking for a way to reach you.</p>
           </div>
+          {/* Answered requests used to just vanish, which left no way to check what you
+              had sent somebody, or to tell a decline from something you never saw. */}
+          <button type="button" className="ghost-link" onClick={() => void openHistory()}>History</button>
         </header>
 
         {loading ? <PageSkeleton rows={3} /> : null}
@@ -327,6 +369,46 @@ export default function ContactRequestsPage() {
                 Not now
               </button>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {historyOpen ? (
+        <div
+          className="connections-modal-backdrop"
+          role="presentation"
+          onClick={() => setHistoryOpen(false)}>
+          <div
+            className="connections-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Answered requests"
+            onClick={(event) => event.stopPropagation()}>
+            <h2>Answered</h2>
+            {historyError ? <StatusMessage tone="error">{historyError}</StatusMessage> : null}
+            {!historyError && !history ? <PageSkeleton rows={2} /> : null}
+            {history && !history.length ? (
+              <StatusMessage tone="info">Nothing answered yet. What you share or decline shows up here.</StatusMessage>
+            ) : null}
+            {history && history.length ? (
+              <div className="connections-list request-history-list">
+                {history.map((item) => (
+                  <div key={item.id} className="connections-row connections-row-simple">
+                    <div className="connections-copy request-row-copy">
+                      <strong>
+                        {item.shared ? "Shared with" : "Declined"} {item.requesterName}
+                      </strong>
+                      <small>
+                        {fieldLabel(item.fieldType)}
+                        {item.sharedValue ? ` · ${item.sharedValue}` : ""}
+                        {item.answeredAt ? ` · ${relativeTime(item.answeredAt)}` : ""}
+                      </small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            <Button variant="secondary" onClick={() => setHistoryOpen(false)}>Close</Button>
           </div>
         </div>
       ) : null}
