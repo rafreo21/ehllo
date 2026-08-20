@@ -46,14 +46,24 @@ Verified by inspection, not assumption
 
 ## Needs you — cannot be done in code
 
-- [ ] **Sign-in codes to junk.** They are sent by **Supabase Auth's own shared mail server**,
-      not by us, on a domain unrelated to ehllo.io — which is why iCloud distrusts them. Our
-      own mail is fine. Fix is Supabase dashboard → Authentication → SMTP Settings:
-      - Host `smtp.resend.com`, port `465`
-      - Username `resend`, password = the Resend API key
-      - Sender `product@ehllo.io`, name `ehllo`
+- [ ] **Sign-in codes to junk — waiting on one key.** Diagnosis confirmed by reading the
+      live staging auth config: `smtp_host` is null, so Supabase Auth falls back to its own
+      shared sender on a domain unrelated to ehllo.io. That is what iCloud distrusts; our
+      own mail is fine.
 
-      Then sign-in codes inherit the DKIM and SPF that already pass.
+      Applying it needs a Resend API key, and the only one on this machine is in
+      `.env.production.local` — so a staging-only key is being created instead, to keep the
+      production credential out of staging. Once it exists:
+
+      ```
+      STAGING_SMTP_KEY='re_...' node --env-file=.env.staging.local \
+        <scratchpad>/apply-staging-smtp.mjs
+      ```
+
+      Sets host `smtp.resend.com`, port `465`, user `resend`, sender `product@ehllo.io`,
+      name `ehllo`; refuses to run against any project but staging, and reads the config
+      back to verify. `smtp_pass` is never returned by the API, so the credential itself can
+      only be confirmed by requesting a real code. Reverting is clearing `smtp_host`.
 
 - [ ] **One capture on the phone.** Gemini's credentials and model are confirmed, but no
       encounter in the database has ever had a transcript, so the audio path itself is
