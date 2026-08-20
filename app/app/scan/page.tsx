@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Camera as CameraIcon } from "react-feather";
 import { CreditCard as IdentificationCardIcon } from "react-feather";
 import { Linkedin as LinkedinLogoIcon } from "react-feather";
@@ -110,6 +111,9 @@ export default function ScanPage() {
   const [savedContactId, setSavedContactId] = useState("");
   const [captureModalOpen, setCaptureModalOpen] = useState(false);
 
+  const searchParams = useSearchParams();
+  const linkedSlug = searchParams.get("card")?.trim() ?? "";
+
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
@@ -215,6 +219,21 @@ export default function ScanPage() {
       stopCamera();
     };
   }, [handlePayload, mode, stopCamera, target]);
+
+  // Lets a card link drive this page, so someone arriving from a wallet pass, an NFC
+  // tag or a shared link on a desktop gets the same connect-or-open outcome the phone
+  // gives them. Runs once: handlePayload guards on the value it last handled, so a
+  // re-render cannot re-add anybody.
+  useEffect(() => {
+    if (!linkedSlug) return;
+    // Deferred a tick. handlePayload sets state as its first act, and doing that
+    // synchronously inside an effect is the cascading render the linter refuses -
+    // correctly, since the work behind it is asynchronous anyway.
+    const timer = setTimeout(() => {
+      void handlePayload(`${window.location.origin}/c/${linkedSlug}`);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [linkedSlug, handlePayload]);
 
   function resetScan() {
     handledRef.current = "";

@@ -51,6 +51,7 @@ function PublicCardView({
   themeColor,
   methods,
   onSaveContact,
+  slug,
   onShareBack,
 }: {
   ownerName: string;
@@ -64,6 +65,7 @@ function PublicCardView({
   themeColor: string;
   methods: CardMethod[];
   onSaveContact: () => void;
+  slug: string;
   onShareBack: () => void;
 }) {
   const theme = themeSurfaceStyle(themeColor);
@@ -149,6 +151,18 @@ function PublicCardView({
           <button type="button" className="public-card-share-back" onClick={onShareBack}>
             Share my details back
           </button>
+          {/*
+            For someone who already uses ehllo. Until now a card link opened on a
+            desktop offered only "save to contacts" - the phone would add the person to
+            your people list and tell you whether you already knew them, and the web
+            did neither. Deliberately a plain link rather than a signed-in check: the
+            card page is public and mostly viewed by people with no account, and
+            looking up a session on every anonymous view costs more than it tells us.
+            The app route decides, and sends anyone signed out to sign in first.
+          */}
+          <a className="public-card-open-in-app" href={`/app/scan?card=${encodeURIComponent(slug)}`}>
+            Already use ehllo? Add {ownerName.split(" ")[0] || "them"} to your people
+          </a>
           <p className="public-card-private">
             One tap saves {ownerName} to your phone with profile photo when available. Open the ehllo link in the contact later to share your details back.
           </p>
@@ -300,6 +314,7 @@ export function PublicCardClient({
           themeColor={themeColor}
           methods={methods}
           onSaveContact={handleSaveClick}
+          slug={slug}
           onShareBack={goToShareStep}
         />
       </section>
