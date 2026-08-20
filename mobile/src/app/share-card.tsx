@@ -174,8 +174,14 @@ export default function ShareCardScreen() {
     try {
       if (Platform.OS === 'ios') {
         await addAppleWalletPass(card.slug, session.access_token);
-        void writeAppleWalletSaved(card.slug, true);
-        setAppleWalletSaved(true);
+        // Ask, the same way the Google path already does, rather than assuming.
+        // addAppleWalletPass only opens the pass - it resolves as soon as iOS shows
+        // its sheet, before anyone has decided anything. Recording "saved" there
+        // meant tapping Cancel still flipped the button to "View in Apple Wallet"
+        // permanently, with no way back to an Add button and nothing in Wallet.
+        if (!appleWalletSaved) {
+          setWalletConfirmOpen(true);
+        }
       } else if (Platform.OS === 'android') {
         await addGoogleWalletPass(card.slug, session.access_token);
         if (!googleWalletSaved) {
@@ -192,8 +198,13 @@ export default function ShareCardScreen() {
   function confirmWalletSaved() {
     setWalletConfirmOpen(false);
     if (!card.slug) return;
-    void writeGoogleWalletSaved(card.slug, true);
-    setGoogleWalletSaved(true);
+    if (Platform.OS === 'ios') {
+      void writeAppleWalletSaved(card.slug, true);
+      setAppleWalletSaved(true);
+    } else {
+      void writeGoogleWalletSaved(card.slug, true);
+      setGoogleWalletSaved(true);
+    }
     setWalletSuccessOpen(true);
   }
 
@@ -351,7 +362,7 @@ export default function ShareCardScreen() {
       <OutcomeSuccessSheet
         visible={walletSuccessOpen}
         title="Done"
-        message="Saved to Google Wallet."
+        message={Platform.OS === 'ios' ? 'Saved to Apple Wallet.' : 'Saved to Google Wallet.'}
         lottieSource={require('@/assets/animations/wallet-added.json')}
         onClose={() => setWalletSuccessOpen(false)}
       />

@@ -38,7 +38,7 @@ import {
   addAppleWalletPass,
   addGoogleWalletPass,
 } from '@/features/card/wallet-actions';
-import { readAppleWalletSaved, writeAppleWalletSaved } from '@/lib/apple-wallet-state';
+import { readAppleWalletSaved } from '@/lib/apple-wallet-state';
 import { readGoogleWalletSaved, writeGoogleWalletSaved } from '@/lib/google-wallet-state';
 import type { MobileCard } from '@/features/card/types';
 import type { SignatureProfile } from '@/lib/email-signature';
@@ -146,8 +146,12 @@ export function WalletToolSheetContent({
             onPress={() => void run('apple', async () => {
               if (!accessToken) throw new Error('Sign in required.');
               await addAppleWalletPass(card.slug, accessToken);
-              void writeAppleWalletSaved(card.slug, true);
-              setAppleWalletSaved(true);
+              // Deliberately does not record the pass as saved. addAppleWalletPass
+              // resolves when iOS shows its sheet, not when someone taps Add, so
+              // writing the flag here marked a cancelled add as saved - and the flag
+              // is what turns the button into "View in Apple Wallet" with no way
+              // back. The share-card screen asks before recording it; this sheet has
+              // nowhere to ask, so it claims nothing.
             }, { successMessage: 'Choose Add to Wallet from the share sheet.' })}
           />
           {walletAvailable === false && walletNote ? (
