@@ -54,12 +54,37 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   // arrived does not have to sign out and back in to see it. It can only ever claim rows
   // matching their own verified address on meetings whose owner has actually shared them.
   if (!shareToken) {
-    const { data: claimed } = await supabase.rpc("claim_my_encounter_participants");
-    if (typeof claimed === "number" && claimed > 0) {
-      const retry = await supabase.rpc("get_share_token_for_participant", {
-        p_encounter_id: encounterId,
+    const { data: claimed, error: claimError } = await supabase.rpc("claim_my_encounter_participants");
+
+    // Said out loud rather than swallowed. The first version of this discarded the error, so
+    // when a share still would not open there was no way to tell "nothing to claim" from
+    // "the claim never ran" - and that is exactly the ambiguity that cost an afternoon.
+    if (claimError) {
+      console.error("[encounter-share-token] claiming shared participants failed", {
+        encounterId,
+        code: claimError.code,
+        message: claimError.message,
       });
-      shareToken = typeof retry.data === "string" ? retry.data.trim() : "";
+    }
+
+    // Retried whatever the claim reported. The previous version only retried when the count
+    // came back as a number greater than zero, which made a successful claim depend on the
+    // shape of a value we do not control: anything else - a string, a null, a transport
+    // quirk - skipped the retry and reported the meeting as unshared even though the row had
+    // just been attached. One extra read is cheaper than that class of bug.
+    const retry = await supabase.rpc("get_share_token_for_participant", {
+      p_encounter_id: encounterId,
+    });
+    shareToken = typeof retry.data === "string" ? retry.data.trim() : "";
+
+    if (!shareToken) {
+      // Logged as a fact rather than an error: plenty of meetings genuinely are not shared
+      // with the caller, and that is a normal answer. It is here so the two cases can be
+      // told apart from the outside.
+      console.info("[encounter-share-token] no share token after claiming", {
+        encounterId,
+        claimed,
+      });
     }
   }
 
