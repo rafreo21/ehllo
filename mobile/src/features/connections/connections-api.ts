@@ -1,3 +1,4 @@
+import { canonicalCardSlug } from '@/lib/parse-scanned-qr';
 import { normalizeEmailForMatching } from '@/lib/contact-identity';
 import { mobileFetch } from '@/lib/mobile-api';
 import type { EventSnapshot } from '@/features/events/event-cache';
@@ -221,8 +222,9 @@ export async function registerScannedCard(
   }
 
   const connections = await fetchAllConnectionsMerged(accessToken);
+  const wanted = canonicalCardSlug(normalized);
   const connection = connections.find((item) => (
-    item.source === 'met' && item.cardSlug?.trim().toLowerCase() === normalized
+    item.source === 'met' && canonicalCardSlug(item.cardSlug) === wanted
   ));
   return connection ? { connection, mutual: payload.mutual ?? false } : null;
 }
@@ -234,9 +236,11 @@ export async function connectionFromScannedSlug(
 ): Promise<ScannedCardResult | null> {
   const normalized = slug.trim().toLowerCase();
   const connections = await fetchAllConnectionsMerged(accessToken);
-  const existing = connections.find((item) => (
-    item.cardSlug?.trim().toLowerCase() === normalized
-  ));
+  // Compared canonically, so the short slug a wallet QR carries matches the full slug
+  // a stored connection holds. Comparing them raw meant someone already in your
+  // people list was registered again as new when scanned from Apple or Google Wallet.
+  const wanted = canonicalCardSlug(normalized);
+  const existing = connections.find((item) => canonicalCardSlug(item.cardSlug) === wanted);
   if (existing) return { connection: existing, mutual: false };
 
   return registerScannedCard(accessToken, normalized, eventSnapshot);

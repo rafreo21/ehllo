@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "04:10",
+    title: "Scanning a wallet pass opens the person, not a second copy of them",
+    impact: "fix",
+    detail:
+      "Scanning someone's card from Apple or Google Wallet added them again, even if they were already in your people list - so you ended up with the same person twice and never landed on their profile. Scanning the same card from the app, a widget or an NFC tag worked properly. The difference was invisible: a wallet QR carries a slightly shorter version of the card's address, to keep the code small enough to scan easily, and the check for \"do I already know this person\" was comparing the two spellings letter by letter. Every route now reads them as the same card, so an existing connection opens their profile and only a genuinely new person is added.",
+    testing:
+      "Scan your own card from Apple Wallet, then from the app. Both should open the same single connection rather than creating another.",
+  },
+  {
+    date: "2026-08-20",
     time: "03:30",
     title: "Android notifications work",
     impact: "fix",

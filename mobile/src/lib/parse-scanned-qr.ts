@@ -11,6 +11,28 @@ function cleanUrl(value: string) {
   return unescapeVcard(value).split(/\s/)[0]?.trim() ?? '';
 }
 
+/**
+ * One spelling for a slug that has two.
+ *
+ * A card QR carries the shortened slug - "card-" dropped when what follows is the
+ * generated 16-hex shape - because those five characters are the difference between a
+ * 33x33 QR and a 29x29 one. Everything else, including every stored connection,
+ * carries the full slug. The server resolves both, so nothing downstream noticed.
+ *
+ * What did notice was comparing them. Scanning a wallet pass handed over the short
+ * form, no stored connection matched it, and someone already in your people list was
+ * registered again as though you had just met - while scanning the same card from the
+ * app, the widget or an NFC tag matched fine, because those carry the full slug.
+ *
+ * Mirrors shortenCardUrlForQr in lib/apple-wallet-pass.ts, including its restraint: a
+ * custom slug that merely begins with "card-" is not the generated shape and is left
+ * exactly as it is.
+ */
+export function canonicalCardSlug(slug: string | null | undefined) {
+  const trimmed = (slug ?? '').trim().toLowerCase();
+  return trimmed.replace(/^card-([a-f0-9]{16})$/, '$1');
+}
+
 export function parseEhlloCardSlugFromUrl(value: string) {
   return parseEhlloCardFromUrl(value)?.slug ?? null;
 }
