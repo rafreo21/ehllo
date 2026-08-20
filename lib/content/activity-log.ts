@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "10:15",
+    title: "You can answer a contact request on the web now",
+    impact: "new",
+    detail:
+      "If someone asked for your number or your email, you could only answer it on your phone. On a laptop you were told somebody had asked and given nowhere to reply - so the request sat there and the person who asked was left waiting with no idea why. Settings › Contact requests now does it on the web, in the same words as the phone: share the one detail, or decline, and either way they are told.",
+    testing:
+      "Have someone request a detail from you, then open Settings › Contact requests in the web app.",
+  },
+  {
+    date: "2026-08-20",
     time: "09:50",
     title: "Your calendar shows all your events, not a chosen few",
     impact: "fix",
@@ -632,7 +642,7 @@ export const KNOWN_ISSUES: KnownIssue[] = [
   {
     title: "Nowhere to answer a contact request",
     time: "20:40",
-    status: "open",
+    status: "fixed",
     detail:
       "You can ask someone for a phone number or email, and they are now notified. But there is still no screen listing requests you have received and no way to share or decline from inside ehllo - the notification tells you, and then the trail stops.",
     resolution:
