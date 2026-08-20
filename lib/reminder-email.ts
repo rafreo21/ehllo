@@ -1,5 +1,5 @@
-import { EHLLO_LOGO_PNG_BASE64 } from "./ehllo-logo-base64";
-import { dueDateBucket, formatDueLabel, type FollowUpItem } from "./follow-ups-server";
+import { EHLLO_LOGO_PNG_BASE64 } from "./ehllo-logo-base64.ts";
+import { dueDateBucket, formatDueLabel, type FollowUpItem } from "./follow-ups-server.ts";
 
 function escapeHtml(value: string) {
   return value

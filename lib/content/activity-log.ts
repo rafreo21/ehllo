@@ -59,6 +59,24 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "15:20",
+    title: "Reminders can arrive at your time, not just after it",
+    impact: "improvement",
+    detail:
+      "The summary we send from the server can only be woken once a day on our current hosting, so honouring three different chosen times was never something it could do alone. The app now asks for it when you open ehllo, so it lands at the time you picked rather than whenever the daily sweep happens to run - and the sweep stays as the backstop for anyone who has not opened the app. Both go through the same rule, so they cannot disagree about whether you have already been reminded today.",
+    testing:
+      "Pick a reminder time, then open the app after it has passed.",
+  },
+  {
+    date: "2026-08-20",
+    time: "15:05",
+    title: "Every email we send now carries a plain-text version",
+    impact: "fix",
+    detail:
+      "Our emails were being sent as HTML and nothing else. A message with no plain-text alternative is a long-standing signal to spam filters, and with our domain policy set to quarantine there is no room to spend on avoidable ones. This log claimed on the 18th that it had been fixed; it had not, which is worse than not fixing it, because it stopped anyone looking. Every email now carries both, with links written out so they still work when the text version is what you are reading.",
+  },
+  {
+    date: "2026-08-20",
     time: "14:30",
     title: "Reminders arrive at the times you picked",
     impact: "fix",
@@ -806,7 +824,7 @@ export const KNOWN_ISSUES: KnownIssue[] = [
     detail:
       "Sign-in code emails were going to the junk folder, reliably on iCloud addresses.",
     resolution:
-      "Two causes. The sending service is not listed in our domain's SPF record while our DMARC policy is set to quarantine, so mail that fails the check is sent to junk by instruction - that needs a DNS change. The emails were also HTML-only and not a complete document, both long-standing spam signals; they now carry a plain-text alternative and proper structure.",
+      "The earlier explanation here was wrong on both counts, and worth correcting rather than quietly replacing. Our DNS is set up properly: the signing key is published, the sending subdomain has its own records, and our policy checks alignment loosely, so mail we send passes. But sign-in codes are not sent by us - they come from our sign-in provider's own shared mail server, on a domain that is nothing to do with ehllo, which is exactly the kind of message a strict filter distrusts. Pointing sign-in codes at our own sending service is the fix, and it is a configuration change rather than a code one. The second claim - that our emails now carry a plain-text alternative - was simply not true; they were still being sent as HTML only. That part is now genuinely done, for every email we send.",
     reportedOn: "2026-08-18",
   },
   {

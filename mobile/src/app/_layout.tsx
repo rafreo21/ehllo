@@ -22,6 +22,7 @@ import { ActiveCaptureBanner } from '@/components/active-capture-banner';
 import { AppErrorBoundary } from '@/components/app-error-boundary';
 import { CaptureRecorderProvider } from '@/features/encounters/capture-recorder-context';
 import { CaptureTranscriptionSyncManager } from '@/features/encounters/capture-transcription-sync-manager';
+import { ReminderFlushManager } from '@/features/notifications/reminder-flush-manager';
 import { EventActionSyncManager } from '@/features/events/event-action-sync-manager';
 import { installRouterDebounce } from '@/lib/router-debounce';
 import { WidgetQrRenderer } from '@/lib/widget-qr-renderer';
@@ -120,6 +121,7 @@ function RootLayout() {
             <QuickFollowUpSyncManager />
             <OfflineScanSyncManager />
             <CaptureTranscriptionSyncManager />
+            <ReminderFlushManager />
             <EventActionSyncManager />
             <CardProvider>
               <CaptureRecorderProvider>

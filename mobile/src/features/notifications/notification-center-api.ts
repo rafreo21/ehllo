@@ -112,6 +112,21 @@ export async function syncReminderTimesToAccount(
   }
 }
 
+/**
+ * Asks the server to send today's reminder digest if it is due.
+ *
+ * Takes no arguments beyond the token: what is due is decided server-side from stored
+ * preferences and the account's time zone, so this cannot ask for an extra reminder or for
+ * somebody else's. Safe to call repeatedly - it will not send twice in one local day.
+ */
+export async function flushReminderDigest(accessToken: string): Promise<void> {
+  const response = await mobileFetch('/api/reminders/flush', accessToken, { method: 'POST' });
+  if (!response.ok) {
+    const payload = await readMobileApiJson<{ error?: string }>(response, 'Could not check your reminders.');
+    throw new Error(payload.error || 'Could not check your reminders.');
+  }
+}
+
 export function notificationDeepLink(notification: NotificationRecord): string | null {
   if (notification.type === 'connection_added') return '/connections';
   // Somebody asked you for a detail. There is no incoming-requests screen yet, so
