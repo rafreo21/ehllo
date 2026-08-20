@@ -70,6 +70,16 @@ export default function ContactRequestsPage() {
     // Deferred to a microtask, matching recent-scans. load() sets state as its first
     // act, and doing that synchronously inside an effect is a cascading render.
     void Promise.resolve().then(() => load());
+
+    // Reloaded when the tab regains focus, because the phone reloads on every screen
+    // focus and a request answered there should not still be sitting here. Without it
+    // the two surfaces disagree about what is pending, which is worse than either
+    // being briefly stale.
+    function refreshOnReturn() {
+      if (document.visibilityState === "visible") void load();
+    }
+    document.addEventListener("visibilitychange", refreshOnReturn);
+    return () => document.removeEventListener("visibilitychange", refreshOnReturn);
   }, [load]);
 
   function openRequest(request: IncomingRequest) {
@@ -132,6 +142,7 @@ export default function ContactRequestsPage() {
 
         {!loading && !error && !requests.length ? (
           <StatusMessage tone="info">
+            <strong>Nothing waiting.</strong>{" "}
             When someone asks for a phone number, email or handle you have not shared, it appears here.
           </StatusMessage>
         ) : null}
@@ -189,7 +200,7 @@ export default function ContactRequestsPage() {
 
             <div className="connections-add-options" style={{ flexDirection: "column", alignItems: "stretch" }}>
               <Button loading={busy} onClick={() => void answer(true)}>Share it</Button>
-              <Button variant="secondary" disabled={busy} onClick={() => void answer(false)}>Decline</Button>
+              <Button variant="secondary" disabled={busy} onClick={() => void answer(false)}>Not this time</Button>
               <button type="button" className="ghost-link" disabled={busy} onClick={() => setActive(null)}>
                 Not now
               </button>
