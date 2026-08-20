@@ -97,6 +97,13 @@ export async function fetchSharedMeeting(
     | { encounter?: Record<string, unknown>; error?: string }
     | null;
   if (!response.ok || !payload?.encounter) {
+    // A server fault is not the same answer as "the host has not shared this", and treating
+    // them alike is what hid a crash for hours: the guest view was 500ing on every shared
+    // meeting that had a participant and an action, and the app reported it as a permission
+    // decision. A 5xx is a fault and says so; only the rest is a settled answer.
+    if (response.status >= 500) {
+      throw new Error(payload?.error || 'Something went wrong opening this meeting. Please try again.');
+    }
     throw new SharedMeetingUnavailableError(payload?.error || 'This meeting is not available.');
   }
 

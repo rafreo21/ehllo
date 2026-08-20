@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "19:45",
+    title: "Opening a meeting shared with you was crashing, and blaming you for it",
+    impact: "fix",
+    detail:
+      "A meeting genuinely shared with you would not open, and said \"this meeting is not available\" - so it read as the host not having shared it, when in fact the page was failing on our side every single time. The guest view withholds the other attendees' email addresses on purpose, and the code that lists who owes what assumed they would be there, so it fell over on any shared meeting that had somebody in it and a follow-up attached - which is every meeting worth sharing. It works now, and a genuine fault says something went wrong rather than quietly pretending you were not allowed in.",
+    testing:
+      "Open a meeting somebody has shared with you from their history.",
+  },
+  {
+    date: "2026-08-20",
     time: "19:20",
     title: "Everyone in a meeting is told when it is shared",
     impact: "fix",
