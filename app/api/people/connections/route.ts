@@ -63,12 +63,18 @@ export async function POST(request: Request) {
   // "just met" from "met months ago" and every client had to guess. Clients need the
   // difference: landing on a profile with no word either way is what made scanning a
   // wallet pass feel like nothing had happened.
-  const { data: priorConnection } = await supabase
+  //
+  // limit(1), not maybeSingle(). maybeSingle throws when more than one row matches, and
+  // more than one legitimately can: a team workspace where two members have each
+  // connected to the same person holds a row per member. That would have turned every
+  // scan of a shared contact into a failure the moment a workspace had a second member -
+  // invisible with one user, which is exactly why it needed saying out loud.
+  const { data: priorConnections } = await supabase
     .from("people_connections")
     .select("id")
     .eq("card_slug", storedSlug)
-    .maybeSingle();
-  const alreadyConnected = Boolean(priorConnection?.id);
+    .limit(1);
+  const alreadyConnected = Boolean(priorConnections?.length);
 
   const snapshot = payload?.eventSnapshot;
   const { data, error } = await supabase.rpc("link_people_connection_from_scan", {
