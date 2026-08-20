@@ -1,13 +1,16 @@
 import "server-only";
 
-import { transcribe } from "ai";
+import { generateText, Output, transcribe } from "ai";
+import { z } from "zod";
 
 import {
+  geminiTranscriptionModel,
   groqTranscriptionConfig,
   isTranscriptionConfigured,
   prepareAiAuth,
   transcriptionModel,
   usesDirectOpenAi,
+  usesGeminiTranscription,
   usesGroqTranscription,
 } from "./ai-provider";
 import { cleanLiveTranscript } from "./transcript-cleanup";
@@ -136,6 +139,72 @@ async function transcribeWithOpenAi(
   };
 }
 
+/**
+ * Gemini transcribes by taking the audio as an input part on an ordinary generation
+ * call - there is no separate transcription endpoint to hit, which is why this does
+ * not go through the AI SDK's transcribe().
+ *
+ * Asked for structured turns rather than a wall of text, because that is what buys
+ * back the speaker labels that gpt-4o-transcribe-diarize provided. Timestamps are
+ * requested but optional: Gemini supplies them inconsistently, and the shared
+ * normaliser already drops any that are not finite numbers.
+ *
+ * Falls back to a plain transcript if the structured call fails, for the same reason
+ * the OpenAI path does - a model or schema problem must not make capture unusable.
+ */
+const geminiTranscriptSchema = z.object({
+  segments: z.array(z.object({
+    speaker: z.string().describe("Stable label for this voice, e.g. \"Speaker 1\". The same person must keep the same label throughout."),
+    text: z.string().describe("Exactly what was said in this turn, verbatim."),
+    start: z.number().optional().describe("Seconds from the start of the recording, if known."),
+    end: z.number().optional().describe("Seconds from the start of the recording, if known."),
+  })),
+});
+
+const GEMINI_TRANSCRIPT_PROMPT = [
+  "Transcribe this recording verbatim.",
+  "Split it into turns, one entry per continuous stretch of a single speaker.",
+  "Give each distinct voice a stable label and reuse it for that person throughout.",
+  "Transcribe only what is actually said - add no summary, commentary, or headings.",
+  "If a passage is inaudible, leave it out rather than guessing at it.",
+].join(" ");
+
+async function transcribeWithGemini(
+  audio: Uint8Array,
+  options: { language?: string; mimeType: string; fileName: string },
+) {
+  const languageNote = options.language ? ` The spoken language is ${options.language}.` : "";
+  const content = [
+    { type: "text" as const, text: GEMINI_TRANSCRIPT_PROMPT + languageNote },
+    { type: "file" as const, data: audio, mediaType: options.mimeType },
+  ];
+
+  try {
+    const result = await generateText({
+      model: geminiTranscriptionModel(),
+      output: Output.object({ schema: geminiTranscriptSchema }),
+      messages: [{ role: "user", content }],
+    });
+    const segments = normalizeDiarizedSegments({ segments: result.output?.segments ?? [] });
+    if (segments.length) {
+      return { text: formatSpeakerTranscript(segments), segments, diarized: true };
+    }
+  } catch {
+    // Structured output can fail on a model that does not support it well; the plain
+    // transcript below is still far better than no transcript.
+  }
+
+  const plain = await generateText({
+    model: geminiTranscriptionModel(),
+    messages: [{ role: "user", content }],
+  });
+  return {
+    text: plain.text.trim(),
+    segments: [] as EncounterTranscriptSegment[],
+    diarized: false,
+  };
+}
+
 /** Groq hosts open-source Whisper behind an OpenAI-compatible endpoint - same multipart shape, free tier, no billing-account requirement. */
 async function transcribeWithGroqWhisper(
   audio: Uint8Array,
@@ -195,7 +264,9 @@ export async function transcribeEncounterAudio(
   const { fileName, mimeType } = resolveMimeAndName(options);
 
   try {
-    const transcription = usesGroqTranscription()
+    const transcription = usesGeminiTranscription()
+      ? await transcribeWithGemini(audio, { language, mimeType, fileName })
+      : usesGroqTranscription()
       ? { text: await transcribeWithGroqWhisper(audio, { language, mimeType, fileName }), diarized: false, segments: [] as EncounterTranscriptSegment[] }
       : usesDirectOpenAi()
         ? await transcribeWithOpenAi(audio, { language, mimeType, fileName })

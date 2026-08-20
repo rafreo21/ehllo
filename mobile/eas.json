@@ -55,6 +55,9 @@
       "ios": {
         "ascAppId": "6801942243",
         "appleTeamId": "VDR84B8UU2"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./aftermeet-503610-firebase-adminsdk-fbsvc-04a28f7167.json"
       }
     }
   }
