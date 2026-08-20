@@ -182,11 +182,15 @@ export default function RecentScansScreen() {
         />
       ) : null}
 
+      {/* The state anybody signed in actually lands on, and it was a bare panel of text while
+          the signed-out state beside it had the illustration. Same component and same artwork
+          now, so an empty page reads as empty rather than as something failing to load. */}
       {session && !initialLoading && !groups.length ? (
-        <Panel>
-          <Text style={styles.panelTitle}>Nothing to add</Text>
-          <Text style={styles.panelCopy}>Every scan has been saved, or you haven&apos;t had one yet.</Text>
-        </Panel>
+        <EmptyState
+          illustration={require('@/assets/animations/recent-scans.json')}
+          title="Nothing to add"
+          copy="Every scan has been saved, or you haven't had one yet."
+        />
       ) : null}
 
       {groups.length ? (
@@ -302,8 +306,6 @@ export default function RecentScansScreen() {
 }
 
 const styles = StyleSheet.create({
-  panelTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.bold, fontWeight: '800' },
-  panelCopy: { marginTop: 6, color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 19 },
   list: { gap: spacing.x2 },
   card: {
     flexDirection: 'row',

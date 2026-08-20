@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "21:15",
+    title: "Asking for a meeting works, and an empty scans page looks intentional",
+    impact: "fix",
+    detail:
+      "Requesting access to a meeting failed every time with \"we couldn't send that request\" - our own mistake, looking up the wrong column when working out who to ask. It works now, and the person who asked is named properly when the request arrives. Recent scans also had artwork when you were signed out and a plain block of text when you were signed in, which is the version anyone actually sees - it now uses the same illustration either way, so an empty page reads as empty rather than as something that failed to load.",
+    testing:
+      "Open a meeting somebody has not shared and ask for it. Then open Settings › Recent scans with nothing waiting.",
+  },
+  {
+    date: "2026-08-20",
     time: "19:45",
     title: "Opening a meeting shared with you was crashing, and blaming you for it",
     impact: "fix",
