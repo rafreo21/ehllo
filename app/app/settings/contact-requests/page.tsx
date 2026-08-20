@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import { Button } from "../../../components/Button";
 import { PageSkeleton, StatusMessage } from "../../../components/AsyncState";
@@ -86,6 +86,10 @@ export default function ContactRequestsPage() {
   const { showToast } = useToast();
   const [groups, setGroups] = useState<RequestGroup[]>([]);
   const [truncated, setTruncated] = useState(0);
+  // What my own card already publishes, keyed by method type. The phone has always
+  // pre-filled from this; the web asked you to type a handle ehllo already knew, which
+  // is the friction you actually feel - not the confirming tap.
+  const [myMethods, setMyMethods] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [active, setActive] = useState<RequestGroup | null>(null);
@@ -93,20 +97,69 @@ export default function ContactRequestsPage() {
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [sheetError, setSheetError] = useState("");
+  // Arrived from a notification, so the sheet should already be up. A ref because it is
+  // a one-shot intent, not state: opening it again on every refetch would fight anyone
+  // who closed it deliberately.
+  const openOnArrival = useRef(
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("open") === "1",
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/contact-requests", { cache: "no-store" });
+      // Both at once: the requests are useless without knowing what I can already share,
+      // and two sequential round trips would show an empty box before filling it in.
+      const [response, cardsResponse] = await Promise.all([
+        fetch("/api/contact-requests", { cache: "no-store" }),
+        fetch("/api/cards", { cache: "no-store" }),
+      ]);
+
+      // Hoisted rather than scoped to the try, because the auto-open below needs the
+      // values just loaded - reading myMethods there would read the previous render's.
+      let found: Record<string, string> = {};
+      // Best effort - failing to read my own card must not stop me answering, it only
+      // means typing the value in as before.
+      try {
+        const cardsPayload = await cardsResponse.json() as {
+          cards?: Array<{ methods?: Array<{ type?: string; value?: string }> }>;
+        };
+        for (const card of cardsPayload.cards ?? []) {
+          for (const method of card.methods ?? []) {
+            const type = method.type?.trim().toLowerCase();
+            const value = method.value?.trim();
+            // First card wins - /api/cards returns most recently updated first, which is
+            // the one whose details are current.
+            if (type && value && !found[type]) found[type] = value;
+          }
+        }
+        setMyMethods(found);
+      } catch {
+        found = {};
+        setMyMethods({});
+      }
       const payload = await response.json() as {
         groups?: RequestGroup[];
         groupsTruncated?: number;
         error?: string;
       };
       if (!response.ok) throw new Error(payload.error || "Could not load contact requests.");
-      setGroups(payload.groups ?? []);
+      const loadedGroups = payload.groups ?? [];
+      setGroups(loadedGroups);
       setTruncated(payload.groupsTruncated ?? 0);
+
+      // Straight into the sheet when there is one thing waiting - which is the usual
+      // case after being told about it. With several, the list is the honest answer:
+      // guessing which one the notification meant would open the wrong person's request.
+      if (openOnArrival.current) {
+        openOnArrival.current = false;
+        const only = loadedGroups.length === 1 ? loadedGroups[0] : null;
+        if (only) {
+          setActive(only);
+          setValue(found[only.fieldType.trim().toLowerCase()] ?? "");
+          setSheetError("");
+        }
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load contact requests.");
     } finally {
@@ -132,7 +185,9 @@ export default function ContactRequestsPage() {
 
   function openRequest(group: RequestGroup) {
     setActive(group);
-    setValue("");
+    // Pre-filled when my card already publishes it, so answering is one tap and no
+    // typing. Left empty rather than guessed at when it is something I do not publish.
+    setValue(myMethods[group.fieldType.trim().toLowerCase()] ?? "");
     setSheetError("");
   }
 
@@ -206,7 +261,7 @@ export default function ContactRequestsPage() {
                 type="button"
                 className="connections-row connections-row-simple"
                 onClick={() => openRequest(group)}>
-                <div className="connections-copy">
+                <div className="connections-copy request-row-copy">
                   <strong>{group.requesterName} asked for your {fieldLabel(group.fieldType)}</strong>
                   <small>{askedCaption(group)}</small>
                 </div>
@@ -240,11 +295,12 @@ export default function ContactRequestsPage() {
             aria-label={`Share your ${fieldLabel(active.fieldType)}`}
             onClick={(event) => event.stopPropagation()}>
             <h2>Share your {fieldLabel(active.fieldType)}?</h2>
+            {/* Short on purpose. The long version explained the whole mechanism at
+                somebody trying to do one thing, and the buttons already say what happens. */}
             <p className="text-sm text-[#6b7168]">
               {active.count > 1
-                ? `${active.requesterName} has asked ${active.count} times. Answer once and all ${active.count} are done - you will not be asked again.`
-                : `${active.requesterName} asked for it. Only this one detail is shared, and only with them.`}
-              {" "}Declining tells them too, so nobody is left waiting on an answer that is not coming.
+                ? `Asked ${active.count} times. One answer clears them all.`
+                : `Only ${active.requesterName} sees it.`}
             </p>
 
             <label className="connections-search">
@@ -257,6 +313,11 @@ export default function ContactRequestsPage() {
               />
             </label>
 
+            {/* Says where the value came from, so a pre-filled box does not look like
+                something already sent, or like a stray value from somewhere else. */}
+            {!sheetError && value && myMethods[active.fieldType.trim().toLowerCase()] === value ? (
+              <p className="request-prefill-note">From your card. Change it here if you want to send something else.</p>
+            ) : null}
             {sheetError ? <StatusMessage tone="error">{sheetError}</StatusMessage> : null}
 
             <div className="connections-add-options" style={{ flexDirection: "column", alignItems: "stretch" }}>

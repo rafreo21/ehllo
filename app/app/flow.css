@@ -1172,7 +1172,13 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
 
 /* Contact requests grouped by person: the count of how many times one person has asked,
    and the sheet that confirms an answer cleared all of them. */
-.request-count-pill { min-width: 26px; padding: 3px 9px; border-radius: 999px; background: var(--p-sky); color: var(--p-navy); font-size: 12px; font-weight: 600; text-align: center; }
+.request-count-pill { flex: 0 0 auto; min-width: 26px; padding: 3px 9px; border: 0; border-radius: 999px; background: var(--p-sky); color: var(--p-navy); font-size: 12px; font-weight: 600; text-align: center; }
+/* Exactly two lines per cell: who asked for what, and how often. Both truncate rather
+   than wrap - a title that runs onto three lines makes every cell a different height and
+   the list stops being scannable, which is the whole point of grouping it. */
+.request-row-copy { min-width: 0; }
+.request-row-copy strong, .request-row-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.request-prefill-note { margin: 0; color: var(--p-muted); font-size: 12px; line-height: 1.4; }
 /* Bottom-anchored, not centred: .connections-modal-compact would have made these
    centre-screen dialogs, and a sheet rising from the bottom edge is what the phone does
    and what these were asked to be. The backdrop is already `place-items: end center`. */

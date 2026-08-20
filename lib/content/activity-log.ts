@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "13:40",
+    title: "Answering a contact request now actually works",
+    impact: "fix",
+    detail:
+      "It never has. Sharing or declining a detail somebody asked for failed every single time with \"we couldn't answer this request\" - on the phone and on the web, from the day the screen shipped. The code recorded the answer using a word the database does not accept, so every attempt was rejected outright, and because nothing ever succeeded there was nothing to notice except the error. This log said it was working. It was not, and that is on us. Tapping the notification on the web also led to the follow-ups screen, which has no trace of the request you were just told about; it now opens the request itself, with the sheet already up when only one person is waiting. Your own details are filled in from your card, so a handle ehllo already knows needs no typing.",
+    testing:
+      "Have someone ask you for a detail, tap the notification, and share it.",
+  },
+  {
+    date: "2026-08-20",
     time: "13:05",
     title: "Keeping someone from their card no longer costs you your email",
     impact: "fix",

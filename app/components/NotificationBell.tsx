@@ -63,6 +63,12 @@ function iconForType(type: NotificationType): IconComponent {
 }
 
 function notificationHref(alert: NotificationAlert) {
+  // Somebody asking for your details has nothing to do with follow-ups, and this sent
+  // them there because it only knew how to route by encounter. A contact request has no
+  // encounter, so it fell through to /app/followups - a screen with no trace of what the
+  // notification was about. `open` carries the intent through so the sheet is already up
+  // when the page arrives, rather than making you find the row you were just told about.
+  if (alert.type === "contact_request") return "/app/settings/contact-requests?open=1";
   if (!alert.encounterId) return "/app/followups";
   return `/app/encounters/${alert.encounterId}`;
 }

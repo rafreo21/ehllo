@@ -1,6 +1,6 @@
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { EnvelopeSimple } from 'phosphor-react-native';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
@@ -58,6 +58,7 @@ function askedCaption(group: ContactRequestGroup) {
 export default function ContactRequestsScreen() {
   const { session } = useAuth();
   const { card } = useCard();
+  const { open } = useLocalSearchParams<{ open?: string }>();
   const [groups, setGroups] = useState<ContactRequestGroup[]>([]);
   const [truncated, setTruncated] = useState(0);
   const [active, setActive] = useState<ContactRequestGroup | null>(null);
@@ -67,6 +68,10 @@ export default function ContactRequestsScreen() {
   const [message, setMessage] = useState('');
   const [sheetError, setSheetError] = useState('');
   const [loading, setLoading] = useState(true);
+  // Arrived from a notification, so the sheet should already be up. A ref because it is a
+  // one-shot intent, not state: re-opening on every focus would fight anyone who closed
+  // it deliberately, and this screen reloads on every focus.
+  const openOnArrival = useRef(open === '1');
 
   const load = useCallback(async () => {
     if (!session?.access_token) { setLoading(false); return; }
@@ -74,15 +79,29 @@ export default function ContactRequestsScreen() {
       const next = await fetchIncomingContactRequests(session.access_token);
       setGroups(next.groups);
       setTruncated(next.truncated);
+
+      // Straight into the sheet when one thing is waiting, which is the usual case right
+      // after being told about it. With several, the list is the honest answer: guessing
+      // which the notification meant would open the wrong person's request.
+      if (openOnArrival.current) {
+        openOnArrival.current = false;
+        const only = next.groups.length === 1 ? next.groups[0] : null;
+        if (only) {
+          const method = (card?.methods ?? []).find((candidate) => candidate.type === only.fieldType);
+          setValue(method?.value ?? '');
+          setSheetError('');
+          setActive(only);
+        }
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not load contact requests.');
     } finally {
       setLoading(false);
     }
-    // `session` whole, not a property or an inline default of it: the compiler infers
-    // the object as the dependency, and a narrower or freshly built one does not match,
-    // so it drops the memo entirely.
-  }, [session]);
+    // `session` and `card` whole, not a property or an inline default of either: the
+    // compiler infers the object as the dependency, and a narrower or freshly built one
+    // does not match, so it drops the memo entirely.
+  }, [session, card]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
@@ -182,11 +201,12 @@ export default function ContactRequestsScreen() {
         }>
         {active ? (
           <View style={styles.sheetBody}>
+            {/* Short on purpose. The long version explained the whole mechanism at
+                somebody trying to do one thing, and the buttons already say what happens. */}
             <Body>
               {active.count > 1
-                ? `${active.requesterName} has asked ${active.count} times. Answer once and all ${active.count} are done - you will not be asked again.`
-                : `${active.requesterName} asked for it. Only this one detail is shared, and only with them.`}
-              {' '}Declining tells them too, so nobody is left waiting on an answer that is not coming.
+                ? `Asked ${active.count} times. One answer clears them all.`
+                : `Only ${active.requesterName} sees it.`}
             </Body>
             {active.followUpTitle ? <Text style={styles.context}>For: {active.followUpTitle}</Text> : null}
             <TextInput
