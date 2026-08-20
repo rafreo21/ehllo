@@ -77,6 +77,13 @@ export function SharedMeetingSheet({
       setUnavailable('');
       setRequestState('');
       setRequestError('');
+      // The previous meeting was left sitting here. Everything else was reset and these two
+      // were not, so opening a second meeting showed the first one's title and recap until
+      // the fetch returned - and kept showing them entirely if the second one could not be
+      // opened. That is why a meeting you had never opened came up titled "Lab Equipment and
+      // Cold Room Inventory Alignment": you were looking at the last one, not this one.
+      setMeeting(null);
+      setShareToken('');
       return fetchSharedMeeting(accessToken, encounterId)
         .then((result) => {
           if (cancelled) return;
@@ -122,9 +129,23 @@ export function SharedMeetingSheet({
   return (
     <BottomSheet
       visible={visible}
-      title={meeting?.title || 'Meeting'}
+      // Says what the sheet is for rather than naming a meeting it cannot show. Falling back
+      // to the last title was how a request sheet ended up labelled with somebody else's
+      // meeting; falling back to "Meeting" would be no better, because at this point we are
+      // asking for access, not displaying one.
+      title={meeting?.title || (unavailable ? 'Request meeting access' : 'Meeting')}
       onClose={onClose}
-      footer={<Button variant="secondary" onPress={onClose}>Done</Button>}>
+      footer={(
+        // Together, in the order the decision is made: the action first, then the way out.
+        // Request access sat up in the body, a scroll away from Done, so the two halves of
+        // one choice were in two different places.
+        <View style={styles.footer}>
+          {unavailable && !requestState ? (
+            <Button loading={requesting} onPress={() => void askForAccess()}>Request access</Button>
+          ) : null}
+          <Button variant="secondary" onPress={onClose}>Done</Button>
+        </View>
+      )}>
       {loading && !meeting ? (
         <View style={styles.loadingWrap}><ActivityIndicator color={colors.ink} /></View>
       ) : null}
@@ -158,9 +179,6 @@ export function SharedMeetingSheet({
                 : 'The host has not shared this meeting. You can ask them to.'}
           </Body>
           {requestError ? <Text style={styles.errorText}>{requestError}</Text> : null}
-          {!requestState ? (
-            <Button loading={requesting} onPress={() => void askForAccess()}>Request access</Button>
-          ) : null}
         </View>
       ) : null}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -208,6 +226,7 @@ export function SharedMeetingSheet({
 const styles = StyleSheet.create({
   loadingWrap: { paddingVertical: spacing.x6, alignItems: 'center' },
   centred: { textAlign: 'center' },
+  footer: { gap: spacing.x2 },
   gateWrap: { alignItems: 'center', gap: spacing.x3, paddingVertical: spacing.x2 },
   gateArt: { width: 180, height: 180, alignItems: 'center', justifyContent: 'center' },
   gateLottie: { width: '100%', height: '100%' },

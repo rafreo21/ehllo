@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "21:40",
+    title: "Opening one meeting no longer shows you the last one",
+    impact: "fix",
+    detail:
+      "Opening a meeting left the previous one on screen. Everything else was cleared between them and the title and recap were not, so a meeting you had never opened came up wearing another meeting's name - and if the new one could not be opened, you were left looking at the old one entirely. That is fixed, and the sheet for asking a host to share now says what it is for instead of borrowing a title it cannot show. Request access sits beside Done rather than a scroll away from it, the sharing switch moves the moment you tap it instead of waiting on the round trip, and on a reviewed meeting Save changes is the main button with Done beside it - they were the wrong way round, so the button that changed nothing looked like the one to press.",
+    testing:
+      "Open two different meetings from someone's history one after the other.",
+  },
+  {
+    date: "2026-08-20",
     time: "21:15",
     title: "Asking for a meeting works, and an empty scans page looks intentional",
     impact: "fix",

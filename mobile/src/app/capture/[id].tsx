@@ -609,10 +609,13 @@ export default function CaptureDetailScreen() {
     </>
   ) : (
     <>
-      <Button onPress={() => router.replace('/(tabs)')}>Done</Button>
-      <Button variant="secondary" loading={saving} onPress={() => void persist(encounter)}>
+      {/* Saving leads, because it is the act with a consequence; leaving is just leaving.
+          These were the other way round, so the button that changed nothing was the one
+          styled as the thing to press. */}
+      <Button loading={saving} onPress={() => void persist(encounter)}>
         Save changes
       </Button>
+      <Button variant="secondary" onPress={() => router.replace('/(tabs)')}>Done</Button>
     </>
   );
 
@@ -1098,7 +1101,12 @@ export default function CaptureDetailScreen() {
           </View>
           <Switch
             accessibilityLabel="Share with participants"
-            value={isShared}
+            // Reflects the tap immediately. It was bound to the saved status alone, so it sat
+            // in its old position for the whole round trip - upload, save, and a retry if the
+            // transcript had moved underneath - which reads as the switch being broken rather
+            // than as work in progress. If the save fails, approving clears and it snaps back
+            // with the error sheet, so it never claims something that did not happen.
+            value={isShared || approving}
             disabled={approving || uploadStatus === 'uploading'}
             onValueChange={(next) => (next ? void approveAndShare() : toggleGuestSharing(false))}
             trackColor={{ false: colors.line, true: colors.accent }}
