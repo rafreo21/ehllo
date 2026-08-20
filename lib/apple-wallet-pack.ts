@@ -23,26 +23,6 @@ function themeRgb(themeColor: string) {
   };
 }
 
-/**
- * Rough advance width for a sans-serif string, used only to decide whether the name
- * needs shrinking. sharp cannot measure text, and pulling in a font-metrics library
- * to place one line is not worth it - 0.55em per character is close enough for a
- * decision that is either "it fits" or "come down a size", and the result is checked
- * on device.
- */
-function approximateTextWidth(text: string, fontSize: number) {
-  return text.length * fontSize * 0.55;
-}
-
-/** XML-escapes a value going into an SVG text node. A name is user input. */
-function svgText(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 async function fetchImageBuffer(url: string) {
   if (!url.trim()) return null;
   try {
@@ -136,49 +116,7 @@ export async function buildAppleWalletPass(card: WalletCardPayload, certs: Apple
   try {
     const sharp = await loadSharp();
 
-    const themeInk = themeForegroundColor(normalizeThemeColor(card.themeColor));
-    const name = card.fullName.trim().replace(/\s+/g, " ");
-
-    /**
-     * The name, drawn into the band rather than left to primaryFields.
-     *
-     * PassKit sizes a primary field itself and offers no key to influence it, so a
-     * short name came out enormous and a long one small - measured on an iPhone 17
-     * Pro, 105px for "Raphael Okojie" against 62px for a 29-character name. Drawing
-     * it here fixes the size instead, so every card reads the same, and only a name
-     * genuinely too wide to fit comes down.
-     *
-     * The cost, stated plainly: text in an image is invisible to VoiceOver. The name
-     * still reaches assistive technology through the pass's description field, which
-     * is "<name> · ehllo card".
-     */
-    // PassKit insets its own field rows about 33pt from the card edge. The name is
-    // drawn by us, so it has to match that by hand or it reads as misaligned - at 20pt
-    // it sat proud of the row beneath it and looked clipped by the card edge.
-    const NAME_PAD = 33;
-
-    const nameSvg = (
-      width: number,
-      height: number,
-      scale: number,
-      ink: string,
-      opts: { x: number; baseline: number; centred?: boolean },
-    ) => {
-      if (!name) return null;
-      const available = width - opts.x - NAME_PAD * scale;
-      const base = 30 * scale;
-      // Shrink only when it will not fit, and never below a size that stays legible -
-      // past that point letting it clip is kinder than type nobody can read.
-      let size = base;
-      while (size > 17 * scale && approximateTextWidth(name, size) > available) size -= scale;
-      return `<text x="${opts.x}" y="${opts.baseline}"`
-        + (opts.centred ? ` dominant-baseline="central"` : "")
-        + ` font-family="Helvetica Neue, Helvetica, Arial, sans-serif"`
-        + ` font-size="${Math.round(size)}" font-weight="600" fill="${ink}">${svgText(name)}</text>`;
-    };
-
     await Promise.all(STRIP_SCALES.map(async ([fileName, width, height]) => {
-      const scale = width / 375;
       const band = () => sharp({
         create: { width, height, channels: 4, background: stripBackground },
       });
@@ -197,13 +135,12 @@ export async function buildAppleWalletPass(card: WalletCardPayload, certs: Apple
           // and illegible over a bright window, and we do not get to choose which.
           // Pure alpha over black, so it never tints the photograph.
           const overlay = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">`
-            + `<defs><linearGradient id="s" x1="0" y1="1" x2="0" y2="0">`
-            + `<stop offset="0" stop-color="#000" stop-opacity="0.62"/>`
-            + `<stop offset="0.55" stop-color="#000" stop-opacity="0.12"/>`
+            + `<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1">`
+            + `<stop offset="0" stop-color="#000" stop-opacity="0.55"/>`
+            + `<stop offset="0.62" stop-color="#000" stop-opacity="0.10"/>`
             + `<stop offset="1" stop-color="#000" stop-opacity="0"/>`
             + `</linearGradient></defs>`
             + `<rect width="${width}" height="${height}" fill="url(#s)"/>`
-            + (nameSvg(width, height, scale, "#FFFFFF", { x: NAME_PAD * scale, baseline: height - 18 * scale }) ?? "")
             + `</svg>`;
 
           files[fileName] = await band()
@@ -217,18 +154,7 @@ export async function buildAppleWalletPass(card: WalletCardPayload, certs: Apple
         // and nothing else. An avatar with initials was tried here and taken back out -
         // a circle floating in a 123pt strip read as a placeholder for something
         // missing, where a clean field of the card's colour just reads as the card.
-        const plain = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">`
-          + (nameSvg(width, height, scale, themeInk, {
-            x: NAME_PAD * scale,
-            baseline: height / 2,
-            centred: true,
-          }) ?? "")
-          + `</svg>`;
-
-        files[fileName] = await band()
-          .composite([{ input: Buffer.from(plain) }])
-          .png()
-          .toBuffer();
+        files[fileName] = await band().png().toBuffer();
         return;
       } catch {
         // Drawing type needs a font in the runtime, and fontconfig is thin in a
