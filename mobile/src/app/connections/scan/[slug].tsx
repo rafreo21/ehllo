@@ -8,7 +8,7 @@ import { connectionFromScannedSlug } from '@/features/connections/connections-ap
 import { colors } from '@/theme/tokens';
 
 export default function ScanCompleteScreen() {
-  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { slug, source } = useLocalSearchParams<{ slug: string; source?: string }>();
   const { session } = useAuth();
 
   useEffect(() => {
@@ -25,10 +25,15 @@ export default function ScanCompleteScreen() {
     let cancelled = false;
     void (async () => {
       try {
-        const result = await connectionFromScannedSlug(session.access_token, normalized);
+        const scanSource = source === 'nfc' ? 'nfc' : 'link';
+        const result = await connectionFromScannedSlug(session.access_token, normalized, undefined, scanSource);
         if (cancelled) return;
         if (result) {
-          router.replace(`/connections/${encodeURIComponent(result.connection.id)}`);
+          // Carries the outcome onward so the profile can say which of the two things
+          // just happened. Arriving with no word either way is what made scanning a
+          // wallet pass feel like nothing had happened at all.
+          const outcome = result.alreadyConnected ? 'known' : 'added';
+          router.replace(`/connections/${encodeURIComponent(result.connection.id)}?scan=${outcome}`);
           return;
         }
         router.replace('/connections');
@@ -40,7 +45,7 @@ export default function ScanCompleteScreen() {
     return () => {
       cancelled = true;
     };
-  }, [session?.access_token, slug]);
+  }, [session?.access_token, slug, source]);
 
   return (
     <View style={styles.container}>

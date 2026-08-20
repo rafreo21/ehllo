@@ -68,7 +68,7 @@ function timelineIcon(kind: 'meeting' | 'completed' | 'follow_up' | 'invite' | '
 }
 
 export default function ConnectionDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, scan } = useLocalSearchParams<{ id: string; scan?: string }>();
   const { session } = useAuth();
   const accessToken = session?.access_token ?? null;
   const insets = useAppInsets();
@@ -86,8 +86,22 @@ export default function ConnectionDetailScreen() {
   const [directoryLoading, setDirectoryLoading] = useState(false);
   const [errorSheetOpen, setErrorSheetOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [successSheetOpen, setSuccessSheetOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  // Which of the two things just happened, for a scan that arrived from anywhere other
+  // than the camera. The camera scanner has its own result sheet; a wallet pass, an NFC
+  // tap or a widget used to drop you here silently, so there was no way to tell "I just
+  // added them" from "I already knew them" - and adding someone in silence reads as
+  // nothing having worked.
+  //
+  // Read into the initial state rather than pushed in by an effect. It is known on the
+  // first render, and setting state synchronously inside an effect is a cascading
+  // render the linter is right to refuse.
+  const scanOutcome = scan === 'added' || scan === 'known' ? scan : null;
+  const [successSheetOpen, setSuccessSheetOpen] = useState(Boolean(scanOutcome));
+  const [successMessage, setSuccessMessage] = useState(
+    scanOutcome === 'added'
+      ? 'Added to your people.'
+      : scanOutcome === 'known' ? 'Already in your people.' : '',
+  );
   const [saving, setSaving] = useState(false);
   const [cardSheetOpen, setCardSheetOpen] = useState(false);
   const [meetingsSheetOpen, setMeetingsSheetOpen] = useState(false);

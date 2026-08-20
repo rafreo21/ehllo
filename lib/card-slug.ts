@@ -48,3 +48,28 @@ export async function resolveStoredCardSlug(
   }
   return null;
 }
+
+/**
+ * Surfaces a connection can be made through.
+ *
+ * Kept here beside the slug helper because both answer "a card link arrived, what do
+ * we know about it". Validated at the edge so an unrecognised value is rejected rather
+ * than quietly stored - a column of typos is worse than a column of nulls.
+ *
+ * "link" covers every surface whose payload is a QR we cannot afford to lengthen: a
+ * wallet pass, a widget, an email signature, a watch face, a virtual background. Those
+ * codes were sized deliberately - dropping five characters from the slug is what keeps
+ * a wallet QR at 29x29 rather than 33x33 - so tagging each one would trade scannability
+ * for reporting. NFC has no such limit, which is why it can name itself.
+ */
+export const CONNECTION_SOURCES = ["camera", "link", "nfc", "web"] as const;
+
+export type ConnectionSource = (typeof CONNECTION_SOURCES)[number];
+
+export function normalizeConnectionSource(value: unknown): ConnectionSource | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().toLowerCase();
+  return (CONNECTION_SOURCES as readonly string[]).includes(trimmed)
+    ? (trimmed as ConnectionSource)
+    : null;
+}

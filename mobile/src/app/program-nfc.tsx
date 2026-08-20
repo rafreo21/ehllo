@@ -83,7 +83,10 @@ export default function ProgramNfcScreen() {
     if (!card || running) return;
     setError('');
     try {
-      await programNfcTag(card, cardPublicUrl(card), setState);
+      // Marked as an NFC tap. A tag is not a QR - there is no size budget to protect -
+      // so unlike the wallet and widget codes this one can say where it came from, and
+      // taps become distinguishable from every other kind of link.
+      await programNfcTag(card, `${cardPublicUrl(card)}?s=nfc`, setState);
       setState('success');
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (caught) {

@@ -238,7 +238,12 @@ export default function ScanPage() {
     void fetch("/api/people/connections", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug: target?.type === "aftermeet_card" ? target.slug : undefined }),
+      // Named so the web scanner is attributable alongside the phone's camera, NFC
+      // taps and every other surface, rather than arriving indistinguishable.
+      body: JSON.stringify({
+        slug: target?.type === "aftermeet_card" ? target.slug : undefined,
+        source: "web",
+      }),
     }).catch(() => undefined);
   }
 

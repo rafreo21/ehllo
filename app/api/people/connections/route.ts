@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { resolveStoredCardSlug } from "../../../../lib/card-slug";
+import { normalizeConnectionSource, resolveStoredCardSlug } from "../../../../lib/card-slug";
 import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
 
 export async function GET(request: Request) {
@@ -28,6 +28,7 @@ export async function POST(request: Request) {
 
   const payload = await request.json().catch(() => null) as {
     slug?: string;
+    source?: string;
     eventSnapshot?: { eventId?: string; eventTitle?: string; eventLocation?: string; occurredAt?: string };
   } | null;
   const slug = payload?.slug?.trim().toLowerCase();
@@ -56,6 +57,18 @@ export async function POST(request: Request) {
   if (!storedSlug) {
     return NextResponse.json({ error: "That card could not be found.", code: "card_not_found" }, { status: 404 });
   }
+
+  // Whether this person was already a connection, established before the RPC runs -
+  // record_connection is idempotent on the pair, so afterwards there is no way to tell
+  // "just met" from "met months ago" and every client had to guess. Clients need the
+  // difference: landing on a profile with no word either way is what made scanning a
+  // wallet pass feel like nothing had happened.
+  const { data: priorConnection } = await supabase
+    .from("people_connections")
+    .select("id")
+    .eq("card_slug", storedSlug)
+    .maybeSingle();
+  const alreadyConnected = Boolean(priorConnection?.id);
 
   const snapshot = payload?.eventSnapshot;
   const { data, error } = await supabase.rpc("link_people_connection_from_scan", {
@@ -108,9 +121,26 @@ export async function POST(request: Request) {
     personCompany?: string;
     personEmail?: string;
   } | null;
+  // First touch wins. scan_source records how a connection began, so a later scan of
+  // the same card from a different surface must not overwrite it - otherwise the column
+  // answers "where did I last scan them" rather than "where did we meet".
+  const source = normalizeConnectionSource(payload?.source);
+  if (source && !alreadyConnected && result?.connectionId) {
+    await supabase
+      .from("people_connections")
+      .update({ scan_source: source })
+      .eq("id", result.connectionId)
+      .is("scan_source", null);
+  }
+
   return NextResponse.json({
     ok: true,
     connectionId: result?.connectionId,
+    // So every client can say the same thing rather than each guessing. Landing on a
+    // profile with no word either way is what made a wallet scan feel like nothing
+    // had happened.
+    alreadyConnected,
+    source: source ?? null,
     mutual: result?.mutual ?? false,
     personName: result?.personName,
     personRole: result?.personRole,

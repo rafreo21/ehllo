@@ -20,12 +20,21 @@ import { Redirect, useLocalSearchParams } from 'expo-router';
  * and the server resolves both spellings.
  */
 export default function CardDeepLinkScreen() {
-  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { slug, s } = useLocalSearchParams<{ slug: string; s?: string }>();
   const normalized = typeof slug === 'string' ? slug.trim().toLowerCase() : '';
 
   // A bare /c/ with nothing after it is not worth an error screen; the people list is
   // where someone opening a card link was heading anyway.
   if (!normalized) return <Redirect href="/connections" />;
 
-  return <Redirect href={`/connections/scan/${encodeURIComponent(normalized)}`} />;
+  // NFC tags carry ?s=nfc; nothing else does, because every other surface is a QR whose
+  // size was deliberately minimised and five more characters would cost scannability.
+  // Anything unmarked is simply a link, which is honest about what we know.
+  const source = typeof s === 'string' && s.trim().toLowerCase() === 'nfc' ? 'nfc' : 'link';
+
+  return (
+    <Redirect
+      href={`/connections/scan/${encodeURIComponent(normalized)}?source=${source}`}
+    />
+  );
 }

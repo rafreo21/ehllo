@@ -56,7 +56,7 @@ export default function ScannerScreen() {
     setLinking(true);
     setError('');
     try {
-      const result = await connectionFromScannedSlug(session.access_token, normalized, eventSnapshot);
+      const result = await connectionFromScannedSlug(session.access_token, normalized, eventSnapshot, 'camera');
       if (result) {
         setScanResult(result);
         setLinking(false);

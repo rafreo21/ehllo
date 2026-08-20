@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "05:20",
+    title: "A scan tells you what it did, wherever you scanned from",
+    impact: "improvement",
+    detail:
+      "Scanning with the camera has always shown you a result. Every other way of arriving at someone - a wallet pass, an NFC tap, a widget, a link, the web scanner - dropped you onto their profile in silence, so there was no way to tell \"I have just added this person\" from \"I already knew them\", and adding someone in silence reads as nothing having worked. All of them now say which it was, in the same words, on iPhone, Android and the web app. We also record which surface a connection came through, so it is finally possible to answer which of these people actually use.",
+    testing:
+      "Scan the same card twice from Apple Wallet. The first should say added, the second should say you already know them.",
+  },
+  {
+    date: "2026-08-20",
     time: "04:45",
     title: "Adding someone from a wallet pass works at all now",
     impact: "fix",

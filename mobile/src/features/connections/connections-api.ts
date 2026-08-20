@@ -158,7 +158,19 @@ export async function enrichConnectionPhotos(accessToken: string, connections: C
   });
 }
 
-export type ScannedCardResult = { connection: ConnectionItem; mutual: boolean };
+/**
+ * alreadyConnected exists so every surface can say the same thing. Without it a scan
+ * landed on a profile with no word either way, which is what made scanning a wallet
+ * pass feel like nothing had happened.
+ */
+export type ScannedCardResult = {
+  connection: ConnectionItem;
+  mutual: boolean;
+  alreadyConnected: boolean;
+};
+
+/** Where a scan came from. Mirrors CONNECTION_SOURCES in lib/card-slug.ts. */
+export type ScanSource = 'camera' | 'link' | 'nfc' | 'web';
 
 /**
  * Carries the server's machine-readable reason so callers can tell a permanent
@@ -178,6 +190,7 @@ export async function registerScannedCard(
   accessToken: string,
   slug: string,
   eventSnapshot?: EventSnapshot,
+  source?: ScanSource,
 ): Promise<ScannedCardResult | null> {
   const normalized = slug.trim().toLowerCase();
   if (!normalized) throw new Error('This QR code is not a valid ehllo card.');
@@ -185,13 +198,14 @@ export async function registerScannedCard(
   const response = await mobileFetch('/api/people/connections', accessToken, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ slug: normalized, eventSnapshot }),
+    body: JSON.stringify({ slug: normalized, eventSnapshot, source }),
   });
   const payload = await response.json() as {
     error?: string;
     code?: string;
     connectionId?: string;
     mutual?: boolean;
+    alreadyConnected?: boolean;
     personName?: string;
     personRole?: string;
     personCompany?: string;
@@ -218,6 +232,7 @@ export async function registerScannedCard(
         photoUrl: name ? connectionAvatarUrl({ name } as ConnectionItem) : undefined,
       },
       mutual: payload.mutual ?? false,
+      alreadyConnected: payload.alreadyConnected ?? false,
     };
   }
 
@@ -226,13 +241,16 @@ export async function registerScannedCard(
   const connection = connections.find((item) => (
     item.source === 'met' && canonicalCardSlug(item.cardSlug) === wanted
   ));
-  return connection ? { connection, mutual: payload.mutual ?? false } : null;
+  return connection
+    ? { connection, mutual: payload.mutual ?? false, alreadyConnected: payload.alreadyConnected ?? false }
+    : null;
 }
 
 export async function connectionFromScannedSlug(
   accessToken: string,
   slug: string,
   eventSnapshot?: EventSnapshot,
+  source?: ScanSource,
 ): Promise<ScannedCardResult | null> {
   const normalized = slug.trim().toLowerCase();
   const connections = await fetchAllConnectionsMerged(accessToken);
@@ -241,9 +259,9 @@ export async function connectionFromScannedSlug(
   // people list was registered again as new when scanned from Apple or Google Wallet.
   const wanted = canonicalCardSlug(normalized);
   const existing = connections.find((item) => canonicalCardSlug(item.cardSlug) === wanted);
-  if (existing) return { connection: existing, mutual: false };
+  if (existing) return { connection: existing, mutual: false, alreadyConnected: true };
 
-  return registerScannedCard(accessToken, normalized, eventSnapshot);
+  return registerScannedCard(accessToken, normalized, eventSnapshot, source);
 }
 
 export async function fetchAllConnectionsMerged(accessToken: string): Promise<ConnectionItem[]> {
