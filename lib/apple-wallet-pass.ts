@@ -156,7 +156,12 @@ export function buildApplePassJson(card: {
       // PassKit draws primaryFields over the strip, so the name lands on the
       // photograph and the strip carries a scrim behind it - see the composite in
       // apple-wallet-pack.
-      primaryFields: [{ key: "name", label: "", value: card.fullName }],
+      // Empty again, because the name is drawn into the strip now. PassKit sizes a
+      // primary field itself with no key to influence it, so the same field rendered
+      // 105px for a short name and 62px for a long one; the band sets one size for
+      // everyone instead. Leaving the field populated as well would print the name
+      // twice, once over the other.
+      primaryFields: [],
       // Occupation then company, on the row beneath the strip. Each is dropped
       // when blank rather than rendering an empty cell, so a card with only a role
       // shows only a role instead of a lopsided gap.

@@ -24,17 +24,23 @@ function themeRgb(themeColor: string) {
 }
 
 /**
- * First and last initial, which is what a card without a photograph has to stand
- * in for a face. Falls back to a single letter for a mononym and to nothing at
- * all for a blank name, because two spaces rendered as "" is worse than an empty
- * band. Diacritics are kept - "Ana Ortiz" and "Ana Ortíz" are different people.
+ * Rough advance width for a sans-serif string, used only to decide whether the name
+ * needs shrinking. sharp cannot measure text, and pulling in a font-metrics library
+ * to place one line is not worth it - 0.55em per character is close enough for a
+ * decision that is either "it fits" or "come down a size", and the result is checked
+ * on device.
  */
-function initialsFor(fullName: string) {
-  const words = fullName.trim().split(/\s+/).filter(Boolean);
-  if (!words.length) return "";
-  const first = [...words[0]][0] ?? "";
-  const last = words.length > 1 ? ([...words[words.length - 1]][0] ?? "") : "";
-  return (first + last).toLocaleUpperCase();
+function approximateTextWidth(text: string, fontSize: number) {
+  return text.length * fontSize * 0.55;
+}
+
+/** XML-escapes a value going into an SVG text node. A name is user input. */
+function svgText(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 async function fetchImageBuffer(url: string) {
@@ -130,82 +136,114 @@ export async function buildAppleWalletPass(card: WalletCardPayload, certs: Apple
   try {
     const sharp = await loadSharp();
 
-    if (profileImage) {
-      await Promise.all(STRIP_SCALES.map(async ([name, width, height]) => {
-        // "attention" keeps the face in frame far more reliably than a centre
-        // crop, which decapitates most portraits at this aspect.
-        const photo = await sharp(profileImage)
-          .resize(width, height, { fit: "cover", position: "attention" })
-          .png()
-          .toBuffer();
+    const themeInk = themeForegroundColor(normalizeThemeColor(card.themeColor));
+    const name = card.fullName.trim().replace(/\s+/g, " ");
 
-        // A scrim, because primaryFields carries the name again and PassKit draws
-        // it over this band. Without one the name is white text on whatever the
-        // photograph happens to be there - fine over a dark jacket, illegible over
-        // a bright window or a pale wall, and we do not get to choose which.
-        //
-        // Top-weighted and stopping short of the bottom, because that is where the
-        // name actually lands; darkening the whole frame would dim the face for no
-        // reason. Pure alpha over black, so it never tints the photograph.
-        const scrim = Buffer.from(
-          `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">`
-          + `<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1">`
-          + `<stop offset="0" stop-color="#000" stop-opacity="0.55"/>`
-          + `<stop offset="0.62" stop-color="#000" stop-opacity="0.10"/>`
-          + `<stop offset="1" stop-color="#000" stop-opacity="0"/>`
-          + `</linearGradient></defs>`
-          + `<rect width="${width}" height="${height}" fill="url(#s)"/></svg>`,
-        );
+    /**
+     * The name, drawn into the band rather than left to primaryFields.
+     *
+     * PassKit sizes a primary field itself and offers no key to influence it, so a
+     * short name came out enormous and a long one small - measured on an iPhone 17
+     * Pro, 105px for "Raphael Okojie" against 62px for a 29-character name. Drawing
+     * it here fixes the size instead, so every card reads the same, and only a name
+     * genuinely too wide to fit comes down.
+     *
+     * The cost, stated plainly: text in an image is invisible to VoiceOver. The name
+     * still reaches assistive technology through the pass's description field, which
+     * is "<name> · ehllo card".
+     */
+    // PassKit insets its own field rows about 33pt from the card edge. The name is
+    // drawn by us, so it has to match that by hand or it reads as misaligned - at 20pt
+    // it sat proud of the row beneath it and looked clipped by the card edge.
+    const NAME_PAD = 33;
 
-        files[name] = await sharp({
-          create: { width, height, channels: 4, background: stripBackground },
-        })
-          .composite([{ input: photo }, { input: scrim }])
-          .png()
-          .toBuffer();
-      }));
-    } else {
-      // No photo is a normal state, not a broken one - but a flat band spends the
-      // most prominent 123pt of the pass on nothing, so it carries the person's
-      // initials instead. Same job an avatar does everywhere else in the app: it
-      // stands in for a face without pretending to be one.
-      //
-      // Text comes from an SVG composite because that is the only way sharp draws
-      // type, and it depends on a font being present in the runtime. If none is -
-      // fontconfig is thin in a serverless image - the composite is what fails,
-      // not the pass: each scale falls back to the flat band this branch used to
-      // produce, so the worst case is exactly the old behaviour.
-      const initials = initialsFor(card.fullName);
-      const inkColor = themeForegroundColor(normalizeThemeColor(card.themeColor));
-      await Promise.all(STRIP_SCALES.map(async ([name, width, height]) => {
-        const band = () => sharp({
-          create: { width, height, channels: 4, background: stripBackground },
-        });
+    const nameSvg = (
+      width: number,
+      height: number,
+      scale: number,
+      ink: string,
+      opts: { x: number; baseline: number; centred?: boolean },
+    ) => {
+      if (!name) return null;
+      const available = width - opts.x - NAME_PAD * scale;
+      const base = 30 * scale;
+      // Shrink only when it will not fit, and never below a size that stays legible -
+      // past that point letting it clip is kinder than type nobody can read.
+      let size = base;
+      while (size > 17 * scale && approximateTextWidth(name, size) > available) size -= scale;
+      return `<text x="${opts.x}" y="${opts.baseline}"`
+        + (opts.centred ? ` dominant-baseline="central"` : "")
+        + ` font-family="Helvetica Neue, Helvetica, Arial, sans-serif"`
+        + ` font-size="${Math.round(size)}" font-weight="600" fill="${ink}">${svgText(name)}</text>`;
+    };
 
-        if (initials) {
-          try {
-            // Sized off the band rather than fixed, so @2x and @3x scale with it
-            // instead of drifting. Letter-spacing opens up a two-letter monogram,
-            // which otherwise reads as one clenched word.
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">`
-              + `<text x="50%" y="50%" text-anchor="middle" dominant-baseline="central"`
-              + ` font-family="Helvetica Neue, Helvetica, Arial, sans-serif"`
-              + ` font-size="${Math.round(height * 0.44)}" font-weight="600"`
-              + ` letter-spacing="${Math.max(1, Math.round(height * 0.03))}"`
-              + ` fill="${inkColor}">${initials}</text></svg>`;
-            files[name] = await band()
-              .composite([{ input: Buffer.from(svg) }])
-              .png()
-              .toBuffer();
-            return;
-          } catch {
-            // Fall through to the plain band below.
-          }
+    await Promise.all(STRIP_SCALES.map(async ([fileName, width, height]) => {
+      const scale = width / 375;
+      const band = () => sharp({
+        create: { width, height, channels: 4, background: stripBackground },
+      });
+
+      try {
+        if (profileImage) {
+          // "attention" keeps the face in frame far more reliably than a centre crop,
+          // which decapitates most portraits at this aspect.
+          const photo = await sharp(profileImage)
+            .resize(width, height, { fit: "cover", position: "attention" })
+            .png()
+            .toBuffer();
+
+          // A scrim under the name, bottom-weighted now that the name sits at the
+          // bottom. White text on an unknown photograph is fine over a dark jacket
+          // and illegible over a bright window, and we do not get to choose which.
+          // Pure alpha over black, so it never tints the photograph.
+          const overlay = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">`
+            + `<defs><linearGradient id="s" x1="0" y1="1" x2="0" y2="0">`
+            + `<stop offset="0" stop-color="#000" stop-opacity="0.62"/>`
+            + `<stop offset="0.55" stop-color="#000" stop-opacity="0.12"/>`
+            + `<stop offset="1" stop-color="#000" stop-opacity="0"/>`
+            + `</linearGradient></defs>`
+            + `<rect width="${width}" height="${height}" fill="url(#s)"/>`
+            + (nameSvg(width, height, scale, "#FFFFFF", { x: NAME_PAD * scale, baseline: height - 18 * scale }) ?? "")
+            + `</svg>`;
+
+          files[fileName] = await band()
+            .composite([{ input: photo }, { input: Buffer.from(overlay) }])
+            .png()
+            .toBuffer();
+          return;
         }
 
-        files[name] = await band().png().toBuffer();
-      }));
-    }
+        // No photograph: the band is simply the card's own colour, carrying the name
+        // and nothing else. An avatar with initials was tried here and taken back out -
+        // a circle floating in a 123pt strip read as a placeholder for something
+        // missing, where a clean field of the card's colour just reads as the card.
+        const plain = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">`
+          + (nameSvg(width, height, scale, themeInk, {
+            x: NAME_PAD * scale,
+            baseline: height / 2,
+            centred: true,
+          }) ?? "")
+          + `</svg>`;
+
+        files[fileName] = await band()
+          .composite([{ input: Buffer.from(plain) }])
+          .png()
+          .toBuffer();
+        return;
+      } catch {
+        // Drawing type needs a font in the runtime, and fontconfig is thin in a
+        // serverless image. If the composite fails, fall through to a band that is
+        // still the card's colour rather than losing the pass over a glyph.
+      }
+
+      files[fileName] = profileImage
+        ? await band()
+          .composite([{ input: await sharp(profileImage).resize(width, height, { fit: "cover", position: "attention" }).png().toBuffer() }])
+          .png()
+          .toBuffer()
+        : await band().png().toBuffer();
+    }));
+
   } catch (error) {
     // A pass without the band is still a working pass. Never fail the whole
     // download because one optional image could not be composed.
