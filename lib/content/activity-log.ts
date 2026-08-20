@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "09:50",
+    title: "Your calendar shows all your events, not a chosen few",
+    impact: "fix",
+    detail:
+      "Events were being withheld. Anything that repeats was dropped outright, and so was anything shorter than 45 minutes - so a weekly meetup never appeared, nor did a half-hour coffee, and nothing anywhere said why. You could look at a calendar you knew had things in it and see an empty week. Both rules are gone: every event on every calendar you have not hidden in Google now comes through. Titles are still never inspected, so nothing is judged on what it happens to be called.",
+    testing:
+      "Settings › Connected accounts, sync your calendar again, then check Upcoming for a recurring event and a short one.",
+  },
+  {
+    date: "2026-08-20",
     time: "05:20",
     title: "A scan tells you what it did, wherever you scanned from",
     impact: "improvement",

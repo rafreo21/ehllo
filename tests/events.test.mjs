@@ -63,15 +63,26 @@ describe("isEventCandidateWorthy", () => {
     assert.equal(isEventCandidateWorthy(baseCandidate), true);
   });
 
-  it("rejects a recurring event regardless of other signals", () => {
-    assert.equal(isEventCandidateWorthy({ ...baseCandidate, isRecurring: true }), false);
+  it("keeps a recurring event - a weekly meetup is still a meetup", () => {
+    // Previously excluded outright. People looked at a calendar they knew had events
+    // in it and saw nothing, with nothing saying why.
+    assert.equal(isEventCandidateWorthy({ ...baseCandidate, isRecurring: true }), true);
   });
 
-  it("rejects an event shorter than the duration floor", () => {
+  it("keeps a short event - a half-hour coffee is a real meeting", () => {
+    // There was a 45 minute floor. A 20 minute entry is a real thing someone did.
     assert.equal(isEventCandidateWorthy({
       ...baseCandidate,
       endsAt: "2026-08-10T14:20:00.000Z",
-    }), false);
+    }), true);
+  });
+
+  it("still judges nothing on the title", () => {
+    // The one rule that has not moved: no keyword matching, in either direction.
+    // It has no reliable stopping point across languages and produces exactly the
+    // false confidence that makes an inference feature feel stupid.
+    assert.equal(isEventCandidateWorthy({ ...baseCandidate, title: "Dentist" }), true);
+    assert.equal(isEventCandidateWorthy({ ...baseCandidate, title: "Annual Conference" }), true);
   });
 
   it("accepts an event with only internal attendees", () => {

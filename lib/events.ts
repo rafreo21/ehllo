@@ -42,28 +42,30 @@ export type CalendarCandidateInput = {
   isRecurring: boolean;
 };
 
-const MIN_CANDIDATE_DURATION_MINUTES = 45;
-
 /**
- * Decides whether a calendar entry is worth surfacing as an event
- * candidate, using only structural signals (recurrence, duration) rather
- * than matching event-sounding words in the title - title keyword matching
- * has no reliable stopping point across languages/styles and produces
- * exactly the false positives ("are you attending your dentist?") that make
- * an inference feature feel dumb. Virtual and physical locations are
- * treated the same - an RSVP is an RSVP regardless of venue, and a bare
- * self-added block (no formal invite, no attendees) is just as often a real
- * event as a calendar invite is - many physical events get added to a
- * calendar by hand, not sent as an invite, so attendee presence isn't
- * required.
+ * Whether a calendar entry can be surfaced as an event at all.
+ *
+ * Only structural validity now: a parseable start, a parseable end, and an end after
+ * the start. Nothing is judged on what it looks like.
+ *
+ * It used to drop two whole classes of entry. Anything recurring was excluded, and
+ * anything under 45 minutes. The reasoning was to keep the list to things that read as
+ * real gatherings rather than filling it with standups and dentist appointments - but
+ * the effect was that people looked at a calendar they knew had events in it and saw
+ * nothing, with nothing anywhere saying why. A weekly meetup is recurring. A half-hour
+ * coffee is a real meeting. Silently withholding them is worse than showing something
+ * nobody needed.
+ *
+ * Titles are still never inspected. Keyword matching has no reliable stopping point
+ * across languages and styles, and produces exactly the false confidence that makes an
+ * inference feature feel stupid. Virtual and physical are treated the same, and a
+ * self-added block with no attendees counts - plenty of real events are typed into a
+ * calendar by hand rather than sent as an invite.
  */
 export function isEventCandidateWorthy(input: CalendarCandidateInput): boolean {
-  if (input.isRecurring) return false;
-
   const start = Date.parse(input.startsAt);
   const end = Date.parse(input.endsAt);
   if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return false;
-  if ((end - start) / 60_000 < MIN_CANDIDATE_DURATION_MINUTES) return false;
 
   return true;
 }
