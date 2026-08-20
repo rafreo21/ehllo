@@ -15,6 +15,7 @@ import { buildGuestAddedEmail } from "../../../lib/guest-added-email";
 import { sendEmail } from "../../../lib/send-email";
 import { applyFollowUpTransition } from "../../../lib/follow-up-lifecycle";
 import { resolveCurrentEventIdForUser } from "../../../lib/events-server";
+import { createServiceSupabaseClient } from "../../../lib/supabase/service";
 
 const allowedStatuses = new Set(["draft", "reviewed", "shared", "archived"]);
 
@@ -383,6 +384,54 @@ export async function POST(request: Request) {
     );
   }
   const newGuestNames = await syncParticipantsToContacts(supabase, user.workspaceId, user.id, user.displayName || "Someone you met", participants);
+
+  // Sharing answers whoever asked to see it. Anybody waiting is told the moment it happens,
+  // because being refused and being unread look identical from their side - the same silence
+  // that made contact requests feel broken. Best effort: the meeting is already shared, and
+  // failing the save over a notification would undo work the host actually completed.
+  if (nextStatus === "shared") {
+    try {
+      const { data: resolved } = await supabase.rpc("resolve_encounter_access_requests", {
+        p_encounter_id: body.id,
+      });
+      const waiting = (resolved ?? {}) as {
+        granted?: Array<{ userId?: string; workspaceId?: string }>;
+        encounterTitle?: string;
+        ownerName?: string;
+      };
+      const service = waiting.granted?.length ? createServiceSupabaseClient() : null;
+      for (const person of waiting.granted ?? []) {
+        if (!service || !person.userId || !person.workspaceId) continue;
+        const title = `${waiting.ownerName ?? "Someone"} shared “${waiting.encounterTitle ?? "a meeting"}” with you`;
+        const notificationBody = "Open it to read the recap.";
+        // Written into the requester's own workspace, with the service client, because it
+        // belongs to them and not to the host who triggered it.
+        const created = await createNotification(service, {
+          userId: person.userId,
+          workspaceId: person.workspaceId,
+          type: "access_granted",
+          title,
+          body: notificationBody,
+          encounterId: body.id,
+          dedupeKey: `access_granted:${body.id}:${person.userId}`,
+        });
+        if (created) {
+          await dispatchPushForUser(service, {
+            userId: person.userId,
+            type: "access_granted",
+            title,
+            body: notificationBody,
+            encounterId: body.id,
+          });
+        }
+      }
+    } catch (caught) {
+      console.error("[encounters] shared, but telling the people waiting threw", {
+        encounterId: body.id,
+        message: caught instanceof Error ? caught.message : String(caught),
+      });
+    }
+  }
 
   // The encounter is reviewable - and its transcript actually has content -
   // the first time it is saved. This is the single place both mobile and

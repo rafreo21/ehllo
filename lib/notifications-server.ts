@@ -21,6 +21,11 @@ export const NOTIFICATION_TYPES = [
   "keep_in_touch",
   "contact_request",
   "follow_up_completed",
+  // Somebody asking the host to share a meeting, and the host having done so. Added to the
+  // table's check constraint in the same migration as this line: a type the code writes and
+  // the table refuses is how answering a contact request failed silently for two days.
+  "access_request",
+  "access_granted",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

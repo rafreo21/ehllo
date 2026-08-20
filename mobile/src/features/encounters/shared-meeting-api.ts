@@ -36,6 +36,38 @@ export function sharedRecordingUri(shareToken: string) {
   return `${apiBase()}/api/encounters/share/${encodeURIComponent(shareToken)}/recording`;
 }
 
+/**
+ * Asks the host to share a meeting they have not shared.
+ *
+ * "Not available" was true and useless: you can see in your shared history that the meeting
+ * happened, because you were there, and had no way to ask for it - so the only route forward
+ * was to message the person outside ehllo.
+ *
+ * Returns whether it turned out to be shared already (open it instead) and whether you had
+ * already asked, so the sheet can say "asked" rather than implying a second nudge went out.
+ */
+export async function requestMeetingAccess(
+  accessToken: string,
+  encounterId: string,
+): Promise<{ alreadyShared: boolean; alreadyRequested: boolean }> {
+  const response = await mobileFetch(
+    `/api/encounters/${encodeURIComponent(encounterId)}/access-request`,
+    accessToken,
+    { method: 'POST' },
+  );
+  const payload = await readMobileApiJson<{
+    ok?: boolean;
+    alreadyShared?: boolean;
+    alreadyRequested?: boolean;
+    error?: string;
+  }>(response, 'Could not send that request.');
+  if (!response.ok) throw new Error(payload.error || 'Could not send that request.');
+  return {
+    alreadyShared: payload.alreadyShared === true,
+    alreadyRequested: payload.alreadyRequested === true,
+  };
+}
+
 export async function fetchSharedMeeting(
   accessToken: string,
   encounterId: string,

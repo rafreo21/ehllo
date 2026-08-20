@@ -30,6 +30,8 @@ const DEFAULT_TYPE_PREFERENCES: NotificationPreferenceMap = {
   keep_in_touch: true,
   contact_request: true,
   follow_up_completed: true,
+  access_request: true,
+  access_granted: true,
 };
 
 // "keep_in_touch" alone still renders a Phosphor icon (HandWaving has no
@@ -52,6 +54,8 @@ const NOTIFICATION_TYPE_ROWS: NotificationTypeRow[] = [
   { type: "connection_added", icon: UsersThreeIcon, label: "New connections", hint: "Someone connects with you by scanning your card." },
   { type: "keep_in_touch", icon: HandWavingIcon, label: "Keep in touch nudges", hint: "A gentle reminder to reach out after you connect." },
   { type: "contact_request", icon: EnvelopeSimpleIcon, label: "Contact requests", hint: "Someone asks you for a phone number or email." },
+  { type: "access_request", icon: EnvelopeSimpleIcon, label: "Access requests", hint: "Someone asks to see a meeting you have not shared." },
+  { type: "access_granted", icon: EnvelopeSimpleIcon, label: "Access granted", hint: "A meeting you asked to see has been shared with you." },
   { type: "follow_up_completed", icon: CheckIcon, label: "Follow-up completed", hint: "The other person ticks off a follow-up you share." },
 ];
 

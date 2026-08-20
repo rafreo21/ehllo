@@ -59,6 +59,24 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "18:50",
+    title: "You can ask for a meeting instead of hitting a wall",
+    impact: "new",
+    detail:
+      "Opening a meeting the host had not shared said \"this meeting is not available\" and stopped there. It was true and it was useless: you can see in your shared history that the meeting happened, because you were there, and the only way forward was to message the person outside ehllo. It now says the host has not shared it yet and gives you a Request access button. They get a notification, tapping it takes them straight to the meeting where the sharing switch already is, and the moment they share it you are told. Nobody is left guessing whether they were refused or simply not seen.",
+    testing:
+      "From a second account, open a meeting in someone's history that they have not shared, and ask for it.",
+  },
+  {
+    date: "2026-08-20",
+    time: "18:20",
+    title: "Sign-in codes arrive in your inbox, not your junk folder",
+    impact: "fix",
+    detail:
+      "Sign-in codes were reliably junked on iCloud addresses. The explanation we had was wrong twice over: our own DNS was correct all along, and the codes are not sent by us at all - they came from our sign-in provider's shared mail server, on a domain that has nothing to do with ehllo, which is exactly what a strict filter distrusts. They now go out through our own sending service as product@ehllo.io, so they inherit the signing our other mail already has. Confirmed landing in the inbox.",
+  },
+  {
+    date: "2026-08-20",
     time: "16:10",
     title: "Sharing a meeting now reaches people who already use ehllo",
     impact: "fix",
@@ -860,7 +878,7 @@ export const KNOWN_ISSUES: KnownIssue[] = [
   {
     title: "Sign-in codes landing in junk",
     time: "18:20",
-    status: "in-progress",
+    status: "fixed",
     detail:
       "Sign-in code emails were going to the junk folder, reliably on iCloud addresses.",
     resolution:

@@ -8,7 +8,10 @@ export type NotificationType =
   | 'connection_added'
   | 'keep_in_touch'
   | 'contact_request'
-  | 'follow_up_completed';
+  | 'follow_up_completed'
+  // Somebody asking the host to share a meeting, and the host having shared it.
+  | 'access_request'
+  | 'access_granted';
 
 export type NotificationRecord = {
   id: string;
@@ -69,6 +72,8 @@ export async function fetchNotificationPreferences(accessToken: string): Promise
     keep_in_touch: true,
     contact_request: true,
     follow_up_completed: true,
+    access_request: true,
+    access_granted: true,
   };
 }
 
@@ -137,6 +142,16 @@ export function notificationDeepLink(notification: NotificationRecord): string |
   // open=1 so the answer sheet is already up on arrival. Landing on the list and making
   // you find the row you were just told about is a second search for the same thing.
   if (notification.type === 'contact_request') return '/settings/contact-requests?open=1';
+  // Straight to the meeting the host is being asked to share. The review screen is where the
+  // sharing switch already lives, so approving is the thing they were already able to do -
+  // the notification just stops them having to go and find it.
+  if (notification.type === 'access_request' && notification.encounterId) {
+    return `/capture/${notification.encounterId}`;
+  }
+  // And for the person who asked, straight to the meeting they can now read.
+  if (notification.type === 'access_granted' && notification.encounterId) {
+    return `/connections`;
+  }
   // Straight to the follow-up that was ticked off, when we know which one.
   if (notification.type === 'follow_up_completed') return '/settings/follow-ups';
   if (notification.type === 'keep_in_touch') {

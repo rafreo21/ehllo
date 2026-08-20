@@ -4,8 +4,12 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { RecordingPlayback } from '@/components/recording-playback';
 import { Body, Button } from '@/components/ui';
+import LottieView from 'lottie-react-native';
+
+import { useDeferredMount } from '@/lib/use-deferred-mount';
 import {
   fetchSharedMeeting,
+  requestMeetingAccess,
   sharedRecordingUri,
   SharedMeetingUnavailableError,
   type SharedMeeting,
@@ -58,6 +62,10 @@ export function SharedMeetingSheet({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [unavailable, setUnavailable] = useState('');
+  const [requesting, setRequesting] = useState(false);
+  const [requestState, setRequestState] = useState<'' | 'sent' | 'already'>('');
+  const [requestError, setRequestError] = useState('');
+  const showIllustration = useDeferredMount(visible);
 
   useEffect(() => {
     if (!visible || !encounterId || !accessToken) return;
@@ -67,6 +75,8 @@ export function SharedMeetingSheet({
       setLoading(true);
       setError('');
       setUnavailable('');
+      setRequestState('');
+      setRequestError('');
       return fetchSharedMeeting(accessToken, encounterId)
         .then((result) => {
           if (cancelled) return;
@@ -86,6 +96,29 @@ export function SharedMeetingSheet({
     return () => { cancelled = true; };
   }, [visible, encounterId, accessToken]);
 
+  async function askForAccess() {
+    if (!accessToken || !encounterId || requesting) return;
+    setRequesting(true);
+    setRequestError('');
+    try {
+      const result = await requestMeetingAccess(accessToken, encounterId);
+      // It was shared after all - open it rather than leaving them waiting for an answer
+      // nobody owes them.
+      if (result.alreadyShared) {
+        const opened = await fetchSharedMeeting(accessToken, encounterId);
+        setMeeting(opened.meeting);
+        setShareToken(opened.shareToken);
+        setUnavailable('');
+        return;
+      }
+      setRequestState(result.alreadyRequested ? 'already' : 'sent');
+    } catch (caught) {
+      setRequestError(describeError(caught, 'Could not send that request.'));
+    } finally {
+      setRequesting(false);
+    }
+  }
+
   return (
     <BottomSheet
       visible={visible}
@@ -96,7 +129,40 @@ export function SharedMeetingSheet({
         <View style={styles.loadingWrap}><ActivityIndicator color={colors.ink} /></View>
       ) : null}
 
-      {unavailable ? <Body style={styles.centred}>{unavailable}</Body> : null}
+      {/* Not a dead end any more. An unshared meeting is a decision the host has not made
+          yet, so this says that and offers the one thing that can move it - with the same
+          illustration treatment as every other outcome sheet, because arriving at a wall of
+          plain text reads as an error even when nothing is wrong. */}
+      {unavailable ? (
+        <View style={styles.gateWrap}>
+          <View style={styles.gateArt}>
+            {showIllustration ? (
+              <LottieView
+                source={requestState
+                  ? require('@/assets/animations/share.json')
+                  : require('@/assets/animations/private-by-default.json')}
+                autoPlay
+                loop={false}
+                style={styles.gateLottie}
+              />
+            ) : null}
+          </View>
+          <Text style={styles.gateTitle}>
+            {requestState ? 'Asked' : 'Not shared yet'}
+          </Text>
+          <Body style={styles.centred}>
+            {requestState === 'sent'
+              ? 'They have been asked. You will be told the moment they share it.'
+              : requestState === 'already'
+                ? 'You have already asked for this one. They will be told again when they open ehllo.'
+                : 'The host has not shared this meeting. You can ask them to.'}
+          </Body>
+          {requestError ? <Text style={styles.errorText}>{requestError}</Text> : null}
+          {!requestState ? (
+            <Button loading={requesting} onPress={() => void askForAccess()}>Request access</Button>
+          ) : null}
+        </View>
+      ) : null}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       {meeting && !unavailable ? (
@@ -142,6 +208,10 @@ export function SharedMeetingSheet({
 const styles = StyleSheet.create({
   loadingWrap: { paddingVertical: spacing.x6, alignItems: 'center' },
   centred: { textAlign: 'center' },
+  gateWrap: { alignItems: 'center', gap: spacing.x3, paddingVertical: spacing.x2 },
+  gateArt: { width: 180, height: 180, alignItems: 'center', justifyContent: 'center' },
+  gateLottie: { width: '100%', height: '100%' },
+  gateTitle: { color: colors.ink, fontSize: 18, fontFamily: fonts.bold, fontWeight: '800', textAlign: 'center' },
   meta: { color: colors.muted, fontSize: 13, fontFamily: fonts.regular },
   recordingCard: { gap: spacing.x2, padding: spacing.x4, borderRadius: radius.medium, backgroundColor: colors.canvas },
   recordingNote: { color: colors.muted, fontSize: 12, lineHeight: 17, fontFamily: fonts.regular },
