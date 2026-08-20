@@ -1,4 +1,4 @@
-import Constants from 'expo-constants';
+import { reportableAppVersion } from '@/lib/build-info';
 import { Platform } from 'react-native';
 
 import { mobileFetch } from '@/lib/mobile-api';
@@ -24,7 +24,7 @@ export async function reportClientError(report: ClientErrorReport) {
       body: JSON.stringify({
         ...report,
         surface: 'mobile-consumer',
-        appVersion: `${Constants.expoConfig?.version || 'unknown'} (${String(Constants.expoConfig?.extra?.buildNumber || '')})`,
+        appVersion: reportableAppVersion(),
         platform: `${Platform.OS} ${String(Platform.Version)}`,
       }),
     });

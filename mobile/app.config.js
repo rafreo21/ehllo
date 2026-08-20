@@ -289,8 +289,11 @@ module.exports = {
       // rather than via env var since this project never wires EAS env vars
       // through to runtime (see BACKEND above), only local-only .env.
       sentryDsn: "https://95ecbc235e3dc8301c48cb83da697b06@o4511911251214336.ingest.us.sentry.io/4511911445463040",
-      buildNumber: 5,
-      buildStamp: IS_STAGING ? "2026-08-14-ehllo-staging" : "2026-08-14-ehllo",
+      // buildNumber and buildStamp used to live here, hardcoded. EAS owns the build
+      // number (appVersionSource "remote" with autoIncrement in eas.json), so the
+      // constant was a copy of a value nothing updated - it read 5 while the shipped
+      // build was 6. The settings screen reports channel, runtime and update id
+      // instead, which it can actually establish at runtime.
       appVariant: APP_VARIANT,
     },
   },

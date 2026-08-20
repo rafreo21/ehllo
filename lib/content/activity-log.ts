@@ -51,12 +51,92 @@ export type KnownIssue = {
   reportedOn: string;
 };
 
-export const ACTIVITY_UPDATED = "18 August 2026";
+export const ACTIVITY_UPDATED = "20 August 2026";
 
 /** Times are local (BST). */
 export const ACTIVITY_TZ_OFFSET = "+01:00";
 
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
+  {
+    date: "2026-08-20",
+    time: "03:30",
+    title: "Android notifications work",
+    impact: "fix",
+    detail:
+      "Android has never been able to receive a notification, and the reason was one file that never left a laptop. Android push runs through Firebase, Firebase needs a configuration file compiled into the app, and that file was never committed - so every Android build was assembled without it and no Android phone could even be issued a push token. Not one ever had been, while iPhones registered normally. The file is in the build now, and the build is on internal testing: update from Play and notifications arrive. Anyone still on the previous build gets nothing until they update, because this part of the app cannot be changed over the air.",
+    testing:
+      "Update ehllo from Play internal testing, sign in, turn Device notifications on in Settings › Notifications, then have someone record a follow-up about you.",
+  },
+  {
+    date: "2026-08-20",
+    time: "03:10",
+    title: "Scanning someone's card opens the app instead of asking you twice",
+    impact: "fix",
+    detail:
+      "Scanning a card QR on Android put up a chooser - open in the app, or open in the browser - and picking the app showed an error page instead of the person. Two separate faults. The app claimed those links but had nothing to answer them with, so it landed nowhere; and the file that proves to Android the app owns the link listed the wrong signing certificate, so Android never trusted the claim and asked instead of just opening. A verified link never asks. Both are fixed, so a scanned card now opens straight into the app and lands on the person.",
+    testing:
+      "Scan a card QR from Apple Wallet, Google Wallet, or the app's own code. It should go straight to the app with no chooser.",
+  },
+  {
+    date: "2026-08-20",
+    time: "02:40",
+    title: "Meeting transcripts and summaries moved to Gemini",
+    impact: "improvement",
+    detail:
+      "Capture now transcribes and summarises through Gemini rather than the previous provider. In testing it returned the transcript verbatim and pulled the company, the role and two follow-ups with the right owners out of a short conversation - including one that belonged to the other person in the room rather than the speaker. Transcription takes a little longer than before; the summary is meaningfully better. Speaker labels are preserved.",
+    testing:
+      "Record a short capture with two people talking and check the transcript keeps them apart, and that the follow-ups it suggests have the right owner.",
+  },
+  {
+    date: "2026-08-20",
+    time: "02:20",
+    title: "Your Apple Wallet pass updates itself, and stops multiplying",
+    impact: "new",
+    detail:
+      "Adding your card to Apple Wallet twice used to leave two passes, because each download counted as a different pass. It is one pass now, and re-adding replaces it. More usefully, a pass can keep itself current: change your name, role or company and every person holding your pass has theirs updated, without anyone re-adding anything. Passes handed out before today cannot do this - they were issued without the machinery - so remove and re-add yours once to move onto the new kind. The pass itself was rebuilt too: your name at one consistent size whoever you are, the brand mark and wordmark together, and everything sharp on modern screens.",
+    testing:
+      "Remove your ehllo pass from Wallet, add it again from the app, then edit your role and publish. The pass in Wallet should follow.",
+  },
+  {
+    date: "2026-08-20",
+    time: "02:00",
+    title: "Wallet button no longer claims a pass you never added",
+    impact: "fix",
+    detail:
+      "Tapping Add to Apple Wallet and then backing out of Apple's sheet still recorded the pass as saved. The button changed to View in Apple Wallet permanently, so there was no way back to an Add button and nothing in Wallet to view - which is exactly the state some of you were stuck in. It asks now, the same way the Google Wallet button always has, and only remembers the pass once you say it saved.",
+    testing:
+      "Tap Add to Apple Wallet, cancel Apple's sheet, and check the button still says Add.",
+  },
+  {
+    date: "2026-08-20",
+    time: "01:40",
+    title: "Sharing by tap keeps the event you are at",
+    impact: "fix",
+    detail:
+      "When an event is running, your card link carries the event so the connection is filed against it. Tap to share was dropping that. It read the link once, before the app had finished working out which event you were at, and then kept the plain version for the rest of the session - so a tap at an event connected you to the person but lost where you met. Nothing said so, which is the worst way to lose it.",
+    testing:
+      "At a live event, share by tap and check the connection shows the event.",
+  },
+  {
+    date: "2026-08-20",
+    time: "01:20",
+    title: "Settings reports which build you are really on",
+    impact: "fix",
+    detail:
+      "The version on the settings screen was written by hand and had stopped matching reality - it read build 5 while phones were running 6, which sent us chasing a Play update that had in fact worked. It no longer prints a number nobody maintains. What it shows now is established when you open it: your version, your channel, and the exact bundle your phone is running, which is the part that actually differs between two devices. Error reports carry the same identity, so a crash can be traced to one bundle.",
+    testing:
+      "Settings, bottom of the screen. Two phones that have both refreshed should show identical values.",
+  },
+  {
+    date: "2026-08-19",
+    time: "10:20",
+    title: "Reminder times are respected, and you can pick more than one",
+    impact: "fix",
+    detail:
+      "Picking a reminder time did not mean much. If the time you chose had already passed that day, the reminder fired five seconds after you next opened the app instead - so choosing 09:00 and opening ehllo in the evening pinged you immediately, which is the opposite of what a chosen time is for. That is gone: a slot that has already passed is simply skipped, and the overdue reminder still covers anything left undone. The setting is also no longer one-of-three. Tap as many times as you want and a follow-up due that day pings at each of them; whatever single time you had picked before is carried over as your starting selection.",
+    testing:
+      "Settings › Notifications › Reminder times, tap two or three times, then check a follow-up due today only pings at the times still ahead of you.",
+  },
   {
     date: "2026-08-19",
     time: "01:10",
@@ -440,23 +520,43 @@ export const ACTIVITY_ENTRIES: ActivityEntry[] = [
 
 export const KNOWN_ISSUES: KnownIssue[] = [
   {
-    title: "Android gets no notifications, iOS does",
-    time: "01:55",
+    title: "Some Apple Wallet passes showed boxes instead of a name",
+    time: "02:35",
+    status: "fixed",
+    detail:
+      "For a short window today, a pass built with the new design printed a row of empty squares where the name should be. Anyone who added or refreshed a pass in that window saw it.",
+    resolution:
+      "Ours, and worth naming. Drawing the name onto the pass needed a typeface, the server that builds passes has none installed, and it drew placeholder squares rather than failing - so the safeguard meant to catch this never fired, because nothing had gone wrong as far as the machine was concerned. It looked correct everywhere we checked, because the machines we checked on have fonts. Reverted within the hour, then rebuilt to carry the lettering as shapes instead of asking for a typeface. Remove and re-add the pass to clear it.",
+    reportedOn: "2026-08-20",
+  },
+  {
+    title: "The daily reminder digest ignores your chosen reminder times",
+    time: "10:20",
     status: "open",
+    detail:
+      "The reminder times you pick are honoured by the reminders the app schedules on your phone. The one daily summary we send from the server is not covered by them - it goes out at the same hour for everybody, so you can see a reminder at an hour you did not choose.",
+    resolution:
+      "Fixing it properly needs two things we do not store yet: your reminder times on the account rather than only on the device, and your time zone. Flagged rather than guessed at, because sending a summary in the wrong time zone is worse than sending it at a fixed hour.",
+    reportedOn: "2026-08-19",
+  },
+  {
+    title: "Android gets no notifications, iOS does",
+    time: "03:30",
+    status: "fixed",
     detail:
       "Notifications arrive on iPhone and never on Android, even with every preference switched on. It is not the preferences and not the app: the notification channel and the permission request are both in place, and the same code registers on both platforms.",
     resolution:
-      "Android needs Firebase before a phone can even be issued a push token, and it has never been set up for this app - which is why not one Android device has ever registered, while iPhones register fine. Needs a Firebase project for com.ehllo.app.staging, its google-services.json added to the app, and an FCM key uploaded to the build service. The app is already wired to pick the file up the moment it exists.",
+      "Fixed. The Firebase configuration existed but had never been committed, so every build was assembled without it and no Android phone could be issued a push token - which is why the table of registered devices had never held a single Android row. It is in the build now, that build is on internal testing, and an Android phone has registered and received a notification. Anyone still on the previous build gets nothing until they update: this part of the app is compiled in and cannot be sent over the air.",
     reportedOn: "2026-08-19",
   },
   {
     title: "Push notifications are not being delivered at all",
     time: "23:55",
-    status: "open",
+    status: "fixed",
     detail:
-      "Notifications appear in the bell inside the app, but nothing arrives on the lock screen. Everything on our side is working - the request is recorded, the notification is created for the right person, and a push is attempted the moment it happens.",
+      "Notifications appeared in the bell inside the app, but nothing arrived on the lock screen. Everything on our side was working - the request recorded, the notification created for the right person, and a push attempted the moment it happened.",
     resolution:
-      "Apple is refusing them: \"Could not find APNs credentials\". The project has no Apple push key uploaded, so every push has failed regardless of anyone's settings. Needs a key generated against the Apple developer account; no code change will help until then.",
+      "Fixed, and worth saying plainly that I misdiagnosed it twice. Apple reported \"Could not find APNs credentials\" and I twice concluded no push key existed. One did, and had for days - I had been reading the credentials for the wrong build target. The real cause was that the installed app was built under a different identity to the one the push key belongs to, so Apple had no credentials for the app actually asking. Rebuilding it under the right identity fixed it.",
     reportedOn: "2026-08-18",
   },
   {
