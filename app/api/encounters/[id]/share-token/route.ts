@@ -41,7 +41,28 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     return NextResponse.json({ error: "We couldn’t open this meeting." }, { status: 500 });
   }
 
-  const shareToken = typeof data === "string" ? data.trim() : "";
+  let shareToken = typeof data === "string" ? data.trim() : "";
+
+  // Nothing back can mean the meeting really is not yours to read - or that it was shared
+  // with your address and never attached to your account. A participant row is only tied to
+  // an account by a claim, and until now the only claim ran during visitor onboarding: the
+  // path a brand new signup takes. So a meeting shared between two people who both already
+  // used ehllo was permanently invisible to the recipient, and this route truthfully said it
+  // had not been shared with them.
+  //
+  // Claimed here rather than only on sign-in, so somebody already signed in when the share
+  // arrived does not have to sign out and back in to see it. It can only ever claim rows
+  // matching their own verified address on meetings whose owner has actually shared them.
+  if (!shareToken) {
+    const { data: claimed } = await supabase.rpc("claim_my_encounter_participants");
+    if (typeof claimed === "number" && claimed > 0) {
+      const retry = await supabase.rpc("get_share_token_for_participant", {
+        p_encounter_id: encounterId,
+      });
+      shareToken = typeof retry.data === "string" ? retry.data.trim() : "";
+    }
+  }
+
   if (!shareToken) {
     return NextResponse.json(
       { code: "not_shared", error: "This meeting hasn’t been shared with you." },

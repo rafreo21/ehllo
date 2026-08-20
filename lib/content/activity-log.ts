@@ -59,6 +59,46 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "16:10",
+    title: "Sharing a meeting now reaches people who already use ehllo",
+    impact: "fix",
+    detail:
+      "Share a meeting with someone who already has an account and it never arrived. They saw \"this meeting is not available\", which was true and completely misleading: a shared meeting is attached to its guest by their email address, and the step that ties that to a real account only ever ran when somebody signed up for the first time from a share link. So sharing worked between a user and a stranger, and silently failed between two people who both already use ehllo - the only case that matters once more than one person is testing. It is now attached on sign-in and when you open the meeting, so anything shared with you before today appears without you doing anything.",
+    testing:
+      "Share a meeting from one account and open it from the other.",
+  },
+  {
+    date: "2026-08-20",
+    time: "16:00",
+    title: "\"This meeting changed on another device\" when nothing had",
+    impact: "fix",
+    detail:
+      "Approving a meeting for sharing could fail, claiming it had been edited somewhere else, when nothing of the kind had happened. Writing the transcript, the summary and the title all happen on our side minutes after you stop recording, and each one counts as a change - so the copy on your phone went out of date on its own, and the next thing you did was refused and blamed on a device that did not exist. This hit exactly the meetings you would most want to share, the ones with a real recording behind them. Your change is now carried onto the up-to-date version and saved, rather than thrown away with an explanation that was not true.",
+    testing:
+      "Record a meeting, wait for the transcript, then share it.",
+  },
+  {
+    date: "2026-08-20",
+    time: "15:50",
+    title: "Starting a capture from someone's page keeps that person",
+    impact: "fix",
+    detail:
+      "Tapping Capture on somebody's page could quietly pick up an unrelated half-finished recording instead of starting a new one - and because the person is only filled in when that recovered draft has nobody in it, the person you had just chosen was dropped. That is how a recording started from someone's own page refused to save with \"add at least one person you met\", and how two entries appeared in your captures afterwards. The person you tapped from now wins, and the older draft is left alone in your captures to pick up deliberately rather than being taken over.",
+    testing:
+      "Start a capture from a person's page while another capture is already in progress.",
+  },
+  {
+    date: "2026-08-20",
+    time: "15:40",
+    title: "A meeting with no transcript is no longer a dead end",
+    impact: "improvement",
+    detail:
+      "If a recording came out with no transcript, the meeting simply said so and offered nothing - which is the worst moment to offer nothing, because the recording is the one part that cannot be made again. If the audio is still on your device there is now a Transcribe again button, and it says plainly when the recording has gone rather than leaving you to guess. Meeting and follow-up rows in someone's history are also back to two lines each, so they stop being different heights.",
+    testing:
+      "Open a meeting whose transcript is empty while its recording is still on the device.",
+  },
+  {
+    date: "2026-08-20",
     time: "15:20",
     title: "Reminders can arrive at your time, not just after it",
     impact: "improvement",

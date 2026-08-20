@@ -652,7 +652,27 @@ export default function CaptureWizardScreen() {
             lastSyncedDraftAtRef.current = remote.updatedAt;
           }
         }
-        const next = { ...(stored ?? remote ?? createFreshCaptureDraft()) };
+        let recovered = stored ?? remote ?? null;
+
+        // Tapping Capture on somebody's page says who this conversation is with. Without a
+        // draftId the recovery path above returns "whatever was last open", so an unrelated
+        // half-finished draft was silently adopted - and because the person is only seeded
+        // when the recovered draft has nobody in it, the person you actually chose was
+        // dropped. That is how a recording ends up refusing to save with "add at least one
+        // person you met" when you started it from that person's own page, and how one
+        // conversation ends up recorded against another.
+        //
+        // The old draft is left alone rather than overwritten. It stays in the capture list
+        // to be resumed deliberately, which is the only place resuming should happen.
+        if (!params.draftId && params.personName?.trim() && recovered) {
+          const intended = String(params.personName).trim().toLowerCase();
+          const alreadyAbout = (recovered.people ?? []).some(
+            (person) => person.name?.trim().toLowerCase() === intended,
+          );
+          if (!alreadyAbout) recovered = null;
+        }
+
+        const next = { ...(recovered ?? createFreshCaptureDraft()) };
         if (params.exchange) next.exchangeId = String(params.exchange);
         if (!(next.people ?? []).length && params.personName?.trim()) {
           next.people = [createGatherPerson({
@@ -672,7 +692,7 @@ export default function CaptureWizardScreen() {
           }
         }
         setDraft(next);
-        if (!stored) void writeCaptureDraft(next);
+        if (!recovered) void writeCaptureDraft(next);
       } finally {
         setDraftReady(true);
       }

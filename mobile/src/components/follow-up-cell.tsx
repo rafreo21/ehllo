@@ -62,8 +62,11 @@ export function FollowUpCell({ item, onPress, onComplete, onReopen, completing }
             </Text>
             {item.owner === 'guest' ? <Text style={styles.ownerTag}>Their turn</Text> : null}
           </View>
+          {/* One line, matching the meeting cells above it. At two, a long channel name plus
+              a person's name wrapped and this row stood a line taller than its neighbours -
+              and rows of uneven height are what stops a list being scannable. */}
           {item.title ? (
-            <Text style={styles.subtitle} numberOfLines={2}>
+            <Text style={styles.subtitle} numberOfLines={1}>
               {isFollowUpChannel(item.channel)
                 ? displayFollowUpTitle(item.title, item.channel)
                 : item.title}

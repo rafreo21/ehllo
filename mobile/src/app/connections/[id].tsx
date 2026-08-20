@@ -626,15 +626,15 @@ export default function ConnectionDetailScreen() {
                         <Text style={styles.meetingTitle} numberOfLines={1}>
                           {item.title}
                         </Text>
-                        <Text style={styles.meetingMeta}>{item.kind === 'completed' ? 'Follow-up completed' : 'Meeting'} · {formatMeetingDate(item.occurredAt)}</Text>
-                        {item.eventTitle ? (
-                          <Text style={styles.meetingPlace} numberOfLines={1}>
-                            At {item.eventTitle}{item.eventLocation ? ` · ${item.eventLocation}` : ''}
-                          </Text>
-                        ) : null}
-                        {item.copy ? (
-                          <Text style={styles.meetingSummary} numberOfLines={2}>{item.copy}</Text>
-                        ) : null}
+                        {/* Two lines, and only two. This carried the event underneath and then
+                            two lines of summary on top of that, so a single row ran to five
+                            lines and every row was a different height - which is what stops a
+                            history being scannable. The summary and the event are both on the
+                            meeting itself, one tap away, which is where something that long
+                            belongs. */}
+                        <Text style={styles.meetingMeta} numberOfLines={1}>
+                          {item.kind === 'completed' ? 'Follow-up completed' : 'Meeting'} · {formatMeetingDate(item.occurredAt)}
+                        </Text>
                       </View>
                       <CaretRight size={16} color={colors.muted} weight="bold" />
                     </Pressable>

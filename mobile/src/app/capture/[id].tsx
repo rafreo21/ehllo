@@ -25,6 +25,7 @@ import {
   extractEncounterDraft,
   getEncounter,
   saveEncounter,
+  transcribeEncounterAudio,
   uploadEncounterRecording,
   type EncounterPayload,
 } from '@/features/encounters/encounter-api';
@@ -67,6 +68,7 @@ export default function CaptureDetailScreen() {
   const [successSheetOpen, setSuccessSheetOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [recordingUri, setRecordingUri] = useState<string | null>(null);
+  const [retranscribing, setRetranscribing] = useState(false);
   const [recordingLoading, setRecordingLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'recap' | 'transcript' | 'details'>('recap');
   const [notesExpanded, setNotesExpanded] = useState(false);
@@ -247,8 +249,34 @@ export default function CaptureDetailScreen() {
    */
   async function saveWithConflictGuard(next: EncounterPayload): Promise<EncounterPayload | null> {
     if (!session?.access_token) return null;
+    return attemptSave(next, encounter?.updatedAt, true);
+  }
+
+  /**
+   * Saves, and on a conflict re-applies the same change to the freshly loaded record and
+   * tries once more before giving up.
+   *
+   * The conflict guard used to stop at the first rejection and tell you the meeting had
+   * changed on another device. Usually nothing had: transcribing a recording and writing the
+   * summary and title happen on the server minutes after the recording ends, and each of
+   * those moves updated_at. So the copy in your hand goes stale by itself, and the first
+   * thing you do afterwards - sharing it - was rejected and blamed on a second device that
+   * did not exist. Approving a meeting was reliably impossible for the one recording anybody
+   * would actually want to share.
+   *
+   * Retrying is safe here because the fields this screen sends are the ones a person edited
+   * on this screen, and the server's own enrichment touches different ones. Only one retry,
+   * and only when the reload succeeded, so a genuine two-device fight still surfaces rather
+   * than looping.
+   */
+  async function attemptSave(
+    next: EncounterPayload,
+    expectedUpdatedAt: string | undefined,
+    mayRetry: boolean,
+  ): Promise<EncounterPayload | null> {
+    if (!session?.access_token) return null;
     try {
-      const result = await saveEncounter(session.access_token, next, { expectedUpdatedAt: encounter?.updatedAt });
+      const result = await saveEncounter(session.access_token, next, { expectedUpdatedAt });
       // Picks up the server's passive-presence guess on first save (see
       // resolveCurrentEventIdForUser) without a separate refetch - next.eventId
       // stays authoritative whenever the client sent an explicit opinion.
@@ -261,17 +289,71 @@ export default function CaptureDetailScreen() {
       return saved;
     } catch (caught) {
       if (caught instanceof EncounterConflictError) {
+        let latest: EncounterPayload | null = null;
         try {
-          const latest = await getEncounter(session.access_token, next.id);
+          latest = await getEncounter(session.access_token, next.id);
           setEncounter(latest);
         } catch {
           // If the reload itself fails, at least the stale local edit was not written over the server's copy.
         }
-        setErrorMessage('This meeting changed on another device. We loaded the latest version below. Please redo your change if it’s still needed.');
+
+        // The change is carried onto the newer record and sent again, so it is not lost.
+        // Transcript, summary and title come from the reloaded copy because the server is
+        // where those are produced - re-sending the older ones would undo the very work that
+        // caused the conflict.
+        if (mayRetry && latest) {
+          return attemptSave({
+            ...next,
+            updatedAt: latest.updatedAt,
+            transcript: latest.transcript ?? next.transcript,
+            title: next.title?.trim() ? next.title : latest.title,
+            sharedSummary: next.sharedSummary?.trim() ? next.sharedSummary : latest.sharedSummary,
+          }, latest.updatedAt, false);
+        }
+
+        setErrorMessage('This meeting changed somewhere else and we could not merge your change. The latest version is below - please redo it if it is still needed.');
         setErrorSheetOpen(true);
         return null;
       }
       throw caught;
+    }
+  }
+
+  /**
+   * Transcribes the local recording again and saves the result onto the meeting.
+   *
+   * There is already a background retry that picks up drafts whose transcription failed,
+   * but it is invisible and it only covers drafts - a saved meeting that came out empty had
+   * no way back at all. This is the same call, asked for deliberately.
+   *
+   * Saved through the conflict guard like every other edit here, so it merges rather than
+   * fighting whatever the server wrote while this screen was open.
+   */
+  async function retranscribe() {
+    if (!session?.access_token || !encounter || !recordingUri || retranscribing) return;
+    setRetranscribing(true);
+    try {
+      const result = await transcribeEncounterAudio(session.access_token, recordingUri, {
+        mimeType: encounter.recording?.mimeType,
+      });
+      const transcript = result.transcript?.trim() ?? '';
+      if (!transcript) {
+        // Told plainly rather than left looking like it worked. An empty result usually
+        // means there was no speech to find, which no amount of retrying will change.
+        setErrorMessage('We could not find any speech in this recording.');
+        setErrorSheetOpen(true);
+        return;
+      }
+      const saved = await saveWithConflictGuard({ ...encounter, transcript });
+      if (saved) {
+        setSuccessMessage('Transcript recovered.');
+        setSuccessSheetOpen(true);
+      }
+    } catch (caught) {
+      setErrorMessage(describeError(caught, 'Could not transcribe this recording.'));
+      setErrorSheetOpen(true);
+    } finally {
+      setRetranscribing(false);
     }
   }
 
@@ -659,7 +741,24 @@ export default function CaptureDetailScreen() {
                   defaultOpen={false}
                 />
               </>
-            ) : <Text style={styles.helperCopy}>No transcript saved for this meeting.</Text>}
+            ) : (
+              /* A dead end until now: a meeting with no transcript said so and offered
+                 nothing, which is the worst possible moment to offer nothing - the recording
+                 is the one thing that cannot be recreated later. If the audio is still on
+                 this device it can simply be tried again. */
+              <>
+                <Text style={styles.helperCopy}>
+                  {recordingUri
+                    ? 'No transcript saved for this meeting. The recording is still on this device, so it can be transcribed again.'
+                    : 'No transcript saved for this meeting, and the recording is no longer on this device.'}
+                </Text>
+                {recordingUri ? (
+                  <Button variant="secondary" loading={retranscribing} onPress={() => void retranscribe()}>
+                    Transcribe again
+                  </Button>
+                ) : null}
+              </>
+            )}
           </View>
         ) : null}
 

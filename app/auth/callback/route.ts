@@ -112,6 +112,15 @@ export async function GET(request: NextRequest) {
   }
 
   const { error: backfillError } = await supabase.rpc("link_people_connections_for_email");
+  // Meetings shared with this address, claimed the same way and at the same moment. Until
+  // now this only ran during visitor onboarding, so a share to somebody who already had an
+  // account was never attached to it and the meeting stayed invisible to them.
+  const { error: encounterClaimError } = await supabase.rpc("claim_my_encounter_participants");
+  if (encounterClaimError) {
+    console.error("[auth-callback] claim_my_encounter_participants failed", {
+      code: encounterClaimError.code, message: encounterClaimError.message,
+    });
+  }
   if (backfillError) {
     console.error("[auth-callback] link_people_connections_for_email failed", {
       code: backfillError.code, message: backfillError.message,

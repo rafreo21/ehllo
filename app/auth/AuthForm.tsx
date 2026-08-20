@@ -109,6 +109,8 @@ export function AuthForm({
       }
 
       await supabase.rpc("link_people_connections_for_email");
+      // And meetings shared with this address, which had no path to an existing account.
+      await supabase.rpc("claim_my_encounter_participants");
       if (visitorIntent?.eventInviteToken) {
         const { error: claimError } = await supabase.rpc("claim_event_invitation", { p_token: visitorIntent.eventInviteToken });
         if (claimError) {

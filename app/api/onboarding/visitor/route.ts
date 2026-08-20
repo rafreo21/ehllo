@@ -72,6 +72,11 @@ export async function POST(request: Request) {
   }
 
   const { error: backfillError } = await supabase.rpc("link_people_connections_for_email");
+  // Meetings shared with this address, claimed the same way and at the same moment. Until
+  // now this only ran during visitor onboarding, so a share to somebody who already had an
+  // account was never attached to it and the meeting stayed invisible to them.
+  const { error: encounterClaimError } = await supabase.rpc("claim_my_encounter_participants");
+  logLinkFailure("claim_my_encounter_participants", encounterClaimError);
   logLinkFailure("link_people_connections_for_email", backfillError);
 
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "private, no-store" } });

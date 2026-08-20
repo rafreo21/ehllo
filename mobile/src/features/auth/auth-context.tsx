@@ -112,6 +112,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     supabase.rpc('provision_personal_workspace').then(({ data }) => {
       void supabase.rpc('link_people_connections_for_email');
+      // And meetings shared with this address. Fire-and-forget like the line above: it is a
+      // backfill, and blocking sign-in on it would trade a working sign-in for a tidier list.
+      void supabase.rpc('claim_my_encounter_participants');
       const onboardingStatus = Array.isArray(data) ? data[0]?.onboarding_status : undefined;
       void consumeAuthReturnPath().then((path) => {
         if (onboardingStatus && onboardingStatus !== 'completed') {
