@@ -167,7 +167,10 @@ export function buildApplePassJson(card: {
       //
       // Getting fixed sizing back means shipping a font file and pointing fontconfig
       // at it, which is a deliberate piece of work rather than a tweak.
-      primaryFields: [{ key: "name", label: "", value: card.fullName }],
+      // Empty: the strip carries the name again, now drawn through satori so the
+      // glyphs are vector paths rather than a font lookup that the serverless runtime
+      // cannot satisfy. Populating this as well would print the name twice.
+      primaryFields: [],
       // Occupation then company, on the row beneath the strip. Each is dropped
       // when blank rather than rendering an empty cell, so a card with only a role
       // shows only a role instead of a lopsided gap.

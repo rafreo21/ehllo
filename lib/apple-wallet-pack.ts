@@ -1,9 +1,13 @@
 import { createHash } from "node:crypto";
+
+import { Resvg } from "@resvg/resvg-js";
+import satori from "satori";
 import forge from "node-forge";
 import JSZip from "jszip";
 
 import { buildApplePassJson, walletIconBuffers } from "./apple-wallet-pass";
 import { normalizeThemeColor, themeForegroundColor } from "./theme-contrast.ts";
+import { loadShareAssetFontBuffers } from "./share-asset-fonts.ts";
 import { loadSharp } from "./sharp-runtime.ts";
 import type { AppleWalletCerts, WalletCardPayload } from "./wallet-config";
 
@@ -21,6 +25,94 @@ function themeRgb(themeColor: string) {
     b: parseInt(value.slice(4, 6), 16),
     alpha: 1,
   };
+}
+
+/**
+ * The name, rendered to a PNG with the text already converted to vector outlines.
+ *
+ * This exists because drawing text through sharp does not work here. sharp hands SVG
+ * to librsvg, librsvg asks fontconfig for a font by family name, and Vercel's
+ * serverless image has no fonts installed - so it drew .notdef boxes where someone's
+ * name should be. It looked perfect locally, on a machine that happens to have
+ * Helvetica, which is how it shipped.
+ *
+ * satori takes the font as a buffer and emits paths, so nothing is looked up at
+ * render time: the glyphs are geometry by the time anything rasterises them. Resvg
+ * then turns that into a PNG, which is the same pair the virtual-background images
+ * already use. Inter comes from share-asset-fonts, inlined as base64 for the same
+ * reason - public/ is CDN-served and absent from the serverless filesystem.
+ *
+ * Returns null rather than throwing: a pass without the name drawn on the band is
+ * still a usable pass.
+ */
+async function renderNamePng(options: {
+  name: string;
+  width: number;
+  height: number;
+  scale: number;
+  color: string;
+  align: "center" | "flex-end";
+}) {
+  const { name, width, height, scale, color, align } = options;
+  if (!name) return null;
+
+  try {
+    const fonts = loadShareAssetFontBuffers();
+    const pad = 33 * scale;
+    // Fixed, which is the whole point - PassKit sized a primary field 105px for a
+    // short name and 62px for a long one. Comes down only when the name genuinely
+    // will not fit, estimated at roughly 0.55em per character for Inter.
+    const available = width - pad * 2;
+    let fontSize = 30 * scale;
+    while (fontSize > 17 * scale && name.length * fontSize * 0.55 > available) {
+      fontSize -= scale;
+    }
+
+    const svg = await satori(
+      ({
+        type: "div",
+        props: {
+          style: {
+            display: "flex",
+            width,
+            height,
+            alignItems: align,
+            paddingLeft: pad,
+            paddingRight: pad,
+            paddingBottom: align === "flex-end" ? 14 * scale : 0,
+          },
+          children: {
+            type: "div",
+            props: {
+              style: {
+                display: "flex",
+                fontFamily: "Inter",
+                fontWeight: 700,
+                fontSize,
+                color,
+                whiteSpace: "nowrap",
+              },
+              children: name,
+            },
+          },
+        },
+      }) as never,
+      {
+        width,
+        height,
+        fonts: [
+          { name: "Inter", data: fonts.regular, weight: 400, style: "normal" },
+          { name: "Inter", data: fonts.bold, weight: 700, style: "normal" },
+        ],
+      },
+    );
+
+    return new Resvg(svg, { fitTo: { mode: "width", value: width }, background: "rgba(0,0,0,0)" })
+      .render()
+      .asPng();
+  } catch {
+    return null;
+  }
 }
 
 async function fetchImageBuffer(url: string) {
@@ -112,11 +204,13 @@ export async function buildAppleWalletPass(card: WalletCardPayload, certs: Apple
   ];
   const stripBackground = themeRgb(card.themeColor);
   const profileImage = await fetchImageBuffer(card.profileImageUrl || "");
+  const cardName = card.fullName.trim().replace(/\s+/g, " ");
 
   try {
     const sharp = await loadSharp();
 
     await Promise.all(STRIP_SCALES.map(async ([fileName, width, height]) => {
+      const scale = width / 375;
       const band = () => sharp({
         create: { width, height, channels: 4, background: stripBackground },
       });
@@ -143,8 +237,19 @@ export async function buildAppleWalletPass(card: WalletCardPayload, certs: Apple
             + `<rect width="${width}" height="${height}" fill="url(#s)"/>`
             + `</svg>`;
 
+          const namePng = await renderNamePng({
+            name: cardName, width, height, scale,
+            // White over the scrim, which exists precisely so this stays readable
+            // whatever the photograph happens to be behind it.
+            color: "#FFFFFF", align: "flex-end",
+          });
+
           files[fileName] = await band()
-            .composite([{ input: photo }, { input: Buffer.from(overlay) }])
+            .composite([
+              { input: photo },
+              { input: Buffer.from(overlay) },
+              ...(namePng ? [{ input: namePng }] : []),
+            ])
             .png()
             .toBuffer();
           return;
@@ -154,7 +259,15 @@ export async function buildAppleWalletPass(card: WalletCardPayload, certs: Apple
         // and nothing else. An avatar with initials was tried here and taken back out -
         // a circle floating in a 123pt strip read as a placeholder for something
         // missing, where a clean field of the card's colour just reads as the card.
-        files[fileName] = await band().png().toBuffer();
+        const namePng = await renderNamePng({
+          name: cardName, width, height, scale,
+          color: themeForegroundColor(normalizeThemeColor(card.themeColor)),
+          align: "center",
+        });
+
+        files[fileName] = namePng
+          ? await band().composite([{ input: namePng }]).png().toBuffer()
+          : await band().png().toBuffer();
         return;
       } catch {
         // Drawing type needs a font in the runtime, and fontconfig is thin in a
