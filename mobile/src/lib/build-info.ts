@@ -42,7 +42,13 @@ export function formatBuildLabel() {
 export function formatRuntimeLabel() {
   const channel = Updates.channel ?? 'local';
   const runtime = Updates.runtimeVersion ?? Constants.expoConfig?.version ?? 'unknown';
-  return `${channel} · runtime ${runtime} · update ${shortUpdateId(Updates.updateId)} · ${updateStamp()}`;
+  // Every one of these is documented as null wherever expo-updates is disabled - a
+  // development build, Expo Go - so the whole update clause is dropped there rather
+  // than printing "update embedded · embedded" twice over.
+  const update = Updates.updateId
+    ? ` · update ${shortUpdateId(Updates.updateId)} · ${updateStamp()}`
+    : ' · embedded bundle';
+  return `${channel} · runtime ${runtime}${update}`;
 }
 
 /** The version string attached to error reports, so a crash can be traced to one bundle. */
