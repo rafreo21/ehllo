@@ -5,7 +5,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppleIcon, GoogleIcon, LinkedInIcon, MicrosoftIcon } from '@/components/provider-icons';
-import { Body, Button, PageHeader, Panel, PillButton, Screen } from '@/components/ui';
+import { Body, PageHeader, Panel, PillButton, Screen } from '@/components/ui';
 import { DisconnectAccountSheet } from '@/components/disconnect-account-sheet';
 import { EmptyState } from '@/components/empty-state';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';

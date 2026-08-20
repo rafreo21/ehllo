@@ -11,9 +11,6 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
-// Matches the row's minHeight + the list's inter-row gap, so a dragged row's
-// translation lines up with exactly one neighbor's slot per step.
-const ROW_HEIGHT = 58 + spacing.x2;
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { PhoneInput } from '@/components/phone-input';
@@ -28,6 +25,14 @@ import {
 } from '@/features/card/method-meta';
 import type { ContactMethod, ContactMethodType } from '@/features/card/types';
 import { colors, radius, spacing, fonts } from '@/theme/tokens';
+
+// Matches the row's minHeight + the list's inter-row gap, so a dragged row's
+// translation lines up with exactly one neighbor's slot per step.
+//
+// Below the imports, not above them: it reads spacing, and sitting above the import
+// that defines it worked only because ES imports hoist - which also pushed every
+// import after it into the module body.
+const ROW_HEIGHT = 58 + spacing.x2;
 
 function createMethodId() {
   return `method-${Date.now()}-${Math.floor(Math.random() * 1000)}`;

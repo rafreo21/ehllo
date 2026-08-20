@@ -1,7 +1,7 @@
 import { router, useFocusEffect } from 'expo-router';
 import { ClockCounterClockwise, ListChecks, Plus } from 'phosphor-react-native';
 import { useCallback, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { FollowUpAudienceSheet } from '@/components/follow-up-audience-sheet';

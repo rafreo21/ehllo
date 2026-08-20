@@ -157,7 +157,11 @@ export default function ShareCardScreen() {
     } finally {
       setTapBusy(false);
     }
-  }, [publicUrl, tapActive, tapSupported]);
+    // onlineCardUrl belongs here: it is publicUrl plus the active event, and the
+    // event arrives from fetchMyEvents after first render. Without it the callback
+    // kept the value from before the events loaded, so a tap during a live event
+    // shared the plain card link and the event attribution was silently lost.
+  }, [onlineCardUrl, publicUrl, tapActive, tapSupported]);
 
   async function shareCard() {
     await Share.share({
