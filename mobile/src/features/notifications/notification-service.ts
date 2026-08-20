@@ -12,10 +12,29 @@ const CHANNEL_ID = 'follow-ups';
 const MAX_HISTORY = 40;
 
 type ScheduledReminder = {
-  identifier: string;
+  identifiers: string[];
   dueAt: string;
-  reminderTime: string;
+  /** Sorted, so a stored set can be compared to a chosen one without re-sorting. */
+  reminderTimes: string[];
+  /** Written by the single-time version. Still read so its notification gets cancelled. */
+  identifier?: string;
+  reminderTime?: string;
 };
+
+/**
+ * Every identifier a stored record stands for, including the single one written
+ * before times became a set. Without the legacy field an upgraded install would
+ * leave its old notification scheduled and fire twice.
+ */
+function scheduledIdentifiers(record: ScheduledReminder | undefined) {
+  if (!record) return [];
+  return [...(record.identifiers ?? []), ...(record.identifier ? [record.identifier] : [])];
+}
+
+async function cancelScheduled(record: ScheduledReminder | undefined) {
+  await Promise.all(scheduledIdentifiers(record).map((identifier) =>
+    Notifications.cancelScheduledNotificationAsync(identifier).catch(() => undefined)));
+}
 
 export const REMINDER_TIME_OPTIONS = ['09:00', '12:00', '17:00'] as const;
 export type ReminderTime = typeof REMINDER_TIME_OPTIONS[number];
@@ -42,20 +61,61 @@ function followUpKey(item: FollowUpItem) {
   return `${item.encounterId}:${item.actionId}`;
 }
 
+/**
+ * The moment a reminder should fire, or null if that moment has gone.
+ *
+ * This used to return `now + 5 seconds` for a time already past, which is why the
+ * chosen times were not respected: a follow-up due today, with 09:00 selected, would
+ * ping the instant the app was opened at five in the afternoon. Picking a time and
+ * being interrupted immediately is worse than not being reminded - the overdue
+ * notification already covers "this needed doing".
+ */
 function reminderDate(dueAt: string, reminderTime: ReminderTime) {
   const due = new Date(`${dueAt.slice(0, 10)}T${reminderTime}:00`);
   if (Number.isNaN(due.getTime())) return null;
-  if (due.getTime() <= Date.now()) return new Date(Date.now() + 5_000);
+  if (due.getTime() <= Date.now()) return null;
   return due;
 }
 
-export async function followUpReminderTime(): Promise<ReminderTime> {
-  const stored = await AsyncStorage.getItem(REMINDER_TIME_KEY);
-  return REMINDER_TIME_OPTIONS.includes(stored as ReminderTime) ? stored as ReminderTime : '09:00';
+const REMINDER_TIMES_KEY = 'aftermeet-follow-up-reminder-times-v1';
+
+function sortTimes(values: ReminderTime[]): ReminderTime[] {
+  return REMINDER_TIME_OPTIONS.filter((option) => values.includes(option));
 }
 
-export async function setFollowUpReminderTime(value: ReminderTime) {
-  await AsyncStorage.setItem(REMINDER_TIME_KEY, value);
+/**
+ * The times a reminder should fire, in order.
+ *
+ * More than one on purpose: a single slot means a follow-up due today is either
+ * caught at that hour or not at all. Falls back to the old single-value key so
+ * nobody's existing choice is lost, and to 09:00 for anyone who never picked.
+ */
+export async function followUpReminderTimes(): Promise<ReminderTime[]> {
+  const stored = await AsyncStorage.getItem(REMINDER_TIMES_KEY);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored) as unknown;
+      if (Array.isArray(parsed)) {
+        const valid = sortTimes(parsed.filter((value): value is ReminderTime =>
+          REMINDER_TIME_OPTIONS.includes(value as ReminderTime)));
+        if (valid.length) return valid;
+      }
+    } catch {
+      // fall through to the legacy key
+    }
+  }
+  const legacy = await AsyncStorage.getItem(REMINDER_TIME_KEY);
+  if (REMINDER_TIME_OPTIONS.includes(legacy as ReminderTime)) return [legacy as ReminderTime];
+  return ['09:00'];
+}
+
+/**
+ * Never stores an empty set: no times at all is indistinguishable from reminders
+ * being broken, and the switch above it is what turns them off.
+ */
+export async function setFollowUpReminderTimes(values: ReminderTime[]) {
+  const next = sortTimes(values);
+  await AsyncStorage.setItem(REMINDER_TIMES_KEY, JSON.stringify(next.length ? next : ['09:00']));
 }
 
 async function readSchedule(): Promise<Record<string, ScheduledReminder>> {
@@ -108,9 +168,7 @@ export async function setDeviceNotificationsEnabled(enabled: boolean) {
 
 export async function clearFollowUpNotifications() {
   const schedule = await readSchedule();
-  await Promise.all(Object.values(schedule).map((item) =>
-    Notifications.cancelScheduledNotificationAsync(item.identifier).catch(() => undefined),
-  ));
+  await Promise.all(Object.values(schedule).map((item) => cancelScheduled(item)));
   await writeSchedule({});
   await Notifications.setBadgeCountAsync(0).catch(() => false);
 }
@@ -123,47 +181,57 @@ export async function syncFollowUpNotifications(items: FollowUpItem[]) {
   const withDueDate = open.filter((item) => item.dueAt.trim());
   const previous = await readSchedule();
   const next: Record<string, ScheduledReminder> = {};
-  const reminderTime = await followUpReminderTime();
+  const reminderTimes = await followUpReminderTimes();
 
   for (const item of withDueDate) {
     const key = followUpKey(item);
     const existing = previous[key];
-    if (existing?.dueAt === item.dueAt && existing.reminderTime === reminderTime) {
-      next[key] = existing;
+    // Same due date and same set of times means the existing schedule already says
+    // what we would say. Comparing the set, not one value, is what makes this hold
+    // when several times are chosen.
+    if (existing?.dueAt === item.dueAt
+      && existing.reminderTimes?.length === reminderTimes.length
+      && existing.reminderTimes.every((time, index) => time === reminderTimes[index])) {
+      next[key] = { identifiers: existing.identifiers, dueAt: existing.dueAt, reminderTimes };
       continue;
     }
-    if (existing) {
-      await Notifications.cancelScheduledNotificationAsync(existing.identifier).catch(() => undefined);
-    }
-    const date = reminderDate(item.dueAt, reminderTime);
-    if (!date) continue;
-    const identifier = await Notifications.scheduleNotificationAsync({
-      identifier: `aftermeet-followup-${item.encounterId}-${item.actionId}`,
-      content: {
-        title: `Follow up with ${item.personName.trim() || 'your connection'}`,
-        body: item.title.trim() || 'You have a follow-up waiting in ehllo.',
-        sound: 'default',
-        badge: open.length,
-        data: {
-          type: 'follow-up',
-          route: '/settings/follow-ups',
-          encounterId: item.encounterId,
-          actionId: item.actionId,
+    if (existing) await cancelScheduled(existing);
+
+    // One notification per chosen time. The identifier carries the time, or each
+    // schedule would overwrite the last and only the final slot would survive.
+    const identifiers: string[] = [];
+    for (const reminderTime of reminderTimes) {
+      const date = reminderDate(item.dueAt, reminderTime);
+      if (!date) continue;
+      const identifier = await Notifications.scheduleNotificationAsync({
+        identifier: `aftermeet-followup-${item.encounterId}-${item.actionId}-${reminderTime}`,
+        content: {
+          title: `Follow up with ${item.personName.trim() || 'your connection'}`,
+          body: item.title.trim() || 'You have a follow-up waiting in ehllo.',
+          sound: 'default',
+          badge: open.length,
+          data: {
+            type: 'follow-up',
+            route: '/settings/follow-ups',
+            encounterId: item.encounterId,
+            actionId: item.actionId,
+          },
         },
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DATE,
-        date,
-        channelId: Platform.OS === 'android' ? CHANNEL_ID : undefined,
-      },
-    });
-    next[key] = { identifier, dueAt: item.dueAt, reminderTime };
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date,
+          channelId: Platform.OS === 'android' ? CHANNEL_ID : undefined,
+        },
+      });
+      identifiers.push(identifier);
+    }
+    // Recorded even when empty - every chosen time for this due date is in the past -
+    // so the next sync does not retry it on every foreground.
+    next[key] = { identifiers, dueAt: item.dueAt, reminderTimes };
   }
 
   for (const [key, existing] of Object.entries(previous)) {
-    if (!next[key]) {
-      await Notifications.cancelScheduledNotificationAsync(existing.identifier).catch(() => undefined);
-    }
+    if (!next[key]) await cancelScheduled(existing);
   }
 
   await writeSchedule(next);

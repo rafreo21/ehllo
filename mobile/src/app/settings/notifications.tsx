@@ -3,18 +3,18 @@ import { useEffect, useState } from 'react';
 import { Linking, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
-import { PageHeader, Panel, Screen } from '@/components/ui';
+import { ChoicePill, PageHeader, Panel, Screen } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { getSupabase } from '@/lib/supabase';
 import { fetchFollowUps } from '@/features/follow-ups/follow-up-api';
 import {
   deviceNotificationsEnabled,
-  followUpReminderTime,
+  followUpReminderTimes,
   notificationPermissionGranted,
   REMINDER_TIME_OPTIONS,
   requestNotificationPermission,
   setDeviceNotificationsEnabled,
-  setFollowUpReminderTime,
+  setFollowUpReminderTimes,
   syncFollowUpNotifications,
   type ReminderTime,
 } from '@/features/notifications/notification-service';
@@ -50,7 +50,7 @@ export default function NotificationPreferencesScreen() {
   const [devicePermission, setDevicePermission] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [pushActive, setPushActive] = useState(false);
-  const [reminderTime, setReminderTime] = useState<ReminderTime>('09:00');
+  const [reminderTimes, setReminderTimes] = useState<ReminderTime[]>(['09:00']);
   const [reminderTimeSheetOpen, setReminderTimeSheetOpen] = useState(false);
   const [typePreferences, setTypePreferences] = useState<NotificationPreferences | null>(null);
   const [typePreferencesSaving, setTypePreferencesSaving] = useState<NotificationType | null>(null);
@@ -91,12 +91,12 @@ export default function NotificationPreferencesScreen() {
     void Promise.all([
       deviceNotificationsEnabled(),
       notificationPermissionGranted(),
-      followUpReminderTime(),
-    ]).then(async ([enabled, granted, storedReminderTime]) => {
+      followUpReminderTimes(),
+    ]).then(async ([enabled, granted, storedReminderTimes]) => {
       if (!active) return;
       setDeviceEnabled(enabled && granted);
       setDevicePermission(granted);
-      setReminderTime(storedReminderTime);
+      setReminderTimes(storedReminderTimes);
       if (enabled && granted && session?.access_token) {
         const registered = await registerPushToken(session.access_token);
         if (active) setPushActive(registered);
@@ -107,9 +107,20 @@ export default function NotificationPreferencesScreen() {
     return () => { active = false; };
   }, [session?.access_token]);
 
-  async function chooseReminderTime(value: ReminderTime) {
-    setReminderTime(value);
-    await setFollowUpReminderTime(value);
+  /**
+   * Turns one time on or off, keeping at least one selected.
+   *
+   * Tapping the only selected time is a no-op rather than an empty set: no times
+   * at all looks identical to reminders being broken, and the switch above this
+   * sheet is what turns them off.
+   */
+  async function toggleReminderTime(value: ReminderTime) {
+    const next = reminderTimes.includes(value)
+      ? reminderTimes.filter((time) => time !== value)
+      : REMINDER_TIME_OPTIONS.filter((option) => option === value || reminderTimes.includes(option));
+    if (!next.length) return;
+    setReminderTimes(next);
+    await setFollowUpReminderTimes(next);
     if (deviceEnabled && session?.access_token) {
       const followUps = await fetchFollowUps(session.access_token);
       await syncFollowUpNotifications(followUps);
@@ -244,8 +255,8 @@ export default function NotificationPreferencesScreen() {
           onPress={() => setReminderTimeSheetOpen(true)}
           style={({ pressed }) => [styles.card, styles.trigger, pressed && styles.pressed]}>
           <View style={styles.linkCopy}>
-            <Text style={styles.preferenceTitle}>Reminder time</Text>
-            <Text style={styles.linkHint}>{reminderTime} daily</Text>
+            <Text style={styles.preferenceTitle}>Reminder times</Text>
+            <Text style={styles.linkHint}>{reminderTimes.join(' · ')} daily</Text>
           </View>
           <CaretRight size={18} color={colors.muted} weight="bold" />
         </Pressable>
@@ -266,25 +277,20 @@ export default function NotificationPreferencesScreen() {
 
       <BottomSheet
         visible={reminderTimeSheetOpen}
-        title="Reminder time"
+        title="Reminder times"
         onClose={() => setReminderTimeSheetOpen(false)}>
+        <Text style={styles.sheetHint}>
+          Pick every time you want to be nudged. A follow-up due that day pings at each one.
+        </Text>
         <View style={styles.reminderTimeOptions}>
           {REMINDER_TIME_OPTIONS.map((option) => (
-            <Pressable
+            <ChoicePill
               key={option}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: reminderTime === option }}
-              onPress={() => void chooseReminderTime(option)}
-              style={({ pressed }) => [
-                styles.reminderTimeOption,
-                reminderTime === option && styles.reminderTimeOptionSelected,
-                pressed && styles.pressed,
-              ]}>
-              <Text style={[
-                styles.reminderTimeText,
-                reminderTime === option && styles.reminderTimeTextSelected,
-              ]}>{option}</Text>
-            </Pressable>
+              label={option}
+              selected={reminderTimes.includes(option)}
+              onPress={() => void toggleReminderTime(option)}
+              accessibilityLabel={`${option} reminder, ${reminderTimes.includes(option) ? 'on' : 'off'}`}
+            />
           ))}
         </View>
         <Text style={styles.linkHint}>
@@ -334,20 +340,7 @@ const styles = StyleSheet.create({
   reminderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.x3 },
   preferenceTitle: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '800' },
   reminderTimeOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.x2, marginBottom: spacing.x3 },
-  reminderTimeOption: {
-    minWidth: 68,
-    minHeight: 44,
-    paddingHorizontal: spacing.x3,
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-  },
-  reminderTimeOptionSelected: { backgroundColor: colors.accent, borderColor: colors.accent },
-  reminderTimeText: { color: colors.ink, fontSize: 14, fontFamily: fonts.medium, fontWeight: '700' },
-  reminderTimeTextSelected: { fontFamily: fonts.extrabold, fontWeight: '900' },
+  sheetHint: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 19, marginBottom: spacing.x3 },
   statusMessage: { color: colors.ink, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
   statusError: { color: colors.danger },
   statusRow: { gap: spacing.x2 },
