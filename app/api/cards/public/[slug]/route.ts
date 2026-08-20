@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+import { cardSlugCandidates } from "../../../../../lib/card-slug";
 import { publicCardImageUrl } from "../../../../../lib/card-assets";
 import { publicCompanyLogoUrl } from "../../../../../lib/card-company-display";
 import { createServiceSupabaseClient } from "../../../../../lib/supabase/service";
@@ -23,14 +24,26 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
 
   const supabase = createServiceSupabaseClient()
     ?? createClient(url, key, { auth: { persistSession: false } });
-  const { data, error } = await supabase
-    .from("cards")
-    .select("id, slug, full_name, job_title, company, bio, theme_color, profile_image_url, company_logo_url, cover_image_url, show_company_details, card_methods(method_type, value, label, sort_order)")
-    .eq("slug", normalized)
-    .eq("status", "published")
-    .maybeSingle();
+  // Tries the slug as given, then the prefixed form for a bare generated code. Both
+  // wallet passes encode the slug with "card-" dropped to keep the QR at 29x29, so
+  // without this the web scanner looked up a short slug, found nothing, and told
+  // people a published card was not published.
+  let data: Awaited<ReturnType<typeof lookupCard>> = null;
+  async function lookupCard(candidate: string) {
+    const result = await supabase
+      .from("cards")
+      .select("id, slug, full_name, job_title, company, bio, theme_color, profile_image_url, company_logo_url, cover_image_url, show_company_details, card_methods(method_type, value, label, sort_order)")
+      .eq("slug", candidate)
+      .eq("status", "published")
+      .maybeSingle();
+    return result.data;
+  }
+  for (const candidate of cardSlugCandidates(normalized)) {
+    data = await lookupCard(candidate);
+    if (data) break;
+  }
 
-  if (error || !data) {
+  if (!data) {
     return NextResponse.json({ error: "This card is not published." }, { status: 404 });
   }
 

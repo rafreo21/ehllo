@@ -23,3 +23,34 @@ test("shortenCardUrlForQr leaves a custom slug alone", () => {
     "https://staging.ehllo.io/c/card-design-studio",
   );
 });
+
+import { cardSlugCandidates } from "../lib/card-slug.ts";
+
+// The pair that has to agree: whatever the QR drops, the resolver has to try adding
+// back. These live in different files and would drift apart in silence otherwise.
+test("a shortened wallet slug resolves back to the stored card", () => {
+  const stored = "card-51c26d952e7a4881";
+  const shortened = shortenCardUrlForQr(`https://staging.ehllo.io/c/${stored}`);
+  const slugFromQr = new URL(shortened).pathname.replace("/c/", "");
+  assert.ok(
+    cardSlugCandidates(slugFromQr).includes(stored),
+    "the prefixed form must be among the candidates, or a wallet scan cannot find the card",
+  );
+});
+
+test("the slug as given is always tried first", () => {
+  // A real card whose own slug happens to look like a bare code must win over a guess.
+  assert.deepEqual(
+    cardSlugCandidates("51c26d952e7a4881"),
+    ["51c26d952e7a4881", "card-51c26d952e7a4881"],
+  );
+});
+
+test("a custom slug gets no prefixed guess", () => {
+  // Guessing "card-" onto someone's chosen slug could resolve to a different person.
+  assert.deepEqual(cardSlugCandidates("raphael"), ["raphael"]);
+  assert.deepEqual(cardSlugCandidates("design-studio"), ["design-studio"]);
+  assert.deepEqual(cardSlugCandidates("card-design-studio"), ["card-design-studio"]);
+  assert.deepEqual(cardSlugCandidates(""), []);
+  assert.deepEqual(cardSlugCandidates(null), []);
+});

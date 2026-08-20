@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "04:45",
+    title: "Adding someone from a wallet pass works at all now",
+    impact: "fix",
+    detail:
+      "Scanning a card from Apple or Google Wallet could not add the person - on the phone or on the web. The address in a wallet QR is deliberately a few characters shorter than the one everywhere else, so the code stays small enough to scan across a table, and the part of the server that records a new connection was looking for the longer spelling only. It answered \"card not found\" and stopped there. On the web scanner it went further and said the card was not published, which was never true. Both now accept either spelling, so a card scanned from a wallet pass behaves exactly like one scanned from the app: someone you already know opens their profile, and someone new is added.",
+    testing:
+      "Scan a card from Apple or Google Wallet on the phone, and again through Scan in the web app. Both should reach the person.",
+  },
+  {
+    date: "2026-08-20",
     time: "04:10",
     title: "Scanning a wallet pass opens the person, not a second copy of them",
     impact: "fix",

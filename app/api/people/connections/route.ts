@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { resolveStoredCardSlug } from "../../../../lib/card-slug";
 import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
 
 export async function GET(request: Request) {
@@ -35,9 +36,30 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createApiSupabaseClient(request);
+
+  // Resolve the slug to the spelling the card is actually stored under before handing
+  // it to the RPC, which matches c.slug exactly and raises 'card not found' otherwise.
+  // Both wallet passes encode the slug with the generated "card-" prefix dropped to
+  // keep the QR at 29x29, so scanning a card from Apple or Google Wallet could not
+  // create a connection at all - on mobile or on the web - while the same card scanned
+  // from the app worked. Done here rather than in the RPC so every caller of this
+  // endpoint gets it without a migration.
+  const storedSlug = await resolveStoredCardSlug(slug, async (candidate) => {
+    const { data: card } = await supabase
+      .from("cards")
+      .select("slug")
+      .eq("slug", candidate)
+      .eq("status", "published")
+      .maybeSingle();
+    return (card?.slug as string | undefined) ?? null;
+  });
+  if (!storedSlug) {
+    return NextResponse.json({ error: "That card could not be found.", code: "card_not_found" }, { status: 404 });
+  }
+
   const snapshot = payload?.eventSnapshot;
   const { data, error } = await supabase.rpc("link_people_connection_from_scan", {
-    p_slug: slug,
+    p_slug: storedSlug,
     p_event_id: snapshot?.eventId || null,
     p_event_title: snapshot?.eventTitle?.trim().slice(0, 160) || null,
     p_event_location: snapshot?.eventLocation?.trim().slice(0, 320) || null,
