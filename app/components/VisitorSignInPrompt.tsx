@@ -2,7 +2,7 @@
 
 import { GoogleProviderIcon } from "./ProviderIcons";
 import { Users as UsersThreeIcon } from "react-feather";
-import { buildAuthHref } from "../../lib/auth/visitor-intent";
+import { buildAuthHref, scanSourceFromLocation } from "../../lib/auth/visitor-intent";
 import { LinkButton } from "../components/Button";
 
 export function VisitorSignInPrompt({
@@ -18,7 +18,15 @@ export function VisitorSignInPrompt({
   shareToken?: string;
   compact?: boolean;
 }) {
-  const authHref = buildAuthHref({ intent: "visitor", slug, exchangeId, shareToken });
+  // Carries the surface through, so signing in from an NFC tap is recorded as a tap
+  // rather than collapsing into "web" like every other browser arrival.
+  const authHref = buildAuthHref({
+    intent: "visitor",
+    slug,
+    exchangeId,
+    shareToken,
+    source: scanSourceFromLocation(),
+  });
 
   return (
     <section className={`visitor-signin-prompt ${compact ? "compact" : ""}`}>

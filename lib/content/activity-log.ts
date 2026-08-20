@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-20",
+    time: "13:05",
+    title: "Keeping someone from their card no longer costs you your email",
+    impact: "fix",
+    detail:
+      "Open somebody's card in a browser and you could look at it, save it to your phone, and never be offered a way to keep them in ehllo - unless you first filled in the form and sent them your email. The sign-in option only appeared after that, so the one path on the web that actually adds a person to your list was behind handing over your details. There is now a Continue with Google option on the same screen as the form: send your details, or just keep them, your choice.",
+    testing:
+      "Open a card in a browser, tap save, and look under the share form on the next screen.",
+  },
+  {
+    date: "2026-08-20",
     time: "12:45",
     title: "We can finally tell where a connection came from",
     impact: "fix",

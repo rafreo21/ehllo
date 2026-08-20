@@ -6,6 +6,7 @@ import { CreditCard as IdentificationCardIcon } from "react-feather";
 import { Button } from "../../components/Button";
 import { ContactMethodIcon } from "../../components/ContactMethodIcon";
 import { PublicAppDownloadPrompt } from "../../components/PublicAppDownloadPrompt";
+import { VisitorSignInPrompt } from "../../components/VisitorSignInPrompt";
 import { contactMethodHref } from "@/lib/contact-methods";
 import { buildFollowUpMailto } from "@/lib/follow-up-email";
 import { themeCoverBadgeStyle, themeForegroundColor, themeSurfaceStyle } from "@/lib/theme-contrast";
@@ -293,6 +294,15 @@ export function PublicCardClient({
               <p>Send your details to {ownerName} so they remember who you are.</p>
             </div>
             <PublicExchangeForm slug={slug} ownerName={ownerName} themeColor={themeColor} onSent={handleExchangeSent} />
+
+            {/* The other way out of this screen, and until now the only way in was through
+                the form. showAppDownload - which holds the single link on the web that
+                creates a connection - is set by handleExchangeSent and nothing else, so a
+                visitor who would rather not hand over their email could look at a card,
+                save the vCard, and never be offered a way to keep the person in ehllo.
+                Keeping people is the entire product. This component existed for exactly
+                that and was rendered nowhere. */}
+            <VisitorSignInPrompt slug={slug} ownerName={ownerName} compact />
           </div>
         </section>
       </main>

@@ -59,6 +59,19 @@ export function appendVisitorIntentToCallback(callback: URL, intent: VisitorInte
   if (intent.source) callback.searchParams.set("s", intent.source);
 }
 
+/**
+ * The surface marker off the live URL, for client components on the public card page.
+ *
+ * They sit two and three levels below a server component that has the query string, and
+ * threading `s` down as a prop to reach a single href was more plumbing than reading it
+ * where it is needed. Returns undefined on the server, so it is safe to call during
+ * render.
+ */
+export function scanSourceFromLocation(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  return normalizeConnectionSource(new URLSearchParams(window.location.search).get("s")) || undefined;
+}
+
 export function visitorOnboardingPath(intent: VisitorIntent | null) {
   const params = new URLSearchParams();
   if (intent?.slug) params.set("slug", intent.slug);

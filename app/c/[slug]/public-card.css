@@ -616,3 +616,44 @@
   border-color: #163300;
   box-shadow: 0 0 0 4px rgba(174, 184, 170, 0.45);
 }
+
+/* The sign-in alternative on the share step.
+   VisitorSignInPrompt already existed and was rendered nowhere, so its styles live in
+   app/app/flow.css - a stylesheet this page does not load. Restated here in this page's
+   own idiom (flat greys, 999px pills, the theme accent only where it earns it) rather
+   than pulling the app stylesheet in for one block. */
+.visitor-signin-prompt {
+  margin-top: 4px;
+  padding: 16px;
+  border: 1px solid #e4e8e1;
+  border-radius: 14px;
+  background: #f7f9f6;
+  display: grid;
+  gap: 12px;
+}
+.visitor-signin-prompt.compact { padding: 14px; }
+.visitor-signin-prompt .step-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: white;
+  border: 1px solid #e4e8e1;
+  color: #71806b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+.visitor-signin-prompt strong {
+  display: block;
+  margin: 10px 0 4px;
+  font-size: 17px;
+  letter-spacing: -.02em;
+}
+.visitor-signin-prompt p {
+  margin: 0;
+  color: #64705f;
+  font-size: 14px;
+  line-height: 1.45;
+}
