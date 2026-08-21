@@ -507,13 +507,22 @@ export default function CaptureDetailScreen() {
     if (!encounter || !session?.access_token) return;
     setApproveHint('');
 
+    // Every one of these turns the switch straight back off, and the only explanation was a
+    // hint elsewhere on the screen - so it read as the switch being broken rather than as
+    // something being needed first. They say what is missing where you cannot miss it, and
+    // the summary one moves you to the field instead of pointing at it.
     if (!encounter.sharedSummary.trim()) {
+      setActiveTab('recap');
       setApproveHint('Add a short share summary below, then approve.');
+      setErrorMessage('This needs a short recap before it can be shared - it is the only thing guests see. Add one under Recap, then turn sharing on.');
+      setErrorSheetOpen(true);
       return;
     }
 
     if (uploadStatus === 'uploading') {
       setApproveHint('Recording is still uploading. Approve unlocks once it finishes.');
+      setErrorMessage('The recording is still uploading. Sharing unlocks as soon as it finishes.');
+      setErrorSheetOpen(true);
       return;
     }
 
@@ -526,6 +535,8 @@ export default function CaptureDetailScreen() {
       );
       if (!uploaded) {
         setApproveHint('The recording could not be prepared for sharing. Retry the upload below.');
+        setErrorMessage('The recording could not be uploaded, so guests would have nothing to play. Your copy is safe on this device - retry the upload under Recap, then turn sharing on.');
+        setErrorSheetOpen(true);
         return;
       }
     }

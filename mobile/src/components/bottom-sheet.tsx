@@ -1,5 +1,5 @@
 import type { PropsWithChildren, ReactNode } from 'react';
-import { ArrowLeft } from 'phosphor-react-native';
+import { ArrowLeft, X } from 'phosphor-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   Keyboard,
@@ -109,30 +109,34 @@ export function BottomSheet({ visible, title, onClose, footer, onBack, children 
             },
           ]}>
           <View style={styles.handle} />
-          <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              {onBack ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Back"
-                  onPress={onBack}
-                  hitSlop={12}
-                  style={styles.backButton}>
-                  <ArrowLeft size={18} color={colors.ink} weight="bold" />
-                </Pressable>
-              ) : null}
-              <Text style={styles.title} numberOfLines={1}>{title}</Text>
-            </View>
+          {/* Close on its own row at the top right, title on the next line from the left.
+              They used to share one row, so a long title squeezed against the word "Close"
+              and the two competed for the same space. Now the title gets the full width and
+              the way out is always in the same corner, whatever the sheet is called. */}
+          <View style={styles.headerRow}>
+            {onBack ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Back"
+                onPress={onBack}
+                hitSlop={12}
+                style={styles.backButton}>
+                <ArrowLeft size={18} color={colors.ink} weight="bold" />
+              </Pressable>
+            ) : null}
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel="Close sheet"
               onPress={() => {
                 Keyboard.dismiss();
                 onClose();
               }}
-              hitSlop={12}>
-              <Text style={styles.close}>Close</Text>
+              hitSlop={12}
+              style={styles.closeButton}>
+              <X size={18} color={colors.ink} weight="bold" />
             </Pressable>
           </View>
+          <Text style={styles.title} numberOfLines={2}>{title}</Text>
           <View style={styles.bodyWrap}>
             <ScrollView
               ref={scrollRef}
@@ -187,16 +191,34 @@ const styles = StyleSheet.create({
     borderRadius: radius.round,
     backgroundColor: colors.line,
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    // Back on the left when there is one, close always on the right.
     justifyContent: 'space-between',
+  },
+  backButton: { flexShrink: 0 },
+  // Pushed right on its own when there is no back button, so the close icon does not drift
+  // to the left edge on a single-step sheet.
+  closeButton: {
+    marginLeft: 'auto',
+    width: 32,
+    height: 32,
+    borderRadius: radius.round,
+    backgroundColor: colors.surfaceMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    color: colors.ink,
+    fontSize: 20,
+    lineHeight: 26,
+    letterSpacing: -0.4,
+    fontFamily: fonts.bold,
+    fontWeight: '800',
+    marginTop: spacing.x2,
     marginBottom: spacing.x4,
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2, flexShrink: 1 },
-  backButton: { flexShrink: 0 },
-  title: { color: colors.ink, fontSize: 18, fontFamily: fonts.bold, fontWeight: '800', flexShrink: 1 },
-  close: { color: colors.muted, fontSize: 14, fontFamily: fonts.medium, fontWeight: '700' },
   bodyWrap: {
     flexGrow: 1,
     flexShrink: 1,

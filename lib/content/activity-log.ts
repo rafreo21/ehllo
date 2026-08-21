@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-21",
+    time: "12:10",
+    title: "The sharing switch tells you why it will not turn on",
+    impact: "fix",
+    detail:
+      "Turning sharing on could flip straight back off with no useful explanation, which reads as a broken switch. It was never broken: a meeting cannot be shared until it has a short recap, because that recap is the only thing guests see, and the recording has to reach us first so there is something for them to play. Now it says which of those is missing, in words you cannot miss, and for a missing recap it takes you to the field rather than pointing at it. Every bottom sheet also has a close icon in the top corner with its title on the line below, so a long title no longer squeezes against the word Close.",
+    testing:
+      "Open a meeting with no recap and try to turn on sharing.",
+  },
+  {
+    date: "2026-08-21",
     time: "11:30",
     title: "Notifications now open the thing they are about",
     impact: "fix",
