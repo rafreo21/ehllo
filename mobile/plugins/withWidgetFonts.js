@@ -49,17 +49,16 @@ module.exports = function withWidgetFonts(config) {
     // "Resources", which a widget target does not have, and dereferences null. addBuildPhase
     // takes the paths directly and makes the file references itself - the same call
     // expo-widgets uses for the widget's Swift sources.
-    const alreadyAdded = JSON.stringify(project.hash.project.objects.PBXBuildFile || {})
-      .includes(copied[0]);
+    // Paths carry the target directory. The file reference is written with
+    // sourceTree "<group>", and the widget's group has no path of its own, so a bare filename
+    // resolves to ios/ - where the fonts are not - and the build fails with "couldn't be
+    // opened because there is no such file". The sixth argument of addBuildPhase is a copy
+    // destination, not a search path, so it does not help here.
+    const paths = copied.map((font) => `${TARGET_NAME}/${font}`);
+    const alreadyAdded = JSON.stringify(project.hash.project.objects.PBXFileReference || {})
+      .includes(paths[0]);
     if (!alreadyAdded) {
-      project.addBuildPhase(
-        copied,
-        'PBXResourcesBuildPhase',
-        'Resources',
-        targetUuid,
-        'app_extension',
-        TARGET_NAME,
-      );
+      project.addBuildPhase(paths, 'PBXResourcesBuildPhase', 'Resources', targetUuid);
     }
 
     // Registered on the extension itself. The app's own UIAppFonts does not reach in here.

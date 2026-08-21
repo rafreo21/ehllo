@@ -108,7 +108,7 @@ function QrScanWidget(props: QrScanWidgetProps) {
             modifiers={[
               frame({ width: 117, height: 117 }),
               background('#FFFFFF'),
-              cornerRadius(18),
+              cornerRadius(7.2),
             ]}>
             {/* fullColor so a tinted or clear widget appearance cannot recolour the code.
                 The system desaturates full-colour images in those modes by default and can

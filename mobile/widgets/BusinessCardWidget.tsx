@@ -128,10 +128,16 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
     // without the top padding coming down with it.
     <HStack
       spacing={16}
-      alignment="top"
+      alignment="center"
       modifiers={[
         containerBackground(WIDGET_COLORS.canvas, 'widget'),
-        padding({ leading: 16, top: 24, trailing: 16, bottom: 16 }),
+        // Horizontal padding only. A fixed 24pt top against a 16pt bottom pushed everything
+        // low and left uneven margins, and any fixed pair is wrong on some device anyway:
+        // a medium widget is 164pt tall here and 141pt on the smallest iPhones, so the spare
+        // height differs by 23pt. With no vertical padding the 117pt row centres itself, which
+        // makes the top and bottom margins equal everywhere by construction rather than by
+        // arithmetic that only holds on one screen.
+        padding({ leading: 16, trailing: 16 }),
         widgetURL(deepLink),
       ]}>
       {/* The white card's 7pt inset around a 103pt code is the only quiet zone these codes
