@@ -58,6 +58,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
+    date: "2026-08-21",
+    time: "11:30",
+    title: "Notifications now open the thing they are about",
+    impact: "fix",
+    detail:
+      "Tapping a notification rarely landed where it said it would. On the web, every notification about a meeting pointed at a page that does not exist, so all of them led nowhere - quietly, for every type. On the phone, a meeting shared with you opened the people list and left you to find it, and several others opened the recorder's own review screen, which nobody but the recorder can load, so being told about a meeting ended in \"encounter not found\". Each one now opens what it is about, and the review screen recognises when you are not the person who recorded it and shows you the shared recap instead. Contact requests also match the rest of the app now: the person's photo, their name, one line underneath, and the same rounded cell used everywhere else, with history behind an icon rather than a word that stacked against the title.",
+    testing:
+      "Open the bell and tap each notification in turn, on the phone and on the web.",
+  },
+  {
     date: "2026-08-20",
     time: "21:40",
     title: "Opening one meeting no longer shows you the last one",

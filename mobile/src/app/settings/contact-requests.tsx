@@ -1,6 +1,7 @@
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { EnvelopeSimple } from 'phosphor-react-native';
+import { ClockCounterClockwise, EnvelopeSimple } from 'phosphor-react-native';
 import { useCallback, useRef, useState } from 'react';
+import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
@@ -8,6 +9,7 @@ import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
 import { Body, Button, HeaderActionButton, PageHeader, Panel, Screen } from '@/components/ui';
 import { useAuth } from '@/features/auth/auth-context';
 import { useCard } from '@/features/card/card-context';
+import { connectionAvatarUrl } from '@/features/connections/connection-public-card';
 import { methodDisplayName, type MissingMethodType } from '@/features/follow-ups/channel-methods';
 import {
   answerContactRequest,
@@ -177,7 +179,9 @@ export default function ContactRequestsScreen() {
           description="People asking for a way to reach you."
           rightAction={(
             <HeaderActionButton accessibilityLabel="Answered requests" onPress={() => void openHistory()}>
-              <Text style={styles.headerActionText}>History</Text>
+              {/* The icon the capture screen already uses for history. As a word it wrapped
+                  against the title and stacked up. */}
+              <ClockCounterClockwise size={21} color={colors.ink} weight="bold" />
             </HeaderActionButton>
           )}
         />
@@ -203,11 +207,22 @@ export default function ContactRequestsScreen() {
           accessibilityLabel={`${group.requesterName} asked for your ${fieldLabel(group.fieldType)}`}
           onPress={() => openGroup(group)}
           style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
+          <Image
+            source={connectionAvatarUrl({ name: group.requesterName })}
+            style={styles.rowAvatar}
+            contentFit="cover"
+            transition={200}
+            alt={`${group.requesterName} profile photo`}
+          />
           <View style={styles.rowCopy}>
-            <Text style={styles.rowTitle} numberOfLines={2}>
-              {group.requesterName} asked for your {fieldLabel(group.fieldType)}
+            {/* Two lines, never three. The name leads because that is what you recognise, and
+                both truncate so every row is the same height as the one above it. */}
+            <Text style={styles.rowTitle} numberOfLines={1}>
+              {group.requesterName}
             </Text>
-            <Text style={styles.rowCaption}>{askedCaption(group)}</Text>
+            <Text style={styles.rowCaption} numberOfLines={1}>
+              Asked for your {fieldLabel(group.fieldType)} · {askedCaption(group).replace('Asked ', '')}
+            </Text>
           </View>
           {/* Only when it is more than one ask - a "1" beside a single request is noise,
               and the caption already says when it arrived. */}
@@ -305,15 +320,23 @@ export default function ContactRequestsScreen() {
 
 const styles = StyleSheet.create({
   message: { color: colors.ink, fontFamily: fonts.medium, fontSize: 13, marginBottom: spacing.x2 },
+  // Deliberately identical to personRow on Home. These were radius.large with a border,
+  // which read as a different kind of object from every other list of people in the app.
   row: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.x3,
-    borderRadius: radius.large, borderWidth: 1, borderColor: colors.line,
-    backgroundColor: colors.surface, paddingVertical: spacing.x3, paddingHorizontal: spacing.x4,
+    minHeight: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.x3,
+    paddingHorizontal: spacing.x3,
+    paddingVertical: spacing.x3,
+    borderRadius: radius.medium,
+    backgroundColor: colors.surface,
   },
-  rowPressed: { backgroundColor: colors.surfaceMuted },
-  rowCopy: { flex: 1, gap: 2 },
-  rowTitle: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, fontWeight: '800' },
-  rowCaption: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
+  rowPressed: { opacity: 0.9 },
+  rowAvatar: { width: 40, height: 40, borderRadius: radius.round, backgroundColor: colors.surfaceMuted },
+  rowCopy: { flex: 1, minWidth: 0, gap: 1 },
+  rowTitle: { color: colors.ink, fontSize: 14, fontFamily: fonts.bold, fontWeight: '800' },
+  rowCaption: { color: colors.muted, fontFamily: fonts.regular, fontSize: 11.5, lineHeight: 15 },
   countPill: {
     minWidth: 28, borderRadius: radius.round, backgroundColor: colors.accent,
     paddingVertical: 4, paddingHorizontal: spacing.x2, alignItems: 'center',
@@ -328,7 +351,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   sheetError: { color: colors.danger, fontFamily: fonts.medium, fontSize: 13 },
-  headerActionText: { color: colors.ink, fontFamily: fonts.bold, fontWeight: '800', fontSize: 13 },
   historyRow: { gap: 2, paddingVertical: spacing.x2, borderBottomWidth: 1, borderBottomColor: colors.line },
   actions: { gap: spacing.x2 },
   emptyWrap: { alignItems: 'center', gap: spacing.x2, paddingVertical: spacing.x3 },

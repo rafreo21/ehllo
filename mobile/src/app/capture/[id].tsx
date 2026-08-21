@@ -8,6 +8,7 @@ import { BottomSheet } from '@/components/bottom-sheet';
 import { CollapsibleTranscriptSection } from '@/components/collapsible-transcript-section';
 import { SpeakerIdentityEditor } from '@/components/speaker-identity-editor';
 import { renameSpeakerAssignees } from '@/features/encounters/speaker-labels';
+import { fetchSharedMeeting } from '@/features/encounters/shared-meeting-api';
 import { FollowUpDuePicker } from '@/components/follow-up-due-picker';
 import { OutcomeErrorSheet } from '@/components/outcome-error-sheet';
 import { OutcomeSuccessSheet } from '@/components/outcome-success-sheet';
@@ -205,6 +206,29 @@ export default function CaptureDetailScreen() {
         }
       } catch (caught) {
         if (cancelled) return;
+
+        // This screen is the owner's review screen, and several notifications point at it -
+        // a follow-up you owe, a meeting somebody shared, an update on one. Those go to
+        // guests as well as owners, and a guest cannot load the owner's copy at all, so
+        // being told about a meeting and then shown "encounter not found" was routine.
+        //
+        // Rather than teaching every notification who it is talking to, the screen works it
+        // out: if the meeting is readable as a shared one, that is the right view and this is
+        // simply the wrong door. Redirected, not rendered here, so the guest view stays a
+        // single implementation.
+        try {
+          const shared = await fetchSharedMeeting(session.access_token!, id);
+          if (cancelled) return;
+          if (shared?.meeting) {
+            // `as never` matches how notifications.tsx pushes a computed route: the generated
+            // route union does not include a path added in the same change.
+            router.replace(`/shared-meeting/${encodeURIComponent(id)}` as never);
+            return;
+          }
+        } catch {
+          // Not readable either way, so the original failure is the honest one to report.
+        }
+
         setErrorMessage(describeError(caught, 'Could not load this meeting.'));
         setErrorSheetOpen(true);
       } finally {

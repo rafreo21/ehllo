@@ -69,8 +69,22 @@ function notificationHref(alert: NotificationAlert) {
   // notification was about. `open` carries the intent through so the sheet is already up
   // when the page arrives, rather than making you find the row you were just told about.
   if (alert.type === "contact_request") return "/app/settings/contact-requests?open=1";
+  if (alert.type === "follow_up_completed") return "/app/followups";
+
+  // Everything with a meeting used to point at /app/encounters/[id]. That route does not
+  // exist - the only page under encounters is `new` - so every notification about a meeting,
+  // a follow-up or a share led to a 404 on the web, silently, for every type. /app/meeting
+  // resolves what the reader is actually entitled to see.
   if (!alert.encounterId) return "/app/followups";
-  return `/app/encounters/${alert.encounterId}`;
+
+  switch (alert.type) {
+    // A follow-up is acted on in Follow-ups, not by reading the meeting it came from.
+    case "follow_up_due":
+    case "follow_up_overdue":
+      return "/app/followups";
+    default:
+      return `/app/meeting/${alert.encounterId}`;
+  }
 }
 
 function relativeTime(iso: string) {

@@ -148,9 +148,11 @@ export function notificationDeepLink(notification: NotificationRecord): string |
   if (notification.type === 'access_request' && notification.encounterId) {
     return `/capture/${notification.encounterId}`;
   }
-  // And for the person who asked, straight to the meeting they can now read.
+  // And for the person who asked, straight to the meeting they can now read. This pointed at
+  // the people list, so being told a meeting was ready dropped you on a list of everyone you
+  // know and left you to find it - which is not what the notification said it would do.
   if (notification.type === 'access_granted' && notification.encounterId) {
-    return `/connections`;
+    return `/shared-meeting/${notification.encounterId}`;
   }
   // Straight to the follow-up that was ticked off, when we know which one.
   if (notification.type === 'follow_up_completed') return '/settings/follow-ups';
