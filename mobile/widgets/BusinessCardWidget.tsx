@@ -5,6 +5,7 @@ import {
   font,
   foregroundStyle,
   frame,
+  lineLimit,
   padding,
   widgetAccentedRenderingMode,
   widgetURL,
@@ -33,6 +34,8 @@ export type BusinessCardWidgetProps = {
   initials?: string;
   qrImageUri?: string;
   photoImageUri?: string;
+  /** '1' or '0'. Absent means the widget gallery, where sample content is correct. */
+  signedIn?: string | boolean;
 };
 
 function BusinessCardWidget(props: BusinessCardWidgetProps) {
@@ -101,12 +104,18 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
   const qrImageUri = card.qrImageUri || props.qrImageUri;
   const photoImageUri = card.photoImageUri || props.photoImageUri;
   const initials = card.initials || props.initials || 'AM';
+  // Signed out, the card falls back to the demo person - so the home screen showed Alex
+  // Morgan's name, role and company as though they were yours. Apple's guidance is explicit
+  // that a widget needing an account should say so rather than inventing content.
+  const signedOut = props.signedIn === '0' || props.signedIn === false;
 
   return (
     <HStack
       modifiers={[
         containerBackground(WIDGET_COLORS.canvas, 'widget'),
-        padding({ all: 10 }),
+        // 11pt: Apple's sanctioned tighter margin "to create content groupings", which is what
+        // a code beside a name is. The standard 16 would squeeze the text column here.
+        padding({ all: 11 }),
         widgetURL(deepLink),
       ]}>
       <VStack
@@ -148,7 +157,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
           <Text
             modifiers={[
               foregroundStyle(WIDGET_COLORS.accent),
-              font({ weight: 'bold', size: 10 }),
+              font({ weight: 'bold', size: 11 }),
               frame({ width: 26, height: 26 }),
             ]}>
             {initials}
@@ -159,26 +168,33 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
             foregroundStyle(WIDGET_COLORS.text),
             font({ weight: 'bold', size: 13 }),
             padding({ top: 4 }),
+            lineLimit(1),
           ]}>
-          {card.name || props.name || 'My card'}
+          {signedOut ? 'Sign in to ehllo' : (card.name || props.name || 'My card')}
         </Text>
-        {(card.role || props.role) ? (
-          <Text modifiers={[foregroundStyle(WIDGET_COLORS.muted), font({ size: 10 })]}>
+        {signedOut ? (
+          <Text modifiers={[foregroundStyle(WIDGET_COLORS.muted), font({ size: 11 }), lineLimit(1)]}>
+            Your card appears here
+          </Text>
+        ) : (card.role || props.role) ? (
+          // 11pt, not 10. Apple: text smaller than 11 points "can be too hard for many
+          // people to read". Line-limited so the larger size cannot wrap the row.
+          <Text modifiers={[foregroundStyle(WIDGET_COLORS.muted), font({ size: 11 }), lineLimit(1)]}>
             {card.role || props.role}
           </Text>
         ) : null}
         {(card.company || props.company) ? (
-          <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ size: 9 })]}>
+          <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ size: 11 }), lineLimit(1)]}>
             {card.company || props.company}
           </Text>
         ) : null}
         <HStack modifiers={[padding({ top: 4 })]}>
-          <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ size: 8, weight: 'bold' })]}>
+          <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ size: 11, weight: 'bold' }), lineLimit(1)]}>
             ehllo
           </Text>
           {cards.length > 1 ? (
             <HStack modifiers={[padding({ leading: 8 })]}>
-              <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ size: 8, weight: 'bold' })]}>
+              <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ size: 11, weight: 'bold' }), lineLimit(1)]}>
                 {cardPagerLabel(index, cards.length)}
               </Text>
               <Button

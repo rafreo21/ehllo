@@ -18,6 +18,8 @@ export type QrScanWidgetProps = {
   qrImageUri?: string;
   logoImageUri?: string;
   cardsJson?: string;
+  /** '1' or '0'. Absent means the widget gallery, where sample content is the right answer. */
+  signedIn?: string | boolean;
 };
 
 function QrScanWidget(props: QrScanWidgetProps) {
@@ -78,19 +80,26 @@ function QrScanWidget(props: QrScanWidgetProps) {
     <VStack
       modifiers={[
         containerBackground(WIDGET_COLORS.canvas, 'widget'),
-        padding({ all: 8 }),
+        // 16pt is the standard widget margin in Apple's guidance - "to avoid crowding their
+        // edges and creating a cluttered appearance". This was 8 plus an inner 4, and with a
+        // fixed 120pt code that needed 144pt of width: a small widget on the smallest iPhones
+        // is about 141pt, so the code was being clipped there.
+        padding({ all: 16 }),
         widgetURL(deepLink),
       ]}>
-      <VStack modifiers={[padding({ all: 4 })]}>
         {qrImageUri ? (
-          <ZStack modifiers={[frame({ width: 120, height: 120 })]}>
+          // 104 rather than 120. A small widget is about 141pt across on the smallest
+          // iPhones, and 16pt margins on both sides leave 109pt - so this is the largest
+          // square that fits every device without being clipped, instead of the largest that
+          // fits the device it was designed on.
+          <ZStack modifiers={[frame({ width: 104, height: 104 })]}>
             {/* fullColor so a tinted or clear widget appearance cannot recolour the code.
                 The system desaturates full-colour images in those modes by default and can
                 apply the person's chosen tint on top - and a QR that has lost its contrast
                 will not scan, which is the entire job of this widget. */}
             <Image
               uiImage={qrImageUri}
-              modifiers={[frame({ width: 120, height: 120 }), widgetAccentedRenderingMode('fullColor')]}
+              modifiers={[frame({ width: 104, height: 104 }), widgetAccentedRenderingMode('fullColor')]}
             />
             {props.logoImageUri ? (
               <Image
@@ -100,11 +109,15 @@ function QrScanWidget(props: QrScanWidgetProps) {
             ) : null}
           </ZStack>
         ) : (
+          // Said plainly instead of "Scan to connect", which promised a code that was not
+          // there. Apple's guidance is explicit that a widget needing an account should say
+          // so; the signed-out wording is theirs in spirit - "Sign in to view reservations".
           <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ weight: 'bold', size: 13 })]}>
-            Scan to connect
+            {props.signedIn === '0' || props.signedIn === false
+              ? 'Sign in to share your card'
+              : 'Open ehllo to set up your card'}
           </Text>
         )}
-      </VStack>
     </VStack>
   );
 }

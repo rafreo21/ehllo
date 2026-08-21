@@ -86,10 +86,13 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
     <VStack
       modifiers={[
         containerBackground(WIDGET_COLORS.canvas, 'widget'),
-        padding({ all: 10 }),
+        // 11pt, Apple's sanctioned tighter margin for a content grouping - a list of rows.
+        padding({ all: 11 }),
         widgetURL(deepLink),
       ]}>
-      <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ weight: 'bold', size: 10 })]}>
+      {/* Nothing under 11pt: Apple's guidance is that smaller text "can be too hard for many
+          people to read". */}
+      <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ weight: 'bold', size: 11 })]}>
         RECENT CONNECTIONS
       </Text>
       {rows.map((row, rowIndex) => {
@@ -111,7 +114,7 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
               <Text modifiers={[foregroundStyle(WIDGET_COLORS.text), font({ weight: 'bold', size: 12 })]}>
                 {row.name}
               </Text>
-              <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ size: 10 })]}>
+              <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ size: 11 })]}>
                 {row.subtitle}
               </Text>
             </VStack>

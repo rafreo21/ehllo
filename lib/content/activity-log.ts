@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-21",
+    time: "15:10",
+    title: "Widgets are readable, fit every iPhone, and stop pretending to be somebody else",
+    impact: "fix",
+    detail:
+      "Three things, all measured against Apple's own widget guidance rather than guessed at. Text as small as eight and nine points was being used for roles, companies and labels, which Apple says is too small for many people to read - nothing is under eleven now, and lines are held to one so the larger text cannot reflow a row. The QR widget asked for a code wider than the space available on the smaller iPhones, so it was being clipped there; it now sits inside the standard margin at a size that fits every device. And when nobody is signed in, the widgets used to show a made-up person's name, role and company as though they were yours, with a code leading to a demo page - they now say to sign in, which is what Apple asks for. Widgets are built into the app, so this arrives with the next full update rather than over the air.",
+    testing:
+      "Add the QR Scan and Business Card widgets on a smaller iPhone, then sign out and look at them again.",
+  },
+  {
+    date: "2026-08-21",
     time: "14:20",
     title: "The widget QR keeps its colours, so it still scans",
     impact: "fix",

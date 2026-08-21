@@ -148,6 +148,10 @@ export async function buildWidgetSnapshot(
     logoImageUri,
     logoImageBase64,
     qrImageUri,
+    // Whether there is a signed-in account behind this snapshot. The widget used to fall back
+    // to the demo card when it had nothing, so a signed-out home screen advertised Alex
+    // Morgan's details as though they were yours, with a QR pointing at a demo page.
+    signedIn: Boolean(accessToken),
   };
 }
 
@@ -157,6 +161,7 @@ function bridgePayload(snapshot: WidgetSnapshot): Record<string, string | undefi
     logoImageBase64: snapshot.logoImageBase64,
     connectionsDeepLink: snapshot.connectionsDeepLink,
     recentConnectionsJson: JSON.stringify(snapshot.connections),
+    signedIn: snapshot.signedIn ? '1' : '0',
   };
 
   snapshot.connections.slice(0, 3).forEach((connection, index) => {
@@ -196,6 +201,9 @@ function iosWidgetPayload(snapshot: WidgetSnapshot): IosWidgetPayload {
     company: primary?.company || WIDGET_DEMO_CARD.company,
     initials: primary?.initials || WIDGET_DEMO_CARD.initials,
     photoImageUri: primary?.photoImageUri,
+    // Crosses as a string because the bridge carries strings and numbers, not booleans. Its
+    // absence means the widget gallery, where the demo card is the right thing to show.
+    signedIn: snapshot.signedIn ? '1' : '0',
   };
 
   snapshot.connections.slice(0, 3).forEach((connection, index) => {

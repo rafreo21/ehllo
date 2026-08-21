@@ -39,6 +39,17 @@ export type WidgetSnapshot = {
   logoImageUri?: string;
   logoImageBase64?: string;
   qrImageUri?: string;
+  /**
+   * Whether anyone is actually signed in on this device.
+   *
+   * Without it, a signed-out widget fell back to the demo card - so it sat on the home screen
+   * showing Alex Morgan's details as though they were yours, and its QR led to a demo page.
+   * Apple's guidance is explicit that a widget needing an account should say so, giving
+   * "Sign in to view reservations" as the example. The gallery preview is a different case and
+   * still wants realistic sample content, which is why this is a flag rather than an absence:
+   * no snapshot at all means the gallery, a snapshot saying false means signed out.
+   */
+  signedIn: boolean;
 };
 
 export const WIDGET_OPTIONS = [
