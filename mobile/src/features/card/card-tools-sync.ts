@@ -11,7 +11,13 @@ export async function syncCardToolsForCard(
 
   try {
     await syncAllWidgets(cards, cardPublicUrl, accessToken, preferredCard);
-  } catch {
-    // Widget sync is best-effort and surfaces in Card Tools when it fails.
+  } catch (caught) {
+    // Best effort by design - a widget that will not update must not break the screen that
+    // triggered it. But it says so now. Swallowing this silently is why an oversized QR could
+    // fail every widget render for weeks with nothing anywhere to say why, and why "the widget
+    // is not working" arrived with no detail attached.
+    console.error('[card-tools-sync] widget sync failed', {
+      message: caught instanceof Error ? caught.message : String(caught),
+    });
   }
 }
