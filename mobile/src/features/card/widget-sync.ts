@@ -209,15 +209,44 @@ function iosWidgetPayload(snapshot: WidgetSnapshot): IosWidgetPayload {
   return payload;
 }
 
+/**
+ * Thrown only when the widget target genuinely is not in this build.
+ *
+ * It exists so that one failure can be told apart from every other one. The caller used to
+ * catch everything and report "install a development or production build", so a QR that would
+ * not render, a photo that would not cache, or a snapshot the extension refused looked
+ * identical to running in Expo Go - and there was no way to find out which.
+ */
+class WidgetTargetMissingError extends Error {}
+
 async function updateIosWidgets(snapshot: WidgetSnapshot) {
+  // Loaded before anything else is prepared, and on its own, because this is the only step
+  // whose failure means the app needs rebuilding.
+  let modules;
+  try {
+    modules = await Promise.all([
+      import('../../../widgets/QrScanWidget'),
+      import('../../../widgets/BusinessCardWidget'),
+      import('../../../widgets/RecentConnectionsWidget'),
+    ]);
+  } catch (caught) {
+    throw new WidgetTargetMissingError(
+      caught instanceof Error ? caught.message : 'widget modules unavailable',
+    );
+  }
+
+  const [{ default: qrScan }, { default: businessCard }, { default: recentConnections }] = modules;
+  // Present but inert is the same situation as absent: the JS shim resolves in Expo Go while
+  // the native extension it talks to does not exist.
+  if (typeof qrScan?.updateSnapshot !== 'function'
+    || typeof businessCard?.updateSnapshot !== 'function'
+    || typeof recentConnections?.updateSnapshot !== 'function') {
+    throw new WidgetTargetMissingError('widget modules loaded without updateSnapshot');
+  }
+
+  // Anything below here is a real failure and is allowed to say so.
   const cards = await ensureDemoCardQr(snapshot.cards);
   const payload = iosWidgetPayload({ ...snapshot, cards });
-
-  const [{ default: qrScan }, { default: businessCard }, { default: recentConnections }] = await Promise.all([
-    import('../../../widgets/QrScanWidget'),
-    import('../../../widgets/BusinessCardWidget'),
-    import('../../../widgets/RecentConnectionsWidget'),
-  ]);
 
   qrScan.updateSnapshot(payload);
   businessCard.updateSnapshot(payload);
@@ -236,8 +265,19 @@ export async function syncAllWidgets(
     try {
       await updateIosWidgets(snapshot);
       return;
-    } catch {
-      throw new Error('The home-screen widget is available after installing a development or production build.');
+    } catch (caught) {
+      if (caught instanceof WidgetTargetMissingError) {
+        throw new Error('The home-screen widget is available after installing a development or production build.');
+      }
+      // Said out loud, and passed on rather than replaced. Every failure used to be reported
+      // as a missing build, which is why "the widget export is not working" came with nothing
+      // to go on.
+      console.error('[widget-sync] iOS widget update failed', {
+        message: caught instanceof Error ? caught.message : String(caught),
+      });
+      throw caught instanceof Error
+        ? new Error(`The widget could not be updated: ${caught.message}`)
+        : new Error('The widget could not be updated.');
     }
   }
 
@@ -246,7 +286,18 @@ export async function syncAllWidgets(
     if (!bridge?.updateWidget) {
       throw new Error('Rebuild the Android app to enable the home-screen widget.');
     }
-    await bridge.updateWidget(bridgePayload(snapshot));
+    try {
+      await bridge.updateWidget(bridgePayload(snapshot));
+    } catch (caught) {
+      // The bridge exists, so this is a real failure on the native side rather than a missing
+      // build, and it should not be reported as one.
+      console.error('[widget-sync] Android widget update failed', {
+        message: caught instanceof Error ? caught.message : String(caught),
+      });
+      throw caught instanceof Error
+        ? new Error(`The widget could not be updated: ${caught.message}`)
+        : new Error('The widget could not be updated.');
+    }
     return;
   }
 

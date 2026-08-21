@@ -1189,3 +1189,7 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
 .request-history-list { max-height: min(52vh, 420px); overflow-y: auto; }
 .request-history-list .connections-row { cursor: default; }
 .request-history-list .connections-row:hover { background: white; }
+
+/* The widgets-live-on-your-phone modal: an icon sitting inline with its sentence. */
+.widgets-modal-lede { margin: 0; color: var(--p-muted); font-size: 14px; line-height: 1.5; }
+.widgets-modal-lede svg { vertical-align: -2px; }

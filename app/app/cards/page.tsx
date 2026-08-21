@@ -25,6 +25,7 @@ import { PageSkeleton } from "../../components/AsyncState";
 import { Button, LinkButton } from "../../components/Button";
 import { contactMethodHref, contactMethodOpensNewTab } from "../../../lib/contact-methods";
 import { buildHtmlSignature, buildPlainSignature } from "../../../lib/email-signature";
+import { WidgetsOnPhoneModal } from "../../components/WidgetsOnPhoneModal";
 import { WalletSharePanel } from "../../components/WalletSharePanel";
 import { useToast } from "../../components/ToastContext";
 import {
@@ -113,6 +114,7 @@ export default function CardsPage() {
   const [svgCopied, setSvgCopied] = useState(false);
   const [signatureCopied, setSignatureCopied] = useState<"" | "plain" | "html">("");
   const [showWidgetHelp, setShowWidgetHelp] = useState(false);
+  const [widgetsOnPhoneOpen, setWidgetsOnPhoneOpen] = useState(false);
   const [viewingCard, setViewingCard] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [qrError, setQrError] = useState("");
@@ -760,7 +762,11 @@ function createCard(seed: Partial<LibraryCard> = {}) {
                 </article>
               </div>
               <div className="phone-widget-actions">
-                <Button size="small" onClick={openInApp}><DeviceMobileIcon size={15} /> Open in app</Button>
+                {/* Widgets cannot exist on the web, so the useful action here is getting the
+                    app. The instructions below used to open with "install and open ehllo
+                    once" and offer no way to do it. */}
+                <Button size="small" onClick={() => setWidgetsOnPhoneOpen(true)}><DeviceMobileIcon size={15} /> Get the app</Button>
+                <Button size="small" variant="secondary" onClick={openInApp}>Open in app</Button>
                 <Button size="small" variant="secondary" aria-expanded={showWidgetHelp} onClick={() => setShowWidgetHelp((current) => !current)}>
                   Add a widget {showWidgetHelp ? <CaretUpIcon size={14} /> : <CaretDownIcon size={14} />}
                 </Button>
@@ -783,6 +789,10 @@ function createCard(seed: Partial<LibraryCard> = {}) {
               qrDataUrl={qr}
               copied={copied}
               onCopyLink={copyLink}
+            />
+            <WidgetsOnPhoneModal
+              open={widgetsOnPhoneOpen}
+              onClose={() => setWidgetsOnPhoneOpen(false)}
             />
           </>
         )}
