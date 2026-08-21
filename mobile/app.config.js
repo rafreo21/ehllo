@@ -172,9 +172,17 @@ module.exports = {
       [
         "expo-splash-screen",
         {
-          backgroundColor: "#163300",
-          image: "./assets/images/splash-icon.png",
-          imageWidth: 76,
+          // The badge's own green, filling the screen, with the figures sitting directly on
+          // it. splash-icon.png is the whole badge - green rounded plate included - so on the
+          // old dark background it read as a small tile floating in the middle rather than as
+          // the mark itself. The plate is the background now, and the image carries only the
+          // figures on transparency.
+          backgroundColor: "#87EA5C",
+          image: "./assets/images/splash-figures.png",
+          // The figures occupy roughly the middle 45% of the source square, so 140pt of image
+          // puts them at about 60pt - the proportion they have in the brand mark, rather than
+          // whatever falls out of the file's padding.
+          imageWidth: 140,
         },
       ],
       "expo-secure-store",

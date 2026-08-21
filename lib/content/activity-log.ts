@@ -59,6 +59,14 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-21",
+    time: "12:40",
+    title: "The opening screen is the mark, not a tile on a dark background",
+    impact: "improvement",
+    detail:
+      "The screen you see while the app opens showed the app icon - green rounded square and all - centred on a dark green background, so it read as a small tile floating in the middle rather than as the ehllo mark. The green is the whole screen now, with the two figures sitting directly on it. This one arrives with the next full app update from the store rather than an over-the-air one, because the opening screen is built into the app itself.",
+  },
+  {
+    date: "2026-08-21",
     time: "12:10",
     title: "The sharing switch tells you why it will not turn on",
     impact: "fix",
