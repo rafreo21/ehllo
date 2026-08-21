@@ -48,6 +48,12 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
     subtle: '#8FA088',
   };
 
+  // The app's own typeface, matching theme/tokens.ts. A widget extension is a separate
+  // bundle, so plugins/withWidgetFonts.js copies these two weights into it and registers
+  // them - without that, Font.custom falls back to the system face silently and the widget
+  // would read in San Francisco while every other screen reads in Airbnb Cereal.
+  const FONTS = { regular: 'AirbnbCereal_W_Bk', medium: 'AirbnbCereal_W_Md' };
+
   const DEMO_CONNECTIONS: WidgetConnectionRecord[] = [
     { name: 'Jordan Lee', subtitle: 'Shared via your card' },
     { name: 'Cameron Williamson', subtitle: 'Shared via your card' },
@@ -92,7 +98,7 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
       ]}>
       {/* Nothing under 11pt: Apple's guidance is that smaller text "can be too hard for many
           people to read". */}
-      <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ weight: 'bold', size: 11 })]}>
+      <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ family: FONTS.medium, weight: 'bold', size: 11 })]}>
         RECENT CONNECTIONS
       </Text>
       {rows.map((row, rowIndex) => {
@@ -104,17 +110,17 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
             <Text
               modifiers={[
                 foregroundStyle(WIDGET_COLORS.accent),
-                font({ weight: 'bold', size: 11 }),
+                font({ family: FONTS.medium, weight: 'bold', size: 11 }),
                 frame({ width: 24, height: 24 }),
                 cornerRadius(12),
               ]}>
               {row.name.slice(0, 1).toUpperCase()}
             </Text>
             <VStack modifiers={[padding({ leading: 4 })]}>
-              <Text modifiers={[foregroundStyle(WIDGET_COLORS.text), font({ weight: 'bold', size: 12 })]}>
+              <Text modifiers={[foregroundStyle(WIDGET_COLORS.text), font({ family: FONTS.medium, weight: 'bold', size: 12 })]}>
                 {row.name}
               </Text>
-              <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ size: 11 })]}>
+              <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ family: FONTS.regular, size: 11 })]}>
                 {row.subtitle}
               </Text>
             </VStack>
@@ -123,7 +129,7 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
                 <Text
                   modifiers={[
                     foregroundStyle(WIDGET_COLORS.text),
-                    font({ size: 12 }),
+                    font({ family: FONTS.regular, size: 12 }),
                     frame({ width: 28, height: 28 }),
                     cornerRadius(14),
                   ]}>
@@ -136,7 +142,7 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
                 <Text
                   modifiers={[
                     foregroundStyle(WIDGET_COLORS.text),
-                    font({ size: 12 }),
+                    font({ family: FONTS.regular, size: 12 }),
                     frame({ width: 28, height: 28 }),
                     cornerRadius(14),
                   ]}>

@@ -1,4 +1,4 @@
-import { Button, HStack, Image, Text, VStack, ZStack } from '@expo/ui/swift-ui';
+import { HStack, Image, Text, VStack, ZStack } from '@expo/ui/swift-ui';
 import {
   aspectRatio,
   background,
@@ -48,13 +48,20 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
   // for native evaluation - nothing from outer scope is captured, not even
   // plain constants. Every helper AND constant the render logic needs must
   // be declared inside this function.
+  // From the layout guide: black canvas, three-step text ramp.
   const WIDGET_COLORS = {
-    canvas: '#141814',
+    canvas: '#000000',
     accent: '#9FE870',
     text: '#FFFFFF',
-    muted: '#B8C4B3',
-    subtle: '#8FA088',
+    muted: '#BDBDBD',
+    subtle: '#8F8F8F',
   };
+
+  // The app's own typeface, matching theme/tokens.ts. A widget extension is a separate
+  // bundle, so plugins/withWidgetFonts.js copies these two weights into it and registers
+  // them - without that, Font.custom falls back to the system face silently and the widget
+  // would read in San Francisco while every other screen reads in Airbnb Cereal.
+  const FONTS = { regular: 'AirbnbCereal_W_Bk', medium: 'AirbnbCereal_W_Md' };
 
   const DEMO_CARD: WidgetCardRecord = {
     name: 'Alex Morgan',
@@ -96,10 +103,9 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
     return cards[index % cards.length] ?? cards[0] ?? DEMO_CARD;
   }
 
-  function cardPagerLabel(index: number, total: number) {
-    return `CARD ${String((index % total) + 1).padStart(2, '0')}`;
-  }
-
+  // The layout guide has no pager row, so the previous card/next card controls are gone with
+  // it - a widget can only show the first card now. Worth naming: the setup copy still tells
+  // people they can switch cards from the widget.
   const cards = parseCardsJson(props.cardsJson);
   const index = activeCardIndex(props.cardIndex);
   const card = activeCard(cards, index);
@@ -113,43 +119,41 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
   const signedOut = props.signedIn === '0' || props.signedIn === false;
 
   return (
+    // 340x164 with a 308x117 inner row: horizontal, 16pt between the card and the text,
+    // 16pt leading and 24pt top per the guide. No corner radius on the root - the system
+    // applies the widget's own, which is what "use recommended" means.
+    //
+    // 24 + a 117pt card is 141pt, exactly the height of a medium widget on the smallest
+    // iPhones, so this fits everywhere with nothing to spare: the card cannot grow past 117
+    // without the top padding coming down with it.
     <HStack
+      spacing={16}
+      alignment="top"
       modifiers={[
         containerBackground(WIDGET_COLORS.canvas, 'widget'),
-        // 11pt: Apple's sanctioned tighter margin "to create content groupings", which is what
-        // a code beside a name is. The standard 16 would squeeze the text column here.
-        padding({ all: 11 }),
+        padding({ leading: 16, top: 24, trailing: 16, bottom: 16 }),
         widgetURL(deepLink),
       ]}>
-      {/* The code was 64pt, using barely half the height available, for the one element
-          anybody actually needs to reach.
-          Sized from Apple's own table rather than the device in front of me: the smallest
-          medium widget is 292x141pt on 320x568 screens, so 11pt margins leave 119pt of
-          height - not the 133 a 375pt-wide phone suggests. Hence a 117pt card with a 105pt
-          code, identical to the QR Scan widget because both are bounded by that same 119pt.
-          143pt of width remains for the text column.
-          The white card's inset is the only quiet zone these codes have; they are generated
-          edge to edge with no margin of their own. */}
+      {/* The white card's 7pt inset around a 103pt code is the only quiet zone these codes
+          have - they are generated edge to edge with no margin of their own - so it is
+          structural rather than decoration. */}
       <VStack
         modifiers={[
           frame({ width: 117, height: 117 }),
           background('#FFFFFF'),
-          cornerRadius(20),
+          cornerRadius(7.2),
         ]}>
         {qrImageUri ? (
-          <ZStack modifiers={[frame({ width: 105, height: 105 })]}>
-            {/* Full colour for the same reason as the QR Scan widget: a tinted or clear
-                appearance recolours full-colour images by default, and a recoloured QR does
-                not scan. */}
-            {/* resizable() before the frame. Without it SwiftUI draws the image at its
-                natural size and the frame only crops, so a 480px code showed as a zoomed-in
-                fragment of itself. */}
+          <ZStack modifiers={[frame({ width: 103, height: 103 })]}>
+            {/* resizable() before the frame, or SwiftUI draws the image at its natural size
+                and the frame only crops it. fullColor so a tinted widget appearance cannot
+                recolour the code out of scanning range. */}
             <Image
               uiImage={qrImageUri}
               modifiers={[
                 resizable(),
                 aspectRatio({ ratio: 1, contentMode: 'fit' }),
-                frame({ width: 105, height: 105 }),
+                frame({ width: 103, height: 103 }),
                 widgetAccentedRenderingMode('fullColor'),
               ]}
             />
@@ -159,96 +163,72 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
                 modifiers={[
                   resizable(),
                   aspectRatio({ ratio: 1, contentMode: 'fit' }),
-                  frame({ width: 27, height: 27 }),
-                  cornerRadius(7),
+                  frame({ width: 26, height: 26 }),
+                  cornerRadius(6),
                   widgetAccentedRenderingMode('fullColor'),
                 ]}
               />
             ) : null}
           </ZStack>
         ) : (
-          <Text modifiers={[foregroundStyle(WIDGET_COLORS.text), font({ weight: 'bold', size: 11 })]}>
-            QR
-          </Text>
+          <Text modifiers={[foregroundStyle('#8F8F8F'), font({ family: FONTS.regular, size: 11 })]}>QR</Text>
         )}
       </VStack>
 
-      <VStack modifiers={[padding({ leading: 10 })]}>
+      <VStack spacing={4} alignment="leading" modifiers={[frame({ width: 175 })]}>
         {photoImageUri ? (
           <Image
             uiImage={photoImageUri}
             modifiers={[
               resizable(),
               aspectRatio({ ratio: 1, contentMode: 'fill' }),
-              frame({ width: 26, height: 26 }),
-              cornerRadius(13),
+              frame({ width: 40, height: 40 }),
+              // A 20pt radius on a 40pt square is the ellipse in the guide.
+              cornerRadius(20),
             ]}
           />
         ) : (
           <Text
             modifiers={[
               foregroundStyle(WIDGET_COLORS.accent),
-              font({ weight: 'bold', size: 11 }),
-              frame({ width: 26, height: 26 }),
+              font({ family: FONTS.regular, size: 14, weight: 'medium' }),
+              frame({ width: 40, height: 40 }),
             ]}>
             {initials}
           </Text>
         )}
+
         <Text
           modifiers={[
             foregroundStyle(WIDGET_COLORS.text),
-            font({ weight: 'bold', size: 13 }),
-            padding({ top: 4 }),
+            font({ family: FONTS.regular, size: 16, weight: 'regular' }),
             lineLimit(1),
           ]}>
           {signedOut ? 'Sign in to ehllo' : (card.name || props.name || 'My card')}
         </Text>
-        {signedOut ? (
-          <Text modifiers={[foregroundStyle(WIDGET_COLORS.muted), font({ size: 11 }), lineLimit(1)]}>
-            Your card appears here
-          </Text>
-        ) : (card.role || props.role) ? (
-          // 11pt, not 10. Apple: text smaller than 11 points "can be too hard for many
-          // people to read". Line-limited so the larger size cannot wrap the row.
-          <Text modifiers={[foregroundStyle(WIDGET_COLORS.muted), font({ size: 11 }), lineLimit(1)]}>
-            {card.role || props.role}
-          </Text>
-        ) : null}
-        {(card.company || props.company) ? (
-          <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ size: 11 }), lineLimit(1)]}>
-            {card.company || props.company}
-          </Text>
-        ) : null}
-        <HStack modifiers={[padding({ top: 4 })]}>
-          <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ size: 11, weight: 'bold' }), lineLimit(1)]}>
-            ehllo
-          </Text>
-          {cards.length > 1 ? (
-            <HStack modifiers={[padding({ leading: 8 })]}>
-              <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ size: 11, weight: 'bold' }), lineLimit(1)]}>
-                {cardPagerLabel(index, cards.length)}
-              </Text>
-              <Button
-                target="card-prev"
-                onPress={() => ({
-                  cardIndex: (index - 1 + cards.length) % cards.length,
-                })}>
-                <Text modifiers={[foregroundStyle(WIDGET_COLORS.text), font({ size: 14, weight: 'bold' })]}>
-                  ‹
+
+        <VStack spacing={3} alignment="leading" modifiers={[frame({ width: 175 })]}>
+          {signedOut ? (
+            <Text modifiers={[foregroundStyle(WIDGET_COLORS.muted), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
+              Your card appears here
+            </Text>
+          ) : (
+            <>
+              {(card.role || props.role) ? (
+                <Text modifiers={[foregroundStyle(WIDGET_COLORS.muted), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
+                  {card.role || props.role}
                 </Text>
-              </Button>
-              <Button
-                target="card-next"
-                onPress={() => ({
-                  cardIndex: (index + 1) % cards.length,
-                })}>
-                <Text modifiers={[foregroundStyle(WIDGET_COLORS.text), font({ size: 14, weight: 'bold' })]}>
-                  ›
+              ) : null}
+              {(card.company || props.company) ? (
+                // 10pt is below the 11pt Apple asks for as a legibility floor. Specified in
+                // the guide, so it stands - noted here rather than silently corrected.
+                <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ family: FONTS.regular, size: 10, weight: 'regular' }), lineLimit(1)]}>
+                  {card.company || props.company}
                 </Text>
-              </Button>
-            </HStack>
-          ) : null}
-        </HStack>
+              ) : null}
+            </>
+          )}
+        </VStack>
       </VStack>
     </HStack>
   );

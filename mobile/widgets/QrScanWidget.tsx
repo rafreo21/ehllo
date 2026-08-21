@@ -37,6 +37,12 @@ function QrScanWidget(props: QrScanWidgetProps) {
     subtle: '#8FA088',
   };
 
+  // The app's own typeface, matching theme/tokens.ts. A widget extension is a separate
+  // bundle, so plugins/withWidgetFonts.js copies these two weights into it and registers
+  // them - without that, Font.custom falls back to the system face silently and the widget
+  // would read in San Francisco while every other screen reads in Airbnb Cereal.
+  const FONTS = { regular: 'AirbnbCereal_W_Bk', medium: 'AirbnbCereal_W_Md' };
+
   const DEMO_CARD: WidgetCardRecord = {
     name: 'Alex Morgan',
     role: 'Product Designer',
@@ -138,7 +144,7 @@ function QrScanWidget(props: QrScanWidgetProps) {
           // Said plainly instead of "Scan to connect", which promised a code that was not
           // there. Apple's guidance is explicit that a widget needing an account should say
           // so; the signed-out wording is theirs in spirit - "Sign in to view reservations".
-          <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ weight: 'bold', size: 13 })]}>
+          <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ family: FONTS.medium, weight: 'bold', size: 13 })]}>
             {props.signedIn === '0' || props.signedIn === false
               ? 'Sign in to share your card'
               : 'Open ehllo to set up your card'}

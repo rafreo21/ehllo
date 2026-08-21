@@ -185,6 +185,8 @@ module.exports = {
           imageWidth: 140,
         },
       ],
+      // After expo-widgets, which is what creates the extension target this adds fonts to.
+      "./plugins/withWidgetFonts",
       "expo-secure-store",
       [
         "expo-camera",
