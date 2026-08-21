@@ -6,6 +6,7 @@ import {
   foregroundStyle,
   frame,
   padding,
+  widgetAccentedRenderingMode,
   widgetURL,
 } from '@expo/ui/swift-ui/modifiers';
 import { createWidget } from 'expo-widgets';
@@ -116,9 +117,18 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
         ]}>
         {qrImageUri ? (
           <ZStack modifiers={[frame({ width: 64, height: 64 })]}>
-            <Image uiImage={qrImageUri} modifiers={[frame({ width: 64, height: 64 })]} />
+            {/* Full colour for the same reason as the QR Scan widget: a tinted or clear
+                appearance recolours full-colour images by default, and a recoloured QR does
+                not scan. */}
+            <Image
+              uiImage={qrImageUri}
+              modifiers={[frame({ width: 64, height: 64 }), widgetAccentedRenderingMode('fullColor')]}
+            />
             {props.logoImageUri ? (
-              <Image uiImage={props.logoImageUri} modifiers={[frame({ width: 16, height: 16 }), cornerRadius(4)]} />
+              <Image
+                uiImage={props.logoImageUri}
+                modifiers={[frame({ width: 16, height: 16 }), cornerRadius(4), widgetAccentedRenderingMode('fullColor')]}
+              />
             ) : null}
           </ZStack>
         ) : (

@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-21",
+    time: "14:20",
+    title: "The widget QR keeps its colours, so it still scans",
+    impact: "fix",
+    detail:
+      "iPhone lets you tint your home screen widgets, and when you do, the system recolours the pictures inside them - including a QR code. A recoloured code loses the contrast a camera needs, so anyone whose widgets were tinted had a code nobody could scan. The QR and the ehllo badge inside it are now pinned to their real colours whatever appearance you choose, on both the QR Scan and Business Card widgets. This one arrives with the next full app update rather than over the air, because widgets are built into the app.",
+    testing:
+      "Long-press the home screen, edit the ehllo widget, choose a tinted appearance, then scan the code with another phone.",
+  },
+  {
+    date: "2026-08-21",
     time: "13:40",
     title: "The meeting background had no QR code in it",
     impact: "fix",

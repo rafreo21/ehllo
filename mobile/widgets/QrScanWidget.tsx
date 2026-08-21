@@ -1,5 +1,5 @@
 import { Image, Text, VStack, ZStack } from '@expo/ui/swift-ui';
-import { containerBackground, cornerRadius, font, foregroundStyle, frame, padding, widgetURL } from '@expo/ui/swift-ui/modifiers';
+import { containerBackground, cornerRadius, font, foregroundStyle, frame, padding, widgetAccentedRenderingMode, widgetURL } from '@expo/ui/swift-ui/modifiers';
 import { createWidget } from 'expo-widgets';
 
 type WidgetCardRecord = {
@@ -84,9 +84,19 @@ function QrScanWidget(props: QrScanWidgetProps) {
       <VStack modifiers={[padding({ all: 4 })]}>
         {qrImageUri ? (
           <ZStack modifiers={[frame({ width: 120, height: 120 })]}>
-            <Image uiImage={qrImageUri} modifiers={[frame({ width: 120, height: 120 })]} />
+            {/* fullColor so a tinted or clear widget appearance cannot recolour the code.
+                The system desaturates full-colour images in those modes by default and can
+                apply the person's chosen tint on top - and a QR that has lost its contrast
+                will not scan, which is the entire job of this widget. */}
+            <Image
+              uiImage={qrImageUri}
+              modifiers={[frame({ width: 120, height: 120 }), widgetAccentedRenderingMode('fullColor')]}
+            />
             {props.logoImageUri ? (
-              <Image uiImage={props.logoImageUri} modifiers={[frame({ width: 24, height: 24 }), cornerRadius(5)]} />
+              <Image
+                uiImage={props.logoImageUri}
+                modifiers={[frame({ width: 24, height: 24 }), cornerRadius(5), widgetAccentedRenderingMode('fullColor')]}
+              />
             ) : null}
           </ZStack>
         ) : (
