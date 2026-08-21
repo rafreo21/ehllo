@@ -94,6 +94,53 @@ export async function GET(request: Request) {
   return NextResponse.json({ cards }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
+/**
+ * Archives a card.
+ *
+ * Mobile used to do this by calling supabase.from('cards').update({ status: 'archived' })
+ * directly - the only card write on the phone that did not go through this route. That path
+ * depends on the client's own auth state matching what row-level security expects, and when it
+ * does not, the update matches nothing and returns no error: the card disappeared from the
+ * phone, stayed on the web, and came back on the next load.
+ *
+ * Here the caller is resolved the same way every other card write resolves it, the workspace
+ * is applied server-side rather than trusted from the body, and the archived row is returned so
+ * "nothing changed" cannot be mistaken for success.
+ */
+export async function DELETE(request: Request) {
+  const user = await resolveApiUser(request);
+  if (!user) return NextResponse.json({ error: "Your session has expired." }, { status: 401 });
+
+  const url = new URL(request.url);
+  const cardId = url.searchParams.get("id")?.trim() || "";
+  if (!cardId) return NextResponse.json({ error: "A card id is required." }, { status: 400 });
+  if (user.id === "local-development-preview") {
+    return NextResponse.json({ ok: true, id: cardId, preview: true });
+  }
+
+  const supabase = await createApiSupabaseClient(request);
+  const { data, error } = await supabase
+    .from("cards")
+    .update({ status: "archived" })
+    .eq("id", cardId)
+    .eq("workspace_id", user.workspaceId)
+    .neq("status", "archived")
+    .select("id");
+
+  if (error) {
+    console.error("[cards] could not archive", { cardId, code: error.code, message: error.message });
+    return NextResponse.json({ error: "We couldn’t delete this card." }, { status: 500 });
+  }
+
+  // Already archived, or not this workspace's card. The same answer either way, deliberately:
+  // distinguishing them would say whether a card id exists in somebody else's workspace.
+  if (!data?.length) {
+    return NextResponse.json({ error: "This card is no longer available." }, { status: 404 });
+  }
+
+  return NextResponse.json({ ok: true, id: data[0].id }, { headers: { "Cache-Control": "private, no-store" } });
+}
+
 export async function POST(request: Request) {
   const user = await resolveApiUser(request);
   if (!user) return NextResponse.json({ error: "Your session has expired." }, { status: 401 });

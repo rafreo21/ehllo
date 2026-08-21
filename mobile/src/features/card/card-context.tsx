@@ -168,6 +168,31 @@ export function CardProvider({ children }: PropsWithChildren) {
     }
   }, [accessToken]);
 
+  /**
+   * Archives a card through /api/cards, the same authenticated route every other card write
+   * uses.
+   *
+   * This was a direct supabase.from('cards').update() from the phone - the only card write not
+   * going through the API. That depends on the client's own auth state lining up with what
+   * row-level security expects, and when it does not the update matches nothing and reports no
+   * error, so the card left the phone, stayed on the web, and returned on the next load.
+   * Going through the route means the caller is resolved server-side and the response says
+   * plainly whether a row changed.
+   */
+  const archiveRemoteCard = useCallback(async (cardId: string) => {
+    if (!accessToken) throw new Error('Sign in to delete this card.');
+    const response = await mobileFetch(`/api/cards?id=${encodeURIComponent(cardId)}`, accessToken, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null) as { error?: string } | null;
+      // A 404 means it is already gone - archived earlier, or on another device. Nothing left
+      // to do, and treating it as a failure would keep it queued forever.
+      if (response.status === 404) return;
+      throw new Error(payload?.error || 'The card could not be deleted.');
+    }
+  }, [accessToken]);
+
   const saveRemoteCard = useCallback(async (card: MobileCard, options?: { strictImages?: boolean }) => {
     if (!accessToken) return card;
     const token = accessToken;
@@ -248,8 +273,7 @@ export function CardProvider({ children }: PropsWithChildren) {
         const queuedDeletes = await readCardDeleteQueue();
         for (const entry of queuedDeletes) {
           try {
-            const { error } = await supabase.from('cards').update({ status: 'archived' }).eq('id', entry.cardId);
-            if (error) throw error;
+            await archiveRemoteCard(entry.cardId);
             await dequeueCardDelete(entry.cardId);
             await clearSyncFailure(syncFailureKey.cardDelete(entry.cardId));
           } catch (caught) {
@@ -342,7 +366,7 @@ export function CardProvider({ children }: PropsWithChildren) {
     } finally {
       setSyncing(false);
     }
-  }, [persistCards, saveRemoteCard, session, setCardDirty]);
+  }, [archiveRemoteCard, persistCards, saveRemoteCard, session, setCardDirty]);
 
   // Wait for the local card library and its dirty-id queue to hydrate before
   // the first sync pass. Starting earlier can fetch remote cards while the
@@ -537,12 +561,14 @@ export function CardProvider({ children }: PropsWithChildren) {
     const target = currentCards.find((item) => item.id === id);
     if (!target?.id) throw new Error('This card could not be found.');
 
-    const supabase = getSupabase();
+    // Gated on the token the request actually uses, not on a Supabase client this no longer
+    // touches. Requiring that client was part of the original problem: it could be absent or
+    // holding a stale session while the bearer token was perfectly good, and the archive was
+    // skipped without anybody being told.
     let archived = false;
-    if (supabase && session) {
+    if (accessToken) {
       try {
-        const { error } = await supabase.from('cards').update({ status: 'archived' }).eq('id', id);
-        if (error) throw error;
+        await archiveRemoteCard(id);
         archived = true;
         await clearSyncFailure(syncFailureKey.cardDelete(id));
       } catch (caught) {
@@ -553,7 +579,7 @@ export function CardProvider({ children }: PropsWithChildren) {
     }
     if (archived) {
       await dequeueCardDelete(id);
-    } else if (session) {
+    } else if (accessToken) {
       // No session means this card never had a server copy to begin with -
       // nothing to queue. With a session, the archive above failed or was
       // skipped for connectivity, so remember to retry it later.
@@ -569,7 +595,7 @@ export function CardProvider({ children }: PropsWithChildren) {
     await persistCards(nextCards, nextActiveId);
     await setCardDirty(id, false);
     void clearPublishedBaseline(id);
-  }, [persistCards, session, setCardDirty]);
+  }, [accessToken, archiveRemoteCard, persistCards, setCardDirty]);
 
   const getCardById = useCallback(
     (cardId: string) => cards.find((item) => item.id === cardId),
