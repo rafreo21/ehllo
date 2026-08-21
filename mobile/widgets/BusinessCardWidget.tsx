@@ -1,6 +1,7 @@
 import { Button, HStack, Image, Text, VStack, ZStack } from '@expo/ui/swift-ui';
 import {
   aspectRatio,
+  background,
   containerBackground,
   cornerRadius,
   font,
@@ -120,14 +121,23 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
         padding({ all: 11 }),
         widgetURL(deepLink),
       ]}>
+      {/* The code was 64pt, using barely half the height available, for the one element
+          anybody actually needs to reach.
+          Sized from Apple's own table rather than the device in front of me: the smallest
+          medium widget is 292x141pt on 320x568 screens, so 11pt margins leave 119pt of
+          height - not the 133 a 375pt-wide phone suggests. Hence a 117pt card with a 105pt
+          code, identical to the QR Scan widget because both are bounded by that same 119pt.
+          143pt of width remains for the text column.
+          The white card's inset is the only quiet zone these codes have; they are generated
+          edge to edge with no margin of their own. */}
       <VStack
         modifiers={[
-          frame({ width: 72, height: 72 }),
-          cornerRadius(12),
-          padding({ all: 4 }),
+          frame({ width: 117, height: 117 }),
+          background('#FFFFFF'),
+          cornerRadius(20),
         ]}>
         {qrImageUri ? (
-          <ZStack modifiers={[frame({ width: 64, height: 64 })]}>
+          <ZStack modifiers={[frame({ width: 105, height: 105 })]}>
             {/* Full colour for the same reason as the QR Scan widget: a tinted or clear
                 appearance recolours full-colour images by default, and a recoloured QR does
                 not scan. */}
@@ -139,7 +149,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
               modifiers={[
                 resizable(),
                 aspectRatio({ ratio: 1, contentMode: 'fit' }),
-                frame({ width: 64, height: 64 }),
+                frame({ width: 105, height: 105 }),
                 widgetAccentedRenderingMode('fullColor'),
               ]}
             />
@@ -149,8 +159,8 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
                 modifiers={[
                   resizable(),
                   aspectRatio({ ratio: 1, contentMode: 'fit' }),
-                  frame({ width: 16, height: 16 }),
-                  cornerRadius(4),
+                  frame({ width: 27, height: 27 }),
+                  cornerRadius(7),
                   widgetAccentedRenderingMode('fullColor'),
                 ]}
               />
