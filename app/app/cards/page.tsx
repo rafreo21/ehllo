@@ -342,7 +342,9 @@ export default function CardsPage() {
   }
 
 function createCard(seed: Partial<LibraryCard> = {}) {
-    if (cards.length >= MAX_CARDS) {
+    // Re-read storage rather than trusting this component's `cards` state,
+    // which can be stale relative to another tab or a recent sync.
+    if (readCardLibrary(localStorage).length >= MAX_CARDS) {
       showToast({ tone: "error", message: "You’ve reached the card limit. Delete a card first, then create a new one." });
       return;
     }
@@ -366,7 +368,7 @@ function createCard(seed: Partial<LibraryCard> = {}) {
   }
 
   function createCardFromTemplate(template: CardTemplate) {
-    if (cards.length >= MAX_CARDS) {
+    if (readCardLibrary(localStorage).length >= MAX_CARDS) {
       showToast({ tone: "error", message: "You’ve reached the card limit. Delete a card first, then create a new one." });
       return;
     }

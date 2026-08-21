@@ -49,6 +49,7 @@ import {
   cardPublishFingerprint,
   createLibraryCard,
   getActiveCardId,
+  type LibraryCard,
   MAX_CARDS,
   readCardLibrary,
   setActiveCardId,
@@ -177,13 +178,24 @@ function isCreateFlow(search: string) {
   return params.get("new") === "1" || params.get("mode") === "create";
 }
 
-function loadDraft(search = "") {
-  if (typeof window === "undefined") return initialDraft;
+type DraftResolution =
+  | { kind: "limit" }
+  | { kind: "create"; card: CardDraft }
+  | { kind: "existing"; card: CardDraft };
+
+// A create-flow draft is only ever built in memory here - it never touches
+// storage. It is persisted (and only then claims a stable ?id= in the URL)
+// on the user's first real edit, in persistDraft. Loading this route and
+// abandoning it - back button, closing the sheet, retrying - must never
+// leave a blank orphan card behind that silently eats into the MAX_CARDS
+// cap and causes a later create attempt to land back on an existing card.
+function resolveDraft(search: string, cards: LibraryCard[]): DraftResolution {
+  if (typeof window === "undefined") return { kind: "existing", card: initialDraft };
   try {
-    let cards = readCardLibrary(localStorage);
     const params = new URLSearchParams(search);
     const requestedId = params.get("id");
-    if (isCreateFlow(search) && cards.length < MAX_CARDS) {
+    if (isCreateFlow(search)) {
+      if (cards.length >= MAX_CARDS) return { kind: "limit" };
       const created = createLibraryCard({
         ...initialDraft,
         id: undefined,
@@ -195,30 +207,30 @@ function loadDraft(search = "") {
         bio: "",
         methods: [],
       });
-      cards = upsertLibraryCard(localStorage, created);
-      window.history.replaceState(null, "", `/app/card/edit?id=${created.id}`);
-      setActiveCardId(localStorage, created.id);
-      return created as CardDraft;
+      return { kind: "create", card: created as CardDraft };
     }
     const requestedIdOrActive = requestedId || getActiveCardId(localStorage, cards);
     const selected = cards.find((card) => card.id === requestedIdOrActive) || cards[0];
     if (selected) {
       setActiveCardId(localStorage, selected.id);
-      return { ...initialDraft, ...selected } as CardDraft;
+      return { kind: "existing", card: { ...initialDraft, ...selected } as CardDraft };
     }
     const legacy = JSON.parse(localStorage.getItem("aftermeet-profile-v1") || "null");
     const photo = localStorage.getItem("aftermeet-profile-photo-v1") || "";
     if (legacy) {
       return {
-        ...initialDraft, ...legacy, photo,
-        methods: [
-          { id: "email", type: "email", value: legacy.email || "", label: "Work" },
-          { id: "website", type: "website", value: legacy.website || "", label: "Visit my website" },
-        ],
+        kind: "existing",
+        card: {
+          ...initialDraft, ...legacy, photo,
+          methods: [
+            { id: "email", type: "email", value: legacy.email || "", label: "Work" },
+            { id: "website", type: "website", value: legacy.website || "", label: "Visit my website" },
+          ],
+        },
       };
     }
   } catch {}
-  return initialDraft;
+  return { kind: "existing", card: initialDraft };
 }
 
 export default function CardEditor() {
@@ -227,6 +239,7 @@ export default function CardEditor() {
   const [isCreating, setIsCreating] = useState(false);
   const [draft, setDraft] = useState<CardDraft>(initialDraft);
   const [hydrated, setHydrated] = useState(false);
+  const [cardLimitReached, setCardLimitReached] = useState(false);
   const [step, setStep] = useState(0);
   const [saved, setSaved] = useState(false);
   const [publishedFingerprint, setPublishedFingerprint] = useState("");
@@ -242,46 +255,41 @@ export default function CardEditor() {
   const hasUnpublishedRef = useRef(false);
   const pendingNavigationRef = useRef<null | (() => void)>(null);
   const suppressBeforeUnloadRef = useRef(false);
+  // True once the in-progress create-flow draft has been persisted at least
+  // once and has therefore claimed a real ?id= in the URL. Guards against
+  // re-claiming (and re-writing history) on every subsequent keystroke.
+  const hasClaimedCreateUrlRef = useRef(false);
 
   useEffect(() => {
     const requestedSearch = searchString;
-    void hydrateCardLibraryFromServer().then(() => {
-      const loaded = loadDraft(requestedSearch);
+    const applyResolution = (cards: LibraryCard[]) => {
       const activeSearch = typeof window === "undefined" ? requestedSearch : window.location.search;
-      const requestedId = new URLSearchParams(activeSearch).get("id");
-      const creatingFlow = isCreateFlow(activeSearch);
+      const resolution = resolveDraft(activeSearch, cards);
+      if (resolution.kind === "limit") {
+        setCardLimitReached(true);
+        setHydrated(true);
+        return;
+      }
+      const creatingFlow = resolution.kind === "create";
+      const loaded = resolution.card;
+      hasClaimedCreateUrlRef.current = false;
+      setCardLimitReached(false);
       setDraft(loaded);
       setPublishedFingerprint(cardPublishFingerprint(loaded));
       setHasEditBaseline(!creatingFlow);
       setSaved(isPublishedCard(loaded));
-      if (creatingFlow || requestedId) {
+      setIsCreating(creatingFlow);
+      if (creatingFlow || new URLSearchParams(activeSearch).get("id")) {
         setStep(0);
-        setIsCreating(creatingFlow);
       } else {
-        setIsCreating(false);
         const storedStep = Number(localStorage.getItem("aftermeet-card-step-v2"));
         if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep <= 2) setStep(storedStep);
       }
       setHydrated(true);
-    }).catch(() => {
-      const loaded = loadDraft(requestedSearch);
-      const activeSearch = typeof window === "undefined" ? requestedSearch : window.location.search;
-      const requestedId = new URLSearchParams(activeSearch).get("id");
-      const creatingFlow = isCreateFlow(activeSearch);
-      setDraft(loaded);
-      setPublishedFingerprint(cardPublishFingerprint(loaded));
-      setHasEditBaseline(!creatingFlow);
-      setSaved(isPublishedCard(loaded));
-      if (creatingFlow || requestedId) {
-        setStep(0);
-        setIsCreating(creatingFlow);
-      } else {
-        setIsCreating(false);
-        const storedStep = Number(localStorage.getItem("aftermeet-card-step-v2"));
-        if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep <= 2) setStep(storedStep);
-      }
-      setHydrated(true);
-    });
+    };
+    void hydrateCardLibraryFromServer()
+      .then(applyResolution)
+      .catch(() => applyResolution(readCardLibrary(localStorage)));
   }, [searchString]);
 
   const initials = draft.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
@@ -313,8 +321,21 @@ export default function CardEditor() {
 
   function persistDraft(next: CardDraft) {
     if (!hydrated) return;
+    const existingCards = readCardLibrary(localStorage);
+    const alreadyStored = existingCards.some((card) => card.id === next.id);
+    if (!alreadyStored && existingCards.length >= MAX_CARDS) {
+      // The cap filled up (another tab, another device) between this page
+      // loading and the user's first edit here. upsertLibraryCard would
+      // otherwise silently no-op and the edit would vanish with no signal.
+      setCardLimitReached(true);
+      return;
+    }
     upsertLibraryCard(localStorage, next);
     setActiveCardId(localStorage, next.id);
+    if (isCreating && !alreadyStored && !hasClaimedCreateUrlRef.current) {
+      hasClaimedCreateUrlRef.current = true;
+      window.history.replaceState(null, "", `/app/card/edit?id=${next.id}`);
+    }
     localStorage.setItem("aftermeet-card-v2", JSON.stringify(next));
     localStorage.setItem("aftermeet-profile-v1", JSON.stringify({
       name: next.name, role: next.role, company: next.company, bio: next.bio,
@@ -436,7 +457,9 @@ export default function CardEditor() {
   useAppShellChrome({
     backHref: "/app/cards",
     requestNavigation,
-    actions: <Button size="small" loading={publishing} disabled={!hasUnpublishedChanges && saved} onClick={save}>{!hasUnpublishedChanges && saved ? <CheckCircleIcon /> : null}{publishLabel}</Button>,
+    actions: cardLimitReached ? null : (
+      <Button size="small" loading={publishing} disabled={!hasUnpublishedChanges && saved} onClick={save}>{!hasUnpublishedChanges && saved ? <CheckCircleIcon /> : null}{publishLabel}</Button>
+    ),
   });
 
   const cancelNavigation = useCallback(() => {
@@ -480,6 +503,18 @@ export default function CardEditor() {
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
   }, [shouldShowLeavePrompt, cancelNavigation]);
+
+  if (hydrated && cardLimitReached) {
+    return (
+      <section className="card-creator">
+        <div className="creator-publish-state is-dirty" role="status">
+          <span>You’ve reached your card limit</span>
+          <small>ehllo supports up to {MAX_CARDS} cards per account. Delete one to make room for a new one.</small>
+        </div>
+        <LinkButton fullWidth href="/app/cards">Back to your cards</LinkButton>
+      </section>
+    );
+  }
 
   return (
     <>

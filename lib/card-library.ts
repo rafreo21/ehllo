@@ -92,10 +92,40 @@ export function preserveLocalCardImages(server: LibraryCard, local: LibraryCard)
   };
 }
 
+// A card with none of these fields set was never actually edited - only
+// created (e.g. by loading the create-card route and then navigating away
+// before typing anything). It holds no user data, so it is safe to drop
+// automatically rather than let it sit forever consuming one of MAX_CARDS
+// slots. Never matches a published card: `status`/`publishedAt` are excluded
+// from the check on purpose.
+export function isOrphanDraftCard(card: LibraryCard) {
+  return (
+    card.status !== "published" &&
+    !card.publishedAt &&
+    !card.name.trim() &&
+    !card.role.trim() &&
+    !card.company.trim() &&
+    !card.bio.trim() &&
+    !card.photo &&
+    !card.companyLogo &&
+    !card.coverPhoto &&
+    card.methods.length === 0
+  );
+}
+
+export function canAddCard(storage: StorageLike, excludeId?: string) {
+  const cards = readCardLibrary(storage);
+  return cards.some((card) => card.id === excludeId) || cards.length < MAX_CARDS;
+}
+
 export function readCardLibrary(storage: StorageLike): LibraryCard[] {
   try {
     const stored = JSON.parse(storage.getItem(CARD_LIBRARY_KEY) || "[]");
-    if (Array.isArray(stored) && stored.length) return stored.slice(0, MAX_CARDS);
+    if (Array.isArray(stored) && stored.length) {
+      const pruned = (stored as LibraryCard[]).filter((card) => !isOrphanDraftCard(card));
+      if (pruned.length !== stored.length) writeCardLibrary(storage, pruned);
+      return pruned.slice(0, MAX_CARDS);
+    }
 
     const legacy = JSON.parse(storage.getItem("aftermeet-card-v2") || "null");
     if (legacy) {
