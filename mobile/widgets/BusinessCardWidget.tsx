@@ -175,7 +175,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
         )}
       </VStack>
 
-      <VStack spacing={4} alignment="leading" modifiers={[frame({ width: 175 })]}>
+      <VStack spacing={4} alignment="leading" modifiers={[frame({ width: 175, alignment: 'leading' })]}>
         {photoImageUri ? (
           <Image
             uiImage={photoImageUri}
@@ -207,7 +207,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
           {signedOut ? 'Sign in to ehllo' : (card.name || props.name || 'My card')}
         </Text>
 
-        <VStack spacing={3} alignment="leading" modifiers={[frame({ width: 175 })]}>
+        <VStack spacing={3} alignment="leading" modifiers={[frame({ width: 175, alignment: 'leading' })]}>
           {signedOut ? (
             <Text modifiers={[foregroundStyle(WIDGET_COLORS.muted), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
               Your card appears here
@@ -220,9 +220,10 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
                 </Text>
               ) : null}
               {(card.company || props.company) ? (
-                // 10pt is below the 11pt Apple asks for as a legibility floor. Specified in
-                // the guide, so it stands - noted here rather than silently corrected.
-                <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ family: FONTS.regular, size: 10, weight: 'regular' }), lineLimit(1)]}>
+                // Same 12pt as the role above it, so the two lines read as one block rather
+                // than a step down in scale. Only the colour separates them now, which also
+                // puts it back above Apple's 11pt legibility floor.
+                <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
                   {card.company || props.company}
                 </Text>
               ) : null}

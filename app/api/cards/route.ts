@@ -159,6 +159,23 @@ export async function POST(request: Request) {
 
   const supabase = await createApiSupabaseClient(request);
   const existing = await findExistingCard(supabase, user.workspaceId, body);
+
+  // A deleted card stays deleted. This route upserts whatever status the client sends, so any
+  // stale copy saved afterwards - a queued edit from before the delete, another device, or an
+  // app that has not taken the update yet - wrote 'draft' straight over 'archived' and the
+  // card reappeared. That is the whole of "I deleted it and it came back": deletion was
+  // losing a race it should never have been in.
+  //
+  // 404 rather than a quiet success, so the client drops its copy instead of retrying forever.
+  // Unconditional: a LibraryCard can only carry 'draft' or 'published', so nothing legitimate
+  // arrives here meaning to archive - deleting goes through DELETE on this route.
+  if (existing?.status === "archived") {
+    return NextResponse.json(
+      { error: "This card was deleted.", deleted: true },
+      { status: 404 },
+    );
+  }
+
   const expectedUpdatedAt = typeof (body as LibraryCard & { expectedUpdatedAt?: unknown }).expectedUpdatedAt === "string"
     ? (body as LibraryCard & { expectedUpdatedAt: string }).expectedUpdatedAt
     : undefined;
