@@ -1,5 +1,5 @@
 import { Image, Text, VStack, ZStack } from '@expo/ui/swift-ui';
-import { containerBackground, cornerRadius, font, foregroundStyle, frame, padding, widgetAccentedRenderingMode, widgetURL } from '@expo/ui/swift-ui/modifiers';
+import { aspectRatio, background, containerBackground, cornerRadius, font, foregroundStyle, frame, padding, resizable, widgetAccentedRenderingMode, widgetURL } from '@expo/ui/swift-ui/modifiers';
 import { createWidget } from 'expo-widgets';
 
 type WidgetCardRecord = {
@@ -80,31 +80,55 @@ function QrScanWidget(props: QrScanWidgetProps) {
     <VStack
       modifiers={[
         containerBackground(WIDGET_COLORS.canvas, 'widget'),
-        // 16pt is the standard widget margin in Apple's guidance - "to avoid crowding their
-        // edges and creating a cluttered appearance". This was 8 plus an inner 4, and with a
-        // fixed 120pt code that needed 144pt of width: a small widget on the smallest iPhones
-        // is about 141pt, so the code was being clipped there.
-        padding({ all: 16 }),
+        // 11pt, which Apple sanctions as the tighter margin "to create content groupings" -
+        // and a scannable code is exactly that. The standard 16 left the code smaller than it
+        // needs to be for the one job this widget has.
+        padding({ all: 11 }),
         widgetURL(deepLink),
       ]}>
         {qrImageUri ? (
-          // 104 rather than 120. A small widget is about 141pt across on the smallest
-          // iPhones, and 16pt margins on both sides leave 109pt - so this is the largest
-          // square that fits every device without being clipped, instead of the largest that
-          // fits the device it was designed on.
-          <ZStack modifiers={[frame({ width: 104, height: 104 })]}>
+          // A white card under the code, matching the QR screen in the app - and it earns its
+          // place technically as well as visually: the padding around the code is the quiet
+          // zone a scanner needs to find the symbol, which a code flush against a dark
+          // background does not have.
+          //
+          // The sums, so this cannot silently clip again: the widget is 164pt here and about
+          // 141pt on the smallest iPhones. 11pt outer margins leave 119pt there, the card's
+          // own 8pt padding takes 16 more, so a 100pt code is the largest that fits every
+          // device. The card itself is then 116pt - about 71% of the widget, up from 63%.
+          <ZStack
+            modifiers={[
+              frame({ width: 116, height: 116 }),
+              background('#FFFFFF'),
+              cornerRadius(18),
+            ]}>
             {/* fullColor so a tinted or clear widget appearance cannot recolour the code.
                 The system desaturates full-colour images in those modes by default and can
                 apply the person's chosen tint on top - and a QR that has lost its contrast
                 will not scan, which is the entire job of this widget. */}
+            {/* resizable() before the frame, or SwiftUI draws the image at its natural size
+                and the frame merely crops it - which is why a 480px code appeared as a
+                zoomed-in fragment of itself, unscannable. aspectRatio keeps it square so the
+                modules stay readable. */}
             <Image
               uiImage={qrImageUri}
-              modifiers={[frame({ width: 104, height: 104 }), widgetAccentedRenderingMode('fullColor')]}
+              modifiers={[
+                resizable(),
+                aspectRatio({ ratio: 1, contentMode: 'fit' }),
+                frame({ width: 100, height: 100 }),
+                widgetAccentedRenderingMode('fullColor'),
+              ]}
             />
             {props.logoImageUri ? (
               <Image
                 uiImage={props.logoImageUri}
-                modifiers={[frame({ width: 24, height: 24 }), cornerRadius(5), widgetAccentedRenderingMode('fullColor')]}
+                modifiers={[
+                  resizable(),
+                  aspectRatio({ ratio: 1, contentMode: 'fit' }),
+                  frame({ width: 26, height: 26 }),
+                  cornerRadius(5),
+                  widgetAccentedRenderingMode('fullColor'),
+                ]}
               />
             ) : null}
           </ZStack>

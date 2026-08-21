@@ -31,7 +31,7 @@ import {
   watchSetupInstructions,
 } from '@/features/card/share-assets';
 import { VirtualBackgroundPanelPreview } from '@/components/virtual-background-panel-preview';
-import { updateQuickShareWidget, widgetSetupInstructions, buildWidgetSnapshot } from '@/features/card/widget-sync';
+import { widgetSetupInstructions, buildWidgetSnapshot } from '@/features/card/widget-sync';
 import { WIDGET_OPTIONS } from '@/features/card/widget-types';
 import type { WidgetSnapshot } from '@/features/card/widget-types';
 import {
@@ -273,7 +273,8 @@ export function WidgetToolSheetContent({
   showCompany: boolean;
   initials: string;
 }) {
-  const { busy, run } = actions;
+  // busy/run moved to the parent with the Refresh button, which is pinned to the sheet
+  // footer now rather than sitting under the gallery.
   const [snapshot, setSnapshot] = useState<WidgetSnapshot | null>(null);
   const resolveCardUrl = useMemo(
     () => cardPublicUrl || (() => publicUrl),
@@ -393,16 +394,6 @@ export function WidgetToolSheetContent({
           );
         })}
       </View>
-      <Button
-        loading={busy === 'widget'}
-        onPress={() => void run('widget', async () => {
-          await updateQuickShareWidget(card, publicUrl, accessToken, allCards, resolveCardUrl);
-          const next = await buildWidgetSnapshot(allCards, resolveCardUrl, accessToken, card);
-          setSnapshot(next);
-        }, { successMessage: 'Widget data refreshed. Add or update ehllo from your widget picker.' })}>
-        <SquaresFour size={18} color={colors.ink} weight="bold" />
-        Refresh home-screen widgets
-      </Button>
     </View>
   );
 }

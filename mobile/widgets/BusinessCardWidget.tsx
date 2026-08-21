@@ -1,5 +1,6 @@
 import { Button, HStack, Image, Text, VStack, ZStack } from '@expo/ui/swift-ui';
 import {
+  aspectRatio,
   containerBackground,
   cornerRadius,
   font,
@@ -7,6 +8,7 @@ import {
   frame,
   lineLimit,
   padding,
+  resizable,
   widgetAccentedRenderingMode,
   widgetURL,
 } from '@expo/ui/swift-ui/modifiers';
@@ -129,14 +131,28 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
             {/* Full colour for the same reason as the QR Scan widget: a tinted or clear
                 appearance recolours full-colour images by default, and a recoloured QR does
                 not scan. */}
+            {/* resizable() before the frame. Without it SwiftUI draws the image at its
+                natural size and the frame only crops, so a 480px code showed as a zoomed-in
+                fragment of itself. */}
             <Image
               uiImage={qrImageUri}
-              modifiers={[frame({ width: 64, height: 64 }), widgetAccentedRenderingMode('fullColor')]}
+              modifiers={[
+                resizable(),
+                aspectRatio({ ratio: 1, contentMode: 'fit' }),
+                frame({ width: 64, height: 64 }),
+                widgetAccentedRenderingMode('fullColor'),
+              ]}
             />
             {props.logoImageUri ? (
               <Image
                 uiImage={props.logoImageUri}
-                modifiers={[frame({ width: 16, height: 16 }), cornerRadius(4), widgetAccentedRenderingMode('fullColor')]}
+                modifiers={[
+                  resizable(),
+                  aspectRatio({ ratio: 1, contentMode: 'fit' }),
+                  frame({ width: 16, height: 16 }),
+                  cornerRadius(4),
+                  widgetAccentedRenderingMode('fullColor'),
+                ]}
               />
             ) : null}
           </ZStack>
@@ -151,7 +167,12 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
         {photoImageUri ? (
           <Image
             uiImage={photoImageUri}
-            modifiers={[frame({ width: 26, height: 26 }), cornerRadius(13)]}
+            modifiers={[
+              resizable(),
+              aspectRatio({ ratio: 1, contentMode: 'fill' }),
+              frame({ width: 26, height: 26 }),
+              cornerRadius(13),
+            ]}
           />
         ) : (
           <Text

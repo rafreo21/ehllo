@@ -399,7 +399,22 @@ export default function CardToolsScreen() {
         />
       </BottomSheet>
 
-      <BottomSheet visible={activeSheet === 'widgets'} title="Home screen widgets" onClose={closeSheet}>
+      <BottomSheet
+        visible={activeSheet === 'widgets'}
+        title="Home screen widgets"
+        onClose={closeSheet}
+        footer={(
+          // Pinned rather than sitting under the gallery. It was the last thing in a
+          // scrolling list of three widget previews, so the one action on the sheet was the
+          // hardest thing on it to reach.
+          <Button
+            loading={busy === 'widget'}
+            onPress={() => void run('widget', async () => {
+              await syncCardToolsForCard(cards, cardPublicUrl, session?.access_token, card);
+            }, { successMessage: 'Widget data refreshed. Add or update ehllo from your widget picker.' })}>
+            Refresh home-screen widgets
+          </Button>
+        )}>
         <WidgetToolSheetContent
           {...sharedSheetProps}
           allCards={cards}
