@@ -121,7 +121,7 @@ test("virtual background jpeg export uses card theme gradient and video-app pane
   if (!sharpAvailable()) return;
   const { buildVirtualBackgroundJpeg } = await import("../lib/share-assets.ts");
   const { themeGradientStops } = await import("../lib/theme-contrast.ts");
-  const { virtualBackgroundPanelLeftForVideoApps } = await import("../lib/virtual-background-layout.ts");
+  const { VIRTUAL_BG_PANEL } = await import("../lib/virtual-background-layout.ts");
   const profile = {
     name: "Alex Morgan",
     role: "Consultant",
@@ -157,9 +157,32 @@ test("virtual background jpeg export uses card theme gradient and video-app pane
     `expected theme gradient near ${highlight}, got rgb(${topLeft.join(",")})`,
   );
 
-  const panelLeft = virtualBackgroundPanelLeftForVideoApps();
-  const panelSample = px(panelLeft + 20, 80);
-  assert.ok(panelSample.every((channel) => channel > 230), `expected white card panel on the left side of export, got rgb(${panelSample.join(",")})`);
+  // On the right, and not mirrored. This asserted the left side, because the export used to
+  // be flipped on the theory that Meet and Zoom mirror your video - they mirror the self-view
+  // only, so that reversed the name for every participant and left a QR no scanner would read.
+  const panelSample = px(VIRTUAL_BG_PANEL.x + 20, 80);
+  assert.ok(
+    panelSample.every((channel) => channel > 230),
+    `expected the white card panel on the right side of the export, got rgb(${panelSample.join(",")})`,
+  );
+
+  // And the QR is actually drawn. It was not: the panel is composed with satori, which
+  // renders <img> by decoding a raster and silently yields an empty box for the SVG data URI
+  // it was being handed - so this shipped with a blank white square where the code belongs.
+  // A QR is mostly dark modules, so a region with no dark pixels is a missing QR.
+  const qrLeft = VIRTUAL_BG_PANEL.x + VIRTUAL_BG_PANEL.width - VIRTUAL_BG_PANEL.pad - VIRTUAL_BG_PANEL.qrSize;
+  const qrTop = VIRTUAL_BG_PANEL.y + Math.round((VIRTUAL_BG_PANEL.height - VIRTUAL_BG_PANEL.qrSize) / 2);
+  let darkModulePixels = 0;
+  for (let dy = 10; dy < VIRTUAL_BG_PANEL.qrSize - 10; dy += 4) {
+    for (let dx = 10; dx < VIRTUAL_BG_PANEL.qrSize - 10; dx += 4) {
+      const [r, g, b] = px(qrLeft + dx, qrTop + dy);
+      if (r < 120 && g < 120 && b < 120) darkModulePixels += 1;
+    }
+  }
+  assert.ok(
+    darkModulePixels > 40,
+    `expected QR modules inside the panel, found ${darkModulePixels} dark pixels - the QR is missing`,
+  );
 });
 
 test("watch face svg includes personal card label", async () => {

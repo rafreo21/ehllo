@@ -6,7 +6,6 @@ import { normalizeThemeColor, themeGradientStops } from "./theme-contrast.ts";
 import { buildVirtualBackgroundGradientPng } from "./virtual-background-gradient.ts";
 import {
   buildVirtualBackgroundLayout,
-  virtualBackgroundPanelLeftForVideoApps,
   VIRTUAL_BG_PANEL,
 } from "./virtual-background-layout.ts";
 import { buildVirtualBackgroundPanelPng } from "./virtual-background-panel-image.ts";
@@ -93,21 +92,22 @@ export async function buildVirtualBackgroundJpeg(profile: ShareAssetProfile) {
     throw new Error("Virtual backgrounds require sharp, which isn't available in this local dev sandbox. Test this against a Vercel preview instead.");
   }
   const sharp = await loadSharp();
-  const panelLeft = virtualBackgroundPanelLeftForVideoApps();
 
   const [background, panelPngRaw] = await Promise.all([
     buildVirtualBackgroundGradientPng(profile.themeColor),
     buildVirtualBackgroundPanelPng(profile, 2),
   ]);
 
+  // No .flop(). Meet and Zoom mirror your self-view, not the stream participants receive, so
+  // flipping this reversed the name for everyone watching and left a mirrored QR that no
+  // scanner will read. Your own preview shows it reversed; everybody else sees it correctly.
   const panelPng = await sharp(panelPngRaw)
     .resize(VIRTUAL_BG_PANEL.width, VIRTUAL_BG_PANEL.height)
-    .flop()
     .png()
     .toBuffer();
 
   return sharp(background)
-    .composite([{ input: panelPng, top: VIRTUAL_BG_PANEL.y, left: panelLeft }])
+    .composite([{ input: panelPng, top: VIRTUAL_BG_PANEL.y, left: VIRTUAL_BG_PANEL.x }])
     .jpeg({ quality: 92, mozjpeg: true })
     .toBuffer();
 }

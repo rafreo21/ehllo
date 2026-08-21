@@ -59,6 +59,16 @@ export const ACTIVITY_TZ_OFFSET = "+01:00";
 export const ACTIVITY_ENTRIES: ActivityEntry[] = [
   {
     date: "2026-08-21",
+    time: "13:40",
+    title: "The meeting background had no QR code in it",
+    impact: "fix",
+    detail:
+      "The virtual background for Zoom, Meet and Teams was downloading with a blank white square where the QR should be - the one thing the whole image exists for. It was also flipped, so your name, your role and the code all read backwards. The flip was deliberate and wrong: video apps mirror the preview of yourself, not the picture everyone else receives, so it reversed the card for every person in the call and left a code no phone could scan. Both fixed, and the card is wider so a full name fits on one line instead of wrapping. Same fix on iPhone, Android and the web, because all three download the same file.",
+    testing:
+      "Card tools › Virtual background › Download, then set it as your background and scan the code from another phone.",
+  },
+  {
+    date: "2026-08-21",
     time: "12:40",
     title: "The opening screen is the mark, not a tile on a dark background",
     impact: "improvement",

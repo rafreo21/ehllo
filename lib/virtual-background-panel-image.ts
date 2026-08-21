@@ -1,7 +1,7 @@
 import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
 
-import { buildBrandedQrDataUri } from "./branded-qr.ts";
+import { buildBrandedQrPngDataUri } from "./branded-qr.ts";
 import { resolveShareQrPayload } from "./contact-qr.ts";
 import { loadShareAssetFontBuffers } from "./share-asset-fonts.ts";
 import type { ShareAssetProfile } from "./share-assets.ts";
@@ -23,7 +23,11 @@ export async function buildVirtualBackgroundPanelPng(profile: ShareAssetProfile,
   const name = profile.name.trim() || "Your name";
   const subtitle = profileSubtitle(profile);
   const fonts = loadShareAssetFontBuffers();
-  const qrDataUri = await buildBrandedQrDataUri(
+  // A PNG, not the SVG variant. satori renders <img> by decoding a raster, and hands back
+  // an empty box for an SVG data URI - silently, which is why the panel shipped with a blank
+  // white square where the code should be. The QR is the only reason this asset exists, so
+  // the one thing it must never do is quietly omit it.
+  const qrDataUri = await buildBrandedQrPngDataUri(
     resolveShareQrPayload(profile),
     VIRTUAL_BG_PANEL.qrSize * 5 * scale,
   );

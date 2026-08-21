@@ -17,7 +17,12 @@ export function VirtualBackgroundPanelPreview({
   cardUrl,
   panelWidth = 240,
 }: VirtualBackgroundPanelPreviewProps) {
-  const scale = panelWidth / 360;
+  // 440 is VIRTUAL_BG_PANEL.width in lib/virtual-background-layout.ts, which is what the
+  // exported image is actually laid out at. It read 360 while the export moved to 440, so the
+  // preview was a different shape from the file people downloaded - and the name wrapped here
+  // while fitting there. Kept as a literal because lib/ is outside the mobile tsconfig; if
+  // that constant changes again, this is the line that has to change with it.
+  const scale = panelWidth / 440;
   const pad = Math.round(28 * scale);
   const qrSize = Math.max(56, Math.round(120 * scale));
   const panelHeight = Math.round(168 * scale);
@@ -31,7 +36,7 @@ export function VirtualBackgroundPanelPreview({
       <View style={styles.row}>
         <View style={[styles.copy, { minHeight: qrSize }]}>
           <View style={styles.heading}>
-            <Text style={[styles.name, { fontFamily: fonts.regular, fontSize: nameFontSize }]} numberOfLines={2}>
+            <Text style={[styles.name, { fontFamily: fonts.regular, fontSize: nameFontSize }]} numberOfLines={1}>
               {card.name}
             </Text>
             {subtitle ? (
