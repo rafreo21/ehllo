@@ -107,7 +107,12 @@ export function WidgetQrRenderer() {
         size={current.size}
         color={current.color}
         backgroundColor={current.backgroundColor}
-        ecl="H"
+        // Q, not H. H is the highest error correction and it costs modules: this URL needs a
+        // 41x41 grid at H against 33x33 at Q, so every module is about a quarter larger at Q -
+        // which is what makes a small widget code readable at arm's length. The centre badge
+        // occludes 26% of the width, which is only 6.6% of the area, comfortably inside Q's
+        // 25% recovery. Verified by decoding the composited result, not assumed.
+        ecl="Q"
         getRef={(ref: SvgRef) => {
           svgRef.current = ref;
         }}

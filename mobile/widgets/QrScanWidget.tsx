@@ -93,12 +93,14 @@ function QrScanWidget(props: QrScanWidgetProps) {
           // background does not have.
           //
           // The sums, so this cannot silently clip again: the widget is 164pt here and about
-          // 141pt on the smallest iPhones. 11pt outer margins leave 119pt there, the card's
-          // own 8pt padding takes 16 more, so a 100pt code is the largest that fits every
-          // device. The card itself is then 116pt - about 71% of the widget, up from 63%.
+          // 141pt on the smallest iPhones. 11pt outer margins - Apple's sanctioned tighter
+          // value for a content grouping - leave 119pt there, so the card can be at most 117.
+          // The code is 105pt inside it, which leaves a 6pt inset each side. That inset came
+          // down from 8 rather than eating into the margin, because the code carries its own
+          // white border already, so the visible gap is presentation rather than quiet zone.
           <ZStack
             modifiers={[
-              frame({ width: 116, height: 116 }),
+              frame({ width: 117, height: 117 }),
               background('#FFFFFF'),
               cornerRadius(18),
             ]}>
@@ -115,7 +117,7 @@ function QrScanWidget(props: QrScanWidgetProps) {
               modifiers={[
                 resizable(),
                 aspectRatio({ ratio: 1, contentMode: 'fit' }),
-                frame({ width: 100, height: 100 }),
+                frame({ width: 105, height: 105 }),
                 widgetAccentedRenderingMode('fullColor'),
               ]}
             />
@@ -125,7 +127,7 @@ function QrScanWidget(props: QrScanWidgetProps) {
                 modifiers={[
                   resizable(),
                   aspectRatio({ ratio: 1, contentMode: 'fit' }),
-                  frame({ width: 26, height: 26 }),
+                  frame({ width: 27, height: 27 }),
                   cornerRadius(5),
                   widgetAccentedRenderingMode('fullColor'),
                 ]}
