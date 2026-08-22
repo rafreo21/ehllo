@@ -17,14 +17,12 @@ type ProviderAvailability = Record<SocialProvider, boolean> | null;
 type ProvisionResult = { onboarding_status?: string };
 
 export function AuthForm({
-  appUrl,
   next,
   visitorIntent,
   initialError,
   initialEmail = "",
   providerAvailability,
 }: {
-  appUrl: string;
   next: string;
   visitorIntent: VisitorIntent | null;
   initialError: string;
@@ -141,7 +139,10 @@ export function AuthForm({
     setLoadingProvider(provider);
     setError("");
     setProviderError("");
-    const callback = new URL("/auth/callback", appUrl || window.location.origin);
+    // OAuth PKCE stores its verifier on the hostname where sign-in starts. Always return to
+    // that same origin: production may be reached through ehllo.io while NEXT_PUBLIC_APP_URL
+    // still points at a Vercel alias, and crossing between them loses the verifier cookie.
+    const callback = new URL("/auth/callback", window.location.origin);
     callback.searchParams.set("next", next);
     appendVisitorIntentToCallback(callback, visitorIntent);
     try {

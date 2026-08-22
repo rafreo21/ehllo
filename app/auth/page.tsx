@@ -1,6 +1,4 @@
-import { headers } from "next/headers";
 import { ArrowLeft as ArrowLeftIcon } from "react-feather";
-import { resolveAppUrlFromHeaders } from "../../lib/auth/app-url";
 import { readPublicSupabaseConfig } from "../../lib/supabase/env";
 import { sanitizeIntendedDestination } from "../../lib/auth/redirect";
 import { parseVisitorIntent, VISITOR_DEFAULT_DESTINATION } from "../../lib/auth/visitor-intent";
@@ -43,7 +41,6 @@ export default async function AuthPage({
   const next = sanitizeIntendedDestination(params.next)
     || (visitorIntent ? VISITOR_DEFAULT_DESTINATION : "/app");
   const environment = readPublicSupabaseConfig();
-  const appUrl = resolveAppUrlFromHeaders(await headers());
   const errors: Record<string, string> = {
     callback: "That sign-in session is invalid or has expired. Request a new code.",
     provisioning: "We couldn’t create your private workspace. Your session was closed; please try again.",
@@ -72,7 +69,6 @@ export default async function AuthPage({
           </div>
         ) : (
           <AuthForm
-            appUrl={appUrl}
             next={next}
             visitorIntent={visitorIntent}
             initialError={params.error ? errors[params.error] ?? "" : ""}
