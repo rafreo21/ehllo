@@ -3,6 +3,12 @@ export type WidgetConnection = {
   subtitle: string;
   phone?: string;
   email?: string;
+  /** Initials, for the green fallback avatar when there is no photo. */
+  initials: string;
+  /** Cached local file, for the iOS widget. */
+  photoImageUri?: string;
+  /** The same photo as base64, because the Android bridge carries strings, not file URIs. */
+  photoImageBase64?: string;
 };
 
 export type WidgetCardPayload = {
@@ -28,8 +34,8 @@ export const WIDGET_DEMO_CARD: WidgetCardPayload = {
 };
 
 export const WIDGET_DEMO_CONNECTIONS: WidgetConnection[] = [
-  { name: 'Jordan Lee', subtitle: 'Shared via your card' },
-  { name: 'Cameron Williamson', subtitle: 'Shared via your card' },
+  { name: 'Jordan Lee', subtitle: 'Connected 2 mins ago', initials: 'JL' },
+  { name: 'Cameron Williamson', subtitle: 'Connected 1 day ago', initials: 'CW' },
 ];
 
 export type WidgetSnapshot = {

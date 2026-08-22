@@ -3,47 +3,42 @@
 import type { IconComponent } from "../../../../lib/icon-component";
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft as ArrowLeftIcon } from "react-feather";
-import { ArrowRight as ArrowRightIcon } from "react-feather";
+import * as nextNavigation from "next/navigation";
+import { Briefcase as BriefcaseIcon } from "react-feather";
 import { Calendar as CalendarBlankIcon } from "react-feather";
 import { MessageCircle as ChatCircleDotsIcon } from "react-feather";
 import { DollarSign as CurrencyDollarIcon } from "react-feather";
-import { ChevronDown as CaretDownIcon } from "react-feather";
-import { ChevronUp as CaretUpIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { Mail as EnvelopeSimpleIcon } from "react-feather";
 import { Globe as GlobeIcon } from "react-feather";
 import { DiscordLogoIcon } from "@phosphor-icons/react/dist/csr/DiscordLogo";
+import { Edit2 as PencilSimpleIcon } from "react-feather";
 import { Facebook as FacebookLogoIcon } from "react-feather";
 import { GitHub as GithubLogoIcon } from "react-feather";
 import { Instagram as InstagramLogoIcon } from "react-feather";
 import { Link as LinkIcon } from "react-feather";
 import { Linkedin as LinkedinLogoIcon } from "react-feather";
 import { MapPin as MapPinIcon } from "react-feather";
-import { PaletteIcon } from "@phosphor-icons/react/dist/csr/Palette";
 import { PaypalLogoIcon } from "@phosphor-icons/react/dist/csr/PaypalLogo";
 import { Phone as PhoneIcon } from "react-feather";
 import { Plus as PlusIcon } from "react-feather";
-import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { SkypeLogoIcon } from "@phosphor-icons/react/dist/csr/SkypeLogo";
 import { SnapchatLogoIcon } from "@phosphor-icons/react/dist/csr/SnapchatLogo";
 import { Star as StarIcon } from "react-feather";
 import { TelegramLogoIcon } from "@phosphor-icons/react/dist/csr/TelegramLogo";
 import { ThreadsLogoIcon } from "@phosphor-icons/react/dist/csr/ThreadsLogo";
 import { TiktokLogoIcon } from "@phosphor-icons/react/dist/csr/TiktokLogo";
-import { Trash2 as TrashIcon } from "react-feather";
 import { Twitch as TwitchLogoIcon } from "react-feather";
-import { User as UserCircleIcon } from "react-feather";
 import { WhatsappLogoIcon } from "@phosphor-icons/react/dist/csr/WhatsappLogo";
 import { X as XIcon } from "react-feather";
 import { XLogoIcon } from "@phosphor-icons/react/dist/csr/XLogo";
 import { Youtube as YoutubeLogoIcon } from "react-feather";
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
-import { Button, IconButton, LinkButton } from "../../../components/Button";
-import { TextAreaField, TextField } from "../../../components/FormField";
-import { PhoneField } from "../../../components/PhoneField";
+import { Button, LinkButton } from "../../../components/Button";
+import { CardFlowSkeleton } from "../../../components/AsyncState";
+import { CardImage } from "../../../components/CardImage";
+import { InlineEditField } from "../../../components/InlineEditField";
 import { Check as CheckIcon } from "react-feather";
-import { contactMethodHref, contactMethodOpensNewTab } from "../../../../lib/contact-methods";
 import { themeCoverBadgeStyle, themeForegroundColor, themeGradientCss, themeSurfaceStyle } from "../../../../lib/theme-contrast";
 import {
   cardPublishFingerprint,
@@ -52,6 +47,7 @@ import {
   type LibraryCard,
   MAX_CARDS,
   readCardLibrary,
+  removeLibraryCard,
   setActiveCardId,
   upsertLibraryCard,
 } from "../../../../lib/card-library";
@@ -144,34 +140,54 @@ function suggestionsFor(type: MethodType) {
   return [`Connect on ${methodMeta[type].name}`, `Follow on ${methodMeta[type].name}`, "View profile"];
 }
 
+// Used as the very first render's state, before hydration resolves the
+// real card - so it must stay genuinely blank. A filled-in demo person
+// here flashes on screen on every visit to create/edit, before snapping
+// to the real (often empty) draft a moment later.
 const initialDraft: CardDraft = {
   id: "primary-card",
-  slug: "alex-morgan",
+  slug: "",
   createdAt: "",
   updatedAt: "",
   label: "My primary card",
-  name: "Alex Morgan",
-  role: "Independent Consultant",
-  company: "Northstar Advisory",
-  bio: "I help growing teams turn messy ideas into clear products people want.",
+  name: "",
+  role: "",
+  company: "",
+  bio: "",
   theme: "#9fe870",
   photo: "",
   companyLogo: "",
   coverPhoto: "",
   showCompanyDetails: true,
-  methods: [
-    { id: "email", type: "email", value: "alex@example.com", label: "Work" },
-    { id: "website", type: "website", value: "https://northstar.example", label: "Visit my website" },
-  ],
+  methods: [],
 };
 
 const themes = ["#9fe870", "#ff6b5e", "#ff9f43", "#ffc107", "#14b8a6", "#2495e8", "#5146e5", "#a83df0", "#163300", "#aeb8aa"];
-const steps = [
-  { label: "Design card", Icon: UserCircleIcon },
-  { label: "Contact methods", Icon: PlusIcon },
-  { label: "Review", Icon: CheckCircleIcon },
-];
 const isPublishedCard = (card: CardDraft) => card.status === "published" || Boolean(card.publishedAt);
+
+// vinext (this app's dev AND build/production runtime - see package.json's
+// build scripts, it's not just a local convenience layer) monkey-patches
+// window.history.replaceState to trigger a full client-side navigation and
+// RSC re-render on every call. Stock Next.js treats a raw replaceState call
+// as invisible to the router, which is what the ?id= URL claim below was
+// relying on - under vinext it instead silently re-ran this page's whole
+// mount effect mid-edit, discarding in-progress state. This is exactly
+// what was surfacing as the create flow "hanging" or "not working" after
+// the first field was confirmed. vinext exports its own escape hatch for
+// this; next/navigation's shipped types don't know about it since it is
+// vinext-specific, hence the loose typing here.
+type NavigationWithVinextExtras = typeof nextNavigation & {
+  replaceHistoryStateWithoutNotify?: (data: unknown, unused: string, url: string) => void;
+};
+
+function silentlyReplaceUrl(url: string) {
+  const nav = nextNavigation as NavigationWithVinextExtras;
+  if (typeof nav.replaceHistoryStateWithoutNotify === "function") {
+    nav.replaceHistoryStateWithoutNotify(null, "", url);
+  } else {
+    window.history.replaceState(null, "", url);
+  }
+}
 
 function isCreateFlow(search: string) {
   const params = new URLSearchParams(search);
@@ -238,15 +254,17 @@ export default function CardEditor() {
   const searchString = searchParams.toString();
   const [isCreating, setIsCreating] = useState(false);
   const [draft, setDraft] = useState<CardDraft>(initialDraft);
+  const draftRef = useRef<CardDraft>(initialDraft);
+  const loadedDraftRef = useRef<CardDraft | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [cardLimitReached, setCardLimitReached] = useState(false);
-  const [step, setStep] = useState(0);
   const [saved, setSaved] = useState(false);
   const [publishedFingerprint, setPublishedFingerprint] = useState("");
   const [hasEditBaseline, setHasEditBaseline] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [showLeavePrompt, setShowLeavePrompt] = useState(false);
+  const [leaveAction, setLeaveAction] = useState<"save" | "discard" | "">("");
   const [editing, setEditing] = useState<ContactMethod | null>(null);
   const [methodError, setMethodError] = useState("");
   const photoInput = useRef<HTMLInputElement>(null);
@@ -255,10 +273,18 @@ export default function CardEditor() {
   const hasUnpublishedRef = useRef(false);
   const pendingNavigationRef = useRef<null | (() => void)>(null);
   const suppressBeforeUnloadRef = useRef(false);
+  const themePersistTimerRef = useRef<number | null>(null);
+  const pendingThemeDraftRef = useRef<CardDraft | null>(null);
+  const saveActionRef = useRef<() => void>(() => {});
+  const labelConfirmRef = useRef<(value: string) => void>(() => {});
   // True once the in-progress create-flow draft has been persisted at least
   // once and has therefore claimed a real ?id= in the URL. Guards against
   // re-claiming (and re-writing history) on every subsequent keystroke.
   const hasClaimedCreateUrlRef = useRef(false);
+
+  useEffect(() => () => {
+    if (themePersistTimerRef.current !== null) window.clearTimeout(themePersistTimerRef.current);
+  }, []);
 
   useEffect(() => {
     const requestedSearch = searchString;
@@ -274,17 +300,13 @@ export default function CardEditor() {
       const loaded = resolution.card;
       hasClaimedCreateUrlRef.current = false;
       setCardLimitReached(false);
+      loadedDraftRef.current = creatingFlow ? null : loaded;
+      draftRef.current = loaded;
       setDraft(loaded);
       setPublishedFingerprint(cardPublishFingerprint(loaded));
       setHasEditBaseline(!creatingFlow);
       setSaved(isPublishedCard(loaded));
       setIsCreating(creatingFlow);
-      if (creatingFlow || new URLSearchParams(activeSearch).get("id")) {
-        setStep(0);
-      } else {
-        const storedStep = Number(localStorage.getItem("aftermeet-card-step-v2"));
-        if (Number.isInteger(storedStep) && storedStep >= 0 && storedStep <= 2) setStep(storedStep);
-      }
       setHydrated(true);
     };
     void hydrateCardLibraryFromServer()
@@ -295,17 +317,15 @@ export default function CardEditor() {
   const initials = draft.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
   const previewTheme = useMemo(() => themeSurfaceStyle(draft.theme), [draft.theme]);
   const coverBadgeStyle = useMemo(() => themeCoverBadgeStyle(draft.theme), [draft.theme]);
-  const EditingMethodIcon: IconComponent = editing ? methodMeta[editing.type].Icon : PlusIcon;
-  const addedMethodTypes = new Set(draft.methods.map((method) => method.type));
+  const methodTypeCounts = draft.methods.reduce<Partial<Record<MethodType, number>>>((counts, method) => {
+    counts[method.type] = (counts[method.type] ?? 0) + 1;
+    return counts;
+  }, {});
   const showCompanyDetails = draft.showCompanyDetails !== false;
   const visibleMethods = showCompanyDetails
     ? draft.methods
     : draft.methods.filter((method) => method.type !== "website");
-  const stepCompletion = [
-    Boolean(draft.name.trim() && draft.role.trim() && draft.theme),
-    draft.methods.length > 0,
-    saved,
-  ];
+  const collapsedPreviewMethods = visibleMethods.filter((method) => method.id !== editing?.id);
   const hasUnpublishedChanges = hydrated && (hasEditBaseline ? cardPublishFingerprint(draft) !== publishedFingerprint : isCreating);
   useEffect(() => {
     hasUnpublishedRef.current = hasUnpublishedChanges;
@@ -334,7 +354,7 @@ export default function CardEditor() {
     setActiveCardId(localStorage, next.id);
     if (isCreating && !alreadyStored && !hasClaimedCreateUrlRef.current) {
       hasClaimedCreateUrlRef.current = true;
-      window.history.replaceState(null, "", `/app/card/edit?id=${next.id}`);
+      silentlyReplaceUrl(`/app/card/edit?id=${next.id}`);
     }
     localStorage.setItem("aftermeet-card-v2", JSON.stringify(next));
     localStorage.setItem("aftermeet-profile-v1", JSON.stringify({
@@ -347,20 +367,46 @@ export default function CardEditor() {
     queueCardSync(next);
   }
 
+  function cancelScheduledThemePersist() {
+    if (themePersistTimerRef.current !== null) {
+      window.clearTimeout(themePersistTimerRef.current);
+      themePersistTimerRef.current = null;
+    }
+    pendingThemeDraftRef.current = null;
+  }
+
+  function scheduleThemePersist(next: CardDraft) {
+    pendingThemeDraftRef.current = next;
+    if (themePersistTimerRef.current !== null) window.clearTimeout(themePersistTimerRef.current);
+    themePersistTimerRef.current = window.setTimeout(() => {
+      themePersistTimerRef.current = null;
+      const pending = pendingThemeDraftRef.current;
+      pendingThemeDraftRef.current = null;
+      if (pending) persistDraft(pending);
+    }, 300);
+  }
+
   const update = <K extends keyof CardDraft>(key: K, value: CardDraft[K]) => {
-    setDraft((current) => {
-      const next = { ...current, [key]: value };
-      persistDraft(next);
-      return next;
-    });
+    const next = { ...draftRef.current, [key]: value };
+    draftRef.current = next;
+    setDraft(next);
+    if (key === "theme") {
+      scheduleThemePersist(next);
+      return;
+    }
+    cancelScheduledThemePersist();
+    // Persistence includes storage, sync and (for the first create edit) URL
+    // work. Keep all of it outside React's replayable state-updater callbacks.
+    persistDraft(next);
   };
 
   async function save() {
-    persistDraft(draft);
+    cancelScheduledThemePersist();
+    persistDraft(draftRef.current);
     setPublishing(true);
     setSaveError("");
     try {
-      const savedDraft = await flushCardSync(draft);
+      const savedDraft = await flushCardSync(draftRef.current);
       if (!savedDraft) throw new Error("This card changed on another device. Reload the latest card before publishing again.");
       const response = await fetch("/api/cards/publish", {
         method: "POST",
@@ -379,6 +425,8 @@ export default function CardEditor() {
         status: "published" as const,
         publishedAt: new Date().toISOString(),
       };
+      draftRef.current = published;
+      loadedDraftRef.current = published;
       setDraft(published);
       persistDraft(published);
       setPublishedFingerprint(cardPublishFingerprint(published));
@@ -406,7 +454,7 @@ export default function CardEditor() {
   }
 
   function openMethod(type: MethodType) {
-    if (addedMethodTypes.has(type)) return;
+    if ((methodTypeCounts[type] ?? 0) >= 3) return;
     setMethodError("");
     setEditing({ id: crypto.randomUUID(), type, value: "", label: methodMeta[type].label });
   }
@@ -426,18 +474,16 @@ export default function CardEditor() {
     setEditing(null);
   }
 
-  function moveMethod(index: number, direction: -1 | 1) {
-    const nextIndex = index + direction;
-    if (nextIndex < 0 || nextIndex >= draft.methods.length) return;
-    const methods = [...draft.methods];
-    [methods[index], methods[nextIndex]] = [methods[nextIndex], methods[index]];
-    update("methods", methods);
-  }
-
-  function goToStep(nextStep: number) {
-    setStep(nextStep);
-    localStorage.setItem("aftermeet-card-step-v2", String(nextStep));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  function finishMethodEditing(event: React.FocusEvent<HTMLElement>) {
+    if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return;
+    if (!editing) return;
+    const exists = draft.methods.some((item) => item.id === editing.id);
+    if (!editing.value.trim() && !exists) {
+      setMethodError("");
+      setEditing(null);
+      return;
+    }
+    saveMethod();
   }
 
   const requestNavigation = useCallback((_href: string, proceed: () => void) => {
@@ -449,31 +495,91 @@ export default function CardEditor() {
     setShowLeavePrompt(true);
   }, []);
 
-  function continueFlow() {
-    if (step === 2) { void save(); return; }
-    goToStep(step + 1);
-  }
+  // AppShellChrome stores this React node in context. If a fresh node is
+  // created on every editor render, its effect updates the provider, which
+  // re-renders this consumer and creates another node indefinitely. Keep the
+  // node stable until its visible state actually changes; the ref ensures its
+  // click always invokes the current save implementation and latest draft.
+  useEffect(() => {
+    saveActionRef.current = () => { void save(); };
+    labelConfirmRef.current = (value) => update("label", value);
+  });
+  const appShellLeading = useMemo(() => hydrated ? (
+    <InlineEditField
+      key={`${draft.id}-${hydrated ? "ready" : "loading"}`}
+      as="span"
+      className="product-page-card-label"
+      defaultValue={draft.label}
+      onConfirm={(value) => labelConfirmRef.current(value)}
+      placeholder="Card label"
+      ariaLabel="Card label"
+      maxLength={60}
+    />
+  ) : null, [draft.id, draft.label, hydrated]);
+  const appShellActions = useMemo(() => !hydrated || cardLimitReached ? null : (
+    <Button
+      size="small"
+      loading={publishing}
+      disabled={!hasUnpublishedChanges && saved}
+      onClick={() => saveActionRef.current()}
+    >
+      {!hasUnpublishedChanges && saved ? <CheckCircleIcon /> : null}
+      {publishLabel}
+    </Button>
+  ), [hydrated, cardLimitReached, publishing, hasUnpublishedChanges, saved, publishLabel]);
 
   useAppShellChrome({
     backHref: "/app/cards",
     requestNavigation,
-    actions: cardLimitReached ? null : (
-      <Button size="small" loading={publishing} disabled={!hasUnpublishedChanges && saved} onClick={save}>{!hasUnpublishedChanges && saved ? <CheckCircleIcon /> : null}{publishLabel}</Button>
-    ),
+    leading: appShellLeading,
+    actions: appShellActions,
   });
 
   const cancelNavigation = useCallback(() => {
     suppressBeforeUnloadRef.current = false;
+    setLeaveAction("");
     setShowLeavePrompt(false);
     pendingNavigationRef.current = null;
   }, []);
 
-  function confirmNavigation() {
+  function completePendingNavigation() {
     const next = pendingNavigationRef.current;
     suppressBeforeUnloadRef.current = true;
     setShowLeavePrompt(false);
     pendingNavigationRef.current = null;
     next?.();
+  }
+
+  async function saveDraftAndLeave() {
+    setLeaveAction("save");
+    cancelScheduledThemePersist();
+    const latest = draftRef.current;
+    persistDraft(latest);
+    await flushCardSync(latest).catch(() => null);
+    completePendingNavigation();
+  }
+
+  async function discardChangesAndLeave() {
+    setLeaveAction("discard");
+    cancelScheduledThemePersist();
+    const latest = draftRef.current;
+    const baseline = loadedDraftRef.current;
+
+    if (baseline) {
+      draftRef.current = baseline;
+      setDraft(baseline);
+      persistDraft(baseline);
+      await flushCardSync(baseline).catch(() => null);
+    } else {
+      const wasStored = readCardLibrary(localStorage).some((card) => card.id === latest.id);
+      if (wasStored) {
+        await flushCardSync(latest).catch(() => null);
+        await fetch(`/api/cards?id=${encodeURIComponent(latest.id)}`, { method: "DELETE" }).catch(() => null);
+        removeLibraryCard(localStorage, latest.id);
+      }
+    }
+
+    completePendingNavigation();
   }
 
   useEffect(() => {
@@ -496,15 +602,17 @@ export default function CardEditor() {
   useEffect(() => {
     if (!shouldShowLeavePrompt) return;
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !leaveAction) {
         cancelNavigation();
       }
     };
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [shouldShowLeavePrompt, cancelNavigation]);
+  }, [shouldShowLeavePrompt, leaveAction, cancelNavigation]);
 
-  if (hydrated && cardLimitReached) {
+  if (!hydrated) return <CardFlowSkeleton />;
+
+  if (cardLimitReached) {
     return (
       <section className="card-creator">
         <div className="creator-publish-state is-dirty" role="status">
@@ -519,242 +627,242 @@ export default function CardEditor() {
   return (
     <>
       {shouldShowLeavePrompt && (
-        <div className="connections-modal-backdrop add-followup-modal-backdrop" role="presentation" onClick={cancelNavigation}>
+        <div className="connections-modal-backdrop add-followup-modal-backdrop" role="presentation" onClick={() => { if (!leaveAction) cancelNavigation(); }}>
           <section className="connections-modal" role="dialog" aria-modal="true" aria-labelledby="leave-card-editor-title" onClick={(event) => event.stopPropagation()}>
             <header>
               <h2 id="leave-card-editor-title">Unsaved changes</h2>
-              <button type="button" aria-label="Close leave prompt" onClick={cancelNavigation}><XIcon /></button>
+              <button type="button" aria-label="Close leave prompt" disabled={Boolean(leaveAction)} onClick={cancelNavigation}><XIcon /></button>
             </header>
-            <p>Are you sure you want to leave this page? Your progress will be lost if you don&apos;t save.</p>
+            <p>Save your latest changes as a draft, or discard them and leave this page.</p>
             <div style={{ display: "grid", gap: "10px", gridTemplateColumns: "1fr 1fr" }}>
-              <Button size="small" variant="secondary" onClick={cancelNavigation}>Stay on page</Button>
-              <Button size="small" onClick={confirmNavigation}>Leave without saving</Button>
+              <Button size="small" variant="secondary" loading={leaveAction === "discard"} disabled={Boolean(leaveAction)} onClick={() => void discardChangesAndLeave()}>Discard changes</Button>
+              <Button size="small" loading={leaveAction === "save"} disabled={Boolean(leaveAction)} onClick={() => void saveDraftAndLeave()}>Save to draft</Button>
             </div>
           </section>
         </div>
       )}
       <section className="card-creator">
-        {hydrated && (
-          <div className={`creator-publish-state ${hasUnpublishedChanges ? "is-dirty" : "is-published"}`} role="status">
-            {hasUnpublishedChanges ? (
-              isCreating
-                ? <><span>New card</span><small>Saved as a draft on this device. Publish once it&apos;s ready so people can scan it.</small></>
-                : <><span>Unpublished changes</span><small>Your edits are saved as a draft on this device. Publish when they are ready to appear on your public card.</small></>
-            ) : isPublishedCard(draft)
-              ? <><CheckCircleIcon size={18} /><span>Card is published</span><small>Your public card matches this editor.</small></>
-              : <><span>Draft loaded</span><small>Publish this card when you&apos;re ready to share it publicly.</small></>}
-          </div>
-        )}
-        <nav className="creator-steps" aria-label="Card creation progress">
-          {steps.map(({ label, Icon }, index) => (
-            <button
-              key={label}
-              type="button"
-              aria-current={index === step ? "step" : undefined}
-              className={index === step ? "active" : stepCompletion[index] ? "complete" : ""}
-              onClick={() => goToStep(index)}
-            >
-              <span>{stepCompletion[index] && index !== step ? <CheckCircleIcon /> : <Icon />}</span>
-              <small>Step {index + 1}</small><strong>{label}</strong>
-            </button>
-          ))}
-        </nav>
-
-        <div className="creator-layout">
+        <div className="creator-layout creator-layout--fill">
           <aside className="creator-preview">
+            {hydrated && (
+              <div className={`creator-publish-state ${isPublishedCard(draft) && !hasUnpublishedChanges ? "is-published" : "is-dirty"}`} role="status">
+                {!hasUnpublishedChanges && isPublishedCard(draft) && <CheckCircleIcon size={18} />}
+                <span>
+                  {hasUnpublishedChanges
+                    ? isCreating
+                      ? "New card, not published yet."
+                      : "Unpublished changes on this card."
+                    : isPublishedCard(draft)
+                      ? "Card published and up to date."
+                      : "Draft loaded, not published yet."}
+                </span>
+              </div>
+            )}
             <div className="creator-preview-head"><span>Live preview</span><small>Updates instantly</small></div>
-            <article className="public-card">
+            <article className="public-card public-card--editable">
+              <input ref={photoInput} className="sr-only" type="file" accept="image/*" onChange={selectPhoto} />
+              <input ref={logoInput} className="sr-only" type="file" accept="image/*" onChange={(event) => selectImage("companyLogo", event)} />
+              <input ref={coverInput} className="sr-only" type="file" accept="image/*" onChange={(event) => selectImage("coverPhoto", event)} />
               <div
                 className={`card-cover ${draft.coverPhoto ? "has-cover-photo" : ""}`}
                 style={draft.coverPhoto
                   ? { backgroundImage: `linear-gradient(rgba(22,51,0,.18), rgba(22,51,0,.18)), url(${draft.coverPhoto})`, color: "#FFFFFF" }
                   : { background: previewTheme.backgroundGradient, color: previewTheme.color }}>
-                {showCompanyDetails && (draft.companyLogo || draft.company) ? <>
+                <button
+                  type="button"
+                  className="image-edit-overlay"
+                  title={draft.coverPhoto ? "Change cover photo" : "Add cover photo"}
+                  aria-label={draft.coverPhoto ? "Change cover photo" : "Add cover photo"}
+                  onClick={() => coverInput.current?.click()}
+                >
+                  <PencilSimpleIcon size={20} />
+                </button>
+                {showCompanyDetails ? <>
                   <div className="card-logo" style={draft.coverPhoto ? undefined : coverBadgeStyle}>
-                    {draft.companyLogo ? <img src={draft.companyLogo} alt="" /> : draft.company[0] || "A"}
+                    <CardImage src={draft.companyLogo} alt="" fallback={draft.company ? draft.company[0] : <BriefcaseIcon size={14} />} />
+                    <button
+                      type="button"
+                      className="image-edit-overlay"
+                      title={draft.companyLogo ? "Change company logo" : "Add company logo"}
+                      aria-label={draft.companyLogo ? "Change company logo" : "Add company logo"}
+                      onClick={() => logoInput.current?.click()}
+                    >
+                      <PencilSimpleIcon size={13} />
+                    </button>
                   </div>
-                  {draft.company ? <span style={draft.coverPhoto ? undefined : { color: previewTheme.color }}>{draft.company}</span> : null}
+                  <InlineEditField
+                    key={`${draft.id}-company`}
+                    as="span"
+                    style={draft.coverPhoto ? undefined : { color: previewTheme.color }}
+                    defaultValue={draft.company}
+                    onConfirm={(next) => update("company", next)}
+                    placeholder="Your company"
+                    ariaLabel="Company name"
+                  />
                 </> : null}
               </div>
               <div className="card-body">
-                <div className="card-avatar">{draft.photo ? <img src={draft.photo} alt="" /> : initials}</div>
-                <h2>{draft.name || "Your name"}</h2><p className="card-role">{draft.role || "Your role"}{showCompanyDetails && draft.company && ` · ${draft.company}`}</p>
-                <p className="card-bio">{draft.bio || "Your introduction will appear here."}</p>
-                <div className="card-actions"><Button fullWidth style={{ background: previewTheme.backgroundGradient }}>Save contact</Button><Button fullWidth variant="secondary">Share details</Button></div>
-                <div className="preview-methods">{visibleMethods.map((method) => {
+                <div className="card-avatar" style={coverBadgeStyle}>
+                  <CardImage src={draft.photo} alt="" fallback={initials} />
+                  <button
+                    type="button"
+                    className="image-edit-overlay"
+                    title={draft.photo ? "Change profile picture" : "Add profile picture"}
+                    aria-label={draft.photo ? "Change profile picture" : "Add profile picture"}
+                    onClick={() => photoInput.current?.click()}
+                  >
+                    <PencilSimpleIcon size={18} />
+                  </button>
+                </div>
+                <InlineEditField
+                  key={`${draft.id}-name`}
+                  as="h2"
+                  defaultValue={draft.name}
+                  onConfirm={(next) => update("name", next)}
+                  placeholder="Your name"
+                  ariaLabel="Full name"
+                />
+                <InlineEditField
+                  key={`${draft.id}-role`}
+                  as="p"
+                  className="card-role"
+                  defaultValue={draft.role}
+                  onConfirm={(next) => update("role", next)}
+                  placeholder="Your role"
+                  ariaLabel="Job title"
+                  suffix={showCompanyDetails && draft.company ? ` · ${draft.company}` : null}
+                />
+                <InlineEditField
+                  key={`${draft.id}-bio`}
+                  as="p"
+                  className="card-bio"
+                  defaultValue={draft.bio}
+                  onConfirm={(next) => update("bio", next)}
+                  placeholder="About you"
+                  ariaLabel="Short introduction"
+                  multiline
+                  maxLength={180}
+                />
+                {editing && <section
+                  className="preview-method-editor"
+                  aria-label={`Edit ${methodMeta[editing.type].name}`}
+                  onBlur={finishMethodEditing}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") { setMethodError(""); setEditing(null); }
+                    if (event.key === "Enter" && event.target instanceof HTMLInputElement) { event.preventDefault(); saveMethod(); }
+                  }}
+                >
+                  <div className="preview-method-editor-content">
+                    <div className="preview-method-suggestions" aria-label="Suggested labels">
+                      {suggestionsFor(editing.type).map((label) => (
+                        <button key={label} type="button" aria-pressed={editing.label === label} onClick={() => setEditing({ ...editing, label })}>{label}</button>
+                      ))}
+                    </div>
+                    <input aria-label="Button label" placeholder="Button label" value={editing.label} onChange={(event) => setEditing({ ...editing, label: event.target.value })} />
+                    <input
+                      autoFocus
+                      aria-label={fieldLabel(editing.type)}
+                      placeholder={fieldLabel(editing.type)}
+                      type={editing.type === "email" ? "email" : editing.type === "phone" || editing.type === "whatsapp" ? "tel" : "text"}
+                      value={editing.value}
+                      onChange={(event) => { setMethodError(""); setEditing({ ...editing, value: event.target.value }); }}
+                    />
+                    {methodError ? <small className="preview-method-error" role="alert">{methodError}</small> : null}
+                    <div className="preview-method-mini-actions">
+                      {draft.methods.some((item) => item.id === editing.id) ? (
+                        <button type="button" className="preview-method-delete" onClick={() => { update("methods", draft.methods.filter((item) => item.id !== editing.id)); setMethodError(""); setEditing(null); }}>Delete</button>
+                      ) : null}
+                      <button type="button" className="preview-method-cancel" onClick={() => { setMethodError(""); setEditing(null); }}>Cancel</button>
+                      <button type="button" className="preview-method-save" onClick={saveMethod}>Save</button>
+                    </div>
+                  </div>
+                </section>}
+                {collapsedPreviewMethods.length > 0 ? <div className="preview-methods">{collapsedPreviewMethods.map((method) => {
                   const meta = methodMeta[method.type];
-                  const href = contactMethodHref(method);
-                  const content = (
-                    <>
-                      <span style={{ background: previewTheme.backgroundGradient, color: previewTheme.color }}>
-                        {PHOSPHOR_METHOD_TYPES.has(method.type) ? <meta.Icon weight="bold" color={previewTheme.color} /> : <meta.Icon color={previewTheme.color} />}
+                  return <button type="button" key={method.id} onClick={() => { setMethodError(""); setEditing(method); }} aria-label={`Edit ${method.label || meta.name}`}>
+                      <i className="preview-method-grip" aria-hidden="true" />
+                      <span style={{ color: previewTheme.backgroundColor }}>
+                        {PHOSPHOR_METHOD_TYPES.has(method.type) ? <meta.Icon weight="bold" color={previewTheme.backgroundColor} /> : <meta.Icon color={previewTheme.backgroundColor} />}
                       </span>
                       <p><strong>{method.label}</strong><small>{method.value}</small></p>
-                    </>
-                  );
-                  return href
-                    ? <a key={method.id} href={href} target={contactMethodOpensNewTab(href) ? "_blank" : undefined} rel={contactMethodOpensNewTab(href) ? "noreferrer" : undefined} aria-label={`${method.label}: ${meta.name}`}>{content}</a>
-                    : <div key={method.id}>{content}</div>;
-                })}</div>
+                      <PencilSimpleIcon size={16} />
+                    </button>;
+                })}</div> : null}
               </div>
             </article>
           </aside>
-          <section className="creator-workspace">
-            {step === 0 && (
-              <div className="creator-section">
-                <header><span>01 · Design card</span><h1>{isCreating ? "Let's create your card." : "Make your card recognisable and ready to share."}</h1><p>{isCreating ? "Start with your identity, images and visual style - you can fill in the rest later." : "Add your identity, images and visual style in one place."}</p></header>
-                <div className="image-panel">
-                  <div className="image-panel-heading"><div><h2>Card images</h2><p>Add a company logo, profile picture and cover photo.</p></div></div>
-                  <input ref={photoInput} className="sr-only" type="file" accept="image/*" onChange={selectPhoto} />
-                  <input ref={logoInput} className="sr-only" type="file" accept="image/*" onChange={(event) => selectImage("companyLogo", event)} />
-                  <input ref={coverInput} className="sr-only" type="file" accept="image/*" onChange={(event) => selectImage("coverPhoto", event)} />
-                  <div className="image-options">
-                    <div className={draft.companyLogo ? "has-image" : ""}>
-                      <button type="button" onClick={() => logoInput.current?.click()}>
-                        {draft.companyLogo ? <img src={draft.companyLogo} alt="" /> : <PlusIcon />}
-                        <span>{draft.companyLogo ? "Change logo" : "Company logo"}</span>
-                      </button>
-                      {draft.companyLogo && <button type="button" className="remove-image" onClick={() => update("companyLogo", "")}>Remove</button>}
-                    </div>
-                    <div className={draft.photo ? "has-image" : ""}>
-                      <button type="button" onClick={() => photoInput.current?.click()}>
-                        {draft.photo ? <img src={draft.photo} alt="" /> : <PlusIcon />}
-                        <span>{draft.photo ? "Change picture" : "Profile picture"}</span>
-                      </button>
-                      {draft.photo && <button type="button" className="remove-image" onClick={() => update("photo", "")}>Remove</button>}
-                    </div>
-                    <div className={draft.coverPhoto ? "has-image" : ""}>
-                      <button type="button" onClick={() => coverInput.current?.click()}>
-                        {draft.coverPhoto ? <img src={draft.coverPhoto} alt="" /> : <PlusIcon />}
-                        <span>{draft.coverPhoto ? "Change cover" : "Cover photo"}</span>
-                      </button>
-                      {draft.coverPhoto && <button type="button" className="remove-image" onClick={() => update("coverPhoto", "")}>Remove</button>}
-                    </div>
-                  </div>
+          <section className="creator-workspace creator-workspace--fill">
+            <div className="creator-section creator-section--fill">
+              {isCreating ? <header><h1>Let&apos;s create your card.</h1><p>Add your identity, images, style and contact details - publish when it&apos;s ready so people can scan it.</p></header> : null}
+              <div
+                className={`company-visibility-option ${showCompanyDetails ? "is-enabled" : ""}`}
+                style={showCompanyDetails ? { borderColor: previewTheme.backgroundColor, boxShadow: `0 8px 24px rgba(22,51,0,.08), inset 3px 0 0 ${previewTheme.backgroundColor}` } : undefined}
+              >
+                <span className="company-option-icon" aria-hidden="true" style={showCompanyDetails ? { background: previewTheme.backgroundGradient, color: previewTheme.color } : undefined}><BriefcaseIcon size={19} /></span>
+                <div className="company-option-copy">
+                  <div><strong>Company details</strong><span style={showCompanyDetails ? { background: previewTheme.backgroundGradient, color: previewTheme.color } : undefined}>{showCompanyDetails ? "Shown" : "Hidden"}</span></div>
+                  <p id="company-details-description">Show your logo, company name, and company website on the card.</p>
                 </div>
-                <TextField label="Card label" hint="Private" value={draft.label} onChange={(e) => update("label", e.target.value)} />
-                <div className="field-row two">
-                  <TextField label="Full name" value={draft.name} onChange={(e) => update("name", e.target.value)} />
-                  <TextField label="Job title" value={draft.role} onChange={(e) => update("role", e.target.value)} />
-                </div>
-                <TextField label="Company" value={draft.company} onChange={(e) => update("company", e.target.value)} />
-                <TextAreaField label="Short introduction" hint={`${draft.bio.length}/180`} maxLength={180} rows={4} value={draft.bio} onChange={(e) => update("bio", e.target.value)} />
-                <div className="theme-panel"><h2>Card colour</h2><p>Used for the cover and primary actions.</p>
-                  <div className="theme-swatches">{themes.map((theme) => (
-                    <button
-                      type="button"
-                      key={theme}
-                      aria-label={`Use ${theme}`}
-                      className={draft.theme === theme ? "selected" : ""}
-                      style={{ background: themeGradientCss(theme) }}
-                      onClick={() => update("theme", theme)}>
-                      {draft.theme === theme ? <CheckIcon size={16} color={themeForegroundColor(theme)} /> : null}
-                    </button>
-                  ))}</div>
-                </div>
-                <div className="layout-choice selected"><div><strong>Focused</strong><p>Photo, identity, introduction, then contact methods.</p></div><CheckCircleIcon size={24} /></div>
-                <div className="creator-note"><PaletteIcon weight="bold" /><p>More layouts can come later. The MVP uses one responsive layout that remains readable on every phone.</p></div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-label="Show company details"
+                  aria-describedby="company-details-description"
+                  aria-checked={showCompanyDetails}
+                  className={`company-switch ${showCompanyDetails ? "is-on" : ""}`}
+                  style={showCompanyDetails ? { background: previewTheme.backgroundGradient } : undefined}
+                  onClick={() => update("showCompanyDetails", !showCompanyDetails)}
+                >
+                  <span aria-hidden="true" />
+                </button>
               </div>
-            )}
-
-            {step === 1 && (
-              <div className="creator-section">
-                <header><span>02 · Contact methods</span><h1>Add only the ways you want people to respond.</h1><p>Each method can have a useful label and can be reordered.</p></header>
-                <div className="method-list">
-                  {draft.methods.map((method, index) => {
-                    const meta = methodMeta[method.type];
-                    return <article className="method-row" key={method.id}>
-                      <span>{PHOSPHOR_METHOD_TYPES.has(method.type) ? <meta.Icon size={21} weight="bold" /> : <meta.Icon size={21} />}</span>
-                      <button type="button" className="method-copy" onClick={() => { setMethodError(""); setEditing(method); }}><strong>{meta.name}</strong><p>{method.value}</p><small>{method.label}</small></button>
-                      <div><IconButton aria-label={`Move ${meta.name} up`} disabled={index === 0} onClick={() => moveMethod(index, -1)}><CaretUpIcon /></IconButton>
-                        <IconButton aria-label={`Move ${meta.name} down`} disabled={index === draft.methods.length - 1} onClick={() => moveMethod(index, 1)}><CaretDownIcon /></IconButton>
-                        <IconButton aria-label={`Remove ${meta.name}`} onClick={() => update("methods", draft.methods.filter((item) => item.id !== method.id))}><TrashIcon /></IconButton></div>
-                    </article>;
-                  })}
-                </div>
-                {editing && <section className="method-inline-editor" aria-labelledby="method-title">
-                  <header>
-                    <div><span>{editing && PHOSPHOR_METHOD_TYPES.has(editing.type) ? <EditingMethodIcon weight="bold" /> : <EditingMethodIcon />}</span><div><small>{draft.methods.some((item) => item.id === editing.id) ? "Edit method" : "New method"}</small><h2 id="method-title">{methodMeta[editing.type].name}</h2></div></div>
-                    <IconButton aria-label="Close editor" onClick={() => setEditing(null)}><XIcon /></IconButton>
-                  </header>
-                  <div className="method-inline-fields">
-                    {editing.type === "phone" || editing.type === "whatsapp" ? (
-                      <PhoneField
-                        label={fieldLabel(editing.type)}
-                        value={editing.value}
-                        onChange={(value) => { setMethodError(""); setEditing({ ...editing, value }); }}
-                        error={methodError}
-                      />
-                    ) : (
-                      <TextField autoFocus label={fieldLabel(editing.type)} placeholder={methodMeta[editing.type].placeholder} value={editing.value} onChange={(e) => { setMethodError(""); setEditing({ ...editing, value: e.target.value }); }} error={methodError} />
-                    )}
-                    <TextField label="Display label" hint="Optional" value={editing.label} onChange={(e) => setEditing({ ...editing, label: e.target.value })} />
-                    <div><p>Suggested labels</p><div className="label-suggestions">{suggestionsFor(editing.type).map((label) => (
-                      <button
-                        key={label}
-                        type="button"
-                        aria-pressed={editing.label === label}
-                        className={editing.label === label ? "selected" : ""}
-                        onClick={() => setEditing({ ...editing, label })}
-                      >
-                        {label}
-                      </button>
-                    ))}</div></div>
-                  </div>
-                  <footer><Button variant="ghost" onClick={() => setEditing(null)}>Cancel</Button><Button onClick={saveMethod}>Save method</Button></footer>
-                </section>}
-                <div className="method-library"><h2>Add a contact method</h2>
-                  {methodCategories.map((category) => {
-                    const availableTypes = (Object.keys(methodMeta) as MethodType[]).filter(
-                      (type) => methodMeta[type].category === category && !addedMethodTypes.has(type),
-                    );
-                    if (availableTypes.length === 0) return null;
-                    return <section className="method-category" key={category}>
-                    <h3>{category}</h3><div>
-                      {availableTypes.map((type) => {
-                        const meta = methodMeta[type];
-                        return <button type="button" key={type} onClick={() => openMethod(type)}>{PHOSPHOR_METHOD_TYPES.has(type) ? <meta.Icon size={24} weight="bold" /> : <meta.Icon size={24} />}<span>{meta.name}</span><PlusIcon /></button>;
-                      })}
-                    </div>
-                  </section>;
-                  })}
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="creator-section review-section">
-                <header><span>03 · Review</span><h1>{isCreating ? "Your new card is ready." : "Your card is ready to share."}</h1><p>{isCreating ? "Check the preview, then publish it so people can start scanning your QR." : "Check the preview, save it, then open the QR sharing screen."}</p></header>
-                <div className="review-list">
-                  <div><CheckCircleIcon /><span><strong>Identity</strong><small>{draft.name || "Name needed"} · {draft.role || "Job title needed"}{showCompanyDetails && draft.company ? ` · ${draft.company}` : ""}</small></span><button type="button" onClick={() => goToStep(0)}>Edit</button></div>
-                  <div><CheckCircleIcon /><span><strong>Images and style</strong><small>{[draft.photo && "profile", draft.companyLogo && "logo", draft.coverPhoto && "cover"].filter(Boolean).join(", ") || "No images"} · {draft.theme} · Focused layout</small></span><button type="button" onClick={() => goToStep(0)}>Edit</button></div>
-                  <div><CheckCircleIcon /><span><strong>Contact methods</strong><small>{draft.methods.length} added · {draft.methods.map((method) => methodMeta[method.type].name).join(", ") || "None"}</small></span><button type="button" onClick={() => goToStep(1)}>Edit</button></div>
-                </div>
-                <div className="company-visibility-option">
-                  <span>
-                    <strong>Company details</strong>
-                    <small>Show your logo, company name, and company website on the card</small>
-                  </span>
+              <div className="theme-panel"><h2>Card colour</h2><p>Used for the cover and primary actions.</p>
+                <div className="theme-swatches">{themes.map((theme) => (
                   <button
                     type="button"
-                    role="switch"
-                    aria-label="Show company details"
-                    aria-checked={showCompanyDetails}
-                    className={`company-switch ${showCompanyDetails ? "is-on" : ""}`}
-                    onClick={() => update("showCompanyDetails", !showCompanyDetails)}
-                  >
-                    <span />
+                    key={theme}
+                    aria-label={`Use ${theme}`}
+                    className={draft.theme === theme ? "selected" : ""}
+                    style={{ background: themeGradientCss(theme) }}
+                    onClick={() => update("theme", theme)}>
+                    {draft.theme === theme ? <CheckIcon size={16} color={themeForegroundColor(theme)} /> : null}
                   </button>
-                </div>
-                <LinkButton fullWidth variant="secondary" href="/app/cards"><QrCodeIcon weight="bold" /> Open card and QR</LinkButton>
+                ))}</div>
               </div>
-            )}
 
-            <footer className="creator-actions">
-              {saveError ? <p className="creator-save-error" role="alert">{saveError}</p> : null}
-              <Button variant="ghost" disabled={step === 0} onClick={() => goToStep(step - 1)}><ArrowLeftIcon /> Back</Button>
-              <Button loading={publishing} disabled={step === 2 && !hasUnpublishedChanges && saved} onClick={continueFlow}>{step === 2 ? publishLabel : "Continue"} {step < 2 && <ArrowRightIcon />}</Button>
-            </footer>
+              <div className="method-library">
+                <header className="method-library-heading">
+                  <span aria-hidden="true" style={{ background: previewTheme.backgroundGradient, color: previewTheme.color }}><PlusIcon size={18} /></span>
+                  <div><h2>Add a contact method</h2><p>Choose how people can connect with you.</p></div>
+                </header>
+                {methodCategories.map((category) => {
+                  const availableTypes = (Object.keys(methodMeta) as MethodType[]).filter(
+                    (type) => methodMeta[type].category === category && (methodTypeCounts[type] ?? 0) < 3,
+                  );
+                  if (availableTypes.length === 0) return null;
+                  return <section className="method-category" key={category}>
+                  <h3>{category}</h3><div>
+                    {availableTypes.map((type) => {
+                      const meta = methodMeta[type];
+                      return <button type="button" key={type} onClick={() => openMethod(type)}>
+                        <span className="method-library-icon" style={{ color: previewTheme.backgroundColor }}>
+                          {PHOSPHOR_METHOD_TYPES.has(type) ? <meta.Icon size={20} weight="bold" color={previewTheme.backgroundColor} /> : <meta.Icon size={20} color={previewTheme.backgroundColor} />}
+                        </span>
+                        <span className="method-library-label">{meta.name}</span>
+                        <PlusIcon />
+                      </button>;
+                    })}
+                  </div>
+                </section>;
+                })}
+              </div>
+            </div>
+
+            {saveError && (
+              <footer className="creator-actions creator-actions--fill">
+                <p className="creator-save-error" role="alert">{saveError}</p>
+              </footer>
+            )}
           </section>
 
         </div>

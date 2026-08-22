@@ -1,4 +1,4 @@
-import { Code, ContactlessPayment, Copy, EnvelopeSimple, ImageSquare, LinkSimple, Monitor, SquaresFour, Watch } from 'phosphor-react-native';
+import { Code, ContactlessPayment, Copy, EnvelopeSimple, ImageSquare, LinkSimple, Monitor, Phone, PlusCircle, Watch } from 'phosphor-react-native';
 import { Platform, Image, StyleSheet, Text, View } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { router } from 'expo-router';
@@ -292,16 +292,11 @@ export function WidgetToolSheetContent({
   }, [accessToken, allCards, card, publicUrl, resolveCardUrl]);
 
   const connections = snapshot?.connections ?? [];
-  const firstConnection = connections[0];
-  const cardCount = snapshot?.cards.length ?? 0;
 
   return (
     <View style={styles.sheetBody}>
       <Body>{widgetSetupInstructions(Platform.OS === 'android' ? 'android' : 'ios')}</Body>
-      <Body style={styles.note}>
-        Widgets sync all published cards. Use ‹ › on the Business Card widget to switch cards.
-        {cardCount > 1 ? ` ${cardCount} cards ready.` : ''}
-      </Body>
+      <Body style={styles.note}>Widgets show your primary card.</Body>
       <View style={styles.widgetGallery}>
         {WIDGET_OPTIONS.map((option) => {
           if (option.id === 'qr-scan') {
@@ -312,7 +307,7 @@ export function WidgetToolSheetContent({
                   <Text style={styles.widgetOptionSize}>{option.size}</Text>
                 </View>
                 <View style={styles.widgetQrOnlyPreview}>
-                  <View style={[styles.widgetQrOnlyFrame, { borderColor: theme.backgroundColor }]}>
+                  <View style={styles.widgetQrOnlyFrame}>
                     <BrandedQrPreview
                       card={card}
                       cardUrl={publicUrl}
@@ -367,25 +362,55 @@ export function WidgetToolSheetContent({
                 <Text style={styles.widgetOptionSize}>{option.size}</Text>
               </View>
               <View style={styles.widgetConnectionsPreview}>
-                <Text style={[styles.widgetConnectionsEyebrow, { color: theme.backgroundColor }]}>Recent connections</Text>
-                {firstConnection ? (
-                  <View style={styles.widgetConnectionRow}>
-                    <View style={styles.widgetAvatarSmall}>
-                      <Text style={styles.widgetAvatarText}>
-                        {firstConnection.name.trim().charAt(0).toUpperCase() || '?'}
-                      </Text>
+                <Text style={styles.widgetConnectionsEyebrow}>Recent Connections</Text>
+                {connections.length ? (
+                  connections.slice(0, 2).map((connection, index) => (
+                    <View key={`${connection.name}-${index}`} style={styles.widgetConnectionRow}>
+                      {connection.photoImageUri ? (
+                        <Image
+                          source={{ uri: connection.photoImageUri }}
+                          style={styles.widgetPhotoSmall}
+                          alt={`${connection.name} profile photo`}
+                        />
+                      ) : (
+                        <View style={styles.widgetAvatarSmall}>
+                          <Text style={styles.widgetAvatarText}>
+                            {connection.initials || connection.name.trim().charAt(0).toUpperCase() || '?'}
+                          </Text>
+                        </View>
+                      )}
+                      <View style={styles.widgetConnectionCopy}>
+                        <Text style={styles.widgetNameLight}>{connection.name}</Text>
+                        <Text style={styles.widgetRoleLight}>{connection.subtitle}</Text>
+                      </View>
+                      {/* Only drawn when the widget would draw them - it hides an action it has
+                          no number or address for, and the preview used to show both always. */}
+                      {connection.phone?.trim() ? (
+                        <View style={styles.widgetActionChip}>
+                          <Phone size={13} color={colors.white} weight="fill" />
+                        </View>
+                      ) : null}
+                      {(connection.email?.trim() || connection.phone?.trim()) ? (
+                        <View style={styles.widgetActionChip}>
+                          <EnvelopeSimple size={13} color={colors.white} weight="fill" />
+                        </View>
+                      ) : null}
                     </View>
-                    <View style={styles.widgetConnectionCopy}>
-                      <Text style={styles.widgetNameLight}>{firstConnection.name}</Text>
-                      <Text style={styles.widgetRoleLight}>
-                        {firstConnection.subtitle || 'Shared via your card'}
-                      </Text>
-                    </View>
-                    <Text style={styles.widgetActionChip}>☎</Text>
-                    <Text style={styles.widgetActionChip}>✉</Text>
-                  </View>
+                  ))
                 ) : (
-                  <Text style={styles.widgetConnectionsEmpty}>Share your card to see new connections here.</Text>
+                  <View style={styles.widgetConnectionRow}>
+                    <View style={[styles.widgetAvatarSmall, { backgroundColor: '#4E4E4E' }]} />
+                    <View style={styles.widgetConnectionCopy}>
+                      <Text style={styles.widgetRoleLight}>Your connections</Text>
+                      <Text style={styles.widgetRoleLight}>Appear here after you share</Text>
+                    </View>
+                  </View>
+                )}
+                {connections.length > 1 ? null : (
+                  <View style={styles.widgetAddPill}>
+                    <PlusCircle size={13} color={colors.white} weight="fill" />
+                    <Text style={styles.widgetAddPillText}>Add new connection</Text>
+                  </View>
                 )}
               </View>
               <Text style={styles.widgetOptionTitle}>{option.title}</Text>
@@ -506,12 +531,18 @@ export function BackgroundToolSheetContent({
           panelWidth={200}
         />
       </VirtualBackgroundPreviewBackground>
+      {/* One button, and it produces the MIRRORED export. Meet, Zoom and Teams mirror your
+          self-view, so this is the one that reads correctly on your own screen - which is what
+          it is for. The trade-off is stated in the copy above: participants see it reversed. */}
       <Button
         loading={busy === 'background'}
         disabled={!accessToken || !published}
         onPress={() => void run('background', async () => {
           if (!accessToken) throw new Error('Sign in required.');
-          await downloadShareAsset(card.slug, 'virtual-background', accessToken, { themeColor: card.theme });
+          await downloadShareAsset(card.slug, 'virtual-background', accessToken, {
+            themeColor: card.theme,
+            mirrored: true,
+          });
         }, { successMessage: 'Virtual background downloaded. Import it in your meeting app.' })}>
         <Monitor size={18} color={colors.ink} weight="bold" />
         Download virtual background
@@ -626,15 +657,16 @@ const styles = StyleSheet.create({
   widgetOptionCopy: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
   widgetQrOnlyPreview: {
     borderRadius: 18,
-    backgroundColor: '#141814',
+    backgroundColor: '#000000',
     padding: spacing.x4,
     alignItems: 'center',
   },
   widgetQrOnlyFrame: {
     width: 96,
     height: 96,
-    borderRadius: 16,
-    borderWidth: 3,
+    // No border. The real widget is a plain white card at a 7.2pt radius; the 3pt accent
+    // outline here was preview-only decoration that made the two look like different widgets.
+    borderRadius: 7,
     backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
@@ -645,13 +677,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.x3,
     borderRadius: 18,
-    backgroundColor: '#141814',
+    backgroundColor: '#000000',
     padding: spacing.x4,
   },
   widgetBusinessQr: {
     width: 72,
     height: 72,
-    borderRadius: 12,
+    borderRadius: 7,
     backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
@@ -665,35 +697,46 @@ const styles = StyleSheet.create({
   widgetBusinessCopy: { flex: 1, gap: 2 },
   widgetConnectionsPreview: {
     borderRadius: 18,
-    backgroundColor: '#141814',
+    backgroundColor: '#000000',
     padding: spacing.x4,
     gap: spacing.x3,
   },
-  widgetConnectionsEyebrow: { fontSize: 10, fontFamily: fonts.bold, fontWeight: '800' },
-  widgetConnectionsEmpty: { color: '#B8C4B3', fontFamily: fonts.regular, fontSize: 11, lineHeight: 16 },
+  widgetConnectionsEyebrow: { fontSize: 10, fontFamily: fonts.bold, fontWeight: '800', color: '#87EA5C' },
+  widgetConnectionsEmpty: { color: '#BDBDBD', fontFamily: fonts.regular, fontSize: 11, lineHeight: 16 },
   widgetConnectionRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.x2 },
   widgetConnectionCopy: { flex: 1, gap: 1 },
-  widgetActionChip: { fontFamily: fonts.regular,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#243024',
-    color: colors.white,
-    textAlign: 'center',
-    lineHeight: 28,
-    overflow: 'hidden', },
+  // A real circle with a real icon, matching the SF Symbols the widget draws. This used to be
+  // a Text holding the characters see and envelope, which is not what the widget shows.
+  widgetActionChip: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#4E4E4E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  widgetAddPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#4E4E4E',
+    borderRadius: 13,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  widgetAddPillText: { color: colors.white, fontFamily: fonts.regular, fontSize: 11 },
   widgetAvatarSmall: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#243024',
+    backgroundColor: '#5DC154',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
   },
-  widgetNameLight: { color: colors.white, fontSize: 13, fontFamily: fonts.bold, fontWeight: '800' },
-  widgetRoleLight: { color: '#B8C4B3', fontFamily: fonts.regular, fontSize: 10 },
-  widgetCompanyLight: { color: '#8FA088', fontFamily: fonts.regular, fontSize: 10 },
+  widgetNameLight: { color: colors.white, fontSize: 13, fontFamily: fonts.regular },
+  widgetRoleLight: { color: '#BDBDBD', fontFamily: fonts.regular, fontSize: 10 },
+  widgetCompanyLight: { color: '#8F8F8F', fontFamily: fonts.regular, fontSize: 10 },
   widgetQrLabelLight: { color: colors.white, fontSize: 11, fontFamily: fonts.bold, fontWeight: '800' },
   watchPreview: {
     alignItems: 'center',

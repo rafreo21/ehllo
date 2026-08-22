@@ -16,6 +16,10 @@ type PhoneFieldProps = {
   value: string;
   onChange: (value: string) => void;
   hint?: string;
+  hideLabel?: boolean;
+  placeholder?: string;
+  compact?: boolean;
+  inline?: boolean;
   error?: string;
   required?: boolean;
   autoComplete?: string;
@@ -25,6 +29,10 @@ export function PhoneField({
   id,
   label,
   hint,
+  hideLabel = false,
+  placeholder: placeholderOverride,
+  compact = false,
+  inline = false,
   error,
   value,
   onChange,
@@ -47,9 +55,9 @@ export function PhoneField({
   const placeholder = phonePlaceholder(country);
 
   return (
-    <label className="grid gap-2" htmlFor={id}>
-      <span className="text-sm font-semibold text-[#454745]">{label}</span>
-      <div className={`phone-field ${error ? "phone-field-error" : ""}`}>
+    <label className={`grid ${inline ? "gap-0" : "gap-2"}`} htmlFor={id}>
+      <span className={hideLabel || inline ? "sr-only" : "text-sm font-semibold text-[#454745]"}>{label}</span>
+      <div className={`phone-field ${compact ? "phone-field-compact" : ""} ${inline ? "phone-field-inline" : ""} ${error ? "phone-field-error" : ""}`}>
         <div className="phone-field-country">
           <span className="phone-field-dial" aria-hidden="true">+{country.dialCode}</span>
           <select
@@ -72,11 +80,11 @@ export function PhoneField({
           autoComplete={autoComplete}
           required={required}
           value={parts.nationalNumber}
-          placeholder={placeholder}
+          placeholder={placeholderOverride ?? placeholder}
           onChange={(event) => update({ ...parts, nationalNumber: event.target.value.replace(/[^\d\s()-]/g, "") })}
         />
       </div>
-      {hint ? <small className="text-xs text-[#6b7168]">{hint}</small> : null}
+      {hint && !hideLabel && !inline ? <small className="text-xs text-[#6b7168]">{hint}</small> : null}
       {error ? <p className="text-sm font-medium text-[#b42318]" role="alert">{error}</p> : null}
     </label>
   );

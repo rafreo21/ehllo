@@ -5,7 +5,7 @@ import { Mail as EnvelopeSimpleIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { UploadCloud as CloudArrowUpIcon } from "react-feather";
 import { AlertCircle as WarningCircleIcon } from "react-feather";
-import { LinkButton } from "./Button";
+import { Button, LinkButton } from "./Button";
 import { StatusMessage } from "./AsyncState";
 import { useToast } from "./ToastContext";
 import { GoogleProviderIcon, MicrosoftProviderIcon } from "./ProviderIcons";
@@ -73,7 +73,7 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
   }
 
   return (
-    <section className="activate-panel">
+    <section className="activate-panel connected-accounts-panel">
       <header>
         <span className="step-pill">Connected accounts</span>
         <h2><EnvelopeSimpleIcon size={22} /> Your connected services</h2>
@@ -102,11 +102,11 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
           </div>
           {status.google.connected ? (
             <div className="connected-account-actions">
-              {!status.google.capabilities.drive ? <LinkButton href={`/api/integrations/google/connect?return_to=${returnTo}`} variant="secondary">Reconnect for Drive</LinkButton> : null}
-              <button type="button" className="ghost-link" onClick={() => void disconnect("google")}>Disconnect</button>
+              {!status.google.capabilities.drive ? <LinkButton href={`/api/integrations/google/connect?return_to=${returnTo}`} size="small" variant="secondary">Reconnect for Drive</LinkButton> : null}
+              <Button type="button" size="small" variant="secondary" onClick={() => void disconnect("google")}>Disconnect</Button>
             </div>
           ) : (
-            <LinkButton href={`/api/integrations/google/connect?return_to=${returnTo}`} fullWidth disabled={!status.configured.google}>
+            <LinkButton href={`/api/integrations/google/connect?return_to=${returnTo}`} size="small" className="connected-account-connect" disabled={!status.configured.google}>
               Connect Google
             </LinkButton>
           )}
@@ -134,11 +134,11 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
           </div>
           {status.microsoft.connected ? (
             <div className="connected-account-actions">
-              {!status.microsoft.capabilities.onedrive ? <LinkButton href={`/api/integrations/microsoft/connect?return_to=${returnTo}`} variant="secondary">Reconnect for OneDrive</LinkButton> : null}
-              <button type="button" className="ghost-link" onClick={() => void disconnect("microsoft")}>Disconnect</button>
+              {!status.microsoft.capabilities.onedrive ? <LinkButton href={`/api/integrations/microsoft/connect?return_to=${returnTo}`} size="small" variant="secondary">Reconnect for OneDrive</LinkButton> : null}
+              <Button type="button" size="small" variant="secondary" onClick={() => void disconnect("microsoft")}>Disconnect</Button>
             </div>
           ) : (
-            <LinkButton href={`/api/integrations/microsoft/connect?return_to=${returnTo}`} fullWidth disabled={!status.configured.microsoft}>
+            <LinkButton href={`/api/integrations/microsoft/connect?return_to=${returnTo}`} size="small" className="connected-account-connect" disabled={!status.configured.microsoft}>
               Connect Microsoft
             </LinkButton>
           )}

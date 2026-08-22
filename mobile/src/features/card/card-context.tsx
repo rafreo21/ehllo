@@ -149,23 +149,33 @@ export function CardProvider({ children }: PropsWithChildren) {
   const persistCards = useCallback(async (nextCards: MobileCard[], nextActiveId?: string) => {
     const normalized = nextCards.map(normalizeCard);
     const resolvedActiveId = nextActiveId ?? activeCardIdRef.current;
-    if (
-      resolvedActiveId === activeCardIdRef.current
-      && cardsSnapshot(normalized) === cardsSnapshot(cardsRef.current)
-    ) {
-      return;
+    // Skipping the state and storage writes when nothing changed is worth keeping - they are
+    // what this guard was for. What must NOT be skipped is the widget sync below.
+    const unchanged = resolvedActiveId === activeCardIdRef.current
+      && cardsSnapshot(normalized) === cardsSnapshot(cardsRef.current);
+
+    if (!unchanged) {
+      setCards(normalized);
+      setActiveCardIdState(resolvedActiveId);
+      await AsyncStorage.setItem(CARDS_STORAGE_KEY, JSON.stringify(normalized));
+      await AsyncStorage.setItem(ACTIVE_CARD_KEY, resolvedActiveId);
     }
-    setCards(normalized);
-    setActiveCardIdState(resolvedActiveId);
-    await AsyncStorage.setItem(CARDS_STORAGE_KEY, JSON.stringify(normalized));
-    await AsyncStorage.setItem(ACTIVE_CARD_KEY, resolvedActiveId);
+
     const active = normalized.find((item) => item.id === resolvedActiveId) || normalized[0];
-    if (active) {
-      const env = readEnv();
-      const urlForCard = (target: MobileCard) =>
-        `${env?.publicCardBaseUrl || 'http://localhost:3000'}/c/${target.slug}`;
-      await syncCardToolsForCard(normalized, urlForCard, accessToken, active);
-    }
+    // Runs on EVERY call, changed or not, and is not gated on there being an active card.
+    //
+    // The widgets' snapshot lives outside React state - in an App Group plist on iOS and
+    // SharedPreferences on Android. A reinstall, cleared app data, or a widget somebody just
+    // added all leave that snapshot stale or empty while the card list itself is byte
+    // identical, so the old early return meant the widget could never recover: every launch
+    // decided "nothing changed" and returned before telling the widget anything. That is why
+    // a freshly installed build kept showing the previous build's widget.
+    //
+    // The no-card case matters for the same reason - it is a state the widgets render.
+    const env = readEnv();
+    const urlForCard = (target: MobileCard) =>
+      `${env?.publicCardBaseUrl || 'http://localhost:3000'}/c/${target.slug}`;
+    await syncCardToolsForCard(normalized, urlForCard, accessToken, active);
   }, [accessToken]);
 
   /**

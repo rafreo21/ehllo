@@ -357,7 +357,7 @@ export default function CardToolsScreen() {
             <ToolRow
               icon={<SquaresFour size={22} color={colors.ink} weight="bold" />}
               title="Home screen widgets"
-              subtitle="QR scan, business card, and recent connections"
+              subtitle="QR, card and recent connections"
               onPress={() => openSheet('widgets')}
             />
             <ToolRow

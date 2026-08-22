@@ -7,8 +7,10 @@ export async function syncCardToolsForCard(
   accessToken?: string,
   preferredCard?: MobileCard,
 ) {
-  if (!cards.length) return;
-
+  // No early return on an empty card list. Bailing out here meant a signed-out phone, or one
+  // with no cards yet, never wrote a snapshot at all - so the widgets read empty preferences,
+  // treated "no snapshot" as "gallery preview", and put the demo person on a real home screen.
+  // The empty case is exactly the case the widgets need to be told about.
   try {
     await syncAllWidgets(cards, cardPublicUrl, accessToken, preferredCard);
   } catch (caught) {

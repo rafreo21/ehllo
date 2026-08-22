@@ -22,7 +22,9 @@ import { Upload as UploadSimpleIcon } from "react-feather";
 import { BusinessShell } from "../../components/BusinessShell";
 import { useAppUser } from "../../components/AppUserContext";
 import { PageSkeleton } from "../../components/AsyncState";
+import { CardImage } from "../../components/CardImage";
 import { Button, LinkButton } from "../../components/Button";
+import { ContactMethodIcon } from "../../components/ContactMethodIcon";
 import { useToast } from "../../components/ToastContext";
 import { contactMethodHref, contactMethodOpensNewTab } from "../../../lib/contact-methods";
 import { buildHtmlSignature, buildPlainSignature } from "../../../lib/email-signature";
@@ -461,17 +463,11 @@ export default function CardsPage() {
                   <article key={card.id} className="card-overview-item">
                     <button onClick={() => openCard(card)} type="button">
                       <div className="card-overview-cover-wrap">
-                        {card.coverPhoto ? (
-                          <img src={card.coverPhoto} alt="" className="card-overview-cover-photo" />
-                        ) : (
-                          <div className="card-overview-cover-fallback" style={{ background: themeSurfaceStyle(card.theme).backgroundGradient }} />
-                        )}
-                        <div className="card-overview-avatar">
-                          {card.photo ? (
-                            <img src={card.photo} alt="" className="card-overview-avatar-photo" />
-                          ) : (
-                            <span className="card-overview-avatar-fallback">{cardInitials(card.name)}</span>
-                          )}
+                        <div className="card-overview-cover-fallback" style={{ background: themeSurfaceStyle(card.theme).backgroundGradient }} />
+                        <CardImage src={card.coverPhoto} alt="" className="card-overview-cover-photo" />
+                        <div className="card-overview-avatar" style={themeCoverBadgeStyle(card.theme)}>
+                          <span className="card-overview-avatar-fallback">{cardInitials(card.name)}</span>
+                          <CardImage src={card.photo} alt="" className="card-overview-avatar-photo" />
                         </div>
                       </div>
                       <div className="card-overview-copy"><small>{cardDisplayLabel(card)}</small><h3>{card.name.trim() || "Add your full name"}</h3><p>{cardLeadDetail(card)}</p></div>
@@ -508,18 +504,27 @@ export default function CardsPage() {
               <strong style={{ color: cardTheme.color }}>{profile.company || "Your company"}</strong>
             </div>
             <div className="share-card-body">
-              <div className="share-avatar">{photo ? <img src={photo} alt="" /> : initials}</div>
+              <div className="share-avatar"><span>{initials}</span><CardImage src={photo} alt={profile.name || "Profile picture"} /></div>
               <h2>{profile.name}</h2>
               <p className="share-role">{profile.role}{profile.company ? ` · ${profile.company}` : ""}</p>
-              <p>{profile.bio}</p>
+              {profile.bio ? <p className="share-bio">{profile.bio}</p> : null}
               <div className="share-contact">
                 {actionMethods.map((method) => {
                   const href = contactMethodHref(method);
                   return href
                     ? <a key={method.id} href={href} target={contactMethodOpensNewTab(href) ? "_blank" : undefined} rel={contactMethodOpensNewTab(href) ? "noreferrer" : undefined}>
-                        <span><strong>{method.label}</strong><small>{method.value}</small></span><ArrowSquareOutIcon />
+                        <span className="share-contact-icon" style={{ color: cardTheme.backgroundColor }}>
+                          <ContactMethodIcon type={method.type} color={cardTheme.backgroundColor} size={18} />
+                        </span>
+                        <span className="share-contact-copy"><strong>{method.label}</strong><small>{method.value}</small></span>
+                        <ArrowSquareOutIcon className="share-contact-action" size={17} aria-hidden="true" />
                       </a>
-                    : <span className="unavailable-method" key={method.id}><strong>{method.label}</strong><small>{method.value}</small></span>;
+                    : <span className="unavailable-method" key={method.id}>
+                        <span className="share-contact-icon" style={{ color: cardTheme.backgroundColor }}>
+                          <ContactMethodIcon type={method.type} color={cardTheme.backgroundColor} size={18} />
+                        </span>
+                        <span className="share-contact-copy"><strong>{method.label}</strong><small>{method.value}</small></span>
+                      </span>;
                 })}
               </div>
               <LinkButton fullWidth variant="secondary" href={`/business/card/edit?id=${activeId}`}><PencilSimpleIcon size={17} />Edit card</LinkButton>
@@ -560,7 +565,7 @@ export default function CardsPage() {
             <section className="signature-panel">
               <div className="inline-qr-head"><span><EnvelopeSimpleIcon size={22} /></span><div><h2>Email signature</h2><p>Square photo, name, title, and contact details. Ready for Gmail or Outlook.</p></div></div>
               <div className="signature-preview-card">
-                <div className="signature-preview-photo">{photo ? <img src={photo} alt="" /> : initials}</div>
+                <div className="signature-preview-photo"><span>{initials}</span><CardImage src={photo} alt="" /></div>
                 <div className="signature-preview-copy">
                   <strong>{profile.name}</strong>
                   {profile.role ? <span>{profile.role}</span> : null}
@@ -624,7 +629,7 @@ export default function CardsPage() {
                     </div>
                     <div>
                       <div className="widget-layout-avatar">
-                        {profile.photo ? <img src={profile.photo} alt="" /> : <span>{initials}</span>}
+                        <span>{initials}</span><CardImage src={profile.photo} alt="" />
                       </div>
                       <strong>{profile.name}</strong>
                       {profile.role ? <span>{profile.role}</span> : null}
@@ -640,7 +645,7 @@ export default function CardsPage() {
                     <small>RECENT CONNECTIONS</small>
                     <div className="widget-gallery-connection-row">
                       <div className="widget-layout-avatar">
-                        {recentConnection?.photoUrl ? <img src={recentConnection.photoUrl} alt="" /> : <span>{recentConnection ? cardInitials(recentConnection.name) : "C"}</span>}
+                        <span>{recentConnection ? cardInitials(recentConnection.name) : "C"}</span><CardImage src={recentConnection?.photoUrl} alt="" />
                       </div>
                       <div>
                         <strong>{recentConnection?.name || "Recent connection"}</strong>

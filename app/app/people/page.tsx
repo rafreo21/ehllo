@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { Search as MagnifyingGlassIcon } from "react-feather";
 import { Edit2 as PencilSimpleLineIcon } from "react-feather";
 import { Plus as PlusIcon } from "react-feather";
@@ -11,6 +12,7 @@ import { X as XIcon } from "react-feather";
 import { PageSkeleton, StatusMessage } from "../../components/AsyncState";
 import { Button, LinkButton } from "../../components/Button";
 import { ConnectionDrawer } from "../../components/ConnectionDrawer";
+import { InlineEditField } from "../../components/InlineEditField";
 import { TextField } from "../../components/FormField";
 import { useToast } from "../../components/ToastContext";
 import {
@@ -23,6 +25,7 @@ import {
   filterConnections,
   formatConnectionDate,
   sortConnections,
+  updateConnectionName,
   type ConnectionItem,
   type ConnectionSort,
 } from "../../../lib/connections";
@@ -170,6 +173,19 @@ export default function ConnectionsPage() {
     }
   }
 
+  async function renameConnection(connection: ConnectionItem, name: string) {
+    const cleanName = name.trim();
+    if (!cleanName || cleanName === connection.name) return;
+    setConnections((current) => current.map((item) => item.id === connection.id ? { ...item, name: cleanName } : item));
+    try {
+      await updateConnectionName(connection, cleanName);
+      showToast({ tone: "success", message: "Connection updated." });
+    } catch (caught) {
+      setConnections((current) => current.map((item) => item.id === connection.id ? connection : item));
+      showToast({ tone: "error", message: caught instanceof Error ? caught.message : "Could not update this connection." });
+    }
+  }
+
   const hasConnections = connections.length > 0;
 
   return (
@@ -257,17 +273,17 @@ export default function ConnectionsPage() {
                         />
                       </td>
                       <td data-label="Person">
-                        <button type="button" className="table-person" onClick={() => setActiveConnection(connection)}>
+                        <div className="table-person">
                           <img
                             className="connections-avatar"
                             src={connection.photoUrl || connectionAvatarUrl(connection)}
                             alt=""
                           />
                           <span>
-                            <strong>{connection.name}</strong>
+                            <strong><InlineEditField key={`${connection.id}-${connection.name}`} defaultValue={connection.name} onConfirm={(value) => void renameConnection(connection, value)} placeholder="Add name" ariaLabel="Connection name" /></strong>
                             <small>{connection.subtitle}</small>
                           </span>
-                        </button>
+                        </div>
                       </td>
                       <td data-label="Source"><span className="table-chip">{connectionSourceLabel(connection.source)}</span></td>
                       <td data-label="Added">{connection.connectedAt ? formatConnectionDate(connection.connectedAt) : "N/A"}</td>
@@ -347,10 +363,22 @@ export default function ConnectionsPage() {
       ) : null}
 
       {manualOpen ? (
-        <div className="connections-modal-backdrop" role="presentation" onClick={() => setManualOpen(false)}>
+        <div className="connections-modal-backdrop connections-manual-backdrop" role="presentation" onClick={() => setManualOpen(false)}>
           <div className="connections-modal" role="dialog" aria-label="Add manually" onClick={(event) => event.stopPropagation()}>
             <header>
-              <h2>Add manually</h2>
+              <div className="connections-modal-title-with-back">
+                <button
+                  type="button"
+                  aria-label="Back to connection options"
+                  onClick={() => {
+                    setManualOpen(false);
+                    setAddOpen(true);
+                  }}
+                >
+                  <ArrowLeftIcon size={17} />
+                </button>
+                <h2>Add manually</h2>
+              </div>
               <button type="button" aria-label="Close" onClick={() => setManualOpen(false)}><XIcon size={18} /></button>
             </header>
             <form
@@ -360,10 +388,10 @@ export default function ConnectionsPage() {
                 void saveManual();
               }}
             >
-              <TextField label="Name" value={manual.name} onChange={(event) => setManual((prev) => ({ ...prev, name: event.target.value }))} required />
-              <TextField label="Email" type="email" value={manual.email} onChange={(event) => setManual((prev) => ({ ...prev, email: event.target.value }))} />
-              <TextField label="Role" value={manual.role} onChange={(event) => setManual((prev) => ({ ...prev, role: event.target.value }))} />
-              <TextField label="Company" value={manual.company} onChange={(event) => setManual((prev) => ({ ...prev, company: event.target.value }))} />
+              <TextField inline label="Name" value={manual.name} onChange={(event) => setManual((prev) => ({ ...prev, name: event.target.value }))} required />
+              <TextField inline label="Email address" type="email" value={manual.email} onChange={(event) => setManual((prev) => ({ ...prev, email: event.target.value }))} />
+              <TextField inline label="Role" value={manual.role} onChange={(event) => setManual((prev) => ({ ...prev, role: event.target.value }))} />
+              <TextField inline label="Company" value={manual.company} onChange={(event) => setManual((prev) => ({ ...prev, company: event.target.value }))} />
               <div className="form-actions">
                 <Button type="button" variant="ghost" onClick={() => setManualOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={savingManual || !manual.name.trim()}>

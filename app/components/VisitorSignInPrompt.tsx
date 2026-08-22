@@ -32,8 +32,8 @@ export function VisitorSignInPrompt({
     <section className={`visitor-signin-prompt ${compact ? "compact" : ""}`}>
       <div>
         <span className="step-pill"><UsersThreeIcon size={12} /> People you&apos;ve met</span>
-        <strong>{compact ? "Remember this connection" : `Keep ${ownerName} in your directory`}</strong>
-        <p>Sign in with Google to save cards and shared meeting records. No full CRM setup.</p>
+        <strong>{compact ? "Save this connection in ehllo" : `Keep ${ownerName} in your directory`}</strong>
+        <p>{compact ? `Sign in to keep ${ownerName} and your shared details together.` : "Sign in with Google to save cards and shared meeting records. No full CRM setup."}</p>
       </div>
       <LinkButton href={authHref} variant="secondary">
         <GoogleProviderIcon size={18} />

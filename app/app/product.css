@@ -3,7 +3,7 @@
   --p-blue: #9fe870;
   --p-sky: #e2f6d5;
   --p-ice: #f2f5f0;
-  --p-line: #d5d9d3;
+  --p-line: #e4e8e2;
   --p-muted: #454745;
   --p-ink: #0e0f0c;
   --p-lime: #9fe870;
@@ -11,7 +11,7 @@
   --p-mint: #9fe870;
   --p-soft: #eef2ec;
   --p-surface: #ffffff;
-  --p-border: #d5d9d3;
+  --p-border: #e4e8e2;
   --p-green: #e2f6d5;
 }
 .product-shell {
@@ -105,15 +105,17 @@
 .product-mobile-header { display: none; }
 .mobile-logo, .menu-button { display: none; }
 .product-page-toolbar { min-height: 36px; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.product-page-leading { min-width: 0; display: flex; align-items: center; gap: 8px; }
 .product-page-back { flex: 0 0 auto; }
+.product-page-card-label { min-width: 80px; max-width: min(320px, 32vw); padding: 7px 9px; overflow: hidden; color: var(--p-navy); font-size: 13px; font-weight: 800; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .product-page-actions { margin-left: auto; display: flex; justify-content: flex-end; gap: 10px; align-items: center; }
 .app-shell-action-group { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 .product-content { max-width: 1260px; margin: auto; padding: 58px 40px 72px; }
 
-/* Consumer app only: float the back-button/actions toolbar in the top gutter so it never
-   pushes the page heading down - every page's <h1> starts at the same offset as Home's. */
+/* Consumer app: every page-level back/action toolbar occupies the same normal-flow
+   position used by View Card, clear of the floating account controls. */
 .product-shell:has(.consumer-sidebar) .product-content { position: relative; }
-.product-shell:has(.consumer-sidebar) .product-page-toolbar { position: absolute; top: 20px; left: 40px; right: 40px; margin-bottom: 0; z-index: 5; }
+.product-shell:has(.consumer-sidebar) .product-page-toolbar { position: static; margin-bottom: 28px; z-index: 5; }
 .welcome { display: grid; grid-template-columns: 1.3fr .7fr; gap: 6vw; align-items: end; }
 .step-pill { display: inline-block; padding: 7px 10px; border-radius: 14px; background: var(--p-blue); color: var(--p-navy); font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: .1em; }
 .step-pill b { margin-right: 5px; font-size: 14px; line-height: 1; vertical-align: -2px; }
@@ -142,18 +144,84 @@
 .preview-column { min-height: 100%; padding: 22px; border-radius: 14px; background: var(--p-sky); }
 .preview-stage { position: sticky; top: 100px; }
 .preview-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: var(--p-muted); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; font-weight: 900; }
-.public-card { background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 18px 50px rgba(22,51,0,.12); }
-.card-cover { height: 135px; padding: 24px; display: flex; align-items: start; gap: 8px; color: var(--p-navy); background: var(--p-blue); }
+.public-card { border: 1px solid rgba(255,255,255,.88); border-radius: 22px; overflow: hidden; background: rgba(255,255,255,.96); box-shadow: 0 24px 64px rgba(22,51,0,.14), 0 4px 14px rgba(22,51,0,.05); }
+.card-cover { position: relative; isolation: isolate; height: 160px; padding: 22px; display: flex; align-items: start; gap: 9px; overflow: hidden; color: var(--p-navy); background: var(--p-blue); }
+.card-cover::after { content: ""; position: absolute; z-index: 0; inset: 0; background: linear-gradient(155deg, rgba(255,255,255,.22), transparent 44%, rgba(0,0,0,.08)); pointer-events: none; }
+.card-cover > * { position: relative; z-index: 1; }
 .card-cover.has-cover-photo { background-position: center; background-size: cover; color: white; }
-.card-logo { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: var(--p-navy); color: white; font-weight: 900; }
+.card-logo { width: 38px; height: 38px; flex: 0 0 auto; border: 2px solid rgba(255,255,255,.78); border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: var(--p-navy); color: white; box-shadow: 0 7px 18px rgba(0,0,0,.13); font-weight: 900; }
 .card-logo img { width: 100%; height: 100%; object-fit: cover; }
-.card-cover > span { padding-top: 7px; font-weight: 800; letter-spacing: -.03em; }
-.card-body { padding: 0 26px 28px; }
-.card-avatar { width: 76px; height: 76px; margin-top: -38px; border-radius: 11px; border: 4px solid white; display: grid; place-items: center; color: white; background: var(--p-navy); font-size: 21px; font-weight: 900; }
-.card-body h2 { margin: 16px 0 4px; font-size: 30px; letter-spacing: -.04em; }
+.card-cover > span { padding-top: 9px; font-weight: 800; letter-spacing: -.03em; }
+.card-body { padding: 0 24px 25px; }
+.card-avatar { width: 88px; height: 88px; margin-top: -44px; border-radius: 50%; border: 5px solid rgba(255,255,255,.96); box-shadow: 0 10px 26px rgba(22,51,0,.2), 0 2px 7px rgba(22,51,0,.08); display: grid; place-items: center; overflow: hidden; color: white; background: var(--p-navy); font-size: 23px; font-weight: 900; }
+.card-body h2 { margin: 19px 0 4px; font-size: 32px; letter-spacing: -.045em; }
+/* --editable: consumer single-page editor only - lets the live preview
+   itself be the place you change images, instead of a separate panel in
+   the white card. Scoped so the read-only public card page and the
+   business editor (which keeps its own image panel) are unaffected.
+   Each hit area is a full-cover scrim + centered pencil, not a corner
+   badge - card-logo clips overflow to stay circular, so a badge sitting
+   partly outside its 32px bounds (the earlier approach) was invisible,
+   clipped by its own parent. A same-size overlay avoids that entirely. */
+.public-card--editable .card-cover,
+.public-card--editable .card-logo,
+.public-card--editable .card-avatar { position: relative; }
+.public-card--editable .image-edit-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: rgba(14,15,12,.55);
+  color: white;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+.public-card--editable .card-logo .image-edit-overlay { border-radius: 50%; }
+.public-card--editable .card-avatar .image-edit-overlay { border-radius: 50%; }
+/* card-logo's own overlay button (and the company name inline-edit field)
+   sit inside card-cover too, so a plain ":hover .image-edit-overlay"
+   descendant selector lit them all up at once - the cover's own overlay is
+   scoped to a direct child (>) and explicitly suppressed while the
+   pointer/focus is over the logo or the company name, so none of these
+   hit areas ever darken together. */
+.public-card--editable .card-cover:hover:not(:has(.card-logo:hover)):not(:has(.inline-edit-field:hover)) > .image-edit-overlay,
+.public-card--editable .card-cover:focus-within:not(:has(.card-logo:focus-within)):not(:has(.inline-edit-field:focus-within)) > .image-edit-overlay,
+.public-card--editable .card-logo:hover > .image-edit-overlay,
+.public-card--editable .card-logo:focus-within > .image-edit-overlay,
+.public-card--editable .card-avatar:hover > .image-edit-overlay,
+.public-card--editable .card-avatar:focus-within > .image-edit-overlay {
+  opacity: 1;
+}
+.public-card--editable .image-edit-overlay:focus-visible { opacity: 1; outline: 3px solid rgba(159,232,112,.65); outline-offset: -3px; }
+@media (hover: none) {
+  .public-card--editable .image-edit-overlay { opacity: 1; background: rgba(14,15,12,.35); }
+}
+
+/* Inline-edit fields (name, company, role, bio) on the live preview - a
+   single always-editable contentEditable node, not a read/write mode
+   toggle. The field's own tag (h2/p/span - whatever "as" the caller
+   passed) is what's editable directly, not a nested input: that keeps
+   .card-cover > span's padding-top and every other surrounding layout
+   rule intact, since there is no extra wrapper element to break them. */
+/* position:relative (no offset - doesn't move it) so a field never loses a
+   click to a same-area absolutely-positioned sibling, like the company
+   name sitting inside card-cover alongside its full-cover edit overlay:
+   without this, the overlay - positioned, so painted above static content
+   regardless of DOM order - silently ate every click meant for the text. */
+.inline-edit-field { position: relative; cursor: text; border-radius: 5px; transition: background .12s ease; }
+.inline-edit-field.is-multiline { white-space: pre-wrap; }
+.inline-edit-field[data-empty="true"]::before { content: attr(data-placeholder); color: inherit; opacity: .55; }
+.inline-edit-field:hover { background: rgba(22,51,0,.05); }
+.inline-edit-field:focus { background: rgba(22,51,0,.07); outline: 2px solid rgba(159,232,112,.65); outline-offset: 1px; }
+
 .card-role { color: var(--p-muted); margin: 0; font-size: 12px; }
-.card-bio { color: var(--p-muted); line-height: 1.5; font-size: 13px; margin: 20px 0; }
-.card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+/* A touch more breathing room than the business editor's 0, scoped so it
+   doesn't change that shared rule for business. */
+.public-card--editable .card-role { margin-top: 6px; }
+.card-bio { color: var(--p-muted); line-height: 1.55; font-size: 13px; margin: 18px 0 0; }
+.card-actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .card-links { margin-top: 24px; padding-top: 8px; display: grid; grid-template-columns: 38px 1fr; column-gap: 12px; row-gap: 8px; align-items: center; font-size: 15px; }
 .card-links span { width: 38px; height: 38px; display: grid; place-items: center; color: var(--p-navy); background: var(--p-sky); border-radius: 50%; }
 .card-links p { margin: 0; font-weight: 650; line-height: 1.35; overflow-wrap: anywhere; }
@@ -184,9 +252,23 @@
 .creator-workspace { min-width: 0; border-radius: 12px; background: white; box-shadow: 0 10px 30px rgba(22,51,0,.05); overflow: hidden; }
 .creator-section { min-height: 620px; padding: clamp(24px,4vw,42px); display: grid; align-content: start; gap: 22px; }
 .creator-section > header { margin-bottom: 8px; }
+/* --fill: the single-page consumer card editor only. Its toolbar now occupies
+   normal page flow at the same vertical position as the View Card toolbar.
+   The remaining viewport height belongs to the two editor columns; only the
+   workspace scrolls internally. Modifiers keep the shared business editor
+   untouched. */
+.creator-layout--fill { margin-top: 0; height: calc(100vh - 194px); }
+.creator-workspace--fill { align-self: stretch; display: flex; flex-direction: column; }
+.creator-section--fill { min-height: 0; overflow-y: auto; flex: 1 1 auto; }
+.creator-section--fill > header { margin-bottom: 0; }
+.creator-actions--fill { flex: 0 0 auto; }
 .creator-section > header > span { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; color: var(--p-muted); }
 .creator-section > header h1 { max-width: 640px; margin: 10px 0; font-size: clamp(32px,4vw,49px); line-height: .98; letter-spacing: -.05em; }
 .creator-section > header p { max-width: 580px; margin: 0; color: var(--p-muted); line-height: 1.55; }
+/* Must come after the base header rules above - same specificity, so
+   source order decides the winner. */
+.creator-section--fill > header h1 { font-size: 32px; }
+.creator-section--fill > header p { font-size: 15px; line-height: 1.5; }
 .creator-photo { padding: 18px; display: flex; align-items: center; gap: 16px; border-radius: 9px; background: var(--p-ice); }
 .creator-photo > div:first-child { width: 72px; height: 72px; flex: 0 0 auto; display: grid; place-items: center; overflow: hidden; border-radius: 9px; background: var(--p-navy); color: white; font-size: 20px; font-weight: 900; }
 .creator-photo img { width: 100%; height: 100%; object-fit: cover; }
@@ -206,14 +288,28 @@
 .creator-save-error { margin: 0 auto 0 0; color: #b42318; font-size: 12px; font-weight: 700; }
 .creator-preview { position: sticky; top: 100px; padding: 20px; border-radius: 12px; background: var(--p-sky); }
 .creator-preview-head { margin-bottom: 12px; display: flex; justify-content: space-between; color: var(--p-muted); font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.creator-preview .creator-publish-state {
+  min-height: 0;
+  margin-bottom: 14px;
+  padding: 7px 10px;
+  column-gap: 6px;
+  border-radius: 7px;
+}
+/* One line only here, not a title+description pair - span is the entire
+   message (see the JSX), so this only needs to size the text and the dot,
+   not lay out two stacked/aligned pieces. */
+.creator-preview .creator-publish-state span { font-size: 11px; }
+.creator-preview .creator-publish-state.is-dirty span::before { width: 6px; height: 6px; margin-right: 6px; }
+.creator-preview .creator-publish-state.is-published svg { width: 15px; height: 15px; }
+/* .is-published normally matches this panel's own background (--p-sky) -
+   give it a white card so it doesn't disappear once nested here. */
+.creator-preview .creator-publish-state.is-published { background: #ffffff; }
 .theme-panel { padding: 22px; border-radius: 9px; background: var(--p-ice); }
 .theme-panel h2 { margin: 0 0 4px; font-size: 18px; }
 .theme-panel > p { margin: 0; color: var(--p-muted); font-size: 12px; }
 .theme-swatches { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 11px; }
 .theme-swatches button { width: 38px; height: 38px; border: 3px solid white; border-radius: 7px; box-shadow: 0 0 0 1px var(--p-line); cursor: pointer; display: grid; place-items: center; }
 .theme-swatches button.selected { box-shadow: 0 0 0 3px var(--p-navy); }
-.layout-choice { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-radius: 9px; background: white; box-shadow: inset 0 0 0 2px var(--p-blue); }
-.layout-choice p { margin: 5px 0 0; color: var(--p-muted); font-size: 12px; }
 .creator-note { padding: 16px; display: flex; gap: 12px; border-radius: 8px; background: var(--p-sky); }
 .creator-note p { margin: 0; color: var(--p-muted); font-size: 12px; line-height: 1.5; }
 .method-list { display: grid; gap: 8px; }
@@ -232,34 +328,69 @@
 .method-inline-fields { padding: 20px; display: grid; gap: 18px; }
 .method-inline-fields > div:last-child > p { margin: 0 0 8px; color: var(--p-muted); font-size: 11px; font-weight: 700; }
 .method-inline-editor > footer { min-height: 0; padding: 14px 20px; display: flex; grid-template-columns: none; align-items: center; justify-content: flex-end; gap: 8px; border-top: 1px solid rgba(22,51,0,.1); background: rgba(255,255,255,.55); color: var(--p-navy); }
-.method-library { padding: 20px; border-radius: 9px; background: white; box-shadow: inset 0 0 0 1px var(--p-line); }
-.method-library h2 { margin: 0 0 14px; font-size: 18px; }
-.method-category + .method-category { margin-top: 18px; }
-.method-category h3 { margin: 0 0 8px; color: var(--p-muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
-.method-category > div { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
-.method-category button { min-height: 78px; padding: 12px; display: grid; grid-template-columns: 1fr auto; grid-template-rows: 1fr auto; border: 0; border-radius: 7px; background: var(--p-ice); color: var(--p-navy); text-align: left; cursor: pointer; }
-.method-library button:hover { background: var(--p-sky); }
-.method-library button > svg:first-child { grid-column: 1; }
-.method-library button > svg:last-child { grid-column: 2; grid-row: 1; }
-.method-library button span { grid-column: 1 / 3; align-self: end; font-size: 11px; font-weight: 800; }
-.preview-methods { margin-top: 22px; display: grid; gap: 9px; }
-.preview-methods > div, .preview-methods > a { padding: 4px; display: grid; grid-template-columns: 42px 1fr; gap: 10px; align-items: center; border-radius: 8px; color: inherit; text-decoration: none; }
-.preview-methods > a:hover { background: var(--p-ice); }
-.preview-methods > a:focus-visible { outline: 3px solid rgba(159,232,112,.65); outline-offset: 2px; }
-.preview-methods > div > span, .preview-methods > a > span { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; color: var(--p-navy); }
+.method-library { padding: 20px; border: 1px solid var(--p-line); border-radius: 12px; background: linear-gradient(145deg, #fff 0%, #f7f9f5 100%); box-shadow: 0 8px 24px rgba(22,51,0,.06); }
+.method-library-heading { margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+.method-library-heading > span { width: 40px; height: 40px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 10px; background: rgba(159,232,112,.32); color: var(--p-navy); }
+.method-library-heading h2 { margin: 0; font-size: 18px; letter-spacing: -.02em; }
+.method-library-heading p { margin: 3px 0 0; color: var(--p-muted); font-size: 11px; line-height: 1.4; }
+.method-category + .method-category { margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(22,51,0,.08); }
+.method-category h3 { margin: 0 0 9px; color: var(--p-muted); font-size: 9px; font-weight: 850; text-transform: uppercase; letter-spacing: .1em; }
+.method-category > div { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.method-category button { position: relative; min-width: 0; min-height: 82px; padding: 11px; display: grid; grid-template-columns: 34px 1fr; grid-template-rows: 34px auto; align-items: center; gap: 7px; border: 1px solid rgba(22,51,0,.08); border-radius: 9px; background: white; color: var(--p-navy); text-align: left; box-shadow: 0 2px 8px rgba(22,51,0,.035); cursor: pointer; transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease, background .14s ease; }
+.method-category button:hover { border-color: rgba(94,154,48,.35); background: #fbfff8; box-shadow: 0 7px 17px rgba(22,51,0,.09); transform: translateY(-1px); }
+.method-category button:focus-visible { outline: 3px solid rgba(159,232,112,.58); outline-offset: 2px; }
+.method-library-icon { position: relative; isolation: isolate; width: 34px; height: 34px; display: grid; grid-column: 1; grid-row: 1; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, currentColor 30%, white); border-radius: 50%; background: rgba(255,255,255,.56); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 5px 14px color-mix(in srgb, currentColor 14%, transparent); backdrop-filter: blur(8px) saturate(1.25); }
+.method-library-icon::before, .preview-methods > button > span::before { content: ""; position: absolute; z-index: 0; inset: 1px; border-radius: inherit; background: linear-gradient(145deg, rgba(255,255,255,.72) 0%, rgba(255,255,255,.12) 50%, rgba(255,255,255,0) 70%); pointer-events: none; }
+.method-library-icon::after, .preview-methods > button > span::after { content: ""; position: absolute; z-index: 0; right: 4px; bottom: 3px; width: 30%; height: 30%; border-radius: 50%; background: currentColor; opacity: .08; filter: blur(3px); pointer-events: none; }
+.method-library-icon > svg, .preview-methods > button > span > svg { position: relative; z-index: 1; filter: drop-shadow(0 1px 2px color-mix(in srgb, currentColor 24%, transparent)); }
+.method-category button > svg:last-child { width: 20px; height: 20px; padding: 4px; grid-column: 2; grid-row: 1; justify-self: end; border-radius: 50%; background: var(--p-ice); color: var(--p-muted); }
+.method-library-label { min-width: 0; grid-column: 1 / 3; grid-row: 2; overflow: hidden; font-size: 11px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.preview-method-editor { margin: 18px 0; padding: 12px; display: grid; border-radius: 10px; background: #f3f4f2; }
+.preview-method-editor-content { min-width: 0; display: grid; gap: 7px; }
+.preview-method-suggestions { margin: -4px; padding: 4px; display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scroll-snap-type: inline proximity; scrollbar-width: none; touch-action: pan-x; }
+.preview-method-suggestions::-webkit-scrollbar { display: none; }
+.preview-method-suggestions button { flex: 0 0 auto; min-height: 25px; padding: 3px 10px; border: 1px solid #dfe2dc; border-radius: 999px; background: #f8f9f7; color: #777b75; font-size: 10px; font-weight: 650; white-space: nowrap; scroll-snap-align: start; cursor: pointer; }
+.preview-method-suggestions button[aria-pressed="true"] { border-color: #72db79; background: #effff1; color: #176526; }
+.preview-method-editor-content > input { width: 100%; height: 38px; min-width: 0; padding: 0 12px; border: 1px solid #edf0eb; border-radius: 7px; background: white; color: var(--p-navy); font: inherit; font-size: 13px; outline: none; }
+.preview-method-editor-content > input::placeholder { color: #858985; }
+.preview-method-editor-content > input:focus { border-color: #8ea785; box-shadow: 0 0 0 3px rgba(159,232,112,.28); }
+.preview-method-error { color: #b42318; font-size: 10px; font-weight: 700; }
+.preview-method-mini-actions { justify-self: end; display: flex; align-items: center; gap: 2px; }
+.preview-method-cancel, .preview-method-delete, .preview-method-save { min-height: 24px; padding: 2px 7px; border: 0; border-radius: 5px; background: transparent; color: var(--p-muted); font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+.preview-method-cancel:hover { background: rgba(22,51,0,.07); color: var(--p-navy); }
+.preview-method-delete { color: #a1281d; }
+.preview-method-delete:hover { background: #fff0ed; color: #8f1f16; }
+.preview-method-save { min-width: 46px; background: #e9ece7; color: var(--p-navy); }
+.preview-method-save:hover { background: #dde2da; }
+.preview-method-cancel:focus-visible, .preview-method-delete:focus-visible, .preview-method-save:focus-visible { outline: 2px solid rgba(159,232,112,.7); outline-offset: 1px; }
+.preview-methods { margin-top: 18px; display: grid; gap: 8px; }
+.preview-methods > button { position: relative; width: 100%; min-height: 64px; padding: 9px 11px; display: grid; grid-template-columns: 42px minmax(0, 1fr) 24px; gap: 10px; align-items: center; border: 1px solid #e7ebe4; border-radius: 14px; background: rgba(248,250,247,.9); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: padding-left .14s ease, background .14s ease, border-color .14s ease, box-shadow .14s ease; }
+.preview-methods > button:hover, .preview-methods > button:focus-visible { padding-left: 38px; background: var(--p-sky); }
+.preview-methods > button:focus-visible { outline: 3px solid rgba(159,232,112,.65); outline-offset: 2px; }
+.preview-method-grip { position: absolute; left: 11px; top: 50%; width: 7px; height: 18px; background-image: radial-gradient(circle, #696d68 1.5px, transparent 1.7px); background-position: 0 0; background-size: 5px 6px; opacity: 0; transform: translateY(-50%); transition: opacity .14s ease; }
+.preview-methods > button:hover .preview-method-grip, .preview-methods > button:focus-visible .preview-method-grip { opacity: .8; }
+.preview-methods > button > span { position: relative; isolation: isolate; width: 42px; height: 42px; display: grid; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, currentColor 30%, white); border-radius: 50%; background: rgba(255,255,255,.58); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 6px 16px color-mix(in srgb, currentColor 14%, transparent); backdrop-filter: blur(8px) saturate(1.25); }
+.preview-methods > button > svg:last-child { color: var(--p-muted); opacity: 0; transition: opacity .14s ease; }
+.preview-methods > button:hover > svg:last-child, .preview-methods > button:focus-visible > svg:last-child { opacity: 1; }
 .preview-methods p { min-width: 0; margin: 0; display: grid; gap: 2px; }
-.preview-methods strong { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
-.preview-methods small { color: var(--p-muted); overflow-wrap: anywhere; }
+.preview-methods strong { overflow: hidden; font-size: 13px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.preview-methods small { overflow: hidden; color: var(--p-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .review-list { display: grid; gap: 9px; }
 .review-list > div { padding: 17px; display: grid; grid-template-columns: 28px 1fr auto; gap: 11px; align-items: center; border-radius: 8px; background: var(--p-ice); }
 .review-list > div > svg { color: var(--p-navy); }
 .review-list span { display: grid; gap: 3px; }
 .review-list small { color: var(--p-muted); }
 .review-list button { border: 0; background: transparent; color: var(--p-navy); font-weight: 800; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-.company-visibility-option { padding: 17px; display: flex; align-items: center; justify-content: space-between; gap: 18px; border-radius: 8px; background: white; box-shadow: inset 0 0 0 1px var(--p-line); }
-.company-visibility-option > span { display: grid; gap: 4px; }
-.company-visibility-option strong { color: var(--p-navy); font-size: 15px; }
-.company-visibility-option small { color: var(--p-muted); line-height: 1.45; }
+.company-visibility-option { padding: 18px; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 14px; border: 1px solid var(--p-line); border-radius: 12px; background: linear-gradient(135deg, #fff 0%, #f8faf7 100%); box-shadow: 0 7px 22px rgba(22,51,0,.06); transition: border-color .16s ease, box-shadow .16s ease; }
+.company-visibility-option.is-enabled { border-color: rgba(94,154,48,.34); box-shadow: 0 8px 24px rgba(22,51,0,.08), inset 3px 0 0 var(--p-lime); }
+.company-option-icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px; background: #e5e8e3; color: #777d74; }
+.company-visibility-option.is-enabled .company-option-icon { background: rgba(159,232,112,.34); }
+.company-option-copy { min-width: 0; }
+.company-option-copy > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.company-option-copy strong { color: var(--p-navy); font-size: 15px; }
+.company-option-copy > div > span { padding: 3px 7px; border-radius: 999px; background: var(--p-ice); color: var(--p-muted); font-size: 9px; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
+.company-visibility-option.is-enabled .company-option-copy > div > span { background: rgba(159,232,112,.28); color: #315f17; }
+.company-option-copy p { margin: 5px 0 0; max-width: 520px; color: var(--p-muted); font-size: 12px; line-height: 1.5; }
 .company-switch { position: relative; flex: 0 0 auto; width: 46px; height: 28px; padding: 3px; border: 0; border-radius: 999px; background: var(--p-line); cursor: pointer; transition: background .16s ease; }
 .company-switch > span { display: block; width: 22px; height: 22px; border-radius: 50%; background: white; box-shadow: 0 1px 4px rgba(22,51,0,.18); transition: transform .16s ease; }
 .company-switch.is-on { background: var(--p-lime); }
@@ -293,7 +424,7 @@
   .notification-popover { position: fixed; top: 60px; left: 12px; right: 12px; width: auto; max-height: calc(100vh - 76px); }
   .product-content { padding: 36px 18px 56px; }
   .product-page-toolbar { margin-bottom: 16px; }
-  .product-shell:has(.consumer-sidebar) .product-page-toolbar { top: 12px; left: 18px; right: 18px; }
+  .product-shell:has(.consumer-sidebar) .product-page-toolbar { margin-bottom: 20px; }
   .welcome, .builder-grid { grid-template-columns: 1fr; }
   .completion { margin-top: 15px; }
   .preview-column { min-height: 0; padding: 18px; }
@@ -302,6 +433,10 @@
   .creator-layout { grid-template-columns: 1fr; }
   .creator-preview { position: static; grid-row: 1; }
   .creator-section { min-height: 0; }
+  .creator-layout--fill { margin-top: 24px; height: auto; }
+  .creator-workspace--fill { display: block; }
+  .creator-section--fill { overflow-y: visible; }
+  .card-flow-skeleton { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 520px) {
@@ -422,6 +557,18 @@
 .loading-skeleton-heading { width: min(360px, 60%); height: 38px; margin-bottom: 4px; }
 .loading-skeleton-rows { display: grid; gap: 10px; }
 .loading-skeleton-row { width: 100%; min-height: 64px; border-radius: 10px; }
+.card-flow-skeleton { display: grid; grid-template-columns: minmax(260px,.82fr) minmax(360px,1.18fr); gap: 24px; align-items: start; }
+.card-flow-skeleton > section { overflow: hidden; border-radius: 12px; background: white; box-shadow: 0 10px 30px rgba(22,51,0,.05); }
+.card-flow-skeleton-preview { padding: 0 24px 28px; }
+.card-flow-skeleton-cover { width: calc(100% + 48px); height: 150px; margin-left: -24px; border-radius: 0; }
+.card-flow-skeleton-avatar { width: 78px; height: 78px; margin-top: -39px; border: 4px solid white; border-radius: 50%; }
+.card-flow-skeleton-name { width: 48%; height: 32px; margin-top: 18px; }
+.card-flow-skeleton-line { width: 72%; height: 15px; margin-top: 12px; }
+.card-flow-skeleton-line.short { width: 54%; }
+.card-flow-skeleton-panel { padding: clamp(24px,4vw,42px); display: grid; gap: 18px; }
+.card-flow-skeleton-title { width: 44%; height: 32px; }
+.card-flow-skeleton-block { width: 100%; height: 82px; border-radius: 11px; }
+.card-flow-skeleton-block.tall { height: 180px; }
 @keyframes skeleton-shimmer { to { transform: translateX(100%); } }
 
 @media (prefers-reduced-motion: reduce) { .button-spinner, .skeleton::after { animation-duration: 2s; } }
@@ -491,5 +638,12 @@
   border-color: #163300;
   box-shadow: 0 0 0 4px rgba(174, 184, 170, 0.45);
 }
+.phone-field-inline { grid-template-columns: minmax(92px, 30%) 1fr; gap: 8px; }
+.phone-field-inline .phone-field-country,
+.phone-field-inline input { min-height: 44px; height: 44px; border-color: transparent; border-radius: 8px; background: #f2f5f0; }
+.phone-field-inline .phone-field-country:hover,
+.phone-field-inline input:hover { background: #edf1ea; }
+.phone-field-inline .phone-field-country:focus-within,
+.phone-field-inline input:focus { border-color: #9fbe8c; background: white; box-shadow: 0 0 0 4px #dff2d3; }
 
 @media (max-width: 700px) { .skeleton-grid { grid-template-columns: 1fr; } }

@@ -22,6 +22,16 @@ function isLibraryCard(value: unknown): value is LibraryCard {
   return typeof card.id === "string" && typeof card.slug === "string" && typeof card.name === "string";
 }
 
+function hasTooManyMethodsOfOneType(methods: LibraryCard["methods"]) {
+  const counts = new Map<string, number>();
+  for (const method of methods) {
+    const count = (counts.get(method.type) ?? 0) + 1;
+    if (count > 3) return true;
+    counts.set(method.type, count);
+  }
+  return false;
+}
+
 async function findExistingCard(
   supabase: Awaited<ReturnType<typeof createApiSupabaseClient>>,
   workspaceId: string,
@@ -144,17 +154,18 @@ export async function DELETE(request: Request) {
 export async function POST(request: Request) {
   const user = await resolveApiUser(request);
   if (!user) return NextResponse.json({ error: "Your session has expired." }, { status: 401 });
-  if (user.id === "local-development-preview") {
-    const body = await request.json().catch(() => null) as LibraryCard | null;
-    return NextResponse.json({ card: body, preview: true }, { headers: { "Cache-Control": "private, no-store" } });
-  }
-
   const body = await request.json().catch(() => null);
   if (!isLibraryCard(body)) {
     return NextResponse.json({ error: "A valid card is required." }, { status: 400 });
   }
   if (!slugPattern.test(body.slug.trim()) || body.name.trim().length < 2 || !themePattern.test(body.theme)) {
     return NextResponse.json({ error: "Complete the card name, slug, and theme before saving." }, { status: 400 });
+  }
+  if (!Array.isArray(body.methods) || hasTooManyMethodsOfOneType(body.methods)) {
+    return NextResponse.json({ error: "You can add each contact method up to three times." }, { status: 400 });
+  }
+  if (user.id === "local-development-preview") {
+    return NextResponse.json({ card: body, preview: true }, { headers: { "Cache-Control": "private, no-store" } });
   }
 
   const supabase = await createApiSupabaseClient(request);
@@ -247,10 +258,9 @@ export async function POST(request: Request) {
   // Replace-by-delete-then-insert, with the destructive half previously
   // unchecked. Two ways that went wrong, both quiet:
   //
-  //   delete fails, insert runs   the unique arc on (card_id, method_type)
-  //                               rejects it, and the user is told saving
-  //                               failed with no hint that the clear-out was
-  //                               the real cause
+  //   delete fails, insert runs   stale contact methods remain alongside the
+  //                               replacement set, potentially exceeding the
+  //                               per-type limit
   //   delete works, insert fails  the card is left with no contact methods at
   //                               all - published, and unreachable
   //

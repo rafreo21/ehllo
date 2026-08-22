@@ -383,10 +383,10 @@ export function AddFollowUpModal({
             </div>
 
             <div className="quick-follow-up-meta">
-              <SelectField compact label={`How will ${pronoun} follow up?`} value={channel} onChange={(event) => setChannel(event.target.value as FollowUpChannel)}>
+              <SelectField inline label={`How will ${pronoun} follow up?`} value={channel} onChange={(event) => setChannel(event.target.value as FollowUpChannel)}>
                 {SELECTABLE_FOLLOW_UP_CHANNELS.map((option) => <option value={option.id} key={option.id}>{option.label}</option>)}
               </SelectField>
-              <TextField compact label="Due date" type="date" leadingIcon={<CalendarBlankIcon size={14} />} value={dueAt} onChange={(event) => setDueAt(event.target.value)} />
+              <TextField inline label="Due date" type="date" leadingIcon={<CalendarBlankIcon size={14} />} value={dueAt} onChange={(event) => setDueAt(event.target.value)} />
             </div>
 
             <div className="quick-follow-up-detail">
@@ -401,9 +401,8 @@ export function AddFollowUpModal({
               </button>
               {detailOpen ? (
                 <TextField
-                  compact
+                  inline
                   label="Next step"
-                  hint="Shown in your reminders so you know what this one's about."
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder="e.g. Send Sarah the revised product draft"
@@ -477,8 +476,8 @@ export function AddFollowUpModal({
               className="connections-manual-form"
               onSubmit={(event) => { event.preventDefault(); saveManualPerson(); }}
             >
-              <TextField label="Full name" value={manualName} onChange={(event) => setManualName(event.target.value)} required />
-              <TextField label="Email" type="email" hint="Optional" value={manualEmail} onChange={(event) => setManualEmail(event.target.value)} />
+              <TextField inline label="Full name" value={manualName} onChange={(event) => setManualName(event.target.value)} required />
+              <TextField inline label="Email address (optional)" type="email" value={manualEmail} onChange={(event) => setManualEmail(event.target.value)} />
               <div className="form-actions">
                 <Button type="button" variant="ghost" onClick={() => setManualOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={!manualName.trim()}>Add person</Button>

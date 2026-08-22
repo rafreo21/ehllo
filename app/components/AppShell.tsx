@@ -55,7 +55,7 @@ export function AppShell({ children }: AppShellProps) {
   const user = useAppUser();
   const pathname = usePathname();
   const active = deriveActive(pathname);
-  const { backHref, backLabel = "Back", actions, requestNavigation } = useAppShellChromeValue();
+  const { backHref, backLabel = "Back", leading, actions, requestNavigation } = useAppShellChromeValue();
   const [mobileNav, setMobileNav] = useState(false);
   const [actionableCount, setActionableCount] = useState(0);
   const updateActionableCount = useCallback((count: number) => setActionableCount(count), []);
@@ -163,23 +163,26 @@ export function AppShell({ children }: AppShellProps) {
           <span className="mobile-logo">ehllo</span>
         </header>
         <div className="product-content">
-          {backHref || actions ? (
+          {backHref || leading || actions ? (
             <div className="product-page-toolbar">
-              {backHref ? (
-                <LinkButton
-                  size="small"
-                  variant="ghost"
-                  href={backHref}
-                  className="product-page-back"
-                  onClick={(event) => {
-                    navigateWithPrompt(event, backHref, () => {
-                      window.location.href = backHref;
-                    });
-                  }}
-                >
-                  <ArrowLeftIcon size={16} />{backLabel}
-                </LinkButton>
-              ) : <span />}
+              <div className="product-page-leading">
+                {backHref ? (
+                  <LinkButton
+                    size="small"
+                    variant="ghost"
+                    href={backHref}
+                    className="product-page-back"
+                    onClick={(event) => {
+                      navigateWithPrompt(event, backHref, () => {
+                        window.location.href = backHref;
+                      });
+                    }}
+                  >
+                    <ArrowLeftIcon size={16} />{backLabel}
+                  </LinkButton>
+                ) : null}
+                {leading}
+              </div>
               {actions ? <div className="product-page-actions">{actions}</div> : null}
             </div>
           ) : null}

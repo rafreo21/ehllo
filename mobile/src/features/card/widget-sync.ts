@@ -5,7 +5,6 @@ import { showsCompanyDetails } from '@/features/card/company-display';
 import { shareCardDeepLink } from '@/features/card/share-deep-link';
 import type { MobileCard } from '@/features/card/types';
 import type { WidgetCardPayload, WidgetConnection, WidgetSnapshot } from '@/features/card/widget-types';
-import { WIDGET_DEMO_CARD } from '@/features/card/widget-types';
 import { cacheWidgetPhotoUri, ensureWidgetLogoUri, readUriAsBase64 } from '@/lib/widget-assets';
 import { readEnv } from '@/lib/env';
 import { buildWidgetQrFileUri } from '@/lib/widget-qr';
@@ -32,15 +31,57 @@ function widgetAssetKey(card: MobileCard, index: number) {
   return card.id || card.slug || `card-${index}`;
 }
 
+// "Connected 2 mins ago" rather than "Shared via your card" - the widget's job is to show who
+// you met and how recently, and the old subtitle said the same thing on every row.
+function connectedAgo(connectedAt?: string) {
+  if (!connectedAt) return 'Connected through ehllo';
+  const then = Date.parse(connectedAt);
+  if (!Number.isFinite(then)) return 'Connected through ehllo';
+  const minutes = Math.floor((Date.now() - then) / 60000);
+  if (minutes < 1) return 'Connected just now';
+  if (minutes < 60) return `Connected ${minutes} min${minutes === 1 ? '' : 's'} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Connected ${hours} hour${hours === 1 ? '' : 's'} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `Connected ${days} day${days === 1 ? '' : 's'} ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 5) return `Connected ${weeks} week${weeks === 1 ? '' : 's'} ago`;
+  const months = Math.floor(days / 30);
+  return `Connected ${months} month${months === 1 ? '' : 's'} ago`;
+}
+
+// Two, not three: the layout has room for two rows plus an action, and every extra row costs a
+// photo download and a cache write for something that would not be drawn.
 async function loadRecentConnections(accessToken?: string): Promise<WidgetConnection[]> {
   if (!accessToken) return [];
   try {
     const connections = await fetchAllConnections(accessToken);
-    return connections.slice(0, 3).map((connection) => ({
-      name: connection.name,
-      subtitle: connection.subtitle,
-      phone: connection.phone,
-      email: connection.email,
+    return await Promise.all(connections.slice(0, 2).map(async (connection, index) => {
+      let photoImageUri: string | undefined;
+      let photoImageBase64: string | undefined;
+      if (connection.photoUrl?.trim()) {
+        try {
+          const cached = await cacheWidgetPhotoUri(connection.photoUrl, `connection-${connection.id || index}`);
+          if (cached) {
+            photoImageUri = cached;
+            if (Platform.OS === 'android') photoImageBase64 = await readUriAsBase64(cached);
+          }
+        } catch {
+          // A missing avatar falls back to the initials circle, which is a real design state
+          // rather than a failure - so this is not worth failing the whole sync over.
+          photoImageUri = undefined;
+          photoImageBase64 = undefined;
+        }
+      }
+      return {
+        name: connection.name,
+        subtitle: connectedAgo(connection.connectedAt),
+        phone: connection.phone,
+        email: connection.email,
+        initials: initialsFor(connection.name),
+        photoImageUri,
+        photoImageBase64,
+      };
     }));
   } catch {
     return [];
@@ -108,11 +149,20 @@ export async function buildWidgetSnapshot(
 ): Promise<WidgetSnapshot> {
   const env = readEnv();
   const published = cards.filter((card) => card.status === 'published' && card.slug);
-  const cardTargets = published.length
-    ? published
-    : preferredCard
-      ? [preferredCard]
-      : cards.slice(0, 1);
+  // The widget shows exactly one card: the one set as primary in the card home. It used to
+  // send every published card so the widget could page between them, and took whichever one
+  // happened to be first in the array as the headline - which is not necessarily the primary
+  // one. There is no pager any more, so "primary" is the whole answer.
+  //
+  // preferredCard is only a hint: card-context passes the primary, but the card tools screen
+  // passes whatever card you are looking at, so it must not outrank an explicit isPrimary.
+  // Only a PUBLISHED PRIMARY card renders. No falling back to the first published card, to a
+  // primary draft, or to whatever the card tools screen happened to pass: if there is no
+  // published primary card there is nothing legitimate to put on a home screen, and the widget
+  // shows its placeholder state instead of somebody else's card or an unpublished draft whose
+  // QR would lead nowhere.
+  const target = published.find((card) => card.isPrimary);
+  const cardTargets = target ? [target] : [];
 
   let logoImageUri: string | undefined;
   let logoImageBase64: string | undefined;
@@ -164,29 +214,26 @@ function bridgePayload(snapshot: WidgetSnapshot): Record<string, string | undefi
     signedIn: snapshot.signedIn ? '1' : '0',
   };
 
-  snapshot.connections.slice(0, 3).forEach((connection, index) => {
+  snapshot.connections.slice(0, 2).forEach((connection, index) => {
     const slot = index + 1;
     payload[`connection${slot}Name`] = connection.name;
     payload[`connection${slot}Subtitle`] = connection.subtitle;
     payload[`connection${slot}Phone`] = connection.phone;
     payload[`connection${slot}Email`] = connection.email;
+    payload[`connection${slot}Initials`] = connection.initials;
+    payload[`connection${slot}PhotoBase64`] = connection.photoImageBase64;
   });
 
   return payload;
 }
 
-async function ensureDemoCardQr(cards: WidgetCardPayload[]) {
-  if (cards.length) return cards;
-  try {
-    const demoQrUri = await buildWidgetQrFileUri(WIDGET_DEMO_CARD.cardUrl, 'demo');
-    return [{ ...WIDGET_DEMO_CARD, qrImageUri: demoQrUri }];
-  } catch {
-    return [WIDGET_DEMO_CARD];
-  }
-}
-
+// No demo card is substituted any more. A snapshot with no cards means there is no published
+// primary card, and the widget has a placeholder state for exactly that - so filling the gap
+// with Alex Morgan's details here would hide the state the widget is meant to show, and put a
+// QR pointing at a demo page on a real home screen. The widget gallery reaches the widget with
+// no snapshot at all, which is a different path and still shows sample content.
 function iosWidgetPayload(snapshot: WidgetSnapshot): IosWidgetPayload {
-  const cards = snapshot.cards.length ? snapshot.cards : [WIDGET_DEMO_CARD];
+  const cards = snapshot.cards;
   const primary = cards[0];
 
   const payload: IosWidgetPayload = {
@@ -194,24 +241,28 @@ function iosWidgetPayload(snapshot: WidgetSnapshot): IosWidgetPayload {
     cardIndex: 0,
     logoImageUri: snapshot.logoImageUri,
     connectionsDeepLink: snapshot.connectionsDeepLink,
-    shareDeepLink: primary?.shareDeepLink || WIDGET_DEMO_CARD.shareDeepLink,
+    shareDeepLink: primary?.shareDeepLink || 'ehllo://share-card',
     qrImageUri: primary?.qrImageUri || snapshot.qrImageUri,
-    name: primary?.name || WIDGET_DEMO_CARD.name,
-    role: primary?.role || WIDGET_DEMO_CARD.role,
-    company: primary?.company || WIDGET_DEMO_CARD.company,
-    initials: primary?.initials || WIDGET_DEMO_CARD.initials,
+    // Empty rather than demo text, so the widget can tell "no published primary card" apart
+    // from a card that simply has no role or company set.
+    name: primary?.name || '',
+    role: primary?.role || '',
+    company: primary?.company || '',
+    initials: primary?.initials || '',
     photoImageUri: primary?.photoImageUri,
     // Crosses as a string because the bridge carries strings and numbers, not booleans. Its
-    // absence means the widget gallery, where the demo card is the right thing to show.
+    // absence means the widget gallery, where sample content is the right thing to show.
     signedIn: snapshot.signedIn ? '1' : '0',
   };
 
-  snapshot.connections.slice(0, 3).forEach((connection, index) => {
+  snapshot.connections.slice(0, 2).forEach((connection, index) => {
     const slot = index + 1;
     payload[`connection${slot}Name`] = connection.name;
     payload[`connection${slot}Subtitle`] = connection.subtitle;
     payload[`connection${slot}Phone`] = connection.phone || '';
     payload[`connection${slot}Email`] = connection.email || '';
+    payload[`connection${slot}Initials`] = connection.initials || '';
+    payload[`connection${slot}PhotoUri`] = connection.photoImageUri || '';
   });
 
   return payload;
@@ -253,8 +304,7 @@ async function updateIosWidgets(snapshot: WidgetSnapshot) {
   }
 
   // Anything below here is a real failure and is allowed to say so.
-  const cards = await ensureDemoCardQr(snapshot.cards);
-  const payload = iosWidgetPayload({ ...snapshot, cards });
+  const payload = iosWidgetPayload(snapshot);
 
   qrScan.updateSnapshot(payload);
   businessCard.updateSnapshot(payload);
@@ -328,8 +378,10 @@ export async function updateQuickShareWidget(
 }
 
 export function widgetSetupInstructions(platform: 'ios' | 'android') {
+  // Just the path to the widget picker. The three widgets are named and pictured in the
+  // gallery directly below this line, so listing them here said everything twice.
   if (platform === 'android') {
-    return 'Long-press your home screen → Widgets → ehllo. Add QR Scan (2×2), Business Card, or Recent Connections. Swipe cards with ‹ › on the business card widget.';
+    return 'Long-press the home screen → Widgets → ehllo.';
   }
-  return 'Long-press your home screen → Edit → Add Widget → ehllo. Add QR Scan, Business Card, or Recent Connections. Use ‹ › on the business card widget to switch cards.';
+  return 'Long-press the home screen → Edit → Add Widget → ehllo.';
 }

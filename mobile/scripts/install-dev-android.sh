@@ -6,6 +6,12 @@ export JAVA_HOME="${JAVA_HOME:-/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
 
+# This is a local build on a developer's machine: there is no Sentry auth token here, and
+# uploading source maps for a throwaway APK is pointless anyway. Without this the whole
+# release build fails at the very last step with "Auth token is required", after ~25 minutes
+# of compiling. Overridable, so CI can still upload.
+export SENTRY_DISABLE_AUTO_UPLOAD="${SENTRY_DISABLE_AUTO_UPLOAD:-true}"
+
 export APP_VARIANT="${APP_VARIANT:-production}"
 if [[ "$APP_VARIANT" == "staging" ]]; then
   PACKAGE="com.ehllo.app.staging"

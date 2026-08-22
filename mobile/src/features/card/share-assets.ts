@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as Sharing from 'expo-sharing';
 
 import { readEnv } from '@/lib/env';
@@ -17,7 +18,7 @@ export async function downloadShareAsset(
   slug: string,
   type: ShareAssetType,
   accessToken: string,
-  options?: { themeColor?: string },
+  options?: { themeColor?: string; mirrored?: boolean },
 ) {
   const env = readEnv();
   if (!env) throw new Error('App configuration is missing.');
@@ -26,8 +27,13 @@ export async function downloadShareAsset(
   if (options?.themeColor?.trim()) {
     params.set('themeColor', options.themeColor.trim());
   }
+  // Virtual backgrounds only. Pre-mirrors the frame so it reads correctly in your own
+  // self-view in Meet, Zoom and Teams - at the cost of participants seeing it reversed and
+  // being unable to scan the QR.
+  const mirrored = type === 'virtual-background' && Boolean(options?.mirrored);
+  if (mirrored) params.set('mirrored', '1');
   const url = `${env.publicCardBaseUrl}/api/mobile/share-assets/${encodeURIComponent(slug)}?${params.toString()}`;
-  const filename = `ehllo-${type}-${slug}.${assetExtension(type)}`;
+  const filename = `ehllo-${type}-${slug}${mirrored ? '-mirrored' : ''}.${assetExtension(type)}`;
   const path = `${FileSystem.cacheDirectory}${filename}`;
 
   const download = await FileSystem.downloadAsync(url, path, {
@@ -56,16 +62,33 @@ export async function downloadShareAsset(
     throw new Error('The downloaded image looks incomplete. Try again after publishing your card.');
   }
 
-  if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(download.uri, {
-      mimeType: assetMimeType(type),
-      dialogTitle: type === 'virtual-background' ? 'Virtual background' : 'Smart watch QR',
-      UTI: type === 'virtual-background' ? 'public.jpeg' : 'public.png',
-    });
-    return download.uri;
+  // Flipped here rather than server-side. The app fetches from the DEPLOYED api
+  // (publicCardBaseUrl), so a ?mirrored=1 the server does not yet understand is silently
+  // ignored and you get the normal image back with no error - which is why the mirrored button
+  // appeared to do nothing. Doing it on the device removes that dependency entirely: it works
+  // against any deploy, old or new.
+  let shareUri = download.uri;
+  if (mirrored) {
+    const context = ImageManipulator.manipulate(download.uri);
+    context.flip('horizontal');
+    const rendered = await context.renderAsync();
+    const flipped = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.92 });
+    if (!flipped?.uri) throw new Error('The background could not be mirrored.');
+    shareUri = flipped.uri;
   }
 
-  return download.uri;
+  if (await Sharing.isAvailableAsync()) {
+    await Sharing.shareAsync(shareUri, {
+      mimeType: assetMimeType(type),
+      dialogTitle: type === 'virtual-background'
+        ? (mirrored ? 'Virtual background (mirrored)' : 'Virtual background')
+        : 'Smart watch QR',
+      UTI: type === 'virtual-background' ? 'public.jpeg' : 'public.png',
+    });
+    return shareUri;
+  }
+
+  return shareUri;
 }
 
 export function watchSetupInstructions(platform: 'ios' | 'android') {
@@ -76,5 +99,5 @@ export function watchSetupInstructions(platform: 'ios' | 'android') {
 }
 
 export function virtualBackgroundInstructions() {
-  return 'Downloads a 1920×1080 JPG for Zoom, Google Meet, and Teams. Uses your card color and is laid out for mirrored self-view in those apps.';
+  return 'A mirrored 1920×1080 JPG for Zoom, Google Meet, and Teams, in your card colour. Those apps mirror your self-view, so this reads correctly on your own screen — participants see it reversed, and the QR will not scan for them.';
 }

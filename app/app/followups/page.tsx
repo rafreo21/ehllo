@@ -16,10 +16,11 @@ import { PageSkeleton, StatusMessage } from "../../components/AsyncState";
 import { Button, LinkButton } from "../../components/Button";
 import { CaptureComingSoonModal } from "../../components/CaptureComingSoonModal";
 import { FollowUpDetailDrawer } from "../../components/FollowUpDetailDrawer";
+import { InlineEditField } from "../../components/InlineEditField";
 import { useToast } from "../../components/ToastContext";
 import { channelLabel } from "../../../lib/action-links";
 import { hydrateContactsFromServer } from "../../../lib/contacts-sync";
-import { readEncounters, updateEncounter, type Encounter, type EncounterAction } from "../../../lib/encounters";
+import { encounterToApiBody, readEncounters, updateEncounter, type Encounter, type EncounterAction } from "../../../lib/encounters";
 import { isFollowUpTerminal } from "../../../lib/follow-up-lifecycle";
 import { hydrateEncountersFromServer } from "../../../lib/encounters-sync";
 import { recordCompletedAction } from "../../../lib/outbound-habit";
@@ -372,6 +373,27 @@ export default function FollowupsPage() {
     }
   }
 
+  function updateActionInline(encounterId: string, actionId: string, patch: Partial<EncounterAction>) {
+    const updated = updateEncounter(encounterId, (encounter) => ({
+      ...encounter,
+      actions: encounter.actions.map((action) => action.id === actionId ? { ...action, ...patch } : action),
+    }));
+    const action = updated?.actions.find((item) => item.id === actionId);
+    if (action) void patchAction(encounterId, action);
+    setEncounters(readEncounters());
+  }
+
+  function updatePersonInline(encounterId: string, personName: string) {
+    const updated = updateEncounter(encounterId, (encounter) => ({ ...encounter, personName }));
+    if (!updated) return;
+    setEncounters(readEncounters());
+    void fetch("/api/encounters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(encounterToApiBody(updated)),
+    }).catch(() => undefined);
+  }
+
   return (
     <>
       <div className="flow-page">
@@ -514,11 +536,35 @@ export default function FollowupsPage() {
                           ) : null}
                         </td>
                         <td data-label="Channel"><span className="inbox-channel">{channelLabel(action.channel)}</span></td>
-                        <td data-label="Follow-up" className="followup-title-cell">{action.title}</td>
-                        <td data-label="Person">{encounter.personName || "Meeting follow-ups"}</td>
+                        <td data-label="Follow-up" className="followup-title-cell">
+                          <InlineEditField
+                            key={`${action.id}-${action.title}`}
+                            defaultValue={action.title}
+                            onConfirm={(value) => updateActionInline(encounter.id, action.id, { title: value })}
+                            placeholder="Add follow-up"
+                            ariaLabel="Follow-up title"
+                          />
+                        </td>
+                        <td data-label="Person">
+                          <InlineEditField
+                            key={`${encounter.id}-${encounter.personName}`}
+                            defaultValue={encounter.personName || ""}
+                            onConfirm={(value) => updatePersonInline(encounter.id, value)}
+                            placeholder="Add person"
+                            ariaLabel="Person name"
+                          />
+                        </td>
                         <td data-label="Owner">{participantName(encounter, action)}{action.owner === "guest" ? <span className="owner-tag">Their turn</span> : null}</td>
                         <td data-label="Date added"><span className="table-date"><ClockIcon size={14} />{addedLabel(encounter.startedAt)}</span></td>
-                        <td data-label={isPast ? "Completed" : "Due"}><span className="table-date"><ClockIcon size={14} />{isPast ? completedLabel(action.completedAt) : action.dueAt || "No due date"}</span></td>
+                        <td data-label={isPast ? "Completed" : "Due"}>{isPast ? <span className="table-date"><ClockIcon size={14} />{completedLabel(action.completedAt)}</span> : (
+                          <input
+                            className="table-inline-date"
+                            type="date"
+                            aria-label={`Due date for ${action.title}`}
+                            value={action.dueAt?.slice(0, 10) || ""}
+                            onChange={(event) => updateActionInline(encounter.id, action.id, { dueAt: event.target.value })}
+                          />
+                        )}</td>
                         <td className="table-open-cell">
                           {isPast ? (
                             <Button size="small" variant="secondary" onClick={() => reopenAction(encounter.id, action.id)}>Reopen</Button>

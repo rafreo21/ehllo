@@ -96,6 +96,7 @@ export default function EditProfilePage() {
               icon={<IdentificationBadgeIcon size={18} />}
             >
               <TextField
+                inline
                 label="Full name"
                 name="displayName"
                 autoComplete="name"
@@ -104,11 +105,8 @@ export default function EditProfilePage() {
                 required
               />
 
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm font-semibold text-[#454745]">Email</span>
-                </div>
-                <div className="flex items-center gap-3">
+              <div className="account-inline-value">
+                <div className="flex min-w-0 items-center gap-3">
                   <span className="text-base text-[#0e0f0c]">{profile?.primaryEmail || "-"}</span>
                   {profile?.emailVerified ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-[#e2f6d5] px-2 py-0.5 text-xs font-bold text-[#163300]">
@@ -116,16 +114,16 @@ export default function EditProfilePage() {
                     </span>
                   ) : null}
                 </div>
-                <small className="text-xs text-[#6b7168]">Confirmed every time you sign in with an email code.</small>
+                <small>Signed-in email</small>
               </div>
 
               <div className="grid gap-2">
-                <PhoneField label="Phone number" value={phone} onChange={setPhone} />
+                <PhoneField inline label="Phone number" value={phone} onChange={setPhone} />
                 <button
                   type="button"
                   disabled={Boolean(profile?.phoneVerified)}
                   onClick={() => setVerifyNoticeOpen(true)}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-md border border-[#aeb8aa] bg-white px-4 text-sm font-bold text-[#163300] transition hover:bg-[#f2f5f0] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="account-phone-verify inline-flex min-h-9 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold text-[#163300] transition disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {profile?.phoneVerified ? <CheckCircleIcon size={18} /> : <ShieldCheckIcon size={18} />}
                   {profile?.phoneVerified ? "Verified" : "Verify"}
@@ -139,7 +137,7 @@ export default function EditProfilePage() {
             {success ? <StatusMessage tone="success">{success}</StatusMessage> : null}
             {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
 
-            <Button type="submit" loading={saving} fullWidth>Save changes</Button>
+            <Button type="submit" loading={saving} className="account-save-changes">Save changes</Button>
           </form>
         )}
 

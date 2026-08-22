@@ -233,7 +233,7 @@ export function ConnectionDrawer({
               </section>
 
               {followUpPreview.length ? (
-                <section className="connections-section">
+                <section className="connections-section connection-followups">
                   <div className="connections-section-head">
                     <h2>Follow-ups</h2>
                     {openFollowUps.length > 2 ? (

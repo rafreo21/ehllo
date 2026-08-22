@@ -31,6 +31,31 @@ export type LibraryCard = {
 
 type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
+const imageFingerprintCache = new Map<string, string>();
+
+function imageFingerprint(value: string) {
+  if (!value) return "";
+  const cached = imageFingerprintCache.get(value);
+  if (cached) return cached;
+
+  // FNV-1a gives publish-state comparisons a compact, deterministic image
+  // identity. Cache the result so changing a lightweight field such as theme
+  // never walks multi-megabyte base64 image strings again.
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  const fingerprint = `${value.length}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
+  imageFingerprintCache.set(value, fingerprint);
+  // Keep only the current/recent card assets rather than retaining an
+  // unbounded history of large data URLs.
+  if (imageFingerprintCache.size > 6) {
+    imageFingerprintCache.delete(imageFingerprintCache.keys().next().value!);
+  }
+  return fingerprint;
+}
+
 function newIdentity() {
   const id = crypto.randomUUID();
   return { id, slug: `card-${id.replaceAll("-", "").slice(0, 16)}` };
@@ -70,9 +95,9 @@ export function cardPublishFingerprint(card: LibraryCard) {
     company: card.company.trim(),
     bio: card.bio.trim(),
     theme: card.theme.toLowerCase(),
-    photo: card.photo,
-    companyLogo: card.companyLogo,
-    coverPhoto: card.coverPhoto,
+    photo: imageFingerprint(card.photo),
+    companyLogo: imageFingerprint(card.companyLogo),
+    coverPhoto: imageFingerprint(card.coverPhoto),
     showCompanyDetails: card.showCompanyDetails !== false,
     methods: card.methods.map((method) => ({
       id: method.id,

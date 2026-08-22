@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { ArrowRight as ArrowRightIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { Download as DownloadSimpleIcon } from "react-feather";
-import { ChevronDown as ChevronDownIcon } from "react-feather";
 import { Copy as CopyIcon } from "react-feather";
 import { Lock as LockKeyIcon } from "react-feather";
 import { Mic as MicrophoneIcon } from "react-feather";
@@ -12,6 +11,7 @@ import { encounterFromSharedPayload, readEncounters, type Encounter } from "../.
 import { buildAuthHref } from "../../../lib/auth/visitor-intent";
 import { CLOUD_RECORDING_RETENTION_DAYS, formatRecordingAvailableUntil } from "../../../lib/recording-metadata";
 import { Button, LinkButton } from "../../components/Button";
+import { SelectField, TextAreaField, TextField } from "../../components/FormField";
 import { followUpDueDate } from "../../../lib/follow-up-templates";
 import { BrandMark } from "../../components/BrandMark";
 import { displayFollowUpTitle, FOLLOW_UP_CHANNELS, SELECTABLE_FOLLOW_UP_CHANNELS } from "../../../lib/follow-up-channels";
@@ -269,7 +269,7 @@ export default function GuestEncounterPage() {
           </article>
         </div>
         <section className="guest-follow-up">
-          <span>Your next step</span><h2>What will you do next?</h2>
+          <h2>What will you do next?</h2>
           {encounter.guestFollowUp?.committedAt ? (
             <article><CheckCircleIcon size={24} /><div><strong>Your next step was shared with the meeting host.</strong>{encounter.guestFollowUp.note ? <small>{encounter.guestFollowUp.note}</small> : null}<small>{encounter.guestFollowUp.dueAt ? `Date: ${encounter.guestFollowUp.dueAt} · ` : ""}{encounter.guestFollowUp.channel ? FOLLOW_UP_CHANNELS.find((item) => item.id === encounter.guestFollowUp?.channel)?.label || encounter.guestFollowUp.channel : "Follow-up"}</small></div></article>
           ) : (
@@ -279,27 +279,18 @@ export default function GuestEncounterPage() {
                 <p>No actions yet. Add one, and it will appear in the host&apos;s follow-up list for this meeting.</p>
               </div>
               <div className="guest-follow-up-fields">
-                <label>How will you follow up?
-                  <span className="guest-follow-up-select-wrap">
-                    <select value={followUpChannel} onChange={(event) => setFollowUpChannel(event.target.value as Encounter["actions"][number]["channel"])}>
-                      {SELECTABLE_FOLLOW_UP_CHANNELS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
-                    </select>
-                    <ChevronDownIcon className="guest-follow-up-chevron" size={14} aria-hidden="true" />
-                  </span>
-                </label>
-                <label>Date
-                  <input type="date" value={followUpDueAt} onChange={(event) => setFollowUpDueAt(event.target.value)} />
-                </label>
+                <SelectField inline label="How will you follow up?" value={followUpChannel} onChange={(event) => setFollowUpChannel(event.target.value as Encounter["actions"][number]["channel"])}>
+                  {SELECTABLE_FOLLOW_UP_CHANNELS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+                </SelectField>
+                <TextField inline label="Date" type="date" value={followUpDueAt} onChange={(event) => setFollowUpDueAt(event.target.value)} />
               </div>
-              <label className="guest-follow-up-label" htmlFor="guest-follow-up-note">
-                What do you need to do? (optional)
-              </label>
-              <textarea
+              <TextAreaField
+                inline
                 id="guest-follow-up-note"
+                label="What do you need to do? (optional)"
                 value={followUpNote}
                 onChange={(event) => setFollowUpNote(event.target.value)}
                 placeholder="For example: I’ll send the proposal on Friday."
-                rows={2}
                 maxLength={280}
               />
               <small className="guest-follow-up-help">Be specific enough to remember later. For example, include what you will send, who you will contact, or when you will respond.</small>
@@ -307,19 +298,19 @@ export default function GuestEncounterPage() {
               <Button
                 type="button"
                 variant="primary"
-                size="normal"
+                size="small"
                 loading={followUpSubmitting}
                 disabled={followUpSubmitting}
                 onClick={() => void commitFollowUp()}
               >
-                {followUpSubmitting ? "Sharing…" : "Share my next step"}
+                {followUpSubmitting ? "Sharing…" : "Share next step"}
               </Button>
             </>
           )}
         </section>
         <div className="guest-claim">
           <div><span>Continue in ehllo</span><strong>Keep this relationship moving.</strong><p>Create your private workspace to claim actions, receive reminders, and add your own notes.</p></div>
-          <LinkButton className="guest-create-account" href={buildAuthHref({ intent: "visitor", shareToken: encounter.shareToken })}>Create account <ArrowRightIcon size={16} /></LinkButton>
+          <LinkButton size="small" className="guest-create-account" href={buildAuthHref({ intent: "visitor", shareToken: encounter.shareToken })}>Create account <ArrowRightIcon size={15} /></LinkButton>
         </div>
         <small className="guest-privacy"><LockKeyIcon size={14} />Private notes and the full transcript stay with the host. This page shows the shared summary{sharedRecordingUrl ? " and meeting recording" : ""} only.</small>
       </section>

@@ -73,10 +73,14 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
   };
 
   function parseCardsJson(raw?: string): WidgetCardRecord[] {
+    // The demo card is for the gallery, where there is no cardsJson at all. A real but empty
+    // '[]' means "no published primary card" and must NOT become the demo card, or the
+    // placeholder state can never be reached.
     if (!raw?.trim()) return [DEMO_CARD];
     try {
       const parsed = JSON.parse(raw) as WidgetCardRecord[];
-      if (!Array.isArray(parsed) || parsed.length === 0) return [DEMO_CARD];
+      if (!Array.isArray(parsed)) return [DEMO_CARD];
+      if (parsed.length === 0) return [];
       return parsed.map((card) => ({
         name: card.name?.trim() || DEMO_CARD.name,
         role: card.role?.trim() || '',
@@ -109,6 +113,11 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
   const cards = parseCardsJson(props.cardsJson);
   const index = activeCardIndex(props.cardIndex);
   const card = activeCard(cards, index);
+  // Only a published primary card renders. With none, the app now sends no cards at all, so
+  // this is the placeholder state: dummy name, role and company against a blank white QR
+  // panel, which reads as "set your card up" rather than as somebody else's finished card.
+  const hasCard = Boolean(props.cardsJson?.trim()) && cards.length > 0 && cards[0] !== DEMO_CARD;
+  const noPrimary = props.signedIn !== undefined && !hasCard;
   const deepLink = card.shareDeepLink || props.shareDeepLink || 'ehllo://share-card';
   const qrImageUri = card.qrImageUri || props.qrImageUri;
   const photoImageUri = card.photoImageUri || props.photoImageUri;
@@ -169,16 +178,18 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
                 modifiers={[
                   resizable(),
                   aspectRatio({ ratio: 1, contentMode: 'fit' }),
-                  frame({ width: 26, height: 26 }),
+                  // Same white ring as the QR widget, and the same reasoning: 20pt logo inside
+                  // a 3pt ring keeps the white footprint at the 26pt it already occupied.
+                  frame({ width: 20, height: 20 }),
+                  padding({ all: 3 }),
+                  background('#FFFFFF'),
                   cornerRadius(6),
                   widgetAccentedRenderingMode('fullColor'),
                 ]}
               />
             ) : null}
           </ZStack>
-        ) : (
-          <Text modifiers={[foregroundStyle('#8F8F8F'), font({ family: FONTS.regular, size: 11 })]}>QR</Text>
-        )}
+        ) : null}
       </VStack>
 
       <VStack spacing={4} alignment="leading" modifiers={[frame({ width: 175, alignment: 'leading' })]}>
@@ -199,8 +210,12 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
               foregroundStyle(WIDGET_COLORS.accent),
               font({ family: FONTS.regular, size: 14, weight: 'medium' }),
               frame({ width: 40, height: 40 }),
+              // Filled only in the placeholder state, where there are no initials to show and
+              // an empty 40pt gap would just look like a layout fault.
+              background(noPrimary || signedOut ? '#2A2D2A' : '#00000000'),
+              cornerRadius(20),
             ]}>
-            {initials}
+            {noPrimary || signedOut ? ' ' : initials}
           </Text>
         )}
 
@@ -210,7 +225,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
             font({ family: FONTS.regular, size: 16, weight: 'regular' }),
             lineLimit(1),
           ]}>
-          {signedOut ? 'Sign in to ehllo' : (card.name || props.name || 'My card')}
+          {signedOut ? 'Sign in to ehllo' : noPrimary ? 'Your name' : (card.name || props.name || 'My card')}
         </Text>
 
         <VStack spacing={3} alignment="leading" modifiers={[frame({ width: 175, alignment: 'leading' })]}>
@@ -218,6 +233,18 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
             <Text modifiers={[foregroundStyle(WIDGET_COLORS.muted), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
               Your card appears here
             </Text>
+          ) : noPrimary ? (
+            // Placeholder rather than a real-looking person: there is no published primary
+            // card, and inventing Alex Morgan here is what put a stranger's details on a real
+            // home screen before.
+            <>
+              <Text modifiers={[foregroundStyle(WIDGET_COLORS.muted), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
+                Your role
+              </Text>
+              <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
+                Your company
+              </Text>
+            </>
           ) : (
             <>
               {(card.role || props.role) ? (

@@ -1,28 +1,36 @@
 .public-card-page {
   --card-accent: #9fe870;
   --card-on-accent: #163300;
+  --p-line: #e4e8e2;
   min-height: 100svh;
-  padding: 28px 16px;
+  position: relative;
+  isolation: isolate;
+  padding: 38px 16px;
   display: grid;
   place-items: center;
-  background: #f4f6f2;
+  background:
+    radial-gradient(circle at 18% 8%, color-mix(in srgb, var(--card-accent) 18%, transparent) 0, transparent 34%),
+    radial-gradient(circle at 86% 92%, color-mix(in srgb, var(--card-accent) 10%, transparent) 0, transparent 30%),
+    #f4f6f2;
   color: #163300;
 }
 
 .public-card-shell {
   width: min(100%, 460px);
   overflow: hidden;
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 20px 60px rgba(22, 51, 0, .12);
+  border: 1px solid rgba(255,255,255,.88);
+  border-radius: 22px;
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 28px 80px rgba(22,51,0,.14), 0 4px 16px rgba(22,51,0,.06);
 }
 
 .public-card-cover {
-  height: 152px;
+  height: 184px;
   background: var(--card-accent);
   position: relative;
   overflow: hidden;
 }
+.public-card-cover::after { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(155deg, rgba(255,255,255,.22), transparent 44%, rgba(0,0,0,.08)); pointer-events: none; }
 .public-card-cover-photo {
   position: absolute;
   inset: 0;
@@ -32,23 +40,33 @@
 }
 .public-card-company-row {
   position: absolute;
-  top: 16px;
-  left: 20px;
+  top: 20px;
+  left: 22px;
   z-index: 2;
   display: flex;
   align-items: center;
   gap: 10px;
+  max-width: calc(100% - 44px);
+  padding: 7px 12px 7px 7px;
+  border: 1px solid rgba(255,255,255,.42);
+  border-radius: 999px;
+  background: rgba(255,255,255,.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.42), 0 8px 22px rgba(0,0,0,.1);
+  backdrop-filter: blur(14px) saturate(1.2);
 }
 .public-card-company-logo {
-  width: 34px;
-  height: 34px;
+  position: absolute;
+  left: 7px;
+  width: 38px;
+  height: 38px;
+  border: 2px solid rgba(255,255,255,.78);
   border-radius: 999px;
   object-fit: cover;
   background: #163300;
 }
 .public-card-company-mark {
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
   border-radius: 999px;
@@ -61,8 +79,12 @@
   color: #163300;
   font-size: 14px;
   font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 8px rgba(0,0,0,.18);
 }
-.public-card-cover img.public-card-company-logo,
+.public-card-cover img.public-card-company-logo { width: 38px; height: 38px; flex: 0 0 auto; }
 .public-card-avatar img {
   width: 100%;
   height: 100%;
@@ -71,56 +93,71 @@
 .public-card-content {
   position: relative;
   z-index: 3;
-  padding: 0 24px 28px;
+  padding: 0 26px 26px;
 }
 .public-card-avatar {
-  width: 92px;
-  height: 92px;
-  margin-top: -46px;
+  width: 104px;
+  height: 104px;
+  margin-top: -52px;
   position: relative;
   z-index: 4;
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 5px solid #fff;
+  border: 5px solid rgba(255,255,255,.96);
   border-radius: 50%;
+  box-shadow: 0 12px 30px rgba(22,51,0,.2), 0 2px 8px rgba(22,51,0,.08);
   background: #163300;
   color: #fff;
   font-size: 28px;
   font-weight: 800;
 }
+.public-card-avatar > span { position: relative; z-index: 0; }
+.public-card-avatar > img { position: absolute; z-index: 1; inset: 0; }
 .public-card-content h1 {
-  margin: 20px 0 0;
+  margin: 22px 0 0;
   font-size: clamp(30px, 8vw, 44px);
   line-height: .96;
   letter-spacing: -.05em;
 }
-.public-card-role { margin: 14px 0 0; font-weight: 700; }
-.public-card-bio { margin: 18px 0 0; color: #53634d; line-height: 1.55; }
+.public-card-role { margin: 10px 0 0; color: #53634d; font-size: 14px; font-weight: 700; }
+.public-card-bio { margin: 0; color: #53634d; line-height: 1.58; }
 .public-card-shell-share {
   width: min(100%, 460px);
 }
+.public-card-page--share { place-items: start center; padding-block: 28px; }
 .public-card-share-page {
-  padding: 20px 24px 28px;
+  padding: 24px 26px 28px;
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 .public-card-share-top {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 .public-card-share-skip {
-  font-size: 14px;
+  margin: -6px;
+  padding: 6px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #64705f;
+  font-size: 13px;
   font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
 }
+.public-card-share-skip:hover { background: #f1f4ef; color: #163300; }
+.public-card-share-skip:focus-visible { outline: 3px solid color-mix(in srgb, var(--card-accent) 45%, transparent); outline-offset: 2px; }
 .public-card-share-heading h1 {
   margin: 0;
-  font-size: clamp(28px, 8vw, 36px);
+  font-size: clamp(30px, 8vw, 40px);
   line-height: 1.05;
   letter-spacing: -.04em;
 }
 .public-card-share-heading p {
-  margin: 8px 0 0;
+  margin: 7px 0 0;
   color: #64705f;
   font-size: 15px;
   line-height: 1.45;
@@ -176,7 +213,7 @@
   background: #9fe870;
   color: #163300;
 }
-.public-card-step { margin-top: 18px; }
+.public-card-step { margin-top: 20px; }
 .public-card-step-share { margin-top: 14px; }
 .public-card-share-summary {
   margin-bottom: 14px;
@@ -216,42 +253,61 @@
 }
 .public-card-share-back {
   width: 100%;
-  min-height: 48px;
-  margin-top: 10px;
-  padding: 12px 16px;
-  border: 2px solid #163300;
-  border-radius: 8px;
-  background: #fff;
+  min-height: 44px;
+  margin-top: 0;
+  padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid #d8dfd2;
+  border-radius: 10px;
+  background: #f8faf7;
   color: #163300;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   text-align: center;
   cursor: pointer;
 }
 .public-card-share-back:hover {
+  border-color: #bdc8b7;
   background: #f1f4ef;
 }
-.public-card-methods { margin: 18px 0 20px; display: grid; gap: 8px; }
+.public-card-methods { margin: 20px 0 0; display: grid; gap: 8px; }
+.public-card-step > .public-card-methods:first-child { margin-top: 0; }
 .public-card-method-link {
-  min-height: 58px;
-  padding: 10px 14px;
-  display: flex;
+  min-height: 66px;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 40px minmax(0,1fr) 24px;
   align-items: center;
   gap: 12px;
-  border-radius: 10px;
-  background: #f7f9f5;
+  border: 1px solid #e7ebe4;
+  border-radius: 14px;
+  background: rgba(248,250,247,.88);
   color: inherit;
   text-decoration: none;
 }
-.public-card-method-link:hover { background: #eef2ea; }
+.public-card-method-link:hover { border-color: color-mix(in srgb, var(--card-accent) 38%, #dce2d8); background: #fff; box-shadow: 0 8px 22px rgba(22,51,0,.08); transform: translateY(-1px); }
+.public-card-method-link { transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease; }
 .public-card-method-icon {
+  position: relative;
+  isolation: isolate;
   width: 34px;
   height: 34px;
   display: grid;
   place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, currentColor 30%, white);
   border-radius: 50%;
+  background: rgba(255,255,255,.58);
   flex: 0 0 auto;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 5px 14px color-mix(in srgb, currentColor 14%, transparent);
+  backdrop-filter: blur(8px) saturate(1.25);
 }
+.public-card-method-icon::before { content: ""; position: absolute; z-index: 0; inset: 1px; border-radius: inherit; background: linear-gradient(145deg, rgba(255,255,255,.72), rgba(255,255,255,.1) 50%, transparent 70%); pointer-events: none; }
+.public-card-method-icon::after { content: ""; position: absolute; z-index: 0; right: 4px; bottom: 3px; width: 30%; height: 30%; border-radius: 50%; background: currentColor; opacity: .08; filter: blur(3px); pointer-events: none; }
+.public-card-method-icon > svg { position: relative; z-index: 1; filter: drop-shadow(0 1px 2px color-mix(in srgb, currentColor 24%, transparent)); }
 .public-card-methods span { display: grid; min-width: 0; }
 .public-card-methods strong { text-transform: capitalize; }
 .public-card-methods small {
@@ -260,26 +316,45 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.public-card-method-action { justify-self: end; color: #879282; }
 .public-card-return {
-  min-height: 50px;
-  display: grid;
-  place-items: center;
-  border-radius: 8px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: 10px;
+  font-size: 13px;
   font-weight: 800;
   text-decoration: none;
 }
+.public-card-actions { margin-top: 20px; padding-top: 18px; display: grid; gap: 8px; border-top: 1px solid #e7ebe4; }
+.public-card-step > .public-card-actions:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
 .public-card-private {
-  margin: 12px 0 0;
+  margin: 14px auto 0;
+  max-width: 350px;
   color: #71806b;
   font-size: 11px;
   text-align: center;
 }
+.public-card-open-in-app { min-height: 42px; margin-top: 8px; padding: 8px 12px; display: grid; grid-template-columns: 15px minmax(0,1fr) 15px; align-items: center; gap: 6px; border: 1px solid #e1e6de; border-radius: 10px; background: #fff; color: #53634d; font-size: 13px; font-weight: 800; line-height: 1.25; text-align: center; text-decoration: none; }
+.public-card-open-in-app::before { content: ""; width: 15px; }
+.public-card-open-in-app > svg { justify-self: center; }
+.public-card-open-in-app:hover { border-color: #c8d1c3; background: #f7f9f5; color: #163300; }
+.public-card-brand { margin-top: 20px; padding-top: 16px; display: flex; align-items: center; justify-content: center; gap: 7px; border-top: 1px solid #edf0eb; color: #879282; font-size: 11px; }
+.public-card-brand img { width: 22px; height: 22px; }
+.public-card-brand strong { color: #53634d; }
 
 .public-exchange-form {
   margin-top: 0;
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
+.public-exchange-required { display: grid; gap: 14px; }
+.public-exchange-method-field { display: grid; grid-template-columns: 38px minmax(0,1fr); align-items: center; gap: 10px; }
+.public-exchange-method-icon { position: relative; isolation: isolate; width: 38px; height: 38px; display: grid; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, currentColor 30%, white); border-radius: 50%; background: rgba(255,255,255,.62); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 5px 14px color-mix(in srgb, currentColor 14%, transparent); }
+.public-exchange-method-icon::before { content: ""; position: absolute; z-index: 0; inset: 1px; border-radius: inherit; background: linear-gradient(145deg, rgba(255,255,255,.72), rgba(255,255,255,.1) 50%, transparent 70%); pointer-events: none; }
+.public-exchange-method-icon > svg { position: relative; z-index: 1; }
 
 .public-exchange-header {
   display: flex;
@@ -328,15 +403,18 @@
 }
 
 .public-exchange-optional {
+  padding: 2px 0 0;
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  border: 0;
+  background: transparent;
 }
 
 .public-exchange-optional-field {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
   gap: 8px;
-  align-items: end;
+  align-items: center;
 }
 
 .public-exchange-remove {
@@ -360,14 +438,15 @@
 .public-exchange-optional-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
 }
 
 .public-exchange-add {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  min-height: 34px;
+  padding: 6px 10px;
   border: 1px solid #d8dfd2;
   border-radius: 999px;
   background: #fff;
@@ -382,7 +461,6 @@
   color: #71806b;
   font-size: 11px;
   text-align: center;
-  text-decoration: underline;
 }
 
 .public-save-coach {
@@ -548,7 +626,20 @@
 }
 
 @media (max-width: 520px) {
+  .public-card-page { padding: 0; place-items: start center; background: #fff; }
+  .public-card-shell { min-height: 100svh; border: 0; border-radius: 0; box-shadow: none; }
+  .public-card-page--share { padding: 0; }
+  .public-card-page--share .public-card-shell { min-height: 100svh; }
+  .public-card-share-page { padding: 20px; }
+  .public-card-cover { height: 174px; }
+  .public-card-content { padding-inline: 20px; }
+  .public-card-avatar { width: 96px; height: 96px; margin-top: -48px; }
+  .public-card-content h1 { font-size: 38px; }
   .public-exchange-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-card-method-link { transition: none; }
 }
 
 .phone-field {
@@ -565,7 +656,7 @@
   position: relative;
   min-height: 48px;
   min-width: 92px;
-  border: 1px solid #d5d9d3;
+  border: 1px solid #e4e8e2;
   border-radius: 10px;
   background: white;
 }
@@ -604,7 +695,7 @@
 .phone-field input {
   min-height: 48px;
   width: 100%;
-  border: 1px solid #d5d9d3;
+  border: 1px solid #e4e8e2;
   border-radius: 10px;
   background: white;
   padding: 0 14px;
@@ -616,6 +707,13 @@
   border-color: #163300;
   box-shadow: 0 0 0 4px rgba(174, 184, 170, 0.45);
 }
+.phone-field-compact { grid-template-columns: minmax(92px, 30%) 1fr; gap: 8px; }
+.phone-field-compact .phone-field-country,
+.phone-field-compact .phone-field-country select,
+.phone-field-compact .phone-field-country-select,
+.phone-field-compact input { min-height: 40px; height: 40px; }
+.phone-field-compact input { padding-inline: 12px; font-size: 14px; }
+.phone-field-compact .phone-field-dial { left: 11px; font-size: 13px; }
 
 /* The sign-in alternative on the share step.
    VisitorSignInPrompt already existed and was rendered nowhere, so its styles live in
@@ -623,15 +721,16 @@
    own idiom (flat greys, 999px pills, the theme accent only where it earns it) rather
    than pulling the app stylesheet in for one block. */
 .visitor-signin-prompt {
-  margin-top: 4px;
-  padding: 16px;
+  margin-top: 2px;
+  padding: 14px;
   border: 1px solid #e4e8e1;
   border-radius: 14px;
-  background: #f7f9f6;
+  background: #fafbf9;
   display: grid;
   gap: 10px;
 }
-.visitor-signin-prompt.compact { padding: 14px; gap: 10px; }
+.visitor-signin-prompt.compact { padding: 14px; gap: 12px; }
+.visitor-signin-prompt.compact .step-pill { display: none; }
 /* No stroke on the pill - it sits on a tinted panel that already separates it, so the
    outline was a second border doing the first one's job. */
 .visitor-signin-prompt .step-pill {
@@ -648,13 +747,13 @@
 }
 .visitor-signin-prompt strong {
   display: block;
-  margin: 8px 0 2px;
-  font-size: 17px;
+  margin: 0 0 3px;
+  font-size: 15px;
   letter-spacing: -.02em;
 }
 .visitor-signin-prompt p {
   margin: 0;
   color: #64705f;
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1.45;
 }

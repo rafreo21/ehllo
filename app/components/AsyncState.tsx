@@ -29,3 +29,23 @@ export function PageSkeleton({ rows = 3 }: { rows?: number }) {
     </div>
   );
 }
+
+export function CardFlowSkeleton() {
+  return (
+    <div className="card-flow-skeleton" aria-label="Loading card" aria-busy="true">
+      <section className="card-flow-skeleton-preview">
+        <span className="skeleton card-flow-skeleton-cover" />
+        <span className="skeleton card-flow-skeleton-avatar" />
+        <span className="skeleton card-flow-skeleton-name" />
+        <span className="skeleton card-flow-skeleton-line" />
+        <span className="skeleton card-flow-skeleton-line short" />
+      </section>
+      <section className="card-flow-skeleton-panel">
+        <span className="skeleton card-flow-skeleton-title" />
+        <span className="skeleton card-flow-skeleton-block" />
+        <span className="skeleton card-flow-skeleton-block" />
+        <span className="skeleton card-flow-skeleton-block tall" />
+      </section>
+    </div>
+  );
+}

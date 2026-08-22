@@ -107,7 +107,10 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
 
   try {
     const { renderVirtualBackgroundOrWatchFace } = await import("../../../../../lib/share-assets-handler");
-    const rendered = await renderVirtualBackgroundOrWatchFace(type, profile, normalized);
+    // ?mirrored=1 pre-flips the virtual background so it reads correctly in your own
+    // self-view. Absent means the participant-correct export, which is the one whose QR scans.
+    const mirrored = url.searchParams.get("mirrored") === "1";
+    const rendered = await renderVirtualBackgroundOrWatchFace(type, profile, normalized, mirrored);
 
     return new NextResponse(rendered.body, {
       headers: {

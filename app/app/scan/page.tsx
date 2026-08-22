@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Camera as CameraIcon } from "react-feather";
 import { CreditCard as IdentificationCardIcon } from "react-feather";
@@ -235,7 +235,7 @@ export default function ScanPage() {
     return () => clearTimeout(timer);
   }, [linkedSlug, handlePayload]);
 
-  function resetScan() {
+  const resetScan = useCallback(() => {
     handledRef.current = "";
     setTarget(null);
     setCard(null);
@@ -243,7 +243,7 @@ export default function ScanPage() {
     setSavedContactId("");
     setManualValue("");
     setCameraState("idle");
-  }
+  }, []);
 
   function saveContact(contact: Contact | null) {
     if (!contact) return;
@@ -267,8 +267,14 @@ export default function ScanPage() {
   }
 
   const draftContact = target ? contactFromScanTarget(target, card) : null;
+  const scanActions = useMemo(() => target ? (
+    <Button size="small" variant="secondary" onClick={resetScan}>
+      <QrCodeIcon size={16} weight="bold" />
+      Scan another
+    </Button>
+  ) : null, [resetScan, target]);
 
-  useAppShellChrome({ backHref: "/app/people" });
+  useAppShellChrome({ backHref: "/app/people", actions: scanActions });
   return (
     <>
       <div className="flow-page scan-page">
@@ -368,9 +374,6 @@ export default function ScanPage() {
               {target.type === "linkedin" ? (
                 <LinkButton href={`/business/contacts/linkedin?url=${encodeURIComponent(target.url)}`}>Review LinkedIn import</LinkButton>
               ) : null}
-            </div>
-            <div className="form-actions">
-              <Button variant="ghost" onClick={resetScan}>Scan another</Button>
             </div>
           </section>
         )}

@@ -31,14 +31,16 @@ export async function PATCH(request: Request) {
 
   const supabase = await createApiSupabaseClient(request);
 
-  const body = await request.json().catch(() => null) as { id?: string; status?: string } | null;
+  const body = await request.json().catch(() => null) as { id?: string; status?: string; name?: string } | null;
   const id = typeof body?.id === "string" ? body.id : "";
   const status = body?.status;
-  if (!id || (status !== "imported" && status !== "dismissed")) {
+  const name = body?.name?.trim();
+  if (!id || (!name && status !== "imported" && status !== "dismissed")) {
     return NextResponse.json({ error: "Invalid update." }, { status: 400 });
   }
 
-  const { error } = await supabase.from("card_exchanges").update({ status }).eq("id", id);
+  const update = name ? { visitor_name: name } : { status };
+  const { error } = await supabase.from("card_exchanges").update(update).eq("id", id).eq("workspace_id", user.workspaceId);
   if (error) {
     return NextResponse.json({ error: "We couldn’t update that capture." }, { status: 500 });
   }

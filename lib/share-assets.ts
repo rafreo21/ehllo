@@ -54,7 +54,7 @@ export async function buildBrandedQrAsset(cardUrl: string, renderSize = 1024) {
   return buildBrandedQrDataUri(cardUrl, renderSize);
 }
 
-async function buildVirtualBackgroundSvgDocument(profile: ShareAssetProfile) {
+async function buildVirtualBackgroundSvgDocument(profile: ShareAssetProfile, mirrored = false) {
   const name = escapeXml(profile.name.trim() || "Your name");
   const layout = buildVirtualBackgroundLayout(profile);
   const fonts = await loadShareAssetFontsBase64();
@@ -70,6 +70,9 @@ async function buildVirtualBackgroundSvgDocument(profile: ShareAssetProfile) {
     cardThemeBackgroundGradientMarkup(profile.themeColor),
     `</defs>`,
     `<rect width="${width}" height="${height}" fill="url(#cardThemeBg)"/>`,
+    // Mirroring flips the entire canvas, panel included - see buildVirtualBackgroundJpeg for
+    // why it has to be the whole frame rather than just the artwork.
+    mirrored ? `<g transform="translate(${width},0) scale(-1,1)">` : "",
     `<rect x="${VIRTUAL_BG_PANEL.x}" y="${VIRTUAL_BG_PANEL.y}" width="${VIRTUAL_BG_PANEL.width}" height="${VIRTUAL_BG_PANEL.height}" rx="${VIRTUAL_BG_PANEL.radius}" fill="#FFFFFF" fill-opacity="0.94"/>`,
     `<text x="${layout.nameX}" y="${layout.nameY}" fill="#163300" font-family="Inter, Arial, sans-serif" font-size="${VIRTUAL_BG_PANEL.nameFontSize}" font-weight="700">${name}</text>`,
     layout.subtitle
@@ -78,16 +81,17 @@ async function buildVirtualBackgroundSvgDocument(profile: ShareAssetProfile) {
     `<rect x="${layout.qrX - 4}" y="${layout.qrY - 4}" width="${VIRTUAL_BG_PANEL.qrSize + 8}" height="${VIRTUAL_BG_PANEL.qrSize + 8}" rx="12" fill="#FFFFFF"/>`,
     `<image href="${qrDataUri}" x="${layout.qrX}" y="${layout.qrY}" width="${VIRTUAL_BG_PANEL.qrSize}" height="${VIRTUAL_BG_PANEL.qrSize}" preserveAspectRatio="xMidYMid meet"/>`,
     `<text x="${layout.scanX}" y="${layout.scanY}" fill="#71806B" font-family="Inter, Arial, sans-serif" font-size="${VIRTUAL_BG_PANEL.scanFontSize}" font-weight="400">Scan to save my contact</text>`,
+    mirrored ? `</g>` : "",
     `</svg>`,
   ].filter(Boolean).join("");
 }
 
-export async function buildVirtualBackgroundSvg(profile: ShareAssetProfile) {
-  return buildVirtualBackgroundSvgDocument(profile);
+export async function buildVirtualBackgroundSvg(profile: ShareAssetProfile, mirrored = false) {
+  return buildVirtualBackgroundSvgDocument(profile, mirrored);
 }
 
 /** JPG export for Zoom, Google Meet, and Teams. */
-export async function buildVirtualBackgroundJpeg(profile: ShareAssetProfile) {
+export async function buildVirtualBackgroundJpeg(profile: ShareAssetProfile, mirrored = false) {
   if (!sharpAvailable()) {
     throw new Error("Virtual backgrounds require sharp, which isn't available in this local dev sandbox. Test this against a Vercel preview instead.");
   }
@@ -98,18 +102,40 @@ export async function buildVirtualBackgroundJpeg(profile: ShareAssetProfile) {
     buildVirtualBackgroundPanelPng(profile, 2),
   ]);
 
-  // No .flop(). Meet and Zoom mirror your self-view, not the stream participants receive, so
-  // flipping this reversed the name for everyone watching and left a mirrored QR that no
-  // scanner will read. Your own preview shows it reversed; everybody else sees it correctly.
   const panelPng = await sharp(panelPngRaw)
     .resize(VIRTUAL_BG_PANEL.width, VIRTUAL_BG_PANEL.height)
     .png()
     .toBuffer();
 
-  return sharp(background)
+  // Composited to its own buffer FIRST, then flipped in a second pass. sharp applies flip and
+  // flop at a fixed point in its pipeline rather than in call order, and that point is BEFORE
+  // composite - so chaining .composite(...).flop() mirrored the gradient and then pasted the
+  // panel back at the same coordinates, leaving the panel exactly where it started. Verified
+  // by tests/virtual-background-mirror.test.mjs, which measures which half the panel lands in.
+  const composedPng = await sharp(background)
     .composite([{ input: panelPng, top: VIRTUAL_BG_PANEL.y, left: VIRTUAL_BG_PANEL.x }])
-    .jpeg({ quality: 92, mozjpeg: true })
+    .png()
     .toBuffer();
+
+  const composed = sharp(composedPng);
+
+  // Two exports, because one image cannot serve both views.
+  //
+  // Meet, Zoom and Teams mirror your SELF-VIEW; the stream participants receive is not
+  // mirrored. The two are horizontal mirrors of each other, so any text reads correctly in
+  // exactly one of them:
+  //
+  //   default (mirrored = false) - correct for everyone watching you, reversed in your own
+  //     self-view. The QR scans. This is the one to upload if anybody is meant to scan it.
+  //   mirrored = true            - correct in your own self-view, reversed for participants,
+  //     and the QR will not scan for them because a mirrored QR is not a valid symbol.
+  //
+  // Flipping has to be the whole frame rather than just the panel: self-view shows
+  // mirror(frame), so to make mirror(frame) look right the frame itself must be pre-mirrored,
+  // panel and position together.
+  const oriented = mirrored ? composed.flop() : composed;
+
+  return oriented.jpeg({ quality: 92, mozjpeg: true }).toBuffer();
 }
 
 export async function buildWatchFacePng(profile: ShareAssetProfile) {
@@ -189,9 +215,11 @@ export function shareAssetFilename(
   type: "virtual-background" | "watch-face",
   slug: string,
   format: "jpg" | "jpeg" | "png" | "svg" = type === "virtual-background" ? "jpg" : "png",
+  mirrored = false,
 ) {
   const normalizedFormat = format === "jpeg" ? "jpg" : format;
-  return `ehllo-${type}-${slug}.${normalizedFormat}`;
+  const suffix = mirrored ? "-mirrored" : "";
+  return `ehllo-${type}-${slug}${suffix}.${normalizedFormat}`;
 }
 
 export function shareAssetMimeType(type: "virtual-background" | "watch-face") {

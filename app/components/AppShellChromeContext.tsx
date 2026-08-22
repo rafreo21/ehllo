@@ -7,6 +7,7 @@ export type NavigationRequestHandler = (href: string, proceed: () => void) => vo
 export type AppShellChrome = {
   backHref?: string;
   backLabel?: string;
+  leading?: ReactNode;
   actions?: ReactNode;
   requestNavigation?: NavigationRequestHandler;
 };
@@ -33,9 +34,9 @@ export function useAppShellChromeValue(): AppShellChrome {
 export function useAppShellChrome(chrome: AppShellChrome) {
   const context = useContext(AppShellChromeContext);
   const setChrome = context?.setChrome;
-  const { backHref, backLabel, actions, requestNavigation } = chrome;
+  const { backHref, backLabel, leading, actions, requestNavigation } = chrome;
   useEffect(() => {
-    void Promise.resolve().then(() => setChrome?.({ backHref, backLabel, actions, requestNavigation }));
+    void Promise.resolve().then(() => setChrome?.({ backHref, backLabel, leading, actions, requestNavigation }));
     return () => void Promise.resolve().then(() => setChrome?.({}));
-  }, [setChrome, backHref, backLabel, actions, requestNavigation]);
+  }, [setChrome, backHref, backLabel, leading, actions, requestNavigation]);
 }

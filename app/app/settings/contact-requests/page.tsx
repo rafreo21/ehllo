@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeft as ArrowLeftIcon, X as XIcon } from "react-feather";
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import { Button } from "../../../components/Button";
+import { TextField } from "../../../components/FormField";
 import { PageSkeleton, StatusMessage } from "../../../components/AsyncState";
 import { useToast } from "../../../components/ToastContext";
 
@@ -102,6 +104,7 @@ export default function ContactRequestsPage() {
   const [myMethods, setMyMethods] = useState<Record<string, string>>({});
   const [history, setHistory] = useState<AnsweredRequest[] | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<AnsweredRequest | null>(null);
   const [historyError, setHistoryError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -196,7 +199,7 @@ export default function ContactRequestsPage() {
     return () => document.removeEventListener("visibilitychange", refreshOnReturn);
   }, [load]);
 
-  async function openHistory() {
+  const openHistory = useCallback(async () => {
     setHistoryOpen(true);
     // Fetched on demand, not with the list. Most visits are here to answer something, and
     // loading a history nobody opened would slow down the thing they came for.
@@ -210,7 +213,15 @@ export default function ContactRequestsPage() {
     } catch (caught) {
       setHistoryError(caught instanceof Error ? caught.message : "Could not load your answered requests.");
     }
-  }
+  }, [history]);
+
+  useEffect(() => {
+    function openHistoryFromDrawer() {
+      void openHistory();
+    }
+    window.addEventListener("ehllo:open-contact-request-history", openHistoryFromDrawer);
+    return () => window.removeEventListener("ehllo:open-contact-request-history", openHistoryFromDrawer);
+  }, [openHistory]);
 
   function openRequest(group: RequestGroup) {
     setActive(group);
@@ -345,15 +356,13 @@ export default function ContactRequestsPage() {
                 : `Only ${active.requesterName} sees it.`}
             </p>
 
-            <label className="connections-search">
-              <input
-                type="text"
-                value={value}
-                onChange={(event) => setValue(event.target.value)}
-                placeholder={`Your ${fieldLabel(active.fieldType)}`}
-                autoFocus
-              />
-            </label>
+            <TextField
+              inline
+              label={`Your ${fieldLabel(active.fieldType)}`}
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+              autoFocus
+            />
 
             {/* Says where the value came from, so a pre-filled box does not look like
                 something already sent, or like a stray value from somewhere else. */}
@@ -375,25 +384,40 @@ export default function ContactRequestsPage() {
 
       {historyOpen ? (
         <div
-          className="connections-modal-backdrop"
+          className="connections-modal-backdrop request-history-backdrop"
           role="presentation"
-          onClick={() => setHistoryOpen(false)}>
+          onClick={() => { setHistoryOpen(false); setSelectedAnswer(null); }}>
           <div
-            className="connections-modal"
+            className="connections-modal request-history-modal"
             role="dialog"
             aria-modal="true"
             aria-label="Answered requests"
             onClick={(event) => event.stopPropagation()}>
-            <h2>Answered</h2>
-            {historyError ? <StatusMessage tone="error">{historyError}</StatusMessage> : null}
-            {!historyError && !history ? <PageSkeleton rows={2} /> : null}
-            {history && !history.length ? (
-              <StatusMessage tone="info">Nothing answered yet. What you share or decline shows up here.</StatusMessage>
-            ) : null}
-            {history && history.length ? (
-              <div className="connections-list request-history-list">
+            <header>
+              <div className="request-history-heading">
+                {selectedAnswer ? <button type="button" aria-label="Back to answered requests" onClick={() => setSelectedAnswer(null)}><ArrowLeftIcon size={18} /></button> : null}
+                <div><h2>{selectedAnswer ? selectedAnswer.requesterName : "Answered requests"}</h2><p>{selectedAnswer ? fieldLabel(selectedAnswer.fieldType) : "Details you shared or declined."}</p></div>
+              </div>
+              <button type="button" aria-label="Close answered requests" onClick={() => { setHistoryOpen(false); setSelectedAnswer(null); }}><XIcon size={18} /></button>
+            </header>
+            {selectedAnswer ? (
+              <div className="request-history-detail">
+                <span className={`request-history-status ${selectedAnswer.shared ? "shared" : "declined"}`}>{selectedAnswer.shared ? "Shared" : "Declined"}</span>
+                <dl>
+                  <div><dt>Person</dt><dd>{selectedAnswer.requesterName}</dd></div>
+                  <div><dt>Requested detail</dt><dd>{fieldLabel(selectedAnswer.fieldType)}</dd></div>
+                  {selectedAnswer.sharedValue ? <div><dt>What you shared</dt><dd>{selectedAnswer.sharedValue}</dd></div> : null}
+                  <div><dt>Answered</dt><dd>{selectedAnswer.answeredAt ? new Date(selectedAnswer.answeredAt).toLocaleString() : "Date unavailable"}</dd></div>
+                </dl>
+              </div>
+            ) : (
+              <>
+                {historyError ? <StatusMessage tone="error">{historyError}</StatusMessage> : null}
+                {!historyError && !history ? <PageSkeleton rows={2} /> : null}
+                {history && !history.length ? <StatusMessage tone="info">Nothing answered yet. What you share or decline shows up here.</StatusMessage> : null}
+                {history && history.length ? <div className="connections-list request-history-list">
                 {history.map((item) => (
-                  <div key={item.id} className="connections-row connections-row-simple">
+                  <button type="button" key={item.id} className="connections-row connections-row-simple" onClick={() => setSelectedAnswer(item)}>
                     <div className="connections-copy request-row-copy">
                       <strong>
                         {item.shared ? "Shared with" : "Declined"} {item.requesterName}
@@ -404,11 +428,11 @@ export default function ContactRequestsPage() {
                         {item.answeredAt ? ` · ${relativeTime(item.answeredAt)}` : ""}
                       </small>
                     </div>
-                  </div>
+                  </button>
                 ))}
-              </div>
-            ) : null}
-            <Button variant="secondary" onClick={() => setHistoryOpen(false)}>Close</Button>
+              </div> : null}
+              </>
+            )}
           </div>
         </div>
       ) : null}

@@ -30,7 +30,8 @@ function QrScanWidget(props: QrScanWidgetProps) {
   // plain constants. Every helper AND constant the render logic needs must
   // be declared inside this function.
   const WIDGET_COLORS = {
-    canvas: '#141814',
+    // Black on every widget, on both platforms.
+    canvas: '#000000',
     accent: '#9FE870',
     text: '#FFFFFF',
     muted: '#B8C4B3',
@@ -86,10 +87,12 @@ function QrScanWidget(props: QrScanWidgetProps) {
     <VStack
       modifiers={[
         containerBackground(WIDGET_COLORS.canvas, 'widget'),
-        // 11pt, which Apple sanctions as the tighter margin "to create content groupings" -
-        // and a scannable code is exactly that. The standard 16 left the code smaller than it
-        // needs to be for the one job this widget has.
-        padding({ all: 11 }),
+        // A minimum guard only - the card below is a fixed size and the VStack centres it, so
+        // the visible margin is (widget - card) / 2: about 14pt on this phone, which matches
+        // the business card's 16pt closely, and 5pt on the smallest iPhone where there simply
+        // is not more room. 5pt here rather than 16 is what keeps the code from clipping at
+        // 141pt while staying as large as possible everywhere else.
+        padding({ all: 5 }),
         widgetURL(deepLink),
       ]}>
         {qrImageUri ? (
@@ -98,15 +101,13 @@ function QrScanWidget(props: QrScanWidgetProps) {
           // zone a scanner needs to find the symbol, which a code flush against a dark
           // background does not have.
           //
-          // The sums, so this cannot silently clip again: the widget is 164pt here and about
-          // 141pt on the smallest iPhones. 11pt outer margins - Apple's sanctioned tighter
-          // value for a content grouping - leave 119pt there, so the card can be at most 117.
-          // The code is 105pt inside it, which leaves a 6pt inset each side. That inset came
-          // down from 8 rather than eating into the margin, because the code carries its own
-          // white border already, so the visible gap is presentation rather than quiet zone.
+          // 130pt, up from 117. A flexible frame was tried here and is the wrong tool: rather
+          // than expanding into the padded area it collapsed the card to 94pt, smaller than
+          // what it replaced. So this is explicit again, sized against the smallest iPhone:
+          // 130 + 2 x 5pt padding = 140, inside the 141pt a small widget has there.
           <ZStack
             modifiers={[
-              frame({ width: 117, height: 117 }),
+              frame({ width: 130, height: 130 }),
               background('#FFFFFF'),
               cornerRadius(7.2),
             ]}>
@@ -118,12 +119,14 @@ function QrScanWidget(props: QrScanWidgetProps) {
                 and the frame merely crops it - which is why a 480px code appeared as a
                 zoomed-in fragment of itself, unscannable. aspectRatio keeps it square so the
                 modules stay readable. */}
+            {/* 116pt inside a 130pt card leaves the 7pt inset that is the quiet zone a scanner
+                needs. Up from 105. */}
             <Image
               uiImage={qrImageUri}
               modifiers={[
                 resizable(),
                 aspectRatio({ ratio: 1, contentMode: 'fit' }),
-                frame({ width: 105, height: 105 }),
+                frame({ width: 116, height: 116 }),
                 widgetAccentedRenderingMode('fullColor'),
               ]}
             />
@@ -133,8 +136,14 @@ function QrScanWidget(props: QrScanWidgetProps) {
                 modifiers={[
                   resizable(),
                   aspectRatio({ ratio: 1, contentMode: 'fit' }),
-                  frame({ width: 27, height: 27 }),
-                  cornerRadius(5),
+                  // A white ring so the mark reads as sitting ON the code rather than being
+                  // part of it. The logo shrinks from 30 to 22 so the ring grows inward: the
+                  // white footprint stays 30pt, which keeps the occluded share of the code
+                  // unchanged and the code as scannable as it was.
+                  frame({ width: 22, height: 22 }),
+                  padding({ all: 4 }),
+                  background('#FFFFFF'),
+                  cornerRadius(7),
                   widgetAccentedRenderingMode('fullColor'),
                 ]}
               />

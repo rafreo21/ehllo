@@ -21,8 +21,10 @@ import { ChevronUp as CaretUpIcon } from "react-feather";
 import { ShareCardModal } from "../../components/ShareCardModal";
 import { Upload as UploadSimpleIcon } from "react-feather";
 import { useAppUser } from "../../components/AppUserContext";
-import { PageSkeleton } from "../../components/AsyncState";
+import { CardFlowSkeleton } from "../../components/AsyncState";
+import { CardImage } from "../../components/CardImage";
 import { Button, LinkButton } from "../../components/Button";
+import { ContactMethodIcon } from "../../components/ContactMethodIcon";
 import { contactMethodHref, contactMethodOpensNewTab } from "../../../lib/contact-methods";
 import { buildHtmlSignature, buildPlainSignature } from "../../../lib/email-signature";
 import { WidgetsOnPhoneModal } from "../../components/WidgetsOnPhoneModal";
@@ -124,6 +126,8 @@ export default function CardsPage() {
   const [recentConnection, setRecentConnection] = useState<ConnectionItem | null>(null);
   const { showToast } = useToast();
   const cardTheme = useMemo(() => themeSurfaceStyle(profile.theme), [profile.theme]);
+  const profilePhoto = normalizeImageSource(profile.photo || photo);
+  const companyLogo = normalizeImageSource(profile.companyLogo);
 
   function toProfile(card: LibraryCard): Profile {
     return {
@@ -392,9 +396,10 @@ function createCard(seed: Partial<LibraryCard> = {}) {
     if (next[0]) selectCard(next[0]);
   }
 
-  async function downloadShareAsset(type: "virtual-background" | "watch-face") {
+  async function downloadShareAsset(type: "virtual-background" | "watch-face", mirrored = false) {
     try {
-      const response = await fetch(`/api/cards/share-assets/${encodeURIComponent(profile.slug)}?type=${type}`);
+      const query = `type=${type}${mirrored ? "&mirrored=1" : ""}`;
+      const response = await fetch(`/api/cards/share-assets/${encodeURIComponent(profile.slug)}?${query}`);
       if (!response.ok) {
         const payload = await response.json().catch(() => null) as { error?: string } | null;
         throw new Error(payload?.error || "We couldn’t download this asset.");
@@ -408,14 +413,22 @@ function createCard(seed: Partial<LibraryCard> = {}) {
       const link = document.createElement("a");
       link.href = href;
       const contentDisposition = response.headers.get("content-disposition");
-      link.download = parseDownloadFilename(contentDisposition) || `ehllo-${type}-${profile.slug}` + (type === "virtual-background" ? ".jpg" : ".png");
+      link.download = parseDownloadFilename(contentDisposition)
+        || `ehllo-${type}-${profile.slug}${mirrored ? "-mirrored" : ""}` + (type === "virtual-background" ? ".jpg" : ".png");
       document.body.appendChild(link);
       link.click();
       window.setTimeout(() => {
         link.remove();
         URL.revokeObjectURL(href);
       }, 1500);
-      showToast({ tone: "success", message: `${type === "virtual-background" ? "Background" : "Watch QR"} downloaded.` });
+      showToast({
+        tone: "success",
+        message: type === "watch-face"
+          ? "Watch QR downloaded."
+          : mirrored
+            ? "Mirrored background downloaded — reads correctly in your own self-view."
+            : "Background downloaded.",
+      });
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : "We couldn’t download this asset.";
       showQrError(message, {
@@ -502,8 +515,8 @@ function createCard(seed: Partial<LibraryCard> = {}) {
 
   return (
     <>
-      <div className="flow-page">
-        {!hydrated ? <PageSkeleton rows={3} /> : !cards.length ? (
+      <div className={`flow-page${hydrated && viewingCard ? " card-detail-page" : ""}`}>
+        {!hydrated ? <CardFlowSkeleton /> : !cards.length ? (
           <section className="cards-empty-state">
             <div className="cards-empty-visual"><div><QrCodeIcon size={42} weight="bold" /></div><span><PlusIcon size={22} /></span></div>
             <h1>Create a card people can remember.</h1>
@@ -533,17 +546,11 @@ function createCard(seed: Partial<LibraryCard> = {}) {
                   <article key={card.id} className="card-overview-item">
                     <button onClick={() => openCard(card)} type="button">
                       <div className="card-overview-cover-wrap">
-                        {card.coverPhoto ? (
-                          <img src={card.coverPhoto} alt="" className="card-overview-cover-photo" />
-                        ) : (
-                          <div className="card-overview-cover-fallback" style={{ background: themeSurfaceStyle(card.theme).backgroundGradient }} />
-                        )}
-                        <div className="card-overview-avatar">
-                          {card.photo ? (
-                            <img src={card.photo} alt="" className="card-overview-avatar-photo" />
-                          ) : (
-                            <span className="card-overview-avatar-fallback">{cardInitials(card.name)}</span>
-                          )}
+                        <div className="card-overview-cover-fallback" style={{ background: themeSurfaceStyle(card.theme).backgroundGradient }} />
+                        <CardImage src={card.coverPhoto} alt="" className="card-overview-cover-photo" />
+                        <div className="card-overview-avatar" style={themeCoverBadgeStyle(card.theme)}>
+                          <span className="card-overview-avatar-fallback">{cardInitials(card.name)}</span>
+                          <CardImage src={card.photo} alt="" className="card-overview-avatar-photo" />
                         </div>
                       </div>
                       <div className="card-overview-copy"><small>{cardDisplayLabel(card)}</small><h3>{card.name.trim() || "Add your full name"}</h3><p>{cardLeadDetail(card)}</p></div>
@@ -576,25 +583,33 @@ function createCard(seed: Partial<LibraryCard> = {}) {
             <div className="card-share-layout" id="share">
           <article className="share-card-preview">
             <div className="share-card-cover" style={{ background: cardTheme.backgroundGradient, color: cardTheme.color }}>
-              <span style={themeCoverBadgeStyle(profile.theme)}>{profile.company[0] || "A"}</span>
+              <span style={themeCoverBadgeStyle(profile.theme)}>{profile.company[0] || "A"}<CardImage src={companyLogo} alt="" /></span>
               <strong style={{ color: cardTheme.color }}>{profile.company || "Your company"}</strong>
             </div>
             <div className="share-card-body">
-              <div className="share-avatar">{photo ? <img src={photo} alt="" /> : initials}</div>
+              <div className="share-avatar" style={themeCoverBadgeStyle(profile.theme)}><span>{initials}</span><CardImage src={profilePhoto} alt={profile.name || "Profile picture"} /></div>
               <h2>{profile.name}</h2>
               <p className="share-role">{profile.role}{profile.company ? ` · ${profile.company}` : ""}</p>
-              <p>{profile.bio}</p>
+              {profile.bio ? <p className="share-bio">{profile.bio}</p> : null}
               <div className="share-contact">
                 {actionMethods.map((method) => {
                   const href = contactMethodHref(method);
                   return href
                     ? <a key={method.id} href={href} target={contactMethodOpensNewTab(href) ? "_blank" : undefined} rel={contactMethodOpensNewTab(href) ? "noreferrer" : undefined}>
-                        <span><strong>{method.label}</strong><small>{method.value}</small></span><ArrowSquareOutIcon />
+                        <span className="share-contact-icon" style={{ color: cardTheme.backgroundColor }}>
+                          <ContactMethodIcon type={method.type} color={cardTheme.backgroundColor} size={18} />
+                        </span>
+                        <span className="share-contact-copy"><strong>{method.label}</strong><small>{method.value}</small></span>
+                        <ArrowSquareOutIcon className="share-contact-action" size={17} aria-hidden="true" />
                       </a>
-                    : <span className="unavailable-method" key={method.id}><strong>{method.label}</strong><small>{method.value}</small></span>;
+                    : <span className="unavailable-method" key={method.id}>
+                        <span className="share-contact-icon" style={{ color: cardTheme.backgroundColor }}>
+                          <ContactMethodIcon type={method.type} color={cardTheme.backgroundColor} size={18} />
+                        </span>
+                        <span className="share-contact-copy"><strong>{method.label}</strong><small>{method.value}</small></span>
+                      </span>;
                 })}
               </div>
-              <LinkButton fullWidth variant="secondary" href={`/app/card/edit?id=${activeId}`}><PencilSimpleIcon size={17} />Edit card</LinkButton>
             </div>
           </article>
           <section className="inline-qr-panel">
@@ -665,7 +680,7 @@ function createCard(seed: Partial<LibraryCard> = {}) {
             {shareTool === "signature" ? <section className="signature-panel card-tool-section">
               <div className="inline-qr-head"><span><EnvelopeSimpleIcon size={22} /></span><div><h2 className="signature-title">Email signature</h2><p>Square photo, name, title, and contact details. Ready for Gmail or Outlook.</p></div></div>
               <div className="signature-preview-card">
-                <div className="signature-preview-photo">{photo ? <img src={photo} alt="" /> : initials}</div>
+                <div className="signature-preview-photo"><span>{initials}</span><CardImage src={photo} alt="" /></div>
                 <div className="signature-preview-copy">
                   <strong>{profile.name}</strong>
                   {profile.role ? <span>{profile.role}</span> : null}
@@ -686,7 +701,7 @@ function createCard(seed: Partial<LibraryCard> = {}) {
               <small className="signature-note">Use plain text for most clients. HTML keeps phone, email, and card link clickable.</small>
             </section> : null}
             {shareTool === "background" ? <section className="share-surface-panel card-tool-section">
-              <div className="inline-qr-head"><span><MonitorIcon size={22} /></span><div><h2 className="virtual-background-title">Virtual background</h2><p>Meeting background with your name and a scannable QR in the corner.</p></div></div>
+              <div className="inline-qr-head"><span><MonitorIcon size={22} /></span><div><h2 className="virtual-background-title">Virtual background</h2><p>Your name and QR on a meeting background, mirrored for Meet, Zoom and Teams. Those apps mirror your self-view, so it reads correctly on your own screen — participants see it reversed and cannot scan the QR.</p></div></div>
               <div className="share-surface-preview virtual-background-preview" style={{ background: cardTheme.backgroundGradient }}>
                 <div className="share-surface-overlay">
                   <strong>{profile.name}</strong>
@@ -697,7 +712,7 @@ function createCard(seed: Partial<LibraryCard> = {}) {
                 </div>
               </div>
               <div className="inline-qr-actions">
-                <Button size="small" variant="secondary" onClick={() => void downloadShareAsset("virtual-background")}><DownloadSimpleIcon size={16} />Download background</Button>
+                <Button size="small" variant="secondary" onClick={() => void downloadShareAsset("virtual-background", true)}><DownloadSimpleIcon size={16} />Download background</Button>
               </div>
             </section> : null}
             {shareTool === "watch" ? <section className="share-surface-panel card-tool-section">
@@ -733,7 +748,7 @@ function createCard(seed: Partial<LibraryCard> = {}) {
                     </div>
                     <div>
                       <div className="widget-layout-avatar">
-                        {profile.photo ? <img src={profile.photo} alt="" /> : <span>{initials}</span>}
+                        <span>{initials}</span><CardImage src={profile.photo} alt="" />
                       </div>
                       <strong>{profile.name}</strong>
                       {profile.role ? <span>{profile.role}</span> : null}
@@ -749,7 +764,7 @@ function createCard(seed: Partial<LibraryCard> = {}) {
                     <small>RECENT CONNECTIONS</small>
                     <div className="widget-gallery-connection-row">
                       <div className="widget-layout-avatar">
-                        {recentConnection?.photoUrl ? <img src={recentConnection.photoUrl} alt="" /> : <span>{recentConnection ? cardInitials(recentConnection.name) : "C"}</span>}
+                        <span>{recentConnection ? cardInitials(recentConnection.name) : "C"}</span><CardImage src={recentConnection?.photoUrl} alt="" />
                       </div>
                       <div>
                         <strong>{recentConnection?.name || "Recent connection"}</strong>
@@ -795,6 +810,14 @@ function createCard(seed: Partial<LibraryCard> = {}) {
             <WidgetsOnPhoneModal
               open={widgetsOnPhoneOpen}
               onClose={() => setWidgetsOnPhoneOpen(false)}
+              // Real card data, so the preview is this person's widget rather than a mock-up.
+              preview={{
+                qrDataUrl: qr,
+                name: profile.name,
+                role: profile.role,
+                company: profile.company,
+                photoUrl: profile.photo,
+              }}
             />
           </>
         )}

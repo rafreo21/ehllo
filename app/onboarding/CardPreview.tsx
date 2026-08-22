@@ -2,7 +2,7 @@ import { Mail as EnvelopeSimpleIcon } from "react-feather";
 import { Phone as PhoneIcon } from "react-feather";
 import { Button } from "../components/Button";
 
-import { themeForegroundColor, themeGradientCss } from "@/lib/theme-contrast";
+import { themeCoverBadgeStyle, themeForegroundColor, themeGradientCss } from "@/lib/theme-contrast";
 
 type PreviewMethod = { type: string; value: string; label: string };
 
@@ -23,6 +23,7 @@ export function CardPreview({
 }) {
   const initials = name.trim().split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "AM";
   const onAccent = themeForegroundColor(theme);
+  const badgeStyle = themeCoverBadgeStyle(theme);
   const methods: PreviewMethod[] = [
     email.trim() ? { type: "email", value: email.trim(), label: "Email" } : null,
     phone.trim() ? { type: "phone", value: phone.trim(), label: "Phone" } : null,
@@ -33,11 +34,11 @@ export function CardPreview({
       <div className="onboarding-phone-notch" aria-hidden="true" />
       <article className="public-card onboarding-card-preview">
         <div className="card-cover" style={{ background: themeGradientCss(theme), color: onAccent }}>
-          <div className="card-logo">{company.trim()[0]?.toUpperCase() || initials[0] || "A"}</div>
+          <div className="card-logo" style={badgeStyle}>{company.trim()[0]?.toUpperCase() || initials[0] || "A"}</div>
           <span>{company.trim() || "Your company"}</span>
         </div>
         <div className="card-body">
-          <div className="card-avatar">{initials}</div>
+          <div className="card-avatar" style={badgeStyle}>{initials}</div>
           <h2>{name.trim() || "Your name"}</h2>
           <p className="card-role">
             {role.trim() || "Your role"}

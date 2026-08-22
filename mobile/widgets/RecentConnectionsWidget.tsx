@@ -1,11 +1,16 @@
-import { HStack, Link, Text, VStack } from '@expo/ui/swift-ui';
+import { HStack, Image, Link, Spacer, Text, VStack } from '@expo/ui/swift-ui';
 import {
+  aspectRatio,
+  background,
   containerBackground,
   cornerRadius,
   font,
   foregroundStyle,
   frame,
+  lineLimit,
   padding,
+  resizable,
+  widgetAccentedRenderingMode,
   widgetURL,
 } from '@expo/ui/swift-ui/modifiers';
 import { createWidget } from 'expo-widgets';
@@ -15,6 +20,8 @@ type WidgetConnectionRecord = {
   subtitle: string;
   phone?: string;
   email?: string;
+  initials?: string;
+  photoUri?: string;
 };
 
 export type RecentConnectionsWidgetProps = {
@@ -24,14 +31,16 @@ export type RecentConnectionsWidgetProps = {
   connection1Subtitle?: string;
   connection1Phone?: string;
   connection1Email?: string;
+  connection1Initials?: string;
+  connection1PhotoUri?: string;
   connection2Name?: string;
   connection2Subtitle?: string;
   connection2Phone?: string;
   connection2Email?: string;
-  connection3Name?: string;
-  connection3Subtitle?: string;
-  connection3Phone?: string;
-  connection3Email?: string;
+  connection2Initials?: string;
+  connection2PhotoUri?: string;
+  /** '1' or '0'. Absent means the widget gallery, where sample content is the right answer. */
+  signedIn?: string | boolean;
 };
 
 function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
@@ -42,10 +51,17 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
   // plain constants. Every helper AND constant the render logic needs must
   // be declared inside this function.
   const WIDGET_COLORS = {
-    canvas: '#141814',
-    accent: '#9FE870',
+    // Black, because "let #000000 be consistent" covers all three widgets. The layout guide
+    // for this one says #2A2D2A; that would make it the only widget not black, so it is the
+    // one number here taken from the earlier instruction instead of the guide.
+    canvas: '#000000',
+    accent: '#87EA5C',
     text: '#FFFFFF',
-    subtle: '#8FA088',
+    subtle: '#BDBDBD',
+    // Both the action circles and the add pill, per the guide.
+    chip: '#4E4E4E',
+    // The initials avatar when someone has no photo.
+    avatarFallback: '#5DC154',
   };
 
   // The app's own typeface, matching theme/tokens.ts. A widget extension is a separate
@@ -54,24 +70,44 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
   // would read in San Francisco while every other screen reads in Airbnb Cereal.
   const FONTS = { regular: 'AirbnbCereal_W_Bk', medium: 'AirbnbCereal_W_Md' };
 
+  // The guide is drawn at 157x72pt, which is about half the size of a real medium widget
+  // (340x164 here, 292x141 on the smallest iPhones). Everything below is that guide scaled to
+  // the real widget, with two corrections that cannot be scaled away: text sits at 11pt or
+  // more, because Apple's guidance is that anything smaller "can be too hard for many people
+  // to read" (the guide's 5.5pt and 7.4pt would be illegible), and the total height is held
+  // under 141pt so nothing clips on the smallest iPhone. The proportions are the guide's.
+  // Dialled back from avatar 36 / action 32 / name 16, which filled the widget so completely
+  // that it read as zoomed in. Everything here is one step smaller with more space around it,
+  // and text stays at or above Apple's 11pt floor.
+  const SIZES = {
+    avatar: 30,
+    action: 26,
+    rowGap: 12,
+    infoGap: 10,
+    textGap: 1,
+    actionGap: 8,
+  };
+
   const DEMO_CONNECTIONS: WidgetConnectionRecord[] = [
-    { name: 'Jordan Lee', subtitle: 'Shared via your card' },
-    { name: 'Cameron Williamson', subtitle: 'Shared via your card' },
+    { name: 'Raphael Okojie', subtitle: 'Connected 2 mins ago', initials: 'RO' },
+    { name: 'Christain Bale', subtitle: 'Connected 1 day ago', initials: 'CB' },
   ];
 
-  function connectionSlots(props: Record<string, string | number | undefined>) {
-    const rows = [1, 2, 3].map((slot) => {
+  function connectionSlots(props: Record<string, string | number | boolean | undefined>) {
+    const rows = [1, 2].map((slot) => {
       const name = String(props[`connection${slot}Name`] || '').trim();
       if (!name) return null;
       return {
         name,
-        subtitle: String(props[`connection${slot}Subtitle`] || 'Shared via your card').trim(),
+        subtitle: String(props[`connection${slot}Subtitle`] || 'Connected through ehllo').trim(),
         phone: String(props[`connection${slot}Phone`] || '').trim(),
         email: String(props[`connection${slot}Email`] || '').trim(),
+        initials: String(props[`connection${slot}Initials`] || '').trim(),
+        photoUri: String(props[`connection${slot}PhotoUri`] || '').trim(),
       };
     }).filter(Boolean) as WidgetConnectionRecord[];
 
-    return rows.length ? rows : DEMO_CONNECTIONS;
+    return rows;
   }
 
   function dialUrl(phone: string) {
@@ -79,80 +115,215 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
     return digits ? `tel:${digits}` : '';
   }
 
-  function messageUrl(email: string, phone: string) {
-    if (phone.trim()) return `sms:${phone.replace(/\s+/g, '')}`;
+  function mailUrl(email: string, phone: string) {
     if (email.trim()) return `mailto:${email.trim()}`;
+    if (phone.trim()) return `sms:${phone.replace(/\s+/g, '')}`;
     return '';
+  }
+
+  function initialsFor(row: WidgetConnectionRecord) {
+    if (row.initials) return row.initials.slice(0, 2).toUpperCase();
+    return row.name.trim().slice(0, 1).toUpperCase() || '?';
+  }
+
+  // Every repeated element is built by a plain function call rather than by mapping inside the
+  // JSX, and that is load-bearing rather than a style choice.
+  //
+  // expo-widgets' native evaluator reads a view's children with
+  //   children.compactMap { $0 as? [String: Any] }
+  // which keeps dictionaries and throws away anything else without a word. `{rows.map(...)}`
+  // hands it a nested ARRAY in one child slot, so every row was discarded - the widget drew
+  // its header, archived "success", and logged nothing at all. Calling the function inline
+  // puts a dictionary in each slot instead, which is what survives that compactMap.
+  function renderRow(row: WidgetConnectionRecord | undefined, rowIndex: number, placeholder?: boolean) {
+    if (!row) return null;
+    const phoneUrl = dialUrl(row.phone || '');
+    const mailHref = mailUrl(row.email || '', row.phone || '');
+
+    return (
+      <HStack key={`row-${rowIndex}`} spacing={SIZES.infoGap} alignment="center">
+        {row.photoUri ? (
+          // resizable() before the frame, or SwiftUI draws the image at its natural size and
+          // the frame merely crops it. fullColor so a tinted widget appearance cannot
+          // desaturate someone's face.
+          <Image
+            uiImage={row.photoUri}
+            modifiers={[
+              resizable(),
+              aspectRatio({ ratio: 1, contentMode: 'fill' }),
+              frame({ width: SIZES.avatar, height: SIZES.avatar }),
+              cornerRadius(SIZES.avatar / 2),
+              widgetAccentedRenderingMode('fullColor'),
+            ]}
+          />
+        ) : (
+          // frame then background then cornerRadius: the background fills the frame, so this
+          // is a real filled circle. It used to be frame + cornerRadius with no fill at all,
+          // which draws nothing, so the initial floated with no shape behind it.
+          <Text
+            modifiers={[
+              foregroundStyle(WIDGET_COLORS.text),
+              font({ family: FONTS.regular, size: 12 }),
+              frame({ width: SIZES.avatar, height: SIZES.avatar }),
+              background(placeholder ? WIDGET_COLORS.chip : WIDGET_COLORS.avatarFallback),
+              cornerRadius(SIZES.avatar / 2),
+            ]}>
+            {placeholder ? ' ' : initialsFor(row)}
+          </Text>
+        )}
+
+        {/* lineLimit(1) on both lines so one long name cannot make its row taller than the
+            other and push it off the bottom. */}
+        <VStack spacing={SIZES.textGap} alignment="leading">
+          <Text
+            modifiers={[
+              foregroundStyle(placeholder ? WIDGET_COLORS.subtle : WIDGET_COLORS.text),
+              font({ family: FONTS.regular, size: 14 }),
+              lineLimit(1),
+            ]}>
+            {row.name}
+          </Text>
+          <Text
+            modifiers={[
+              foregroundStyle(WIDGET_COLORS.subtle),
+              font({ family: FONTS.regular, size: 11 }),
+              lineLimit(1),
+            ]}>
+            {row.subtitle}
+          </Text>
+        </VStack>
+
+        {/* A Spacer rather than a fixed text column. A medium widget is 292pt wide on the
+            smallest iPhones and 360 on the largest, so any hardcoded width overflows at one
+            end of that range. This pins the actions right at every width instead. */}
+        <Spacer />
+
+        {phoneUrl ? (
+          <Link destination={phoneUrl}>
+            <Image
+              systemName="phone.fill"
+              modifiers={[
+                foregroundStyle(WIDGET_COLORS.text),
+                font({ size: 11 }),
+                frame({ width: SIZES.action, height: SIZES.action }),
+                background(WIDGET_COLORS.chip),
+                cornerRadius(SIZES.action / 2),
+              ]}
+            />
+          </Link>
+        ) : null}
+
+        {mailHref ? (
+          <Link destination={mailHref}>
+            <Image
+              systemName="envelope.fill"
+              modifiers={[
+                foregroundStyle(WIDGET_COLORS.text),
+                font({ size: 11 }),
+                frame({ width: SIZES.action, height: SIZES.action }),
+                background(WIDGET_COLORS.chip),
+                cornerRadius(SIZES.action / 2),
+              ]}
+            />
+          </Link>
+        ) : null}
+      </HStack>
+    );
+  }
+
+  // The pill takes the place of a second row when there is only one connection, so the widget
+  // always has two lines of content instead of a row and a gap.
+  function renderAddButton() {
+    return (
+      <Link destination="ehllo://scanner">
+        <HStack
+          spacing={6}
+          alignment="center"
+          modifiers={[
+            padding({ leading: 12, trailing: 12, top: 6, bottom: 6 }),
+            background(WIDGET_COLORS.chip),
+            cornerRadius(13),
+          ]}>
+          <Image
+            systemName="plus.circle.fill"
+            modifiers={[foregroundStyle(WIDGET_COLORS.text), font({ size: 13 })]}
+          />
+          <Text
+            modifiers={[
+              foregroundStyle(WIDGET_COLORS.text),
+              font({ family: FONTS.regular, size: 12 }),
+              lineLimit(1),
+            ]}>
+            Add new connection
+          </Text>
+          {/* The Spacer is what makes the pill span the full width - a fixed width would be
+              wrong on some device, since a medium widget is 292 to 360pt wide. */}
+          <Spacer />
+        </HStack>
+      </Link>
+    );
   }
 
   const deepLink = props.connectionsDeepLink || props.shareDeepLink || 'ehllo://connections';
   const rows = connectionSlots(props);
+  // Three states, not two. Signed out says so. Signed in with nothing yet gets the add pill,
+  // which is the actual next step rather than a sentence about one. The gallery - where
+  // signedIn is absent entirely - keeps realistic sample rows.
+  const signedOut = props.signedIn === '0' || props.signedIn === false;
+  const preview = props.signedIn === undefined;
+  const visible = preview && rows.length === 0 ? DEMO_CONNECTIONS : rows;
+  // Nothing yet: a dummy row in the real row's shape, then the add pill. An empty widget with
+  // only a header reads as broken rather than as new.
+  const empty = !signedOut && visible.length === 0;
+  const PLACEHOLDER_ROW: WidgetConnectionRecord = {
+    name: 'Your connections',
+    subtitle: 'Appear here after you share',
+  };
 
   return (
+    // Height budget for the smallest iPhone, where a medium widget is 141pt tall:
+    // 12 top + 14 header + 10 + 34 + 10 + 34 = 114, leaving room to spare. A third row would
+    // not fit, which is why the guide has two.
     <VStack
+      spacing={SIZES.rowGap}
+      alignment="leading"
       modifiers={[
         containerBackground(WIDGET_COLORS.canvas, 'widget'),
-        // 11pt, Apple's sanctioned tighter margin for a content grouping - a list of rows.
-        padding({ all: 11 }),
+        // 16pt, the same margin as the business card widget, so the two do not look like they
+        // were laid out to different rules when they sit together on a home screen.
+        padding({ leading: 16, trailing: 16, top: 16 }),
         widgetURL(deepLink),
       ]}>
-      {/* Nothing under 11pt: Apple's guidance is that smaller text "can be too hard for many
-          people to read". */}
-      <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ family: FONTS.medium, weight: 'bold', size: 11 })]}>
-        RECENT CONNECTIONS
+      <Text
+        modifiers={[
+          foregroundStyle(WIDGET_COLORS.accent),
+          font({ family: FONTS.medium, weight: 'bold', size: 11 }),
+        ]}>
+        Recent Connections
       </Text>
-      {rows.map((row, rowIndex) => {
-        const phoneUrl = dialUrl(row.phone || '');
-        const messageHref = messageUrl(row.email || '', row.phone || '');
 
-        return (
-          <HStack key={`row-${rowIndex}`} modifiers={[padding({ top: 8 })]}>
-            <Text
-              modifiers={[
-                foregroundStyle(WIDGET_COLORS.accent),
-                font({ family: FONTS.medium, weight: 'bold', size: 11 }),
-                frame({ width: 24, height: 24 }),
-                cornerRadius(12),
-              ]}>
-              {row.name.slice(0, 1).toUpperCase()}
-            </Text>
-            <VStack modifiers={[padding({ leading: 4 })]}>
-              <Text modifiers={[foregroundStyle(WIDGET_COLORS.text), font({ family: FONTS.medium, weight: 'bold', size: 12 })]}>
-                {row.name}
-              </Text>
-              <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ family: FONTS.regular, size: 11 })]}>
-                {row.subtitle}
-              </Text>
-            </VStack>
-            {phoneUrl ? (
-              <Link destination={phoneUrl}>
-                <Text
-                  modifiers={[
-                    foregroundStyle(WIDGET_COLORS.text),
-                    font({ family: FONTS.regular, size: 12 }),
-                    frame({ width: 28, height: 28 }),
-                    cornerRadius(14),
-                  ]}>
-                  ☎
-                </Text>
-              </Link>
-            ) : null}
-            {messageHref ? (
-              <Link destination={messageHref}>
-                <Text
-                  modifiers={[
-                    foregroundStyle(WIDGET_COLORS.text),
-                    font({ family: FONTS.regular, size: 12 }),
-                    frame({ width: 28, height: 28 }),
-                    cornerRadius(14),
-                  ]}>
-                  ✉
-                </Text>
-              </Link>
-            ) : null}
-          </HStack>
-        );
-      })}
+      {signedOut ? (
+        <Text
+          modifiers={[
+            foregroundStyle(WIDGET_COLORS.subtle),
+            font({ family: FONTS.regular, size: 12 }),
+            lineLimit(2),
+          ]}>
+          Sign in to see the people you meet
+        </Text>
+      ) : null}
+
+      {/* One child slot each - see renderRow on why these are not a .map(). */}
+      {signedOut ? null : empty ? renderRow(PLACEHOLDER_ROW, 0, true) : renderRow(visible[0], 0)}
+      {signedOut || empty ? null : renderRow(visible[1], 1)}
+
+      {/* Two rows fill the widget on their own; with one connection, or none, the pill takes
+          the second slot. */}
+      {signedOut || visible.length > 1 ? null : renderAddButton()}
+
+      {/* A VStack centres its content vertically, so the rows floated in the middle of a 164pt
+          widget. This pushes them to the top, where a list belongs. */}
+      <Spacer />
     </VStack>
   );
 }

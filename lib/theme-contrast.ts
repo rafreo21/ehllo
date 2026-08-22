@@ -100,7 +100,10 @@ export function themeSurfaceStyle(hex: string): ThemeSurfaceStyle {
 export function themeCoverBadgeStyle(hex: string) {
   const surface = themeSurfaceStyle(hex);
   return {
-    background: surface.color === WHITE ? "rgba(255,255,255,0.18)" : INK,
-    color: WHITE,
+    // Keep the company and profile badges structurally consistent across all
+    // swatches. Dark themes can carry their accent as the mark; very light
+    // themes use ink so the mark remains readable against the white badge.
+    background: WHITE,
+    color: surface.color === WHITE ? surface.backgroundColor : INK,
   };
 }

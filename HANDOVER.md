@@ -20,6 +20,23 @@ typecheck and lint clean.
 | Widget QR too large for WidgetKit -> every render failed | `f14d70f` | Extension log: `imageTooLarge` gone, all three `success` |
 | Widget QR cropped instead of scaled; white card; bigger | `9783dff` | Layout verified in the App Group plist |
 | Splash is the mark, not a tile on dark green | `8c12da1` | Colorset regenerated to `#87EA5C` |
+| Widget font: the app's own Airbnb Cereal inside the extension | `8085a31` | Both weights present in the built `.appex`, listed in `UIAppFonts` |
+| Recent Connections widget rebuilt (last of the three) | pending | Layout in the App Group plist; all three archive `success`, 0 errors |
+| Android widgets never received `signedIn` at all | pending | `:app:compileDebugKotlin` + `processDebugResources` BUILD SUCCESSFUL |
+| **Recent Connections rows had never rendered once** | pending | Rows now visible on the home screen; see below |
+| All three widget canvases black; pager gone, primary card only | pending | Screenshotted on the home screen, all three `success` |
+
+### The rows-never-rendered bug, because it will bite again
+
+`expo-widgets` reads a view's children natively with
+
+    children.compactMap { $0 as? [String: Any] }
+
+which keeps dictionaries and **silently discards anything else**. `{rows.map(...)}` as a JSX
+child hands it a nested *array* in one slot, so every row was thrown away — the widget drew its
+header, archived `success`, and logged nothing. Build repeated children by calling a plain
+function per slot (`renderRow(rows[0], 0)`), never by mapping inside the JSX. The other two
+widgets only use `.map` for data, so they were unaffected.
 
 ## Needs you
 
@@ -37,8 +54,8 @@ typecheck and lint clean.
   read, because Meet and Zoom mirror your *self-view* only, not the stream others receive. The
   right shape is a mirrored variant alongside the normal one, not instead of it. Your call.
 - **Request-access history**, and whether it should show the value you sent.
-- **Widget signed-out wording** is in, but a widget with no published card still falls back to
-  demo content in the gallery, which is correct there and arguably wrong once installed.
+- **Android QR card keeps a 3dp accent-green stroke** (`accent_frame_compact`) where iOS is now
+  a plain white card with a 7.2pt radius. Cosmetic, and Android-build-only.
 
 ## Where the bugs live
 

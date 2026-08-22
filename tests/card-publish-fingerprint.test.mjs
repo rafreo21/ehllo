@@ -32,4 +32,5 @@ test("ignores persistence metadata when checking publish state", () => {
 
 test("detects user-visible card changes", () => {
   assert.notEqual(cardPublishFingerprint(card), cardPublishFingerprint({ ...card, bio: "A changed bio" }));
+  assert.notEqual(cardPublishFingerprint(card), cardPublishFingerprint({ ...card, photo: "data:image/png;base64,changed" }));
 });

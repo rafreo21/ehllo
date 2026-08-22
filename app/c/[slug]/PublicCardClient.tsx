@@ -2,8 +2,14 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { ArrowUpRight as ArrowUpRightIcon } from "react-feather";
 import { CreditCard as IdentificationCardIcon } from "react-feather";
+import { Send as SendIcon } from "react-feather";
+import { UserPlus as UserPlusIcon } from "react-feather";
 import { Button } from "../../components/Button";
+import { BrandMark } from "../../components/BrandMark";
+import { CardImage } from "../../components/CardImage";
 import { ContactMethodIcon } from "../../components/ContactMethodIcon";
 import { PublicAppDownloadPrompt } from "../../components/PublicAppDownloadPrompt";
 import { VisitorSignInPrompt } from "../../components/VisitorSignInPrompt";
@@ -77,12 +83,12 @@ function PublicCardView({
     <>
       <div
         className="public-card-cover"
-        style={{ background: coverImageUrl ? undefined : theme.backgroundGradient }}>
-        {coverImageUrl ? <img src={coverImageUrl} alt="" className="public-card-cover-photo" /> : null}
+        style={{ background: theme.backgroundGradient }}>
+        <CardImage src={coverImageUrl} alt="" className="public-card-cover-photo" />
         {showCompanyDetails && (companyLogoUrl || company) ? (
           <div className="public-card-company-row">
             {companyLogoUrl ? (
-              <img src={companyLogoUrl} alt="" className="public-card-company-logo" />
+              <><span className="public-card-company-mark" style={coverBadge}>{company?.[0] || "A"}</span><CardImage src={companyLogoUrl} alt="" className="public-card-company-logo" /></>
             ) : company ? (
               <span className="public-card-company-mark" style={coverBadge}>{company[0]}</span>
             ) : null}
@@ -95,25 +101,22 @@ function PublicCardView({
         ) : null}
       </div>
       <div className="public-card-content">
-        <div className="public-card-avatar">
-          {profileImageUrl ? (
-            <img src={profileImageUrl} alt={ownerName} />
-          ) : (
-            <span>
-              {ownerName
-                .split(/\s+/)
-                .map((part) => part[0])
-                .slice(0, 2)
-                .join("")}
-            </span>
-          )}
+        <div className="public-card-avatar" style={coverBadge}>
+          <span>
+            {ownerName
+              .split(/\s+/)
+              .map((part) => part[0])
+              .slice(0, 2)
+              .join("")}
+          </span>
+          <CardImage src={profileImageUrl} alt={ownerName} />
         </div>
         <h1>{ownerName}</h1>
         {roleLine ? <p className="public-card-role">{roleLine}</p> : null}
 
         <div className="public-card-step">
           {bio ? <p className="public-card-bio">{bio}</p> : null}
-          <div className="public-card-methods">
+          {methods.length ? <div className="public-card-methods">
             {methods.map((method) => {
               const href = publicMethodHref(method, ownerName);
               if (!href) return null;
@@ -128,30 +131,33 @@ function PublicCardView({
                 >
                   <span
                     className="public-card-method-icon"
-                    style={{ background: theme.backgroundGradient, color: theme.color }}
+                    style={{ color: theme.backgroundColor }}
                   >
-                    <ContactMethodIcon type={method.method_type} color={theme.color} size={18} />
+                    <ContactMethodIcon type={method.method_type} color={theme.backgroundColor} size={18} />
                   </span>
                   <span>
                     <strong>{method.label || method.method_type}</strong>
                     <small>{displayValue}</small>
                   </span>
+                  <ArrowUpRightIcon className="public-card-method-action" size={17} aria-hidden="true" />
                 </a>
               );
             })}
-          </div>
+          </div> : null}
 
-          <button
-            type="button"
-            className="public-card-return"
-            style={{ background: theme.backgroundGradient, color: theme.color }}
-            onClick={onSaveContact}
-          >
-            Save to contacts
-          </button>
-          <button type="button" className="public-card-share-back" onClick={onShareBack}>
-            Share my details back
-          </button>
+          <div className="public-card-actions">
+            <button
+              type="button"
+              className="public-card-return"
+              style={{ background: theme.backgroundGradient, color: theme.color }}
+              onClick={onSaveContact}
+            >
+              <UserPlusIcon size={16} /> Save to contacts
+            </button>
+            <button type="button" className="public-card-share-back" onClick={onShareBack}>
+              <SendIcon size={16} /> Share my details back
+            </button>
+          </div>
           {/*
             For someone who already uses ehllo. Until now a card link opened on a
             desktop offered only "save to contacts" - the phone would add the person to
@@ -162,11 +168,12 @@ function PublicCardView({
             The app route decides, and sends anyone signed out to sign in first.
           */}
           <a className="public-card-open-in-app" href={`/app/scan?card=${encodeURIComponent(slug)}`}>
-            Already use ehllo? Add {ownerName.split(" ")[0] || "them"} to your people
+            <span>Add {ownerName.split(" ")[0] || "them"} in ehllo</span><ArrowRightIcon size={15} />
           </a>
           <p className="public-card-private">
-            One tap saves {ownerName} to your phone with profile photo when available. Open the ehllo link in the contact later to share your details back.
+            Save {ownerName} to your phone now. Share your details back anytime.
           </p>
+          <div className="public-card-brand"><BrandMark size={22} /><span>Shared with <strong>ehllo</strong></span></div>
         </div>
       </div>
     </>
@@ -281,17 +288,17 @@ export function PublicCardClient({
 
   if (step === "share") {
     return (
-      <main className="public-card-page" style={themeStyle}>
+      <main className="public-card-page public-card-page--share" style={themeStyle}>
         <section className="public-card-shell public-card-shell-share">
           <div className="public-card-share-page">
             <div className="public-card-share-top">
               <button type="button" className="ghost-link public-card-share-skip" onClick={returnToCard}>
-                Back to card
+                <ArrowLeftIcon size={16} /> Back to {ownerName.split(" ")[0] || "card"}
               </button>
             </div>
             <div className="public-card-share-heading">
-              <h1>Share your contact</h1>
-              <p>Send your details to {ownerName} so they remember who you are.</p>
+              <h1>Stay in touch</h1>
+              <p>Send your contact details to {ownerName}.</p>
             </div>
             <PublicExchangeForm slug={slug} ownerName={ownerName} themeColor={themeColor} onSent={handleExchangeSent} />
 

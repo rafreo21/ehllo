@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2 as TrashIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon, HardDrive as StorageIcon } from "react-feather";
 
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import { WEB_LOCAL_DATA_KEYS, clearWebLocalData } from "../../../../lib/web-local-data";
@@ -32,7 +32,8 @@ export default function LocalDataSettingsPage() {
     });
   }, []);
 
-  function clear() {
+  const clear = useCallback(() => {
+    if (held === 0) return;
     clearWebLocalData();
     window.localStorage.removeItem("ehllo-local-owner-v1");
     setHeld(0);
@@ -41,10 +42,18 @@ export default function LocalDataSettingsPage() {
     // the copy we just deleted, so leaving them mounted shows data that no longer
     // exists anywhere.
     window.setTimeout(() => router.refresh(), 400);
-  }
+  }, [held, router]);
+
+  useEffect(() => {
+    function clearFromDrawer() {
+      clear();
+    }
+    window.addEventListener("ehllo:clear-local-data", clearFromDrawer);
+    return () => window.removeEventListener("ehllo:clear-local-data", clearFromDrawer);
+  }, [clear]);
 
   return (
-    <section className="settings-panel">
+    <section className="settings-panel local-data-panel">
       <header>
         <div>
           <h2>Local data</h2>
@@ -52,21 +61,17 @@ export default function LocalDataSettingsPage() {
         </div>
       </header>
 
-      <p className="settings-note">
-        {held > 0
-          ? `${held} of ${WEB_LOCAL_DATA_KEYS.length} stores have something saved in this browser.`
-          : "Nothing is saved in this browser right now."}
-      </p>
+      <div className="local-data-summary">
+        <span>{held > 0 ? <StorageIcon size={19} /> : <CheckCircleIcon size={19} />}</span>
+        <div>
+          <strong>{held > 0 ? `${held} browser stores in use` : "Browser storage is clear"}</strong>
+          <small>{held > 0 ? `${held} of ${WEB_LOCAL_DATA_KEYS.length} local stores contain cached data.` : "No cached ehllo data is stored here."}</small>
+        </div>
+      </div>
 
-      <p className="settings-note">
-        Clearing is safe: everything here is a copy kept for speed, and the next page load
-        fetches it again. Your device and notification permission are left alone.
-      </p>
+      <p className="local-data-explainer">Clearing removes only this browser&rsquo;s cached copy. Your account, server data, device settings, and notification permission stay unchanged.</p>
 
-      <button type="button" className="button button-secondary" onClick={clear} disabled={held === 0}>
-        <TrashIcon size={16} />
-        {cleared ? "Cleared" : "Clear this browser's copy"}
-      </button>
+      {cleared ? <p className="local-data-cleared"><CheckCircleIcon size={16} />Browser copy cleared</p> : null}
     </section>
   );
 }

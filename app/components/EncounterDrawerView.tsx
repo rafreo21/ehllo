@@ -2,12 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { ChevronDown as CaretDownIcon } from "react-feather";
+import { ChevronUp as CaretUpIcon } from "react-feather";
 import { Copy as CopyIcon } from "react-feather";
 import { Mail as EnvelopeSimpleIcon } from "react-feather";
 import { Eye as EyeIcon } from "react-feather";
 import { Lock as LockKeyIcon } from "react-feather";
 import { Edit3 as NotePencilIcon } from "react-feather";
 import { Edit2 as PencilSimpleIcon } from "react-feather";
+import { Send as PaperPlaneTiltIcon } from "react-feather";
 import { X as XIcon } from "react-feather";
 import { ActionDoButton } from "./ActionDoButton";
 import { Button } from "./Button";
@@ -28,6 +31,7 @@ import {
 import { formatMeetingEmailDate, recordingShareMailtoHref } from "../../lib/recording-email";
 import { renameSpeakerAssignees, renameTranscriptSpeakers, transcriptSpeakerLabels } from "../../lib/speaker-labels";
 import { applyFollowUpTransition, canTransitionFollowUp } from "../../lib/follow-up-lifecycle";
+import { SELECTABLE_FOLLOW_UP_CHANNELS } from "../../lib/follow-up-channels";
 
 type UploadStatus = "idle" | "uploading" | "uploaded" | "failed";
 const ACTIONS_PREVIEW_SIZE = 3;
@@ -37,7 +41,8 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [reviewTab, setReviewTab] = useState<"recap" | "transcript" | "notes">("recap");
-  const [editingActionId, setEditingActionId] = useState("");
+  const [editingAction, setEditingAction] = useState<EncounterAction | null>(null);
+  const [editingDetailOpen, setEditingDetailOpen] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
   const [uploadError, setUploadError] = useState("");
   const [uploadRetryable, setUploadRetryable] = useState(true);
@@ -57,7 +62,7 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
     setLoading(true);
     setEncounter(null);
     setReviewTab("recap");
-    setEditingActionId("");
+    setEditingAction(null);
     setShowAllActions(false);
     void fetch(`/api/encounters/${encounterId}`)
       .then(async (response) => {
@@ -509,77 +514,12 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
                 aria-label={action.status === "completed" ? "Mark open" : canToggle ? "Mark complete" : "Confirm review to activate this follow-up first"}
               ><CheckCircleIcon size={16} /></button>
               <div className="action-copy"><strong>{action.title}</strong><small>{actionOwnerLabel(action)}{action.dueAt ? ` · due ${action.dueAt}` : ""}</small></div>
-              {editingActionId === action.id ? (
-                <div className="action-inline-editor">
-                  <SelectField
-                    label="Owner"
-                    value={action.owner === "me" ? "me" : action.participantId || "guest"}
-                    onChange={(event) => {
-                      const value = event.target.value;
-                      const participant = participants.find((person) => person.id === value);
-                      patch((current) => ({
-                        ...current,
-                        actions: (current.actions ?? []).map((item) => item.id !== action.id ? item : value === "me"
-                          ? { ...item, owner: "me" }
-                          : {
-                            ...item,
-                            owner: "guest",
-                            participantId: participant?.id,
-                            assigneeName: participant?.name || current.personName || "Guest",
-                            assigneeEmail: participant?.email || item.assigneeEmail,
-                          }),
-                      }));
-                    }}
-                  >
-                    <option value="me">Me</option>
-                    {participants.length ? participants.map((person) => (
-                      <option key={person.id} value={person.id}>{person.name || "Guest"}</option>
-                    )) : <option value="guest">{encounter.personName || "Guest"}</option>}
-                  </SelectField>
-                  {action.owner === "me" && participants.length ? (
-                    <SelectField
-                      label="For person"
-                      value={action.participantId || participants[0]?.id || ""}
-                      onChange={(event) => {
-                        const participant = participants.find((person) => person.id === event.target.value);
-                        patch((current) => ({
-                          ...current,
-                          actions: (current.actions ?? []).map((item) => item.id === action.id
-                            ? {
-                              ...item,
-                              participantId: participant?.id,
-                              assigneeName: participant?.name,
-                              assigneeEmail: participant?.email,
-                            }
-                            : item),
-                        }));
-                      }}
-                    >
-                      {participants.map((person) => (
-                        <option key={person.id} value={person.id}>{person.name || "Guest"}</option>
-                      ))}
-                    </SelectField>
-                  ) : null}
-                  <TextField
-                    label="Due date"
-                    type="date"
-                    value={action.dueAt || ""}
-                    onChange={(event) => patch((current) => ({
-                      ...current,
-                      actions: (current.actions ?? []).map((item) => item.id === action.id
-                        ? { ...item, dueAt: event.target.value }
-                        : item),
-                    }))}
-                  />
-                  <Button variant="secondary" onClick={() => setEditingActionId("")}>Done</Button>
-                </div>
-              ) : null}
               <button
                 type="button"
                 className="action-edit"
-                aria-label={`Edit owner and due date for ${action.title}`}
-                aria-expanded={editingActionId === action.id}
-                onClick={() => setEditingActionId((current) => current === action.id ? "" : action.id)}
+                aria-label={`Edit follow-up ${action.title}`}
+                aria-haspopup="dialog"
+                onClick={() => { setEditingAction({ ...action }); setEditingDetailOpen(false); }}
               ><PencilSimpleIcon size={16} /></button>
               {actionContext ? renderActionCta(action, actionContext) : null}
             </article>;
@@ -642,6 +582,67 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
         <small>{encounter.status === "shared" ? "Only the approved recap and participant follow-ups are visible." : "Keep this private by leaving it as a draft."}</small>
         {message && <p className="share-message" role="status">{message}</p>}
       </section>
+
+      {editingAction ? (
+        <div className="connections-modal-backdrop add-followup-modal-backdrop" role="presentation" onClick={() => setEditingAction(null)}>
+          <div className="connections-modal" role="dialog" aria-modal="true" aria-labelledby="edit-followup-title" onClick={(event) => event.stopPropagation()}>
+            <header>
+              <h2 id="edit-followup-title">What needs to happen next?</h2>
+              <button type="button" aria-label="Close" onClick={() => setEditingAction(null)}><XIcon size={18} /></button>
+            </header>
+            <form
+              className="contact-form-card quick-follow-up-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const participant = participants.find((person) => person.id === editingAction.participantId);
+                const savedAction = {
+                  ...editingAction,
+                  title: editingAction.title.trim() || channelLabel(editingAction.channel),
+                  assigneeName: participant?.name || editingAction.assigneeName,
+                  assigneeEmail: participant?.email || editingAction.assigneeEmail,
+                };
+                patch((current) => ({
+                  ...current,
+                  actions: (current.actions ?? []).map((item) => item.id === savedAction.id ? savedAction : item),
+                }));
+                setEditingAction(null);
+              }}
+            >
+              <div className="flex min-h-[72px] w-full items-center gap-3 rounded-[12px] border border-[#e5e9e2] bg-[#fbfdf9] px-5 py-4 text-left">
+                <span className="min-w-0 flex-1">
+                  <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">Person</small>
+                  <strong className="block text-base text-[#163300]">{participantName(editingAction.participantId)}</strong>
+                </span>
+              </div>
+              <div className="quick-follow-up-owner">
+                <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">Owner</small>
+                <div className="flow-heading-actions" style={{ marginTop: 8 }}>
+                  <Button type="button" variant={editingAction.owner === "me" ? "primary" : "secondary"} size="small" onClick={() => setEditingAction((current) => current ? { ...current, owner: "me" } : current)}>You</Button>
+                  <Button type="button" variant={editingAction.owner === "guest" ? "primary" : "secondary"} size="small" onClick={() => setEditingAction((current) => current ? { ...current, owner: "guest" } : current)}>Them</Button>
+                </div>
+              </div>
+              <div className="quick-follow-up-meta">
+                <SelectField inline label={`How will ${editingAction.owner === "me" ? "you" : "they"} follow up?`} value={editingAction.channel} onChange={(event) => setEditingAction((current) => current ? { ...current, channel: event.target.value as EncounterAction["channel"] } : current)}>
+                  {SELECTABLE_FOLLOW_UP_CHANNELS.map((option) => <option value={option.id} key={option.id}>{option.label}</option>)}
+                </SelectField>
+                <TextField inline label="Due date" type="date" value={editingAction.dueAt || ""} onChange={(event) => setEditingAction((current) => current ? { ...current, dueAt: event.target.value } : current)} />
+              </div>
+              <div className="quick-follow-up-detail">
+                <button type="button" aria-expanded={editingDetailOpen} onClick={() => setEditingDetailOpen((value) => !value)} className="quick-follow-up-detail-toggle">
+                  <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">What do {editingAction.owner === "me" ? "you" : "they"} need to do? (optional)</small>
+                  {editingDetailOpen ? <CaretUpIcon size={14} /> : <CaretDownIcon size={14} />}
+                </button>
+                {editingDetailOpen ? <TextField inline label="Next step" value={editingAction.title} onChange={(event) => setEditingAction((current) => current ? { ...current, title: event.target.value } : current)} /> : null}
+              </div>
+              <p className="quick-follow-up-note"><PaperPlaneTiltIcon size={16} />Nothing sends automatically.</p>
+              <div className="quick-follow-up-actions">
+                <Button type="button" size="small" variant="ghost" onClick={() => setEditingAction(null)}>Cancel</Button>
+                <Button type="submit" size="small"><CheckCircleIcon size={16} />Save changes</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
 
     </div>
   );

@@ -30,17 +30,42 @@ function initialsFor(name: string) {
     .toUpperCase();
 }
 
+function signatureOrigin(cardUrl: string) {
+  try {
+    return new URL(cardUrl.trim()).origin;
+  } catch {
+    return "";
+  }
+}
+
+// A hosted 14px monochrome PNG rather than a Unicode dingbat.
+//
+// The old markup used &#9742; and &#9993;. Gmail, Apple Mail and most phones promote those
+// code points to full-colour emoji, so a professional signature arrived looking like a chat
+// message - and where they are NOT promoted they fall back to whatever the system font has,
+// which is inconsistent. A PNG in the same ink as the text cannot be substituted.
+//
+// Inline SVG and data URIs were the other options and both lose: Gmail strips SVG and blocks
+// data-URI images. The alt text carries the label, so a client that blocks remote images shows
+// "Phone" rather than a broken-image icon.
+function contactIcon(origin: string, file: "phone" | "envelope", label: string) {
+  if (!origin) return "";
+  return `<img src="${origin}/email-icons/${file}.png" width="14" height="14" alt="${label}"`
+    + ` style="display:block;width:14px;height:14px;border:0;" />`;
+}
+
 function contactRows(profile: SignatureProfile) {
   const rows: string[] = [];
+  const origin = signatureOrigin(profile.cardUrl);
   if (profile.phone?.trim()) {
     rows.push(
-      `<tr><td style="padding:0 8px 0 0;vertical-align:middle;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;color:#53634D;">&#9742;</td>`,
+      `<tr><td style="padding:0 8px 0 0;vertical-align:middle;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;color:#53634D;">${contactIcon(origin, 'phone', 'Phone')}</td>`,
       `<td style="padding:0 0 4px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;color:#163300;"><a href="tel:${escapeHtml(profile.phone.trim())}" style="color:#163300;text-decoration:none;">${escapeHtml(profile.phone.trim())}</a></td></tr>`,
     );
   }
   if (profile.email?.trim()) {
     rows.push(
-      `<tr><td style="padding:0 8px 0 0;vertical-align:middle;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;color:#53634D;">&#9993;</td>`,
+      `<tr><td style="padding:0 8px 0 0;vertical-align:middle;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;color:#53634D;">${contactIcon(origin, 'envelope', 'Email')}</td>`,
       `<td style="padding:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;color:#163300;"><a href="mailto:${escapeHtml(profile.email.trim())}" style="color:#163300;text-decoration:none;">${escapeHtml(profile.email.trim())}</a></td></tr>`,
     );
   }

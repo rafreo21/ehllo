@@ -20,7 +20,6 @@ import { Instagram as InstagramLogoIcon } from "react-feather";
 import { Link as LinkIcon } from "react-feather";
 import { Linkedin as LinkedinLogoIcon } from "react-feather";
 import { MapPin as MapPinIcon } from "react-feather";
-import { PaletteIcon } from "@phosphor-icons/react/dist/csr/Palette";
 import { PaypalLogoIcon } from "@phosphor-icons/react/dist/csr/PaypalLogo";
 import { Phone as PhoneIcon } from "react-feather";
 import { Plus as PlusIcon } from "react-feather";
@@ -39,6 +38,7 @@ import { X as XIcon } from "react-feather";
 import { XLogoIcon } from "@phosphor-icons/react/dist/csr/XLogo";
 import { Youtube as YoutubeLogoIcon } from "react-feather";
 import { BusinessShell } from "../../../components/BusinessShell";
+import { CardImage } from "../../../components/CardImage";
 import { Button, IconButton, LinkButton } from "../../../components/Button";
 import { TextAreaField, TextField } from "../../../components/FormField";
 import { PhoneField } from "../../../components/PhoneField";
@@ -235,6 +235,7 @@ export default function CardEditor() {
   const searchParams = useSearchParams();
   const searchString = searchParams.toString();
   const [draft, setDraft] = useState<CardDraft>(initialDraft);
+  const draftRef = useRef<CardDraft>(initialDraft);
   const [hydrated, setHydrated] = useState(false);
   const [cardLimitReached, setCardLimitReached] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -252,6 +253,12 @@ export default function CardEditor() {
   // once and has therefore claimed a real ?id= in the URL. Guards against
   // re-claiming (and re-writing history) on every subsequent keystroke.
   const hasClaimedCreateUrlRef = useRef(false);
+  const themePersistTimerRef = useRef<number | null>(null);
+  const pendingThemeDraftRef = useRef<CardDraft | null>(null);
+
+  useEffect(() => () => {
+    if (themePersistTimerRef.current !== null) window.clearTimeout(themePersistTimerRef.current);
+  }, []);
 
   useEffect(() => {
     const requestedSearch = searchString;
@@ -268,6 +275,7 @@ export default function CardEditor() {
       hasClaimedCreateUrlRef.current = false;
       setCardLimitReached(false);
       setIsCreating(creatingFlow);
+      draftRef.current = loaded;
       setDraft(loaded);
       if (loaded.status === "published") {
         setPublishedFingerprint(cardPublishFingerprint(loaded));
@@ -290,7 +298,10 @@ export default function CardEditor() {
   const previewTheme = useMemo(() => themeSurfaceStyle(draft.theme), [draft.theme]);
   const coverBadgeStyle = useMemo(() => themeCoverBadgeStyle(draft.theme), [draft.theme]);
   const EditingMethodIcon: IconComponent = editing ? methodMeta[editing.type].Icon : PlusIcon;
-  const addedMethodTypes = new Set(draft.methods.map((method) => method.type));
+  const methodTypeCounts = draft.methods.reduce<Partial<Record<MethodType, number>>>((counts, method) => {
+    counts[method.type] = (counts[method.type] ?? 0) + 1;
+    return counts;
+  }, {});
   const stepCompletion = [
     Boolean(draft.name.trim() && draft.role.trim() && draft.theme),
     draft.methods.length > 0,
@@ -342,20 +353,44 @@ export default function CardEditor() {
     queueCardSync(next);
   }
 
+  function cancelScheduledThemePersist() {
+    if (themePersistTimerRef.current !== null) {
+      window.clearTimeout(themePersistTimerRef.current);
+      themePersistTimerRef.current = null;
+    }
+    pendingThemeDraftRef.current = null;
+  }
+
+  function scheduleThemePersist(next: CardDraft) {
+    pendingThemeDraftRef.current = next;
+    if (themePersistTimerRef.current !== null) window.clearTimeout(themePersistTimerRef.current);
+    themePersistTimerRef.current = window.setTimeout(() => {
+      themePersistTimerRef.current = null;
+      const pending = pendingThemeDraftRef.current;
+      pendingThemeDraftRef.current = null;
+      if (pending) persistDraft(pending);
+    }, 300);
+  }
+
   const update = <K extends keyof CardDraft>(key: K, value: CardDraft[K]) => {
-    setDraft((current) => {
-      const next = { ...current, [key]: value };
-      persistDraft(next);
-      return next;
-    });
+    const next = { ...draftRef.current, [key]: value };
+    draftRef.current = next;
+    setDraft(next);
+    if (key === "theme") {
+      scheduleThemePersist(next);
+      return;
+    }
+    cancelScheduledThemePersist();
+    persistDraft(next);
   };
 
   async function save() {
-    persistDraft(draft);
+    cancelScheduledThemePersist();
+    persistDraft(draftRef.current);
     setPublishing(true);
     setSaveError("");
     try {
-      const savedDraft = await flushCardSync(draft);
+      const savedDraft = await flushCardSync(draftRef.current);
       if (!savedDraft) throw new Error("This card changed on another device. Reload the latest card before publishing again.");
       const response = await fetch("/api/cards/publish", {
         method: "POST",
@@ -374,6 +409,7 @@ export default function CardEditor() {
         status: "published" as const,
         publishedAt: new Date().toISOString(),
       };
+      draftRef.current = published;
       setDraft(published);
       persistDraft(published);
       setPublishedFingerprint(cardPublishFingerprint(published));
@@ -400,7 +436,7 @@ export default function CardEditor() {
   }
 
   function openMethod(type: MethodType) {
-    if (addedMethodTypes.has(type)) return;
+    if ((methodTypeCounts[type] ?? 0) >= 3) return;
     setMethodError("");
     setEditing({ id: crypto.randomUUID(), type, value: "", label: methodMeta[type].label });
   }
@@ -481,22 +517,22 @@ export default function CardEditor() {
                   ? { backgroundImage: `linear-gradient(rgba(22,51,0,.18), rgba(22,51,0,.18)), url(${draft.coverPhoto})`, color: "#FFFFFF" }
                   : { background: previewTheme.backgroundGradient, color: previewTheme.color }}>
                 <div className="card-logo" style={draft.coverPhoto ? undefined : coverBadgeStyle}>
-                  {draft.companyLogo ? <img src={draft.companyLogo} alt="" /> : draft.company[0] || "A"}
+                  <CardImage src={draft.companyLogo} alt="" fallback={draft.company[0] || "A"} />
                 </div>
                 <span style={draft.coverPhoto ? undefined : { color: previewTheme.color }}>{draft.company || "Your company"}</span>
               </div>
               <div className="card-body">
-                <div className="card-avatar">{draft.photo ? <img src={draft.photo} alt="" /> : initials}</div>
+                <div className="card-avatar" style={coverBadgeStyle}><CardImage src={draft.photo} alt="" fallback={initials} /></div>
                 <h2>{draft.name || "Your name"}</h2><p className="card-role">{draft.role || "Your role"}{draft.company && ` · ${draft.company}`}</p>
                 <p className="card-bio">{draft.bio || "Your introduction will appear here."}</p>
-                <div className="card-actions"><Button fullWidth style={{ background: previewTheme.backgroundGradient }}>Save contact</Button><Button fullWidth variant="secondary">Share details</Button></div>
+                <div className="card-actions"><Button fullWidth style={{ background: previewTheme.backgroundGradient, color: previewTheme.color }}>Save contact</Button><Button fullWidth variant="secondary">Share details</Button></div>
                 <div className="preview-methods">{draft.methods.map((method) => {
                   const meta = methodMeta[method.type];
                   const href = contactMethodHref(method);
                   const content = (
                     <>
-                      <span style={{ background: previewTheme.backgroundGradient, color: previewTheme.color }}>
-                        {PHOSPHOR_METHOD_TYPES.has(method.type) ? <meta.Icon weight="bold" color={previewTheme.color} /> : <meta.Icon color={previewTheme.color} />}
+                      <span style={{ color: previewTheme.backgroundColor }}>
+                        {PHOSPHOR_METHOD_TYPES.has(method.type) ? <meta.Icon weight="bold" color={previewTheme.backgroundColor} /> : <meta.Icon color={previewTheme.backgroundColor} />}
                       </span>
                       <p><strong>{method.label}</strong><small>{method.value}</small></p>
                     </>
@@ -520,21 +556,21 @@ export default function CardEditor() {
                   <div className="image-options">
                     <div className={draft.companyLogo ? "has-image" : ""}>
                       <button type="button" onClick={() => logoInput.current?.click()}>
-                        {draft.companyLogo ? <img src={draft.companyLogo} alt="" /> : <PlusIcon />}
+                        <CardImage src={draft.companyLogo} alt="" fallback={<PlusIcon />} />
                         <span>{draft.companyLogo ? "Change logo" : "Company logo"}</span>
                       </button>
                       {draft.companyLogo && <button type="button" className="remove-image" onClick={() => update("companyLogo", "")}>Remove</button>}
                     </div>
                     <div className={draft.photo ? "has-image" : ""}>
                       <button type="button" onClick={() => photoInput.current?.click()}>
-                        {draft.photo ? <img src={draft.photo} alt="" /> : <PlusIcon />}
+                        <CardImage src={draft.photo} alt="" fallback={<PlusIcon />} />
                         <span>{draft.photo ? "Change picture" : "Profile picture"}</span>
                       </button>
                       {draft.photo && <button type="button" className="remove-image" onClick={() => update("photo", "")}>Remove</button>}
                     </div>
                     <div className={draft.coverPhoto ? "has-image" : ""}>
                       <button type="button" onClick={() => coverInput.current?.click()}>
-                        {draft.coverPhoto ? <img src={draft.coverPhoto} alt="" /> : <PlusIcon />}
+                        <CardImage src={draft.coverPhoto} alt="" fallback={<PlusIcon />} />
                         <span>{draft.coverPhoto ? "Change cover" : "Cover photo"}</span>
                       </button>
                       {draft.coverPhoto && <button type="button" className="remove-image" onClick={() => update("coverPhoto", "")}>Remove</button>}
@@ -560,14 +596,11 @@ export default function CardEditor() {
                     </button>
                   ))}</div>
                 </div>
-                <div className="layout-choice selected"><div><strong>Focused</strong><p>Photo, identity, introduction, then contact methods.</p></div><CheckCircleIcon size={24} /></div>
-                <div className="creator-note"><PaletteIcon weight="bold" /><p>More layouts can come later. The MVP uses one responsive layout that remains readable on every phone.</p></div>
               </div>
             )}
 
             {step === 1 && (
               <div className="creator-section">
-                <header><span>02 · Contact methods</span><h1>Add only the ways you want people to respond.</h1><p>Each method can have a useful label and can be reordered.</p></header>
                 <div className="method-list">
                   {draft.methods.map((method, index) => {
                     const meta = methodMeta[method.type];
@@ -614,7 +647,7 @@ export default function CardEditor() {
                 <div className="method-library"><h2>Add a contact method</h2>
                   {methodCategories.map((category) => {
                     const availableTypes = (Object.keys(methodMeta) as MethodType[]).filter(
-                      (type) => methodMeta[type].category === category && !addedMethodTypes.has(type),
+                      (type) => methodMeta[type].category === category && (methodTypeCounts[type] ?? 0) < 3,
                     );
                     if (availableTypes.length === 0) return null;
                     return <section className="method-category" key={category}>

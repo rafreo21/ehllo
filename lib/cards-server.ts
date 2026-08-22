@@ -90,13 +90,7 @@ export function libraryCardToRow(
 }
 
 export function methodsForUpsert(cardId: string, methods: LibraryMethod[]) {
-  const deduped = new Map<string, LibraryMethod>();
-  for (const method of methods) {
-    if (!method.type || !method.value.trim()) continue;
-    deduped.set(method.type, method);
-  }
-
-  return [...deduped.values()].map((method, sortOrder) => ({
+  return methods.filter((method) => method.type && method.value.trim()).map((method, sortOrder) => ({
     card_id: cardId,
     method_type: method.type,
     value: method.value.trim(),
