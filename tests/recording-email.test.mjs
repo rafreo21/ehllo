@@ -33,4 +33,6 @@ test("recordingShareMailtoHref encodes recipient and body", () => {
   assert.match(href, /^mailto:alex%40example\.com\?/);
   assert.match(href, /subject=/);
   assert.match(href, /body=/);
+  assert.doesNotMatch(href, /\+/);
+  assert.match(href, /Intro%20call/);
 });

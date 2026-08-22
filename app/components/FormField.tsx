@@ -137,10 +137,11 @@ export const SelectField = forwardRef<HTMLSelectElement, SharedProps & SelectHTM
 ) {
   const fieldId = id ?? `field-${props.name ?? label.toLowerCase().replace(/\s+/g, "-")}`;
   const descriptionId = hint || error ? `${fieldId}-description` : undefined;
+  const visuallyHideLabel = hideLabel || inline;
 
   return (
-    <div className={`grid ${compact && hideLabel ? "gap-0" : compact ? "gap-1" : "gap-2"} ${className}`}>
-      <div className={hideLabel ? "sr-only" : "grid gap-0.5"}>
+    <div className={`grid ${visuallyHideLabel ? "gap-0" : compact ? "gap-1" : "gap-2"} ${className}`}>
+      <div className={visuallyHideLabel ? "sr-only" : "grid gap-0.5"}>
         <label htmlFor={fieldId} className={compact ? compactLabelClass : fieldLabelClass}>{label}</label>
         {hint && !error && !hideLabel && <span className="text-xs text-[#6b7168]">{hint}</span>}
       </div>

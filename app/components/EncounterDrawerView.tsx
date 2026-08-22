@@ -422,16 +422,18 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
                   <small>Confirm who each detected voice belongs to before you review the summary.</small>
                 </div>
                 {speakerLabels.map((label) => (
-                  <label key={label}>
-                    <span>{label}</span>
-                    <select
+                  <div className="speaker-identity-row" key={label}>
+                    <strong>{label}</strong>
+                    <SelectField
+                      inline
+                      label={`${label}: choose a person`}
                       value={speakerNames[label] || ""}
                       onChange={(event) => setSpeakerNames((current) => ({ ...current, [label]: event.target.value }))}
                     >
                       <option value="">Choose a person</option>
                       {speakerCandidates.map((candidate) => <option key={candidate} value={candidate}>{candidate}</option>)}
-                    </select>
-                  </label>
+                    </SelectField>
+                  </div>
                 ))}
                 <Button
                   variant="secondary"

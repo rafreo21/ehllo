@@ -43,10 +43,13 @@ export function buildRecordingShareEmail(input: RecordingShareEmailInput) {
 
 export function recordingShareMailtoHref(input: RecordingShareEmailInput) {
   const email = buildRecordingShareEmail(input);
-  const params = new URLSearchParams();
-  if (email.subject) params.set("subject", email.subject);
-  if (email.body) params.set("body", email.body);
-  const query = params.toString();
+  // URLSearchParams serializes spaces as `+`. Several native mail clients
+  // display those plus signs literally in mailto subjects and bodies, so use
+  // percent encoding here instead.
+  const query = [
+    email.subject ? `subject=${encodeURIComponent(email.subject)}` : "",
+    email.body ? `body=${encodeURIComponent(email.body)}` : "",
+  ].filter(Boolean).join("&");
   if (email.to) {
     return `mailto:${encodeURIComponent(email.to)}${query ? `?${query}` : ""}`;
   }

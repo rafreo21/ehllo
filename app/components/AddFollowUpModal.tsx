@@ -466,11 +466,14 @@ export function AddFollowUpModal({
       )}
 
       {manualOpen ? (
-        <div className="connections-modal-backdrop" role="presentation" onClick={() => setManualOpen(false)}>
-          <div className="connections-modal" role="dialog" aria-label="Add manually" onClick={(event) => event.stopPropagation()}>
+        <div className="connections-modal-backdrop connections-manual-backdrop" role="presentation" onClick={() => setManualOpen(false)}>
+          <div className="connections-modal connections-modal-compact" role="dialog" aria-label="Add manually" onClick={(event) => event.stopPropagation()}>
             <header>
-              <h2>Add manually</h2>
-              <button type="button" aria-label="Close" onClick={() => setManualOpen(false)}><XIcon size={18} /></button>
+              <div className="connections-modal-title-with-back">
+                <button type="button" aria-label="Back to add someone" onClick={() => setManualOpen(false)}><ArrowLeftIcon size={16} /></button>
+                <h2>Add manually</h2>
+              </div>
+              <button type="button" aria-label="Close" onClick={onClose}><XIcon size={18} /></button>
             </header>
             <form
               className="connections-manual-form"
@@ -491,8 +494,11 @@ export function AddFollowUpModal({
         <div className="connections-modal-backdrop" role="presentation" onClick={() => setQrOpen(false)}>
           <div className="connections-modal connections-modal-compact" role="dialog" aria-label="Share your card" onClick={(event) => event.stopPropagation()}>
             <header>
-              <h2>Share your card</h2>
-              <button type="button" aria-label="Close" onClick={() => setQrOpen(false)}><XIcon size={18} /></button>
+              <div className="connections-modal-title-with-back">
+                <button type="button" aria-label="Back to add someone" onClick={() => setQrOpen(false)}><ArrowLeftIcon size={16} /></button>
+                <h2>Share your card</h2>
+              </div>
+              <button type="button" aria-label="Close" onClick={onClose}><XIcon size={18} /></button>
             </header>
             <p>They scan this code and their details link here automatically.</p>
             <div style={{ display: "grid", justifyItems: "center", gap: 12, marginTop: 12 }}>
@@ -509,10 +515,13 @@ export function AddFollowUpModal({
 
       {scansOpen ? (
         <div className="connections-modal-backdrop" role="presentation" onClick={() => setScansOpen(false)}>
-          <div className="connections-modal" role="dialog" aria-label="Recent scans" onClick={(event) => event.stopPropagation()}>
+          <div className="connections-modal connections-modal-compact" role="dialog" aria-label="Recent scans" onClick={(event) => event.stopPropagation()}>
             <header>
-              <h2>Recent scans</h2>
-              <button type="button" aria-label="Close" onClick={() => setScansOpen(false)}><XIcon size={18} /></button>
+              <div className="connections-modal-title-with-back">
+                <button type="button" aria-label="Back to add someone" onClick={() => setScansOpen(false)}><ArrowLeftIcon size={16} /></button>
+                <h2>Recent scans</h2>
+              </div>
+              <button type="button" aria-label="Close" onClick={onClose}><XIcon size={18} /></button>
             </header>
             {loadingExchanges ? (
               <p>Checking for new scans…</p>
