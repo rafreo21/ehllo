@@ -241,7 +241,7 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
         <div className="notification-drawer-backdrop" role="presentation" onClick={() => setOpen(false)}>
           <section className="notification-popover" role="dialog" aria-modal="true" aria-label="Notifications" onClick={(event) => event.stopPropagation()}>
             <header>
-              <div><span>Attention centre</span><h2>Notifications</h2></div>
+              <div><h2>Notifications</h2></div>
               <div className="notification-header-actions">
                 {unreadCount ? <button type="button" onClick={() => void markAllRead()}><CheckIcon size={14} />Mark all read</button> : null}
                 <button type="button" className="notification-close" aria-label="Close notifications" onClick={() => setOpen(false)}><CloseIcon size={18} /></button>
