@@ -186,8 +186,9 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
   }
 }
 .share-card-cover { position: relative; isolation: isolate; min-height: 180px; padding: 24px; display: flex; align-items: flex-start; gap: 10px; overflow: hidden; background: var(--p-blue); }
-.share-card-cover::after { content: ""; position: absolute; z-index: 0; inset: 0; background: linear-gradient(155deg, rgba(255,255,255,.22), transparent 44%, rgba(0,0,0,.08)); pointer-events: none; }
-.share-card-cover > * { position: relative; z-index: 1; }
+.share-card-cover::after { content: ""; position: absolute; z-index: 1; inset: 0; background: linear-gradient(155deg, rgba(255,255,255,.22), transparent 44%, rgba(0,0,0,.08)); pointer-events: none; }
+.share-card-cover > * { position: relative; z-index: 2; }
+.share-card-cover > .share-card-cover-photo { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
 .share-card-cover > span { width: 40px; height: 40px; display: grid; place-items: center; overflow: hidden; border: 2px solid rgba(255,255,255,.78); border-radius: 50%; background: var(--p-navy); color: white; box-shadow: 0 7px 18px rgba(0,0,0,.13); font-weight: 900; }
 .share-card-cover > span > img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border-radius: inherit; object-fit: cover; }
 .share-card-cover strong { padding-top: 10px; }

@@ -93,7 +93,7 @@ function PublicCardView({
               <span className="public-card-company-mark" style={coverBadge}>{company[0]}</span>
             ) : null}
             {company ? (
-              <span className="public-card-company-name" style={{ color: coverImageUrl ? undefined : theme.color }}>
+              <span className="public-card-company-name" style={{ color: coverImageUrl ? "#FFFFFF" : theme.color }}>
                 {company}
               </span>
             ) : null}

@@ -131,6 +131,7 @@ export default function CardsPage() {
   const cardTheme = useMemo(() => themeSurfaceStyle(profile.theme), [profile.theme]);
   const profilePhoto = normalizeImageSource(profile.photo || photo);
   const companyLogo = normalizeImageSource(profile.companyLogo);
+  const coverPhoto = normalizeImageSource(profile.coverPhoto);
   const showCompanyDetails = showsCompanyDetails(profile);
 
   function toProfile(card: LibraryCard): Profile {
@@ -599,9 +600,10 @@ function createCard(seed: Partial<LibraryCard> = {}) {
             <div className="card-share-layout" id="share">
           <article className="share-card-preview" style={{ "--card-accent": cardTheme.backgroundColor } as React.CSSProperties}>
             <div className="share-card-cover" style={{ background: cardTheme.backgroundGradient, color: cardTheme.color }}>
+              <CardImage src={coverPhoto} alt="" className="share-card-cover-photo" />
               {showCompanyDetails ? <>
                 <span style={themeCoverBadgeStyle(profile.theme)}>{profile.company[0] || "A"}<CardImage src={companyLogo} alt="" /></span>
-                <strong style={{ color: cardTheme.color }}>{profile.company || "Your company"}</strong>
+                <strong style={{ color: coverPhoto ? "#FFFFFF" : cardTheme.color }}>{profile.company || "Your company"}</strong>
               </> : null}
             </div>
             <div className="share-card-body">
