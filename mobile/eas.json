@@ -57,7 +57,9 @@
         "appleTeamId": "VDR84B8UU2"
       },
       "android": {
-        "serviceAccountKeyPath": "./aftermeet-503610-firebase-adminsdk-fbsvc-04a28f7167.json"
+        "serviceAccountKeyPath": "./aftermeet-503610-firebase-adminsdk-fbsvc-04a28f7167.json",
+        "track": "internal",
+        "releaseStatus": "completed"
       }
     }
   }
