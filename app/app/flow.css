@@ -221,8 +221,8 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
 }
 .share-contact small { color: var(--p-muted); overflow-wrap: anywhere; }
 .share-contact svg { flex: 0 0 auto; }
-.inline-qr-panel { padding: 26px; }
-.card-tools-tabs { margin-bottom: 12px; justify-content: flex-start; gap: 4px; overflow-x: auto; scrollbar-width: thin; border-bottom: 1px solid var(--p-line); padding-bottom: 0; }
+.inline-qr-panel { padding: 14px 26px 26px; }
+.card-tools-tabs { margin-bottom: 8px; justify-content: flex-start; gap: 4px; overflow-x: auto; scrollbar-width: thin; border-bottom: 1px solid var(--p-line); padding-bottom: 0; }
 .card-tools-tabs button { min-height: 34px; padding: 10px 4px 12px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--p-muted); font: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; }
 .card-tools-tabs button:hover { color: var(--p-navy); }
 .card-tools-tabs button.active { border-bottom-color: var(--p-navy); color: var(--p-navy); font-weight: 700; }
