@@ -424,7 +424,7 @@
   .product-shell { grid-template-columns: 1fr; }
   .product-sidebar { position: fixed; left: -270px; width: 250px; transition: left .25s; box-shadow: 20px 0 50px rgba(0,28,100,.15); }
   .product-sidebar.open { left: 0; }
-  .product-mobile-header { height: 64px; background: rgba(255,255,255,.94); backdrop-filter: blur(14px); box-shadow: 0 4px 20px rgba(22,51,0,.035); display: flex; align-items: center; gap: 12px; padding: 0 20px; position: sticky; top: 0; z-index: 20; }
+  .product-mobile-header { height: 64px; display: flex; align-items: center; gap: 12px; padding: 0 20px; position: relative; z-index: 90; background: transparent; pointer-events: none; }
   .menu-button { display: block; border: 0; background: transparent; color: var(--p-navy); font-size: 22px; }
   .mobile-logo { display: block; font-weight: 900; }
   .product-shell:has(.consumer-sidebar) { display: block; padding: 0; }
@@ -439,7 +439,7 @@
   .mobile-nav-close { position: absolute; top: 18px; right: 18px; width: 34px; height: 34px; z-index: 2; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--p-ice); color: var(--p-navy); cursor: pointer; }
   .mobile-nav-close:hover { background: var(--p-sky); }
   .product-shell:has(.consumer-sidebar) .product-mobile-header { padding: 0 16px; }
-  .product-shell:has(.consumer-sidebar) .menu-button { width: 40px; height: 40px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: transparent; }
+  .product-shell:has(.consumer-sidebar) .menu-button { width: 46px; height: 46px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: white; box-shadow: 0 8px 24px rgba(22,51,0,.1); pointer-events: auto; }
   .product-shell:has(.consumer-sidebar) .menu-button:hover { background: var(--p-ice); }
 }
 
