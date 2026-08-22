@@ -449,12 +449,13 @@
   .mobile-nav-close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; z-index: 2; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--p-ice); color: var(--p-navy); cursor: pointer; }
   .mobile-nav-close:hover { background: var(--p-sky); }
   .product-shell:has(.consumer-sidebar) .product-mobile-header { padding: 0 16px; }
-  .product-shell:has(.consumer-sidebar) .menu-button { width: 46px; height: 46px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: white; box-shadow: 0 8px 24px rgba(22,51,0,.1); pointer-events: auto; }
+  .product-shell:has(.consumer-sidebar) .menu-button { position: fixed; top: 16px; left: 16px; z-index: 90; width: 46px; height: 46px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: white; box-shadow: 0 8px 24px rgba(22,51,0,.1); pointer-events: auto; }
   .product-shell:has(.consumer-sidebar) .menu-button:hover { background: var(--p-ice); }
 }
 
 @media (max-width: 760px) {
   .consumer-topbar { top: 10px; right: 16px; }
+  .product-shell:has(.consumer-sidebar) .menu-button { top: 10px; }
   .notification-popover { position: fixed; top: 60px; left: 12px; right: 12px; width: auto; max-height: calc(100vh - 76px); }
   .product-content { padding: 36px 18px 56px; }
   .product-page-toolbar { margin-bottom: 16px; }
