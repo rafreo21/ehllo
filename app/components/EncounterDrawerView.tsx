@@ -16,6 +16,7 @@ import { ActionDoButton } from "./ActionDoButton";
 import { Button } from "./Button";
 import { PageSkeleton } from "./AsyncState";
 import { TextAreaField, SelectField, TextField } from "./FormField";
+import { useToast } from "./ToastContext";
 import { buildActionLinkContext, buildRequestEmailLink, channelLabel, resolveActionLink, type ActionLinkContext } from "../../lib/action-links";
 import { findContactById } from "../../lib/contacts";
 import { encounterToApiBody, formatDuration, readEncounters, updateEncounter, writeEncounter, type Encounter, type EncounterAction } from "../../lib/encounters";
@@ -37,6 +38,7 @@ type UploadStatus = "idle" | "uploading" | "uploaded" | "failed";
 const ACTIONS_PREVIEW_SIZE = 3;
 
 export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
+  const { showToast } = useToast();
   const [encounter, setEncounter] = useState<Encounter | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -268,12 +270,17 @@ export function EncounterDrawerView({ encounterId }: { encounterId: string }) {
   async function copyGuestLink() {
     if (!encounter) return;
     if (encounter.status !== "shared") {
-      setMessage("Approve the shared record before copying the guest link.");
+      showToast({ tone: "info", message: "Approve the guest view before copying its link." });
       return;
     }
     const url = `${window.location.origin}/e/${encounter.shareToken}`;
-    await navigator.clipboard.writeText(url);
-    setMessage("Guest link copied.");
+    try {
+      await navigator.clipboard.writeText(url);
+      setMessage("");
+      showToast({ tone: "success", message: "Guest link copied." });
+    } catch {
+      showToast({ tone: "error", message: "Could not copy the guest link." });
+    }
   }
 
   async function copyFieldValue(field: string, value: string) {
