@@ -767,6 +767,11 @@ export default function CardEditor() {
               </div>
             )}
             <div className="creator-preview-head"><span>Live preview</span><small>Updates instantly</small></div>
+            <button type="button" className="theme-picker-trigger preview-theme-picker-trigger editor-compact-only" onClick={() => setShowThemePicker(true)}>
+              <span className="theme-picker-current" aria-hidden="true" style={{ background: previewTheme.backgroundGradient }} />
+              <span><strong>Card colour</strong><small>Choose the colour used across your card.</small></span>
+              <ChevronRightIcon size={18} aria-hidden="true" />
+            </button>
             <article className="public-card public-card--editable">
               <input ref={photoInput} className="sr-only" type="file" accept="image/*" onChange={selectPhoto} />
               <input ref={logoInput} className="sr-only" type="file" accept="image/*" onChange={(event) => selectImage("companyLogo", event)} />
@@ -983,12 +988,6 @@ export default function CardEditor() {
                   </button>
                 ))}</div>
               </div>
-              <button type="button" className="theme-picker-trigger editor-compact-only" onClick={() => setShowThemePicker(true)}>
-                <span className="theme-picker-current" aria-hidden="true" style={{ background: previewTheme.backgroundGradient }} />
-                <span><strong>Card colour</strong><small>Choose the colour used across your card.</small></span>
-                <ChevronRightIcon size={18} aria-hidden="true" />
-              </button>
-
               <div className="method-library editor-desktop-only">
                 <header className="method-library-heading">
                   <span className="method-library-add-icon" aria-hidden="true" style={{ color: previewTheme.backgroundColor }}><PlusIcon size={18} /></span>

@@ -326,6 +326,7 @@ body:has(.product-shell) { background: var(--p-ice); }
 .theme-picker-trigger strong { font-size: 16px; }
 .theme-picker-trigger small { overflow: hidden; color: var(--p-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .theme-picker-trigger > svg { color: var(--p-muted); }
+.preview-theme-picker-trigger { margin: 0 0 12px; }
 .creator-note { padding: 16px; display: flex; gap: 12px; border-radius: 8px; background: var(--p-sky); }
 .creator-note p { margin: 0; color: var(--p-muted); font-size: 12px; line-height: 1.5; }
 .method-list { display: grid; gap: 8px; }
@@ -514,6 +515,10 @@ body:has(.product-shell) { background: var(--p-ice); }
   }
   .editor-desktop-only { display: none; }
   .theme-picker-trigger.editor-compact-only { display: grid; }
+  .preview-theme-picker-trigger { min-height: 58px; padding: 9px 12px; grid-template-columns: 34px minmax(0,1fr) 18px; gap: 10px; }
+  .preview-theme-picker-trigger .theme-picker-current { width: 34px; height: 34px; }
+  .preview-theme-picker-trigger strong { font-size: 13px; }
+  .preview-theme-picker-trigger small { font-size: 10px; }
   .method-library-trigger.editor-compact-only { display: flex; }
   .preview-add-method-trigger.editor-compact-only { display: grid; }
   .creator-layout { grid-template-columns: minmax(0,1fr); }
