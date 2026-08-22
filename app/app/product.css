@@ -299,9 +299,12 @@ body:has(.product-shell) { background: var(--p-ice); }
 .creator-preview { position: sticky; top: 100px; padding: 20px; border-radius: 12px; background: var(--p-sky); }
 .creator-preview-head { margin-bottom: 12px; display: flex; justify-content: space-between; color: var(--p-muted); font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .creator-preview .creator-publish-state {
+  width: fit-content;
+  max-width: 100%;
   min-height: 0;
   margin-bottom: 9px;
   padding: 5px 8px;
+  display: inline-flex;
   column-gap: 5px;
   border-radius: 6px;
 }
