@@ -362,7 +362,10 @@
 .preview-method-save:hover { background: #dde2da; }
 .preview-method-cancel:focus-visible, .preview-method-delete:focus-visible, .preview-method-save:focus-visible { outline: 2px solid rgba(159,232,112,.7); outline-offset: 1px; }
 .preview-methods { margin-top: 18px; display: grid; gap: 8px; }
-.preview-methods > button { position: relative; width: 100%; min-height: 64px; padding: 9px 11px; display: grid; grid-template-columns: 42px minmax(0, 1fr) 24px; gap: 10px; align-items: center; border: 1px solid #e7ebe4; border-radius: 14px; background: rgba(248,250,247,.9); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: padding-left .14s ease, background .14s ease, border-color .14s ease, box-shadow .14s ease; }
+.preview-methods > button { position: relative; width: 100%; min-height: 64px; padding: 9px 11px; display: grid; grid-template-columns: 42px minmax(0, 1fr) 24px; gap: 10px; align-items: center; border: 1px solid #e7ebe4; border-radius: 14px; background: rgba(248,250,247,.9); color: inherit; font: inherit; text-align: left; cursor: grab; transition: padding-left .14s ease, background .14s ease, border-color .14s ease, box-shadow .14s ease, opacity .14s ease, transform .14s ease; }
+.preview-methods > button:active { cursor: grabbing; }
+.preview-methods > button.is-dragging { opacity: .42; transform: scale(.985); }
+.preview-methods > button.is-drop-target { border-color: var(--card-accent, #9fe870); box-shadow: 0 -3px 0 color-mix(in srgb, var(--card-accent, #9fe870) 72%, white); }
 .preview-methods > button:hover, .preview-methods > button:focus-visible { padding-left: 38px; border-color: color-mix(in srgb, var(--card-accent, var(--p-navy)) 38%, #e7ebe4); background: color-mix(in srgb, var(--card-accent, var(--p-sky)) 7%, #fff); }
 .preview-methods > button:focus-visible { outline: 3px solid color-mix(in srgb, var(--card-accent, #9fe870) 48%, transparent); outline-offset: 2px; }
 .preview-method-grip { position: absolute; left: 11px; top: 50%; width: 7px; height: 18px; background-image: radial-gradient(circle, #696d68 1.5px, transparent 1.7px); background-position: 0 0; background-size: 5px 6px; opacity: 0; transform: translateY(-50%); transition: opacity .14s ease; }

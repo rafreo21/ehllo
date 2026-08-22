@@ -267,6 +267,9 @@ export default function CardEditor() {
   const [leaveAction, setLeaveAction] = useState<"save" | "discard" | "">("");
   const [editing, setEditing] = useState<ContactMethod | null>(null);
   const [methodError, setMethodError] = useState("");
+  const [draggingMethodId, setDraggingMethodId] = useState<string | null>(null);
+  const [dropTargetMethodId, setDropTargetMethodId] = useState<string | null>(null);
+  const methodDragRef = useRef(false);
   const photoInput = useRef<HTMLInputElement>(null);
   const logoInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
@@ -399,6 +402,23 @@ export default function CardEditor() {
     // work. Keep all of it outside React's replayable state-updater callbacks.
     persistDraft(next);
   };
+
+  function moveMethod(sourceId: string, targetId: string) {
+    if (sourceId === targetId) return;
+    const methods = [...draftRef.current.methods];
+    const sourceIndex = methods.findIndex((method) => method.id === sourceId);
+    const targetIndex = methods.findIndex((method) => method.id === targetId);
+    if (sourceIndex < 0 || targetIndex < 0) return;
+    const [moved] = methods.splice(sourceIndex, 1);
+    methods.splice(targetIndex, 0, moved);
+    update("methods", methods);
+  }
+
+  function moveVisibleMethod(methodId: string, direction: -1 | 1) {
+    const index = collapsedPreviewMethods.findIndex((method) => method.id === methodId);
+    const target = collapsedPreviewMethods[index + direction];
+    if (target) moveMethod(methodId, target.id);
+  }
 
   async function save() {
     cancelScheduledThemePersist();
@@ -779,7 +799,42 @@ export default function CardEditor() {
                 </section>}
                 {collapsedPreviewMethods.length > 0 ? <div className="preview-methods">{collapsedPreviewMethods.map((method) => {
                   const meta = methodMeta[method.type];
-                  return <button type="button" key={method.id} style={{ "--card-accent": previewTheme.backgroundColor } as React.CSSProperties} onClick={() => { setMethodError(""); setEditing(method); }} aria-label={`Edit ${method.label || meta.name}`}>
+                  return <button
+                    type="button"
+                    key={method.id}
+                    draggable
+                    className={`${draggingMethodId === method.id ? "is-dragging" : ""}${dropTargetMethodId === method.id && draggingMethodId !== method.id ? " is-drop-target" : ""}`}
+                    style={{ "--card-accent": previewTheme.backgroundColor } as React.CSSProperties}
+                    onDragStart={(event) => {
+                      methodDragRef.current = true;
+                      setDraggingMethodId(method.id);
+                      event.dataTransfer.effectAllowed = "move";
+                      event.dataTransfer.setData("text/plain", method.id);
+                    }}
+                    onDragEnter={() => { if (draggingMethodId !== method.id) setDropTargetMethodId(method.id); }}
+                    onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      moveMethod(event.dataTransfer.getData("text/plain") || draggingMethodId || "", method.id);
+                      setDropTargetMethodId(null);
+                    }}
+                    onDragEnd={() => {
+                      setDraggingMethodId(null);
+                      setDropTargetMethodId(null);
+                      window.setTimeout(() => { methodDragRef.current = false; }, 0);
+                    }}
+                    onKeyDown={(event) => {
+                      if (!event.altKey || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) return;
+                      event.preventDefault();
+                      moveVisibleMethod(method.id, event.key === "ArrowUp" ? -1 : 1);
+                    }}
+                    onClick={() => {
+                      if (methodDragRef.current) return;
+                      setMethodError("");
+                      setEditing(method);
+                    }}
+                    aria-label={`Edit ${method.label || meta.name}. Hold Alt and press the up or down arrow to reorder.`}
+                  >
                       <i className="preview-method-grip" aria-hidden="true" />
                       <span style={{ color: previewTheme.backgroundColor }}>
                         {PHOSPHOR_METHOD_TYPES.has(method.type) ? <meta.Icon weight="bold" color={previewTheme.backgroundColor} /> : <meta.Icon color={previewTheme.backgroundColor} />}
