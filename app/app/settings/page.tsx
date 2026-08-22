@@ -11,6 +11,7 @@ import { PlugsIcon } from "@phosphor-icons/react/dist/csr/Plugs";
 import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
 import { X as XIcon } from "react-feather";
 import { Clock as HistoryIcon } from "react-feather";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { AppShellChromeProvider } from "../../components/AppShellChromeContext";
 import { PageSkeleton } from "../../components/AsyncState";
 
@@ -39,15 +40,45 @@ const SETTINGS_PANELS: Record<string, ComponentType> = {
 
 export default function ConsumerSettingsPage() {
   const [activePanel, setActivePanel] = useState<SettingsLink | null>(null);
+  const [panelHistory, setPanelHistory] = useState<SettingsLink[]>([]);
+
+  function closePanel() {
+    setActivePanel(null);
+    setPanelHistory([]);
+  }
+
+  function goBackPanel() {
+    const previous = panelHistory[panelHistory.length - 1] || null;
+    setActivePanel(previous);
+    setPanelHistory((current) => current.slice(0, -1));
+  }
 
   useEffect(() => {
     if (!activePanel) return;
     function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setActivePanel(null);
+      if (event.key === "Escape") {
+        setActivePanel(null);
+        setPanelHistory([]);
+      }
     }
     document.addEventListener("keydown", closeOnEscape);
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [activePanel]);
+
+  useEffect(() => {
+    function openNestedPanel(event: Event) {
+      const customEvent = event as CustomEvent<{ href?: string }>;
+      const target = SETTINGS_LINKS.find((item) => item.href === customEvent.detail?.href);
+      if (!target) return;
+      customEvent.preventDefault();
+      setActivePanel((current) => {
+        if (current) setPanelHistory((history) => [...history, current]);
+        return target;
+      });
+    }
+    window.addEventListener("ehllo:open-settings-panel", openNestedPanel);
+    return () => window.removeEventListener("ehllo:open-settings-panel", openNestedPanel);
+  }, []);
 
   const ActivePanel = activePanel ? SETTINGS_PANELS[activePanel.href] : null;
 
@@ -63,7 +94,7 @@ export default function ConsumerSettingsPage() {
             <button
               type="button"
               key={link.href}
-              onClick={() => setActivePanel(link)}
+              onClick={() => { setPanelHistory([]); setActivePanel(link); }}
               className="flex min-h-[72px] w-full cursor-pointer items-center gap-3 rounded-[10px] border border-[#e5e9e2] bg-[#fbfdf9] px-5 py-4 text-left font-inherit transition hover:bg-[#f2f5f0]"
             >
               <span className="shrink-0 text-[#163300]">{link.icon}</span>
@@ -78,12 +109,17 @@ export default function ConsumerSettingsPage() {
       </div>
 
       {activePanel && ActivePanel ? (
-        <div className="settings-drawer-backdrop" role="presentation" onClick={() => setActivePanel(null)}>
+        <div className="settings-drawer-backdrop" role="presentation" onClick={closePanel}>
           <aside className="settings-drawer" role="dialog" aria-modal="true" aria-labelledby="settings-drawer-title" onClick={(event) => event.stopPropagation()}>
             <header className="settings-drawer-header">
-              <div>
+              <div className="settings-drawer-title-row">
+                {panelHistory.length ? (
+                  <button type="button" aria-label="Back" onClick={goBackPanel}><ArrowLeftIcon size={18} /></button>
+                ) : null}
+                <div>
                 <h2 id="settings-drawer-title">{activePanel.label}</h2>
                 <p>{activePanel.hint}</p>
+                </div>
               </div>
               <div className="settings-drawer-header-actions">
                 {activePanel.href === "/app/settings/local-data" ? (
@@ -101,7 +137,7 @@ export default function ConsumerSettingsPage() {
                     onClick={() => window.dispatchEvent(new Event("ehllo:open-contact-request-history"))}
                   ><HistoryIcon size={18} /></button>
                 ) : null}
-                <button type="button" aria-label="Close" onClick={() => setActivePanel(null)}><XIcon size={18} /></button>
+                <button type="button" aria-label="Close" onClick={closePanel}><XIcon size={18} /></button>
               </div>
             </header>
             <div className="settings-drawer-body">

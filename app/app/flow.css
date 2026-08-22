@@ -463,6 +463,8 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .settings-drawer-header { flex: 0 0 auto; min-height: 84px; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 18px; border-bottom: 1px solid var(--p-line); background: white; }
 .settings-drawer-header h2 { margin: 0; color: var(--p-navy); font-size: 20px; }
 .settings-drawer-header p { margin: 3px 0 0; color: var(--p-muted); font-size: 12px; }
+.settings-drawer-title-row { min-width: 0; display: flex; align-items: center; gap: 10px; }
+.settings-drawer-title-row > div { min-width: 0; }
 .settings-drawer-header button { width: 36px; height: 36px; flex: 0 0 auto; display: grid; place-items: center; border: 0; border-radius: 999px; background: var(--p-ice); color: var(--p-navy); cursor: pointer; }
 .settings-drawer-header button:hover { background: var(--p-sky); }
 .settings-drawer-header-actions { display: flex; align-items: center; gap: 12px; margin-left: 16px; }

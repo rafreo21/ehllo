@@ -48,6 +48,15 @@ export default function RecordingStorageSettingsPage() {
     return Boolean(status?.microsoft.connected && status.microsoft.capabilities.onedrive);
   }
 
+  function openConnectedAccounts() {
+    const event = new CustomEvent("ehllo:open-settings-panel", {
+      cancelable: true,
+      detail: { href: "/app/settings/connected-accounts" },
+    });
+    window.dispatchEvent(event);
+    if (!event.defaultPrevented) router.push("/app/settings/connected-accounts");
+  }
+
   useAppShellChrome({ backHref: "/app/settings", backLabel: "Settings" });
   return (
     <>
@@ -67,7 +76,7 @@ export default function RecordingStorageSettingsPage() {
                 <button
                   key={option.id}
                   type="button"
-                  onClick={() => (enabled ? select(option.id) : router.push("/app/settings/connected-accounts"))}
+                  onClick={() => (enabled ? select(option.id) : openConnectedAccounts())}
                   className={`recording-storage-option${selected ? " selected" : ""}`}
                 >
                   <span className="recording-storage-option-icon">{option.icon}</span>
