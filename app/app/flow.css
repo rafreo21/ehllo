@@ -261,6 +261,8 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .share-card-preview, .inline-qr-panel { border: 1px solid rgba(255,255,255,.88); background: white; box-shadow: 0 24px 64px rgba(22,51,0,.1), 0 4px 14px rgba(22,51,0,.04); overflow: hidden; }
 .share-card-preview { border-radius: 22px; }
 .inline-qr-panel { border-radius: 12px; }
+.card-tools-sheet-shell { display: contents; }
+.card-tools-mobile-trigger, .card-tools-mobile-header, .card-tools-mobile-list { display: none; }
 @media (min-width: 801px) {
   .product-shell:has(.consumer-sidebar):has(.card-detail-page) { height: 100vh; min-height: 0; overflow: hidden; }
   .product-shell:has(.consumer-sidebar):has(.card-detail-page) .product-main { min-height: 0; overflow: hidden; }
@@ -1429,6 +1431,106 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .card-overview-grid { grid-template-columns: 1fr 1fr; }
   .card-detail-topbar { grid-template-columns: 1fr auto; }
   .card-detail-title { order: -1; grid-column: 1 / -1; }
+  .card-tools-mobile-trigger { width: 100%; display: inline-flex; }
+  .card-tools-sheet-shell { display: none; }
+  .card-tools-sheet-shell.open {
+    position: fixed;
+    z-index: 109;
+    inset: 0;
+    padding: 14px;
+    display: grid;
+    align-items: end;
+    background: rgba(14,20,12,.42);
+  }
+  .card-tools-sheet-shell .inline-qr-panel {
+    width: min(100%, 520px);
+    max-height: min(86dvh, 760px);
+    margin: 0 auto;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    border: 0;
+    border-radius: 18px 18px 12px 12px;
+    background: white;
+    box-shadow: 0 24px 60px rgba(0,0,0,.2);
+    overflow: hidden;
+  }
+  .card-tools-mobile-header {
+    min-height: 60px;
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
+    align-items: center;
+    gap: 9px;
+    border-bottom: 1px solid #edf0eb;
+  }
+  .card-tools-mobile-header > button,
+  .card-tools-mobile-header > span {
+    width: 36px;
+    height: 36px;
+  }
+  .card-tools-mobile-header > button {
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: var(--p-ice);
+    color: var(--p-navy);
+    cursor: pointer;
+  }
+  .card-tools-mobile-header > div { min-width: 0; display: grid; gap: 1px; text-align: center; }
+  .card-tools-mobile-header small { color: var(--p-muted); font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+  .card-tools-mobile-header strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+  .card-tools-mobile-list {
+    padding: 10px 12px 16px;
+    display: grid;
+    gap: 5px;
+    overflow-y: auto;
+  }
+  .card-tools-mobile-list > button {
+    width: 100%;
+    min-height: 48px;
+    padding: 7px 9px;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 18px;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    border-radius: 9px;
+    background: #f7f9f6;
+    color: var(--p-navy);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .card-tools-mobile-list > button:hover,
+  .card-tools-mobile-list > button:active { background: var(--p-sky); }
+  .card-tools-mobile-list > button > span { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: white; }
+  .card-tools-mobile-list > button > strong { font-size: 13px; }
+  .card-tools-sheet-shell .card-tools-tabs { display: none; }
+  .card-tools-sheet-shell .card-tool-content { display: none; }
+  .card-tools-sheet-shell.tool-selected .card-tools-mobile-list { display: none; }
+  .card-tools-sheet-shell.tool-selected .card-tool-content {
+    min-height: 0;
+    padding: 14px;
+    display: block;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .card-tools-sheet-shell .inline-qr-frame { width: min(100%, 260px); margin-inline: auto; padding: 10px; }
+  .card-tools-sheet-shell .scan-steps { grid-template-columns: 1fr; }
+  .card-tools-sheet-shell .inline-qr-actions,
+  .card-tools-sheet-shell .signature-actions,
+  .card-tools-sheet-shell .phone-widget-actions { display: grid; grid-template-columns: 1fr; gap: 7px; }
+  .card-tools-sheet-shell .inline-qr-actions > *,
+  .card-tools-sheet-shell .signature-actions > *,
+  .card-tools-sheet-shell .phone-widget-actions > * { width: 100%; }
+  .card-tools-sheet-shell .widget-gallery { grid-template-columns: 1fr; }
+  .card-tools-sheet-shell .watch-preview { width: min(100%, 220px); margin-inline: auto; }
+  .card-tools-sheet-shell .signature-preview-card { gap: 11px; padding: 12px; }
+  .card-tools-sheet-shell .signature-preview-photo { width: 52px; height: 52px; }
+  .card-tools-sheet-shell .virtual-background-preview { min-height: 150px; }
   .activate-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .guest-content-grid { grid-template-columns:1fr; }
 }

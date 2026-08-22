@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
 import { MoreHorizontal as MoreHorizontalIcon } from "react-feather";
 import { X as XIcon } from "react-feather";
 import { Copy as CopyIcon } from "react-feather";
@@ -19,6 +20,7 @@ import { ExternalLink as ArrowSquareOutIcon } from "react-feather";
 import { Plus as PlusIcon } from "react-feather";
 import { Trash2 as TrashIcon } from "react-feather";
 import { Smartphone as DeviceMobileIcon } from "react-feather";
+import { CreditCard as IdentificationCardIcon } from "react-feather";
 import { ChevronDown as CaretDownIcon } from "react-feather";
 import { ChevronUp as CaretUpIcon } from "react-feather";
 import { ShareCardModal } from "../../components/ShareCardModal";
@@ -129,6 +131,8 @@ export default function CardsPage() {
   const [cardActionsOpen, setCardActionsOpen] = useState(false);
   const [deletingCard, setDeletingCard] = useState(false);
   const [shareTool, setShareTool] = useState<ShareTool>("qr");
+  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
+  const [mobileToolSelected, setMobileToolSelected] = useState(false);
   const [recentConnection, setRecentConnection] = useState<ConnectionItem | null>(null);
   const { showToast } = useToast();
   const cardTheme = useMemo(() => themeSurfaceStyle(profile.theme), [profile.theme]);
@@ -646,7 +650,25 @@ function createCard(seed: Partial<LibraryCard> = {}) {
               </div>
             </div>
           </article>
-          <section className="inline-qr-panel">
+          <Button className="card-tools-mobile-trigger" variant="secondary" onClick={() => { setMobileToolSelected(false); setMobileToolsOpen(true); }}><MoreHorizontalIcon size={18} /> Do more</Button>
+          <div className={`card-tools-sheet-shell${mobileToolsOpen ? " open" : ""}${mobileToolSelected ? " tool-selected" : ""}`} role={mobileToolsOpen ? "presentation" : undefined} onClick={(event) => { if (event.target === event.currentTarget) setMobileToolsOpen(false); }}>
+          <section className="inline-qr-panel" role={mobileToolsOpen ? "dialog" : undefined} aria-modal={mobileToolsOpen || undefined} aria-label={mobileToolsOpen ? "Card tools" : undefined}>
+            <header className="card-tools-mobile-header">
+              {mobileToolSelected ? <button type="button" aria-label="Back to card tools" onClick={() => setMobileToolSelected(false)}><ArrowLeftIcon size={17} /></button> : <span />}
+              <div><small>{mobileToolSelected ? "Card tool" : "Do more"}</small><strong>{mobileToolSelected ? ([
+                ["qr", "QR code"], ["signature", "Email signature"], ["background", "Virtual background"],
+                ["watch", "Watch"], ["widgets", "Widgets"], ["wallet", "Wallet & NFC"],
+              ] as const).find(([id]) => id === shareTool)?.[1] : "Choose what you want to use"}</strong></div>
+              <button type="button" aria-label="Close card tools" onClick={() => setMobileToolsOpen(false)}><XIcon size={18} /></button>
+            </header>
+            <div className="card-tools-mobile-list">
+              <button type="button" onClick={() => { setShareTool("qr"); setMobileToolSelected(true); }}><span><QrCodeIcon size={18} weight="bold" /></span><strong>QR code</strong><ArrowRightIcon size={16} /></button>
+              <button type="button" onClick={() => { setShareTool("signature"); setMobileToolSelected(true); }}><span><EnvelopeSimpleIcon size={18} /></span><strong>Email signature</strong><ArrowRightIcon size={16} /></button>
+              <button type="button" onClick={() => { setShareTool("background"); setMobileToolSelected(true); }}><span><MonitorIcon size={18} /></span><strong>Virtual background</strong><ArrowRightIcon size={16} /></button>
+              <button type="button" onClick={() => { setShareTool("watch"); setMobileToolSelected(true); }}><span><WatchIcon size={18} /></span><strong>Watch</strong><ArrowRightIcon size={16} /></button>
+              <button type="button" onClick={() => { setShareTool("widgets"); setMobileToolSelected(true); }}><span><DeviceMobileIcon size={18} /></span><strong>Widgets</strong><ArrowRightIcon size={16} /></button>
+              <button type="button" onClick={() => { setShareTool("wallet"); setMobileToolSelected(true); }}><span><IdentificationCardIcon size={18} /></span><strong>Wallet &amp; NFC</strong><ArrowRightIcon size={16} /></button>
+            </div>
             <div className="card-tools-tabs review-tabs" role="tablist" aria-label="Card sharing tools">
             {([
                 ["qr", "QR code"],
@@ -831,6 +853,7 @@ function createCard(seed: Partial<LibraryCard> = {}) {
             {shareTool === "wallet" ? <section className="card-tool-section card-tool-qr-section wallet-tool-section"><WalletSharePanel slug={profile.slug} shareUrl={shareUrl} /></section> : null}
             </div>
           </section>
+          </div>
             </div>
             <ShareCardModal
               open={shareModalOpen}
