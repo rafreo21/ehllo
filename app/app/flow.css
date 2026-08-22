@@ -42,6 +42,9 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .home-nudge-copy small { color: var(--p-muted); font-size: 11px; }
 .home-nudge-card > button { position: absolute; top: 9px; right: 9px; width: 28px; height: 28px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--p-ice); color: var(--p-muted); cursor: pointer; transition: background-color .16s ease, color .16s ease; }
 .home-nudge-card > button:hover { background: var(--p-sky); color: var(--p-navy); }
+.home-feature-card { background: linear-gradient(105deg, #f3faee, #fff); }
+.home-feature-card > a:hover { background: rgba(220,245,207,.38); }
+.home-feature-action { display: inline-flex; align-items: center; gap: 6px; padding-right: 4px; font-size: 12px; font-weight: 800; white-space: nowrap; }
 .home-content-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 18px; align-items: start; }
 .home-section { display: grid; gap: 12px; }
 .home-section h2 { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
@@ -75,6 +78,7 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .home-stat-tile + .home-stat-tile { border-top: 1px solid #edf0eb; border-left: 0; }
   .home-quick-actions { width: 100%; margin-left: 0; flex-direction: column; }
   .home-quick-actions > a, .home-quick-actions > button { width: 100%; }
+  .home-feature-action { display: none; }
   .home-empty-compact { grid-template-columns: auto 1fr; }
   .home-empty-compact > a { grid-column: 1 / -1; margin-top: 4px; }
 }

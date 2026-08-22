@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowRight as ArrowRightIcon } from "react-feather";
 import { CreditCard as IdentificationCardIcon } from "react-feather";
 import { CheckSquare as ListChecksIcon } from "react-feather";
+import { Mic as MicrophoneIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
 import { HandWavingIcon } from "@phosphor-icons/react/dist/csr/HandWaving";
@@ -49,6 +50,8 @@ type HomeNudge = {
   actionId: string;
   readAt: string | null;
 };
+
+const HOME_CAPTURE_TIP_DISMISSED_KEY = "ehllo-home-capture-tip-dismissed-v1";
 
 function isDueNow(dueAt: string) {
   if (!dueAt.trim()) return false;
@@ -96,6 +99,7 @@ export default function HomeDashboard() {
   const [activeEncounterId, setActiveEncounterId] = useState("");
   const [addFollowUpModalOpen, setAddFollowUpModalOpen] = useState(false);
   const [homeNudges, setHomeNudges] = useState<HomeNudge[]>([]);
+  const [captureTipVisible, setCaptureTipVisible] = useState(false);
 
   function loadFollowUps() {
     return fetch("/api/follow-ups", { cache: "no-store" }).then(async (response) => {
@@ -171,6 +175,7 @@ export default function HomeDashboard() {
   useEffect(() => {
     void Promise.resolve().then(async () => {
       setGreeting(timeGreeting());
+      setCaptureTipVisible(localStorage.getItem(HOME_CAPTURE_TIP_DISMISSED_KEY) !== "1");
       loadLocalData();
       await Promise.allSettled([loadFollowUps(), loadConnections(), loadHomeNudges()]);
       setHydrated(true);
@@ -192,6 +197,11 @@ export default function HomeDashboard() {
       window.clearInterval(interval);
     };
   }, []);
+
+  function dismissCaptureTip() {
+    setCaptureTipVisible(false);
+    localStorage.setItem(HOME_CAPTURE_TIP_DISMISSED_KEY, "1");
+  }
 
   const followUpStatLabel = nudge.urgentCount
     ? `${nudge.urgentCount} need${nudge.urgentCount === 1 ? "s" : ""} you`
@@ -278,6 +288,22 @@ export default function HomeDashboard() {
                   </article>
                 ))}
               </div>
+            ) : null}
+
+            {captureTipVisible ? (
+              <article className="home-nudge-card home-feature-card">
+                <a href="/app/encounters/new">
+                  <span className="home-nudge-icon"><MicrophoneIcon size={18} /></span>
+                  <span className="home-nudge-copy">
+                    <strong>Capture your next conversation</strong>
+                    <small>Record the context now and let ehllo help you remember the follow-up.</small>
+                  </span>
+                  <span className="home-feature-action">Start capture <ArrowRightIcon size={14} /></span>
+                </a>
+                <button type="button" aria-label="Dismiss Capture suggestion" onClick={dismissCaptureTip}>
+                  <XIcon size={14} />
+                </button>
+              </article>
             ) : null}
 
             {activeWork.length ? (
