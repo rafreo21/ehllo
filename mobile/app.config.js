@@ -237,18 +237,27 @@ module.exports = {
               displayName: "ehllo QR Scan",
               description: "Large scannable QR code for your card.",
               supportedFamilies: ["systemSmall"],
+              ios: {
+                contentMarginsDisabled: true,
+              },
             },
             {
               name: "BusinessCardWidget",
               displayName: "ehllo Business Card",
               description: "QR code plus your name, role, and company.",
               supportedFamilies: ["systemMedium"],
+              ios: {
+                contentMarginsDisabled: true,
+              },
             },
             {
               name: "RecentConnectionsWidget",
               displayName: "ehllo Recent Connections",
               description: "Recent people who shared their details with you.",
               supportedFamilies: ["systemMedium"],
+              ios: {
+                contentMarginsDisabled: true,
+              },
             },
           ],
         },
