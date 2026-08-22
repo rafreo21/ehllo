@@ -721,7 +721,7 @@ function createCard(seed: Partial<LibraryCard> = {}) {
               <small className="signature-note">Use plain text for most clients. HTML keeps phone, email, and card link clickable.</small>
             </section> : null}
             {shareTool === "background" ? <section className="share-surface-panel card-tool-section">
-              <div className="inline-qr-head"><span><MonitorIcon size={22} /></span><div><h2 className="virtual-background-title">Virtual background</h2><p>Your name and QR on a meeting background, mirrored for Meet, Zoom and Teams. Those apps mirror your self-view, so it reads correctly on your own screen — participants see it reversed and cannot scan the QR.</p></div></div>
+              <div className="inline-qr-head"><span><MonitorIcon size={22} /></span><div><h2 className="virtual-background-title">Virtual background</h2><p>Your name and QR on a meeting-ready background. Use the mirrored version for your self-view.</p></div></div>
               <div className="share-surface-preview virtual-background-preview" style={{ background: cardTheme.backgroundGradient }}>
                 <div className="share-surface-overlay">
                   <strong>{profile.name}</strong>

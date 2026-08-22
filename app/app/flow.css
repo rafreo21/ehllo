@@ -233,14 +233,15 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
 .card-tool-section.card-tool-qr-section { margin-top: 0; padding-top: 0; gap: 10px; }
 .card-tool-section.share-surface-panel, .card-tool-section.phone-widget-panel { margin-top: 0; padding-top: 0; border-top: 0; }
 .wallet-tool-section > .wallet-share-panel { margin-top: 0; padding-top: 0; border-top: 0; }
-.inline-qr-head { display: flex; align-items: center; gap: 12px; }
+.inline-qr-head { display: grid; grid-template-columns: 42px minmax(0, 1fr); align-items: start; gap: 12px; }
+.inline-qr-head > div { min-width: 0; padding-top: 1px; }
 .inline-qr-head > span { width: 42px; height: 42px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 8px; background: var(--p-sky); }
-.inline-qr-head h2 { margin: 0 0 5px; font-size: 24px; }
+.inline-qr-head h2 { margin: 0 0 4px; font-size: 16px; line-height: 1.25; }
 .inline-qr-head h2.qr-scan-title { font-size: 16px; }
 .inline-qr-head h2.signature-title { font-size: 16px; }
 .inline-qr-head h2.virtual-background-title { font-size: 16px; }
 .inline-qr-head h2.watch-title { font-size: 16px; }
-.inline-qr-head p { margin: 0; color: var(--p-muted); font-size: 12px; line-height: 1.45; }
+.inline-qr-head p { max-width: 680px; margin: 0; color: var(--p-muted); font-size: 12px; line-height: 1.45; }
 .inline-qr-frame { position: relative; width: min(100%, 354px); margin: 0 auto; padding: 14px; border-radius: 10px; background: white; box-shadow: 0 10px 30px rgba(22,51,0,.08); }
 .inline-qr-frame img.inline-qr-image { width: 100%; aspect-ratio: 1; display: block; object-fit: contain; image-rendering: pixelated; }
 .product-shell:has(.consumer-sidebar) .inline-qr-frame { margin-left: 0; margin-right: auto; }

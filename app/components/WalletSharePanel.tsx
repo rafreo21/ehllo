@@ -195,7 +195,7 @@ export function WalletSharePanel({ slug, shareUrl }: WalletSharePanelProps) {
         <span><QrCodeIcon size={22} weight="bold" /></span>
         <div>
           <h2 className="qr-scan-title">Wallet passes and NFC</h2>
-          <p>Save your card to Apple or Google Wallet, or program an NFC tag that opens your public link.</p>
+          <p>Add your card to Apple or Google Wallet, or link it to an NFC tag.</p>
         </div>
       </div>
 
@@ -216,7 +216,7 @@ export function WalletSharePanel({ slug, shareUrl }: WalletSharePanelProps) {
           <span><QrCodeIcon size={22} weight="bold" /></span>
           <div>
             <h2 className="qr-scan-title">Program an NFC tag</h2>
-            <p>Write your card URL to a blank NFC sticker, or copy the payload for a badge manufacturer.</p>
+            <p>Write your public card link to a blank NFC tag.</p>
           </div>
         </div>
         <div className="inline-qr-url">
