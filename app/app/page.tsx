@@ -415,7 +415,7 @@ export default function HomeDashboard() {
             <section className="home-mobile-beta" aria-labelledby="mobile-beta-title">
               <div className="home-mobile-beta-copy">
                 <h2 id="mobile-beta-title">Take ehllo with you.</h2>
-                <p>The mobile app is coming soon. Join testing today on iOS or Android and help shape what ships.</p>
+                <p>Join the iOS or Android beta and help shape the app.</p>
                 <Button size="small" disabled title="Testing form link coming soon">Join mobile testing</Button>
               </div>
               <div className="home-mobile-beta-art" aria-hidden="true">
