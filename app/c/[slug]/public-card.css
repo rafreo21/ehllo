@@ -335,7 +335,7 @@
   font-weight: 800;
   text-decoration: none;
 }
-.public-card-actions { margin-top: 20px; padding-top: 18px; display: grid; gap: 8px; border-top: 1px solid #e7ebe4; }
+.public-card-actions { margin-top: 20px; padding-top: 18px; display: grid; gap: 8px; }
 .public-card-step > .public-card-actions:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
 .public-card-private {
   margin: 14px auto 0;
