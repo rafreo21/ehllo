@@ -479,6 +479,17 @@ body:has(.product-shell) { background: var(--p-ice); }
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
   }
+  .product-shell:has(.card-creator) .theme-panel { padding: 16px 18px; }
+  .product-shell:has(.card-creator) .theme-panel .theme-swatches {
+    margin-top: 12px;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .product-shell:has(.card-creator) .theme-panel .theme-swatches button {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+  }
   .company-visibility-option { padding: 20px; grid-template-columns: 42px minmax(0,1fr) auto; gap: 12px; align-items: center; }
   .company-option-icon { width: 42px; height: 42px; }
   .company-option-copy { align-self: center; }
