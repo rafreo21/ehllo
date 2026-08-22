@@ -457,6 +457,28 @@ body:has(.product-shell) { background: var(--p-ice); }
 .company-switch.is-on > span { transform: translateX(18px); }
 .company-switch:focus-visible { outline: 3px solid rgba(159,232,112,.65); outline-offset: 2px; }
 @media (min-width: 1200px) {
+  .product-shell:has(.card-creator) .creator-workspace--fill {
+    overflow: hidden;
+    background: transparent;
+    box-shadow: none;
+  }
+  .product-shell:has(.card-creator) .creator-section--fill {
+    padding: 0 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow: hidden;
+  }
+  .product-shell:has(.card-creator) .creator-section--fill > header,
+  .product-shell:has(.card-creator) .company-visibility-option,
+  .product-shell:has(.card-creator) .theme-panel { flex: 0 0 auto; }
+  .product-shell:has(.card-creator) .method-library.editor-desktop-only {
+    min-height: 0;
+    flex: 1 1 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
   .company-visibility-option { padding: 20px; grid-template-columns: 42px minmax(0,1fr) auto; gap: 12px; align-items: center; }
   .company-option-icon { width: 42px; height: 42px; }
   .company-option-copy { align-self: center; }
