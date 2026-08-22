@@ -13,7 +13,7 @@ ehllo already supports social sign-in in the app. Providers stay disabled until 
 - `http://localhost:3001/auth/callback` (if port 3000 is taken)
 - Your production URL, e.g. `https://ehllo.io/auth/callback`
 
-When a provider is enabled, `/auth` picks it up automatically — no deploy required.
+When a provider is enabled, `/auth` picks it up automatically - no deploy required.
 
 ---
 
@@ -28,7 +28,7 @@ When a provider is enabled, `/auth` picks it up automatically — no deploy requ
    - `https://tgpzxgrvdmmwnodxrooh.supabase.co/auth/v1/callback`
 5. Save the **Client ID** and **Client secret**.
 
-Guide: [Supabase — Login with Google](https://supabase.com/docs/guides/auth/social-login/auth-google)
+Guide: [Supabase - Login with Google](https://supabase.com/docs/guides/auth/social-login/auth-google)
 
 ---
 
@@ -45,7 +45,7 @@ Use **LinkedIn (OIDC)** in Supabase, not the legacy LinkedIn provider.
 4. Enable **Sign In with LinkedIn using OpenID Connect**.
 5. Copy the **Client ID** and **Client secret** from the Auth tab.
 
-Guide: [Supabase — Login with LinkedIn](https://supabase.com/docs/guides/auth/social-login/auth-linkedin)
+Guide: [Supabase - Login with LinkedIn](https://supabase.com/docs/guides/auth/social-login/auth-linkedin)
 
 ---
 
@@ -62,13 +62,13 @@ Use **X / Twitter (OAuth 2.0)**, not OAuth 1.0a.
    - **Website URL:** `http://localhost:3000` for local dev (or your production URL)
 4. On **Keys and tokens**, copy **Client ID** and regenerate/copy **Client secret**.
 
-Guide: [Supabase — Login with X](https://supabase.com/docs/guides/auth/social-login/auth-twitter)
+Guide: [Supabase - Login with X](https://supabase.com/docs/guides/auth/social-login/auth-twitter)
 
 ---
 
 ## 4. Register credentials in Supabase
 
-### Option A — Dashboard (manual)
+### Option A - Dashboard (manual)
 
 1. [Supabase → Authentication → Providers](https://supabase.com/dashboard/project/tgpzxgrvdmmwnodxrooh/auth/providers)
 2. Enable **Google**, **LinkedIn (OIDC)**, and **X / Twitter (OAuth 2.0)** with the client IDs/secrets from above.
@@ -76,7 +76,7 @@ Guide: [Supabase — Login with X](https://supabase.com/docs/guides/auth/social-
    - **Site URL:** `https://ehllo.io` (production) or `http://localhost:3000` (local)
    - **Redirect URLs:** add production and localhost callback URLs listed above
 
-### Option C — Redirect URLs only
+### Option C - Redirect URLs only
 
 If OAuth credentials are already configured and you only need production redirects:
 

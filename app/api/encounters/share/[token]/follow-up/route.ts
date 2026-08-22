@@ -4,6 +4,7 @@ import { createClient } from "../../../../../../lib/supabase/server";
 import { createServiceSupabaseClient } from "../../../../../../lib/supabase/service";
 import { createNotification, notificationTypeEnabled } from "../../../../../../lib/notifications-server";
 import { dispatchPushForUser } from "../../../../../../lib/push-dispatch-server";
+import { defaultFollowUpTitle, type FollowUpChannel } from "../../../../../../lib/follow-up-channels";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 async function notifyHostOfGuestFollowUp(
@@ -63,13 +64,13 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   }
 
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
-  const note = typeof body?.note === "string" ? body.note.trim().slice(0, 280) : "";
-  const allowedChannels = new Set(["email", "linkedin", "call", "meeting", "send", "whatsapp", "instagram", "x", "tiktok", "other"]);
-  const channel = typeof body?.channel === "string" && allowedChannels.has(body.channel) ? body.channel : "other";
+  const allowedChannels: FollowUpChannel[] = ["email", "linkedin", "call", "meeting", "send", "whatsapp", "instagram", "x", "tiktok", "other"];
+  const channel: FollowUpChannel = typeof body?.channel === "string" && (allowedChannels as string[]).includes(body.channel)
+    ? body.channel as FollowUpChannel
+    : "other";
+  const rawNote = typeof body?.note === "string" ? body.note.trim() : "";
+  const note = rawNote ? rawNote.slice(0, 280) : defaultFollowUpTitle(channel);
   const dueAt = typeof body?.dueAt === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.dueAt) ? body.dueAt : "";
-  if (note.length < 3) {
-    return NextResponse.json({ error: "Add the next step you intend to take." }, { status: 400 });
-  }
   const shareToken = token.trim();
 
   // Prefer the service client for this narrowly-scoped public write. This

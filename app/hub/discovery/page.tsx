@@ -1,10 +1,10 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { DownloadSimpleIcon } from "@phosphor-icons/react/dist/csr/DownloadSimple";
-import { UploadSimpleIcon } from "@phosphor-icons/react/dist/csr/UploadSimple";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { Download as DownloadSimpleIcon } from "react-feather";
+import { Upload as UploadSimpleIcon } from "react-feather";
+import { Trash2 as TrashIcon } from "react-feather";
 import { Button } from "../../components/Button";
 import {
   createEmptyDiscoveryData,
@@ -222,7 +222,7 @@ export default function DiscoveryPage() {
   return (
     <main className="discovery-shell">
       <header className="discovery-nav">
-        <a href="/hub"><ArrowLeftIcon size={16} weight="bold" /> MVP hub</a>
+        <a href="/hub"><ArrowLeftIcon size={16} /> MVP hub</a>
         <div>
           <Button size="small" variant="secondary" onClick={exportData}><DownloadSimpleIcon size={16} /> Export JSON</Button>
           <Button size="small" variant="secondary" onClick={() => importRef.current?.click()}><UploadSimpleIcon size={16} /> Import JSON</Button>
@@ -248,7 +248,7 @@ export default function DiscoveryPage() {
       </nav>
 
       <section className="discovery-section" id="overview">
-        <header><span>01</span><div><h2>Discovery overview</h2><p>The current segment, problem, and outcome are working hypotheses—not facts.</p></div></header>
+        <header><span>01</span><div><h2>Discovery overview</h2><p>The current segment, problem, and outcome are working hypotheses-not facts.</p></div></header>
         <div className="overview-grid">
           <article className="objective-panel">
             <span className="unvalidated-badge">Unvalidated assumptions</span>
@@ -390,7 +390,7 @@ export default function DiscoveryPage() {
       </section>
 
       <section className="discovery-section" id="synthesis">
-        <header><span>07</span><div><h2>Synthesis</h2><p>Record patterns and contradictions in plain qualitative language—never invented scores.</p></div></header>
+        <header><span>07</span><div><h2>Synthesis</h2><p>Record patterns and contradictions in plain qualitative language-never invented scores.</p></div></header>
         <div className="synthesis-grid">{synthesisFields.map(([field, label]) => <label key={field}>{label}<textarea rows={4} value={data.synthesis[field]} onChange={(event) => commit({ ...data, synthesis: { ...data.synthesis, [field]: event.target.value } }, "Synthesis saved locally.")} /></label>)}</div>
         <h3 className="comparison-title">Interview comparison</h3>
         <div className="comparison-wrap"><table><thead><tr><th>Participant</th><th>Meetings/week</th><th>Fragmented tools</th><th>Missed follow-up</th><th>Consequence</th><th>Workaround</th><th>CRM</th><th>Capture evidence</th><th>Payment evidence</th></tr></thead><tbody>{data.participants.map((participant) => {

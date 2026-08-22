@@ -15,7 +15,7 @@ function emailDomain(email: string): string {
 }
 
 /**
- * Counts attendees whose email domain differs from the user's own — the
+ * Counts attendees whose email domain differs from the user's own - the
  * "external, not just an internal sync" signal a calendar candidate needs
  * to be worth surfacing. Case/whitespace-insensitive, dedupes repeats, and
  * excludes the user's own address if it's listed among the attendees.
@@ -42,28 +42,30 @@ export type CalendarCandidateInput = {
   isRecurring: boolean;
 };
 
-const MIN_CANDIDATE_DURATION_MINUTES = 45;
-
 /**
- * Decides whether a calendar entry is worth surfacing as an event
- * candidate, using only structural signals (recurrence, duration) rather
- * than matching event-sounding words in the title — title keyword matching
- * has no reliable stopping point across languages/styles and produces
- * exactly the false positives ("are you attending your dentist?") that make
- * an inference feature feel dumb. Virtual and physical locations are
- * treated the same — an RSVP is an RSVP regardless of venue, and a bare
- * self-added block (no formal invite, no attendees) is just as often a real
- * event as a calendar invite is — many physical events get added to a
- * calendar by hand, not sent as an invite, so attendee presence isn't
- * required.
+ * Whether a calendar entry can be surfaced as an event at all.
+ *
+ * Only structural validity now: a parseable start, a parseable end, and an end after
+ * the start. Nothing is judged on what it looks like.
+ *
+ * It used to drop two whole classes of entry. Anything recurring was excluded, and
+ * anything under 45 minutes. The reasoning was to keep the list to things that read as
+ * real gatherings rather than filling it with standups and dentist appointments - but
+ * the effect was that people looked at a calendar they knew had events in it and saw
+ * nothing, with nothing anywhere saying why. A weekly meetup is recurring. A half-hour
+ * coffee is a real meeting. Silently withholding them is worse than showing something
+ * nobody needed.
+ *
+ * Titles are still never inspected. Keyword matching has no reliable stopping point
+ * across languages and styles, and produces exactly the false confidence that makes an
+ * inference feature feel stupid. Virtual and physical are treated the same, and a
+ * self-added block with no attendees counts - plenty of real events are typed into a
+ * calendar by hand rather than sent as an invite.
  */
 export function isEventCandidateWorthy(input: CalendarCandidateInput): boolean {
-  if (input.isRecurring) return false;
-
   const start = Date.parse(input.startsAt);
   const end = Date.parse(input.endsAt);
   if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return false;
-  if ((end - start) / 60_000 < MIN_CANDIDATE_DURATION_MINUTES) return false;
 
   return true;
 }
@@ -72,9 +74,11 @@ export type GoingEventWindow = {
   id: string;
   startsAt: string;
   endsAt?: string | null;
-  // Set when the user tapped "I've left" — caps this event's effective end
+  // Set when the user tapped "I've left" - caps this event's effective end
   // for presence purposes without touching its real scheduled end time.
   leftAt?: string | null;
+  /** When the user confirmed they are physically here. Outranks the time window. */
+  checkedInAt?: string | null;
 };
 
 // Events synced without an explicit end (some calendar entries, and every
@@ -82,16 +86,25 @@ export type GoingEventWindow = {
 // for the purpose of deciding whether "now" falls inside their window.
 const DEFAULT_EVENT_WINDOW_MS = 4 * 60 * 60 * 1000;
 
+// How early an explicit check-in starts counting for attribution. Long enough
+// to cover arriving before doors, short enough that it cannot reach back into
+// a different event earlier the same day.
+export const EARLY_CHECK_IN_GRACE_MS = 60 * 60 * 1000;
+
 /**
  * The passive-presence decision: given the events a user is "going" to,
  * which one (if any) is the current context right now. An event whose
  * window contains `now` is a match; "I've left" (leftAt) caps that window
- * early. When more than one going-event matches — genuinely overlapping
- * RSVPs — the one that started most recently wins, on the theory that
- * whichever event you checked into last is the one you're most likely
- * still at. A wrong guess here costs one tap to correct on the encounter
- * (the event chip is editable); asking the user to disambiguate up front
- * on every capture would cost more than it saves.
+ * early.
+ *
+ * Among matches, an explicit check-in wins. Only when nobody has said where
+ * they are does this fall back to the old heuristic - the most recently
+ * started event - on the theory that the one you arrived at last is the one
+ * you are most likely still at. That heuristic is fine for a single event and
+ * a coin toss for two overlapping ones, which is exactly why check-in exists.
+ * A wrong guess costs one tap to correct on the encounter (the event chip is
+ * editable); asking the user to disambiguate on every capture would cost more
+ * than it saves.
  */
 export function resolveCurrentEvent(goingEvents: GoingEventWindow[], now: Date = new Date()): string | null {
   const nowMs = now.getTime();
@@ -104,9 +117,34 @@ export function resolveCurrentEvent(goingEvents: GoingEventWindow[], now: Date =
       const leftAt = Date.parse(event.leftAt);
       if (!Number.isNaN(leftAt)) end = Math.min(end, leftAt);
     }
-    return start <= nowMs && nowMs <= end;
+    // Checking in opens the window early. People arrive before the scheduled
+    // start and meet the most interesting person of the day in the queue, so
+    // scans made then belong to the event they are standing at - but only for
+    // an event they explicitly said they are at. Inferring the same grace for
+    // every RSVP would let a lunch invite claim the morning.
+    const windowStart = event.checkedInAt ? start - EARLY_CHECK_IN_GRACE_MS : start;
+    return windowStart <= nowMs && nowMs <= end;
   });
   if (!matches.length) return null;
+
+  // An explicit check-in outranks the clock. Two events overlapping on the same
+  // afternoon are otherwise decided by whichever started most recently - a
+  // guess that silently attributes scanned cards, exchanges, encounters and
+  // their follow-ups to the wrong event. If the user has said where they are,
+  // that answer wins, and the most recent check-in wins among several.
+  //
+  // A check-in still has to fall inside the matched window above, so one the
+  // user forgets to close expires with the event instead of capturing every
+  // scan they make for the rest of the week.
+  const checkedIn = matches
+    .filter((event) => {
+      if (!event.checkedInAt) return false;
+      const at = Date.parse(event.checkedInAt);
+      return !Number.isNaN(at) && at <= nowMs;
+    })
+    .sort((left, right) => Date.parse(right.checkedInAt!) - Date.parse(left.checkedInAt!));
+  if (checkedIn.length) return checkedIn[0].id;
+
   return matches.reduce((latest, event) => (
     Date.parse(event.startsAt) > Date.parse(latest.startsAt) ? event : latest
   )).id;
@@ -114,7 +152,7 @@ export function resolveCurrentEvent(goingEvents: GoingEventWindow[], now: Date =
 
 /**
  * Buckets a timestamp to the nearest 30 minutes of its time-of-day (UTC),
- * ignoring the date entirely — a standing weekly block repeats at the same
+ * ignoring the date entirely - a standing weekly block repeats at the same
  * clock time even though its calendar date moves every week.
  */
 function suppressionTimeSlot(startsAt: string): string {
@@ -131,10 +169,226 @@ function suppressionTimeSlot(startsAt: string): string {
  * user says "not going" to a candidate, this key (organizer + title + time
  * of day) is remembered so the same recurring-in-spirit entry (e.g. a
  * standing "Dentist" block with no formal recurrence rule) doesn't get
- * re-suggested. Time-of-day is part of the key — without it, declining one
+ * re-suggested. Time-of-day is part of the key - without it, declining one
  * meeting permanently hides every future meeting anyone ever reuses that
  * exact title for, even an unrelated one at a completely different time.
  */
 export function candidateSuppressionKey(organizerEmail: string, title: string, startsAt: string): string {
   return `${organizerEmail.trim().toLowerCase()}::${title.trim().toLowerCase()}::${suppressionTimeSlot(startsAt)}`;
+}
+
+/** True when two timestamps name the same instant, whatever their offset. */
+export function sameCalendarInstant(left: string | null, right: string | null) {
+  if (!left || !right) return left === right;
+  const leftTime = Date.parse(left);
+  const rightTime = Date.parse(right);
+  return !Number.isNaN(leftTime) && !Number.isNaN(rightTime) && leftTime === rightTime;
+}
+
+export type CalendarImportCandidate = {
+  title: string;
+  location: string;
+  startsAt: string;
+  endsAt: string;
+  organizerEmail: string;
+};
+
+export type CalendarImportTarget = {
+  source: string;
+  status: string;
+  title: string;
+  location: string;
+  starts_at: string | null;
+  ends_at: string | null;
+  organizer_email: string;
+};
+
+/** The column values the importer would write, clamped as the table requires. */
+export function normalizeCalendarCandidate(candidate: CalendarImportCandidate) {
+  return {
+    title: candidate.title.trim().slice(0, 160) || "Untitled event",
+    location: candidate.location.trim().slice(0, 320),
+    organizerEmail: candidate.organizerEmail.trim().slice(0, 320),
+  };
+}
+
+/**
+ * What the importer is allowed to do with one provider entry.
+ *
+ * Extracted from syncCalendarCandidates so the policy can be tested without a
+ * database or a provider token. The behaviour it encodes is the part that was
+ * wrong: a blanket upsert let the provider's copy win on conflict, which
+ * resurrected locally-cancelled events, reassigned ownership, and overwrote
+ * local edits with no revision check.
+ *
+ * `keep` means leave the row exactly as it is. It is not "nothing changed" -
+ * it also covers the cases where the provider disagrees with ehllo and ehllo
+ * wins, which is what DEC-031 requires instead of silently overwriting.
+ */
+export function decideCalendarImport(
+  existing: CalendarImportTarget | undefined,
+  candidate: CalendarImportCandidate,
+): { decision: "insert" | "update" | "keep" | "conflict"; scheduleChanged: boolean; reason: string } {
+  if (!existing) return { decision: "insert", scheduleChanged: false, reason: "new" };
+
+  const next = normalizeCalendarCandidate(candidate);
+  const scheduleChanged = existing.title !== next.title
+    || existing.location !== next.location
+    || !sameCalendarInstant(existing.starts_at, candidate.startsAt)
+    || !sameCalendarInstant(existing.ends_at, candidate.endsAt);
+
+  // An ehllo-authored event keeps its own truth even once it carries an
+  // external_id. Letting the importer touch it is how ownership disappears on
+  // the first echo back from the provider.
+  //
+  // Where the provider's copy has actually diverged, silence is not good enough.
+  // DEC-031 says surface the disagreement rather than resolve it, so this
+  // reports a conflict; keeping quiet would leave correct behaviour that nobody
+  // can see, which is the defect running through this whole surface.
+  if (existing.source !== "calendar") {
+    return scheduleChanged
+      ? { decision: "conflict", scheduleChanged: true, reason: "provider-diverged-from-ehllo-event" }
+      : { decision: "keep", scheduleChanged: false, reason: "not-importer-owned" };
+  }
+
+  // A local cancellation is a decision, not stale data.
+  if (existing.status === "cancelled") {
+    return { decision: "keep", scheduleChanged: false, reason: "cancelled-locally" };
+  }
+
+  if (!scheduleChanged && existing.organizer_email === next.organizerEmail) {
+    return { decision: "keep", scheduleChanged: false, reason: "unchanged" };
+  }
+
+  return { decision: "update", scheduleChanged, reason: "provider-changed" };
+}
+
+/** Same ceiling the email outbox uses, so both queues give up at the same point. */
+export const CALENDAR_SYNC_MAX_ATTEMPTS = 8;
+
+/** Identical curve to event_email_outbox: 5 minutes doubling, capped at a day. */
+export function calendarSyncRetryDelayMinutes(attempts: number) {
+  return Math.min(24 * 60, 5 * 2 ** Math.max(0, attempts - 1));
+}
+
+export type CalendarPushAction = "create" | "update" | "cancel" | "skip";
+
+export type CalendarPushTarget = {
+  source: string;
+  status: string;
+  external_id: string | null;
+  calendar_push_enabled: boolean;
+  sync_state: string;
+};
+
+/**
+ * What, if anything, ehllo should send the provider for this event.
+ *
+ * Pure so the rules can be tested without a token: the push path is the one
+ * place where getting this wrong writes to somebody's real calendar.
+ *
+ * The ordering matters more than the individual branches. A calendar-sourced
+ * event is refused first, because pushing the provider's own entry back to it is
+ * the loop that sinks two-way sync. An unresolved conflict is refused next,
+ * since overwriting the provider is exactly what DEC-031 says not to do while
+ * the two sides disagree. Only then does opt-in apply - and a cancel of
+ * something already pushed is allowed through regardless, because ehllo put that
+ * entry on the calendar and withdrawing consent should not strand it there.
+ */
+export function decideCalendarPush(event: CalendarPushTarget): { action: CalendarPushAction; reason: string } {
+  if (event.source === "calendar") {
+    return { action: "skip", reason: "provider-owned" };
+  }
+  if (event.sync_state === "conflict") {
+    return { action: "skip", reason: "conflict-unresolved" };
+  }
+
+  const alreadyPushed = Boolean(event.external_id);
+
+  if (event.status === "cancelled") {
+    return alreadyPushed
+      ? { action: "cancel", reason: "cancelled-locally" }
+      : { action: "skip", reason: "never-pushed" };
+  }
+
+  if (!event.calendar_push_enabled) {
+    // Opted out after a push: take it back off the calendar rather than leaving
+    // an entry ehllo will no longer maintain.
+    return alreadyPushed
+      ? { action: "cancel", reason: "opted-out-after-push" }
+      : { action: "skip", reason: "not-opted-in" };
+  }
+
+  return alreadyPushed
+    ? { action: "update", reason: "local-change" }
+    : { action: "create", reason: "first-push" };
+}
+
+/**
+ * Reads a provider's all-day date as an instant.
+ *
+ * Google represents an all-day entry as a plain `date` ("2026-08-28") rather
+ * than a `dateTime`, with an exclusive end - a single day on the 28th arrives as
+ * start 2026-08-28, end 2026-08-29. Midnight UTC for both keeps that a correct
+ * half-open interval. Returns "" for anything that is not a plain date, so a
+ * caller can treat it the same as a missing value.
+ *
+ * These entries were previously discarded outright, which meant a conference or
+ * meetup booked as a whole day never reached ehllo and nothing said why.
+ */
+export function allDayInstantIso(date: string | undefined) {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return "";
+  return `${date}T00:00:00.000Z`;
+}
+
+/** One entry from Google's calendarList, reduced to what the import decision needs. */
+export type CalendarListEntry = {
+  id: string;
+  primary?: boolean;
+  selected?: boolean;
+  accessRole?: string;
+};
+
+/**
+ * Whether a calendar's events belong in ehllo.
+ *
+ * Only the primary calendar used to be read, so an event kept on a work or side
+ * calendar never appeared and nothing said why. Reading every calendar instead
+ * is wrong in the other direction: Google auto-subscribes accounts to Holidays,
+ * Birthdays and Week Numbers, and importing those would bury real events under
+ * hundreds of entries nobody chose.
+ *
+ * The dividing line is that those generated calendars all live on
+ * `group.v.calendar.google.com` - note the `.v.`, which is what separates them
+ * from genuinely shared calendars on `group.calendar.google.com`. Beyond that,
+ * `selected: false` means the person has hidden the calendar in Google's own UI,
+ * which is a clear enough statement of intent to respect, and a
+ * `freeBusyReader` grant cannot read event details at all so there is nothing to
+ * fetch.
+ */
+export function shouldImportCalendar(entry: CalendarListEntry): boolean {
+  if (!entry.id) return false;
+  if (entry.primary) return true;
+  if (entry.id.includes("group.v.calendar.google.com")) return false;
+  if (entry.selected === false) return false;
+  if (entry.accessRole === "freeBusyReader" || entry.accessRole === "none") return false;
+  return true;
+}
+
+/** Bounds how many calendars one sync will read, so a heavily-subscribed account cannot blow the provider quota. */
+export const MAX_CALENDARS_PER_SYNC = 12;
+
+/**
+ * Picks the calendars to read, primary first.
+ *
+ * Primary is sorted to the front so that if the cap truncates anything, it is
+ * never the calendar most people keep everything in.
+ */
+export function selectCalendarsToImport(
+  entries: CalendarListEntry[],
+  limit = MAX_CALENDARS_PER_SYNC,
+): string[] {
+  const keep = entries.filter(shouldImportCalendar);
+  keep.sort((left, right) => Number(Boolean(right.primary)) - Number(Boolean(left.primary)));
+  return keep.slice(0, limit).map((entry) => entry.id);
 }

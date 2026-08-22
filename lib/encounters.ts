@@ -71,11 +71,17 @@ export function normalizeEncounterActions(
       ? record.channel as EncounterAction["channel"]
       : "other";
     const status = normalizeFollowUpStatus(record.status);
-    const assigneeName = participant?.name.trim()
+    // `?.` on the participant only, with `.trim()` straight after, assumed that a participant
+    // which exists carries both fields. The guest payload deliberately does not - it returns
+    // id and display name and withholds everybody's email - so reading .name threw
+    // "Cannot read properties of undefined" and took the whole guest view down with a 500.
+    // The app reported that as "this meeting is not available", so a crash looked like a
+    // permission decision for anyone who tried to open a meeting shared with them.
+    const assigneeName = participant?.name?.trim()
       || (typeof record.assigneeName === "string" ? record.assigneeName.trim().slice(0, 160) : "")
       || fallbackPerson?.name?.trim().slice(0, 160)
       || undefined;
-    const assigneeEmail = participant?.email.trim()
+    const assigneeEmail = participant?.email?.trim()
       || (typeof record.assigneeEmail === "string" ? record.assigneeEmail.trim().slice(0, 320) : "")
       || fallbackPerson?.email?.trim().slice(0, 320)
       || undefined;
@@ -144,7 +150,7 @@ export type Encounter = {
   contactId?: string;
   exchangeId?: string;
   campaignId?: string;
-  /** The event this meeting happened at, if any — see lib/events.ts. Optional context, never required. */
+  /** The event this meeting happened at, if any - see lib/events.ts. Optional context, never required. */
   eventId?: string;
   startedAt: string;
   endedAt: string;
@@ -273,8 +279,28 @@ export function encounterFromApi(row: EncounterRow | Record<string, unknown>): E
 
 export function encounterFromSharedPayload(payload: Record<string, unknown>): Encounter | null {
   if (!payload || typeof payload.id !== "string") return null;
-  const participants = Array.isArray(payload.participants)
-    ? payload.participants as EncounterParticipant[]
+  // Mapped rather than cast. get_shared_encounter returns { id, displayName } - no name and
+  // no email, on purpose, because the guest view must not hand out the other attendees'
+  // addresses. Casting that to EncounterParticipant asserted fields that were never there,
+  // and the first thing to read one crashed. Filled in as empty strings so every consumer
+  // can rely on the shape it is promised.
+  const participants: EncounterParticipant[] = Array.isArray(payload.participants)
+    ? payload.participants.flatMap((entry) => {
+        if (!entry || typeof entry !== "object") return [];
+        const person = entry as Record<string, unknown>;
+        const id = typeof person.id === "string" ? person.id : "";
+        if (!id) return [];
+        return [{
+          id,
+          name: typeof person.displayName === "string"
+            ? person.displayName
+            : typeof person.name === "string" ? person.name : "",
+          // Withheld by the guest payload by design, not missing by accident.
+          email: typeof person.email === "string" ? person.email : "",
+          phone: typeof person.phone === "string" ? person.phone : "",
+          linkedIn: typeof person.linkedIn === "string" ? person.linkedIn : "",
+        }];
+      })
     : [];
   return {
     id: payload.id,

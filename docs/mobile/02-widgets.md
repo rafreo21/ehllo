@@ -4,9 +4,9 @@
 
 ehllo ships three home-screen widgets:
 
-1. **QR Scan** — large scannable QR code (2×2 on Android, small on iOS)
-2. **Business Card** — QR plus name, role, and company (4×2 wide)
-3. **Recent Connections** — recent people who shared their details (4×2 wide)
+1. **QR Scan** - large scannable QR code (2×2 on Android, small on iOS)
+2. **Business Card** - QR plus name, role, and company (4×2 wide)
+3. **Recent Connections** - recent people who shared their details (4×2 wide)
 
 Tapping a widget opens the matching deep link (`ehllo://share-card` or `ehllo://connections`). Legacy `aftermeet://` links remain accepted during migration.
 
@@ -14,8 +14,8 @@ Tapping a widget opens the matching deep link (`ehllo://share-card` or `ehllo://
 
 Both platforms read from the same snapshot built in `mobile/src/features/card/widget-sync.ts`:
 
-- `cardsJson` — all published cards, including per-card QR and photo assets
-- `recentConnectionsJson` / `connection1Name`… — recent connections
+- `cardsJson` - all published cards, including per-card QR and photo assets
+- `recentConnectionsJson` / `connection1Name`… - recent connections
 - Placeholder/demo content when nothing is synced yet (Alex Morgan + sample connections)
 
 ## iOS

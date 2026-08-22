@@ -4,6 +4,8 @@ import { join } from "node:path";
 import QRCode from "qrcode";
 
 import { EHLLO_LOGO_PNG_BASE64 } from "./ehllo-logo-base64.ts";
+import { EHLLO_MARK_SVG } from "./ehllo-mark-svg.ts";
+import { ehlloWalletLogoSvg } from "./ehllo-wallet-logo-svg.ts";
 import { loadSharp, sharpAvailable } from "./sharp-runtime.ts";
 
 import type { CardVcardInput } from "./vcard-export.ts";
@@ -47,16 +49,25 @@ export async function buildBrandedQrPngBuffer(payload: string, size = 1024) {
   });
 
   // Cloudflare's local workerd dev sandbox can't load sharp's native/wasm bindings
-  // at all — attempting the import crashes the sandbox itself, not a catchable JS
-  // error — so we must skip the attempt entirely there and fall back to a plain QR.
+  // at all - attempting the import crashes the sandbox itself, not a catchable JS
+  // error - so we must skip the attempt entirely there and fall back to a plain QR.
   if (!sharpAvailable()) return qrBuffer;
   let sharp;
   try {
     sharp = await loadSharp();
-  } catch {
+  } catch (error) {
     // A readable QR is more important than the centre badge. Some server
     // bundlers deliberately externalize native modules; never turn sharing
     // into a 500 merely because the optional compositor is unavailable.
+    //
+    // Log it though. Swallowing this silently meant a deployed environment
+    // could ship logo-less QR codes indefinitely and look completely healthy,
+    // and it made a plain QR indistinguishable from sharp being switched off
+    // by the availability guard - two very different faults.
+    console.error("[branded-qr] sharp unavailable, falling back to a plain QR", {
+      name: error instanceof Error ? error.name : typeof error,
+      message: error instanceof Error ? error.message : String(error),
+    });
     return qrBuffer;
   }
 
@@ -96,16 +107,20 @@ export async function buildBrandedQrPngBuffer(payload: string, size = 1024) {
 /**
  * Builds the branded QR as a self-contained SVG (QR modules + logo badge, all
  * drawn with markup) instead of compositing raster layers with sharp. This is
- * what every current caller actually needs — an `<img>`/`<image>`-embeddable
- * data URI — and it works in every runtime, including the local dev sandbox
+ * what every current caller actually needs - an `<img>`/`<image>`-embeddable
+ * data URI - and it works in every runtime, including the local dev sandbox
  * where sharp's native/wasm bindings can't load at all.
  */
 export async function buildBrandedQrDataUri(payload: string, size = 1024) {
-  const [qrSvg, logoBuffer] = await Promise.all([
-    QRCode.toString(payload, { ...QR_OPTIONS, type: "svg", width: size }),
+  const [qrPng, logoBuffer] = await Promise.all([
+    // A PNG rather than an SVG. resvg resolves one level of nested SVG but not
+    // two, so keeping this layer raster means the composed document is only
+    // ever one level deep. Email clients are unreliable with SVG as well, so
+    // raster is the safer answer everywhere this data URI ends up.
+    QRCode.toBuffer(payload, { ...QR_OPTIONS, width: size }),
     loadEhlloLogoBuffer(),
   ]);
-  const qrDataUri = `data:image/svg+xml;base64,${Buffer.from(qrSvg).toString("base64")}`;
+  const qrDataUri = `data:image/png;base64,${qrPng.toString("base64")}`;
 
   const logoSize = Math.round(size * 0.24);
   const badgePadding = Math.max(5, Math.round(size * 0.014));
@@ -127,6 +142,21 @@ export async function buildBrandedQrDataUri(payload: string, size = 1024) {
   return `data:image/svg+xml;base64,${Buffer.from(composed).toString("base64")}`;
 }
 
+/**
+ * The branded QR flattened into a single PNG data URI.
+ *
+ * buildBrandedQrDataUri returns an SVG that itself embeds images. resvg
+ * resolves one level of that - an SVG data URI inside <image> renders fine -
+ * but not two, so when the virtual background and watch face documents
+ * embedded it, the QR modules and logo inside came back empty and every asset
+ * shipped with a blank badge. Compositing to a single raster first leaves the
+ * outer document only one level to resolve.
+ */
+export async function buildBrandedQrPngDataUri(payload: string, size = 1024) {
+  const png = await buildBrandedQrPngBuffer(payload, size);
+  return `data:image/png;base64,${png.toString("base64")}`;
+}
+
 export async function buildBrandedContactQrPngBuffer(input: CardVcardInput, size = 1024) {
   return buildBrandedQrPngBuffer(buildContactQrPayload(input), size);
 }
@@ -135,23 +165,76 @@ export async function buildBrandedContactQrDataUri(input: CardVcardInput, size =
   return buildBrandedQrDataUri(buildContactQrPayload(input), size);
 }
 
-export async function buildWalletLogoBuffers() {
+/**
+ * The brand mark for a pass, as the round badge it was designed to be.
+ *
+ * public/ehllo-logo.svg draws it as `<rect width="60" height="60" rx="30">` - on a
+ * 60x60 box, rx=30 is a circle. public/ehllo-mark.png is a flattened square export
+ * of that same mark with the green baked in as opaque pixels, and that is what the
+ * pass was using: so `logo.png` came out as a small green *square* adrift in a
+ * 160x50 transparent box, sitting on whatever colour the card happened to be. On a
+ * coral card it read as a mismatched green tile rather than a logo.
+ *
+ * Rendering from the SVG keeps the circle and keeps the corners transparent, so the
+ * badge sits on the card's own colour instead of punching a square hole in it.
+ *
+ * Sized square rather than padded to Apple's full 160x50 allowance: Apple
+ * left-aligns the logo, so a 50x50 circle lands flush against the edge where it
+ * belongs, and the padding was only ever pushing it away from it.
+ */
+export async function buildWalletLogoBuffers(wordmarkColor?: string) {
   if (!sharpAvailable()) {
     throw new Error("Wallet pass images require sharp, which isn't available in this local dev sandbox. Test this against a Vercel preview instead.");
   }
   const sharp = await loadSharp();
-  const logoBuffer = await loadEhlloLogoBuffer();
-  const [icon, icon2x, logo, logo2x] = await Promise.all([
-    sharp(logoBuffer).resize(29, 29, { fit: "contain", background: { r: 135, g: 234, b: 92, alpha: 1 } }).png().toBuffer(),
-    sharp(logoBuffer).resize(58, 58, { fit: "contain", background: { r: 135, g: 234, b: 92, alpha: 1 } }).png().toBuffer(),
-    sharp(logoBuffer).resize(160, 50, { fit: "contain", background: { r: 135, g: 234, b: 92, alpha: 0 } }).png().toBuffer(),
-    sharp(logoBuffer).resize(320, 100, { fit: "contain", background: { r: 135, g: 234, b: 92, alpha: 0 } }).png().toBuffer(),
+  const markBuffer = loadEhlloMarkForWallet();
+  // Falls back to the wordmark's own near-black when no colour is supplied, which is
+  // what a caller that does not know the card's theme should get.
+  const logoBuffer = Buffer.from(ehlloWalletLogoSvg(wordmarkColor?.trim() || "#121212"), "utf8");
+  const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
+  // Every asset at every scale. The strip already ships @3x; the logo and icon did
+  // not, so on a 3x device - which is every current iPhone - iOS upscaled them from
+  // @2x and they were the softest marks on an otherwise sharp pass. The mark is an
+  // SVG, so the extra scale costs a resize and nothing else.
+  const [icon, icon2x, icon3x, logo, logo2x, logo3x] = await Promise.all([
+    sharp(markBuffer).resize(29, 29, { fit: "contain", background: transparent }).png().toBuffer(),
+    sharp(markBuffer).resize(58, 58, { fit: "contain", background: transparent }).png().toBuffer(),
+    sharp(markBuffer).resize(87, 87, { fit: "contain", background: transparent }).png().toBuffer(),
+    // The full lockup - badge and wordmark together - rather than the badge alone.
+    // Apple gives logoText no size control, and it rendered smaller than the header
+    // field beside it; the wordmark inside the image is the only way to set that
+    // type size ourselves, so pass.json drops logoText entirely.
+    //
+    // 150x50pt at 1x, under Apple's 160x50 ceiling. Height, not width, is what Apple
+    // constrains, and the aspect is preserved, so the badge stays the size it was
+    // while the wordmark rides along beside it.
+    sharp(logoBuffer).resize(150, 50, { fit: "contain", background: transparent }).png().toBuffer(),
+    sharp(logoBuffer).resize(300, 100, { fit: "contain", background: transparent }).png().toBuffer(),
+    sharp(logoBuffer).resize(450, 150, { fit: "contain", background: transparent }).png().toBuffer(),
   ]);
 
   return {
     "icon.png": icon,
     "icon@2x.png": icon2x,
+    "icon@3x.png": icon3x,
     "logo.png": logo,
     "logo@2x.png": logo2x,
+    "logo@3x.png": logo3x,
   };
+}
+
+/**
+ * Prefers the SVG, because it is the only source that still has the circle and
+ * transparent corners. Falls back to the square PNG rather than failing the pass -
+ * a square mark is worse-looking, not broken. Kept separate from
+ * loadEhlloLogoBuffer so the QR centre mark, which is composited onto a white plate
+ * and does not need transparency, keeps working exactly as it does now.
+ */
+/**
+ * The inline SVG, not a file read. public/ is CDN-served and absent from the
+ * serverless filesystem, so reading it there fails every time and falls through -
+ * which is exactly how this shipped the square mark once already.
+ */
+function loadEhlloMarkForWallet() {
+  return Buffer.from(EHLLO_MARK_SVG, "utf8");
 }

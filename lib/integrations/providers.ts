@@ -1,9 +1,14 @@
 import "server-only";
 
+import { allDayInstantIso, selectCalendarsToImport } from "../events";
 import { buildPlainEmailRaw } from "./email";
+import type { IntegrationProvider } from "./types";
 
-/** A 401/403 from the provider means the access token itself was rejected — distinct from a 5xx/network blip, since the former means the connection needs reconnecting, not just retrying. */
+/** A 401/403 from the provider means the access token itself was rejected - distinct from a 5xx/network blip, since the former means the connection needs reconnecting, not just retrying. */
 export class CalendarProviderAuthError extends Error {}
+
+/** A 403 for one calendar: that calendar is unreadable, which says nothing about the token. Only a 403 on every calendar does. */
+export class CalendarPermissionError extends Error {}
 
 export async function sendGoogleEmail(accessToken: string, input: { to: string; subject: string; body: string }) {
   const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
@@ -104,6 +109,10 @@ export type RawCalendarEvent = {
   cancelled: boolean;
 };
 
+type GoogleCalendarListEntriesResponse = {
+  items?: Array<{ id?: string; primary?: boolean; selected?: boolean; accessRole?: string }>;
+};
+
 type GoogleCalendarListResponse = {
   items?: Array<{
     id?: string;
@@ -119,15 +128,62 @@ type GoogleCalendarListResponse = {
 };
 
 /**
- * Lists events in a rolling window from the user's primary Google Calendar.
+ * Lists events in a rolling window across the account's calendars.
  * Reuses the same `calendar.events` scope already granted for
- * createGoogleCalendarEvent — no new consent screen for an already-connected
- * account. Cancelled events and all-day entries (date, not dateTime) are
- * dropped: an all-day block rarely represents a single attendable gathering
- * and has no meaningful duration for the candidate filter.
+ * createGoogleCalendarEvent - no new consent screen for an already-connected
+ * account. Cancelled entries are still listed so a cancellation propagates.
+ *
+ * Only `primary` used to be read, so an event kept on a work or side calendar
+ * never arrived and nothing anywhere said why. selectCalendarsToImport decides
+ * which calendars qualify and why; Google's generated Holidays/Birthdays
+ * calendars are excluded there rather than here. A single calendar failing is
+ * skipped rather than failing the whole sync - one broken share should not cost
+ * you every other event - but a rejected *token* still throws, because that
+ * needs reconnecting rather than retrying.
+ *
+ * All-day entries used to be dropped here, on the reasoning that an all-day
+ * block "rarely represents a single attendable gathering". That is backwards for
+ * ehllo: conferences, summits and meetups are usually entered as all-day, and
+ * they are the events this product exists for. Worse, the drop was silent - an
+ * event simply never appeared, with nothing anywhere saying why.
  */
-export async function listGoogleCalendarEvents(
+/**
+ * The calendars worth reading, or just ["primary"] when we cannot enumerate.
+ *
+ * Enumeration is an enhancement and must never be able to fail the sync or
+ * question the connection. calendarList.list needs `calendar.readonly`, which
+ * `calendar.events` alone does not cover - so on an account connected before
+ * that scope was requested, this call returns 403. Treating that as a dead token
+ * (as the first version of this did) told people to reconnect a perfectly valid
+ * connection, and sent them looking for a Reconnect button that the accounts
+ * screen was right not to show, because refreshing the token there succeeded.
+ *
+ * So: every failure here degrades to the primary calendar. Once the scope is
+ * granted the enumeration simply starts working, with no further change.
+ */
+async function listGoogleCalendarIds(accessToken: string): Promise<string[]> {
+  let response: Response;
+  try {
+    response = await fetch(
+      "https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=reader&maxResults=250",
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+  } catch {
+    return ["primary"];
+  }
+  if (!response.ok) return ["primary"];
+  const payload = await response.json() as GoogleCalendarListEntriesResponse;
+  const ids = selectCalendarsToImport(
+    (payload.items ?? []).flatMap((item) => item.id
+      ? [{ id: item.id, primary: item.primary, selected: item.selected, accessRole: item.accessRole }]
+      : []),
+  );
+  return ids.length ? ids : ["primary"];
+}
+
+async function listGoogleEventsForCalendar(
   accessToken: string,
+  calendarId: string,
   input: { timeMinIso: string; timeMaxIso: string },
 ): Promise<RawCalendarEvent[]> {
   const params = new URLSearchParams({
@@ -139,23 +195,34 @@ export async function listGoogleCalendarEvents(
     maxResults: "250",
   });
   const response = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/primary/events?${params.toString()}`,
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params.toString()}`,
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
-  if (response.status === 401 || response.status === 403) {
+  // 401 is unambiguous: the token itself is rejected. 403 is not - it also means
+  // "you cannot read this particular calendar", which must not condemn the whole
+  // connection. The caller decides, once it knows whether every calendar failed.
+  if (response.status === 401) {
     throw new CalendarProviderAuthError("Google Calendar rejected this token.");
   }
+  if (response.status === 403) throw new CalendarPermissionError("Google Calendar refused this calendar.");
   if (!response.ok) throw new Error("Google Calendar rejected this request.");
   const payload = await response.json() as GoogleCalendarListResponse;
 
-  return (payload.items ?? []).flatMap((item) => {
+  // Annotated so the cancelled and active branches unify as RawCalendarEvent.
+  // Left inferred, TypeScript widens each branch separately and then rejects the
+  // callback against flatMap's signature.
+  return (payload.items ?? []).flatMap((item): RawCalendarEvent[] => {
     if (!item.id) return [];
     if (item.status === "cancelled") return [{
       externalId: item.id, title: item.summary?.trim() ?? "", location: "", startsAt: "", endsAt: "",
       organizerEmail: item.organizer?.email?.trim() ?? "", attendeeEmails: [], isRecurring: Boolean(item.recurringEventId), cancelled: true,
     }];
-    const startsAt = item.start?.dateTime;
-    const endsAt = item.end?.dateTime;
+    // Google gives an all-day entry a plain `date` instead of `dateTime`, and its
+    // end is exclusive: one day on the 28th arrives as start 2026-08-28, end
+    // 2026-08-29. Reading both as midnight UTC keeps that a correct half-open
+    // interval, so duration-based filtering still works on them.
+    const startsAt = item.start?.dateTime ?? allDayInstantIso(item.start?.date);
+    const endsAt = item.end?.dateTime ?? allDayInstantIso(item.end?.date);
     if (!startsAt || !endsAt) return [];
     return [{
       externalId: item.id,
@@ -169,6 +236,43 @@ export async function listGoogleCalendarEvents(
       cancelled: false,
     }];
   });
+}
+
+export async function listGoogleCalendarEvents(
+  accessToken: string,
+  input: { timeMinIso: string; timeMaxIso: string },
+): Promise<RawCalendarEvent[]> {
+  const calendarIds = await listGoogleCalendarIds(accessToken);
+
+  // The same meeting can sit on more than one calendar the person can see, and
+  // downstream keys events on externalId, so first copy wins - calendarIds puts
+  // primary first, which makes that the primary calendar's copy.
+  const byExternalId = new Map<string, RawCalendarEvent>();
+  let refusedEvery = true;
+  for (const calendarId of calendarIds) {
+    let events: RawCalendarEvent[];
+    try {
+      events = await listGoogleEventsForCalendar(accessToken, calendarId, input);
+    } catch (caught) {
+      // A rejected token propagates immediately - every calendar will fail and
+      // the connection genuinely needs attention. Anything else is one calendar's
+      // problem and must not cost the person their other events.
+      if (caught instanceof CalendarProviderAuthError) throw caught;
+      if (!(caught instanceof CalendarPermissionError)) refusedEvery = false;
+      continue;
+    }
+    refusedEvery = false;
+    for (const event of events) {
+      if (!byExternalId.has(event.externalId)) byExternalId.set(event.externalId, event);
+    }
+  }
+
+  // Refused on every single calendar is the one case where a 403 does mean the
+  // grant is gone, so surface it rather than reporting an empty calendar.
+  if (refusedEvery && calendarIds.length > 0) {
+    throw new CalendarProviderAuthError("Google Calendar refused every calendar.");
+  }
+  return [...byExternalId.values()];
 }
 
 type MicrosoftCalendarViewResponse = {
@@ -188,7 +292,7 @@ type MicrosoftCalendarViewResponse = {
 /**
  * Lists events in a rolling window via Microsoft Graph's calendarView,
  * which (unlike a raw /events list) already expands recurring series into
- * per-day instances within the window — so `type` tells us instance vs.
+ * per-day instances within the window - so `type` tells us instance vs.
  * series membership directly. Reuses the existing Calendars.ReadWrite scope.
  */
 export async function listMicrosoftCalendarEvents(
@@ -215,7 +319,7 @@ export async function listMicrosoftCalendarEvents(
   if (!response.ok) throw new Error("Outlook Calendar rejected this request.");
   const payload = await response.json() as MicrosoftCalendarViewResponse;
 
-  return (payload.value ?? []).flatMap((item) => {
+  return (payload.value ?? []).flatMap((item): RawCalendarEvent[] => {
     if (!item.id) return [];
     if (item.isCancelled) return [{
       externalId: item.id, title: item.subject?.trim() ?? "", location: "", startsAt: "", endsAt: "",
@@ -229,7 +333,7 @@ export async function listMicrosoftCalendarEvents(
       title: item.subject?.trim() ?? "",
       location: item.location?.displayName?.trim() ?? "",
       // Graph returns naive local-time strings for the requested timezone
-      // (UTC, forced via the Prefer header above) rather than an offset —
+      // (UTC, forced via the Prefer header above) rather than an offset -
       // appending "Z" makes them parse as the UTC instants they represent.
       startsAt: `${startsAt}Z`,
       endsAt: `${endsAt}Z`,
@@ -241,4 +345,117 @@ export async function listMicrosoftCalendarEvents(
       cancelled: false,
     }];
   });
+}
+
+/**
+ * A real event, as opposed to the follow-up meeting window that
+ * createGoogleCalendarEvent builds from a due date. That one derives its own
+ * start and end and throws the provider's id away, so it cannot be updated or
+ * cancelled later; these carry explicit instants and hand the id back so ehllo
+ * can keep the two sides pointing at each other.
+ */
+export type ProviderCalendarEventPayload = {
+  title: string;
+  details?: string;
+  location?: string;
+  startsAt: string;
+  endsAt: string;
+};
+
+/** The provider already forgot this event, so there is nothing left to do. */
+export class CalendarProviderGoneError extends Error {}
+
+function googleEventBody(payload: ProviderCalendarEventPayload) {
+  return {
+    summary: payload.title,
+    ...(payload.details ? { description: payload.details } : {}),
+    ...(payload.location ? { location: payload.location } : {}),
+    start: { dateTime: new Date(payload.startsAt).toISOString() },
+    end: { dateTime: new Date(payload.endsAt).toISOString() },
+  };
+}
+
+function microsoftEventBody(payload: ProviderCalendarEventPayload) {
+  return {
+    subject: payload.title,
+    ...(payload.details ? { body: { contentType: "Text", content: payload.details } } : {}),
+    ...(payload.location ? { location: { displayName: payload.location } } : {}),
+    start: { dateTime: new Date(payload.startsAt).toISOString(), timeZone: "UTC" },
+    end: { dateTime: new Date(payload.endsAt).toISOString(), timeZone: "UTC" },
+  };
+}
+
+function assertCalendarResponse(response: Response, provider: IntegrationProvider) {
+  if (response.status === 401 || response.status === 403) {
+    throw new CalendarProviderAuthError(
+      provider === "google" ? "Google Calendar rejected this token." : "Outlook Calendar rejected this token.",
+    );
+  }
+  // 404/410 on an update or cancel means the entry is already gone from the
+  // provider. That is a settled outcome, not a failure to retry forever.
+  if (response.status === 404 || response.status === 410) {
+    throw new CalendarProviderGoneError("The calendar no longer has this event.");
+  }
+  if (!response.ok) {
+    throw new Error(
+      provider === "google" ? "Google Calendar rejected this request." : "Outlook Calendar rejected this request.",
+    );
+  }
+}
+
+const CALENDAR_ENDPOINTS = {
+  google: {
+    collection: "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+    item: (externalId: string) =>
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(externalId)}`,
+  },
+  microsoft: {
+    collection: "https://graph.microsoft.com/v1.0/me/events",
+    item: (externalId: string) => `https://graph.microsoft.com/v1.0/me/events/${encodeURIComponent(externalId)}`,
+  },
+} as const;
+
+/** Creates the event and returns the provider's id for it. */
+export async function createProviderCalendarEvent(
+  provider: IntegrationProvider,
+  accessToken: string,
+  payload: ProviderCalendarEventPayload,
+): Promise<string> {
+  const response = await fetch(CALENDAR_ENDPOINTS[provider].collection, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify(provider === "google" ? googleEventBody(payload) : microsoftEventBody(payload)),
+  });
+  assertCalendarResponse(response, provider);
+  const created = await response.json() as { id?: string };
+  if (!created.id) throw new Error("The calendar did not return an event id.");
+  return created.id;
+}
+
+export async function updateProviderCalendarEvent(
+  provider: IntegrationProvider,
+  accessToken: string,
+  externalId: string,
+  payload: ProviderCalendarEventPayload,
+): Promise<void> {
+  const response = await fetch(CALENDAR_ENDPOINTS[provider].item(externalId), {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify(provider === "google" ? googleEventBody(payload) : microsoftEventBody(payload)),
+  });
+  assertCalendarResponse(response, provider);
+}
+
+export async function cancelProviderCalendarEvent(
+  provider: IntegrationProvider,
+  accessToken: string,
+  externalId: string,
+): Promise<void> {
+  const response = await fetch(CALENDAR_ENDPOINTS[provider].item(externalId), {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  // A delete that finds nothing has still achieved what it was asked to.
+  if (response.status === 404 || response.status === 410) return;
+  assertCalendarResponse(response, provider);
 }

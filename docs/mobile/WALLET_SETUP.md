@@ -81,8 +81,8 @@ Expected when configured:
 
 These do not use server wallet credentials:
 
-- **NFC write** — Android native build + physical NTAG tag. Programmed tags include the card URL first, then a vCard fallback.
-- **Home-screen widget** — native build (`expo prebuild` / EAS). Widget QRs are always **online** (card URL). Tap **Open QR** → `ehllo://share-card` → in-app QR screen with online/offline toggle.
+- **NFC write** - Android native build + physical NTAG tag. Programmed tags include the card URL first, then a vCard fallback.
+- **Home-screen widget** - native build (`expo prebuild` / EAS). Widget QRs are always **online** (card URL). Tap **Open QR** → `ehllo://share-card` → in-app QR screen with online/offline toggle.
 
 See [05-qr-sharing.md](./05-qr-sharing.md) for online vs offline QR behaviour and test steps.
 

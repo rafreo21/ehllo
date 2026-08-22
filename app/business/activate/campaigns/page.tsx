@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { Plus as PlusIcon } from "react-feather";
 import { BusinessShell } from "../../../components/BusinessShell";
 import { LinkButton } from "../../../components/Button";
 import { buildWorkspaceAnalytics, formatSourceLabel } from "../../../../lib/campaign-analytics";
@@ -32,7 +32,7 @@ export default function CampaignsPage() {
       actions={
         <>
           <LinkButton size="small" variant="ghost" href="/business/activate"><ArrowLeftIcon size={16} />Activate</LinkButton>
-          <LinkButton size="small" href="/business/activate/campaigns/new"><PlusIcon size={16} weight="bold" />New campaign</LinkButton>
+          <LinkButton size="small" href="/business/activate/campaigns/new"><PlusIcon size={16} />New campaign</LinkButton>
         </>
       }
     >
@@ -68,7 +68,7 @@ export default function CampaignsPage() {
             <div>
               <h2>No campaigns yet</h2>
               <p>Create one for a conference, dinner series, or partner push, then tag captures as you go.</p>
-              <LinkButton href="/business/activate/campaigns/new"><PlusIcon size={17} weight="bold" />Create campaign</LinkButton>
+              <LinkButton href="/business/activate/campaigns/new"><PlusIcon size={17} />Create campaign</LinkButton>
             </div>
           </div>
         )}

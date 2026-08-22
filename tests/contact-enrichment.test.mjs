@@ -42,7 +42,7 @@ test("enrichContactField uses LinkedIn work email when visible", async () => {
   assert.equal(result.provider, "linkedin");
   assert.equal(result.confidence, "likely");
   assert.equal(result.steps[1]?.status, "skipped");
-  assert.equal(result.steps[1]?.detail, "Skipped — verified match already found");
+  assert.equal(result.steps[1]?.detail, "Skipped - verified match already found");
 });
 
 test("enrichContactField does not use personal email for work email lookup", async () => {

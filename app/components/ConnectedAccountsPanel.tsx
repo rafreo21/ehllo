@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { CloudArrowUpIcon } from "@phosphor-icons/react/dist/csr/CloudArrowUp";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/csr/WarningCircle";
-import { LinkButton } from "./Button";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { UploadCloud as CloudArrowUpIcon } from "react-feather";
+import { AlertCircle as WarningCircleIcon } from "react-feather";
+import { Button, LinkButton } from "./Button";
 import { StatusMessage } from "./AsyncState";
+import { useToast } from "./ToastContext";
 import { GoogleProviderIcon, MicrosoftProviderIcon } from "./ProviderIcons";
 import type { ConnectedAccountStatus } from "../../lib/integrations/types";
 import { emptyConnectedAccountStatus } from "../../lib/integrations/types";
 
 export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: { stacked?: boolean; returnTo?: string } = {}) {
+  const { showToast } = useToast();
   const [status, setStatus] = useState<ConnectedAccountStatus>(emptyConnectedAccountStatus());
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -28,15 +30,32 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
       void refresh();
       const params = new URLSearchParams(window.location.search);
       const integration = params.get("integration");
-      if (integration === "google-connected") setMessage("Google connected. Gmail, Calendar, and Drive are now available wherever you choose to use them.");
-      if (integration === "microsoft-connected") setMessage("Microsoft connected. Outlook, Calendar, and OneDrive are now available wherever you choose to use them.");
-      if (integration === "google-error" || integration === "microsoft-error") setError("We couldn’t connect that account. Reconnect and approve the requested permissions.");
-      if (integration === "preview") setError("Connected accounts need a signed-in Supabase user; local preview mode cannot complete Google OAuth.");
+      if (integration === "google-connected") {
+        const text = "Google connected. Gmail, Calendar, and Drive are now available wherever you choose to use them.";
+        setMessage(text);
+        showToast({ tone: "success", message: text });
+      }
+      if (integration === "microsoft-connected") {
+        const text = "Microsoft connected. Outlook, Calendar, and OneDrive are now available wherever you choose to use them.";
+        setMessage(text);
+        showToast({ tone: "success", message: text });
+      }
+      if (integration === "google-error" || integration === "microsoft-error") {
+        const text = "We couldn’t connect that account. Reconnect and approve the requested permissions.";
+        setError(text);
+        showToast({ tone: "error", message: text });
+      }
+      if (integration === "preview") {
+        const text = "Connected accounts need a signed-in Supabase user; local preview mode cannot complete Google OAuth.";
+        setError(text);
+        showToast({ tone: "error", message: text });
+      }
       if (integration === "google-unconfigured" || integration === "microsoft-unconfigured") {
         setError("This connection has not been enabled by the ehllo workspace administrator yet.");
+        showToast({ tone: "error", message: "This connection has not been enabled by the ehllo workspace administrator yet." });
       }
     });
-  }, []);
+  }, [showToast]);
 
   async function disconnect(provider: "google" | "microsoft") {
     setError("");
@@ -44,17 +63,20 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
     const response = await fetch(`/api/integrations/${provider}`, { method: "DELETE" });
     if (!response.ok) {
       setError("We couldn’t disconnect that account.");
+      showToast({ tone: "error", message: "We couldn’t disconnect that account." });
       return;
     }
-    setMessage(`${provider === "google" ? "Google" : "Microsoft"} disconnected.`);
+    const text = `${provider === "google" ? "Google" : "Microsoft"} disconnected.`;
+    setMessage(text);
+    showToast({ tone: "success", message: text });
     await refresh();
   }
 
   return (
-    <section className="activate-panel">
+    <section className="activate-panel connected-accounts-panel">
       <header>
         <span className="step-pill">Connected accounts</span>
-        <h2><EnvelopeSimpleIcon size={22} weight="bold" /> Your connected services</h2>
+        <h2><EnvelopeSimpleIcon size={22} /> Your connected services</h2>
         <p>Connect once per provider. You stay in control of which approved messages, meetings, and recordings use each account.</p>
       </header>
 
@@ -72,7 +94,7 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
                   ["Calendar", status.google.capabilities.calendar],
                   ["Drive", status.google.capabilities.drive],
                 ] as Array<[string, boolean]>).map(([label, enabled]) => (
-                  <span className={enabled ? "enabled" : ""} key={String(label)}><CheckCircleIcon weight={enabled ? "fill" : "regular"} />{label}</span>
+                  <span className={enabled ? "enabled" : ""} key={String(label)}><CheckCircleIcon />{label}</span>
                 ))}
               </div>
             </div>
@@ -80,15 +102,15 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
           </div>
           {status.google.connected ? (
             <div className="connected-account-actions">
-              {!status.google.capabilities.drive ? <LinkButton href={`/api/integrations/google/connect?return_to=${returnTo}`} variant="secondary">Reconnect for Drive</LinkButton> : null}
-              <button type="button" className="ghost-link" onClick={() => void disconnect("google")}>Disconnect</button>
+              {!status.google.capabilities.drive ? <LinkButton href={`/api/integrations/google/connect?return_to=${returnTo}`} size="small" variant="secondary">Reconnect for Drive</LinkButton> : null}
+              <Button type="button" size="small" variant="secondary" onClick={() => void disconnect("google")}>Disconnect</Button>
             </div>
           ) : (
-            <LinkButton href={`/api/integrations/google/connect?return_to=${returnTo}`} fullWidth disabled={!status.configured.google}>
+            <LinkButton href={`/api/integrations/google/connect?return_to=${returnTo}`} size="small" className="connected-account-connect" disabled={!status.configured.google}>
               Connect Google
             </LinkButton>
           )}
-          {!status.configured.google && !status.google.connected ? <div className="connected-account-warning"><WarningCircleIcon size={17} weight="fill" /><span><strong>Setup required</strong><small>Google connection isn’t configured in this environment.</small></span></div> : null}
+          {!status.configured.google && !status.google.connected ? <div className="connected-account-warning"><WarningCircleIcon size={17} /><span><strong>Setup required</strong><small>Google connection isn’t configured in this environment.</small></span></div> : null}
         </article>
 
         <article className="connected-account-card">
@@ -104,7 +126,7 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
                   ["Calendar", status.microsoft.capabilities.calendar],
                   ["OneDrive", status.microsoft.capabilities.onedrive],
                 ] as Array<[string, boolean]>).map(([label, enabled]) => (
-                  <span className={enabled ? "enabled" : ""} key={label}><CheckCircleIcon weight={enabled ? "fill" : "regular"} />{label}</span>
+                  <span className={enabled ? "enabled" : ""} key={label}><CheckCircleIcon />{label}</span>
                 ))}
               </div>
             </div>
@@ -112,21 +134,21 @@ export function ConnectedAccountsPanel({ stacked, returnTo = "/app/settings" }: 
           </div>
           {status.microsoft.connected ? (
             <div className="connected-account-actions">
-              {!status.microsoft.capabilities.onedrive ? <LinkButton href={`/api/integrations/microsoft/connect?return_to=${returnTo}`} variant="secondary">Reconnect for OneDrive</LinkButton> : null}
-              <button type="button" className="ghost-link" onClick={() => void disconnect("microsoft")}>Disconnect</button>
+              {!status.microsoft.capabilities.onedrive ? <LinkButton href={`/api/integrations/microsoft/connect?return_to=${returnTo}`} size="small" variant="secondary">Reconnect for OneDrive</LinkButton> : null}
+              <Button type="button" size="small" variant="secondary" onClick={() => void disconnect("microsoft")}>Disconnect</Button>
             </div>
           ) : (
-            <LinkButton href={`/api/integrations/microsoft/connect?return_to=${returnTo}`} fullWidth disabled={!status.configured.microsoft}>
+            <LinkButton href={`/api/integrations/microsoft/connect?return_to=${returnTo}`} size="small" className="connected-account-connect" disabled={!status.configured.microsoft}>
               Connect Microsoft
             </LinkButton>
           )}
-          {!status.configured.microsoft && !status.microsoft.connected ? <div className="connected-account-warning"><WarningCircleIcon size={17} weight="fill" /><span><strong>Setup required</strong><small>Microsoft connection isn’t configured in this environment.</small></span></div> : null}
+          {!status.configured.microsoft && !status.microsoft.connected ? <div className="connected-account-warning"><WarningCircleIcon size={17} /><span><strong>Setup required</strong><small>Microsoft connection isn’t configured in this environment.</small></span></div> : null}
         </article>
       </div>
 
       {message ? <StatusMessage tone="success">{message}</StatusMessage> : null}
       {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
-      <small className="connected-account-note"><CloudArrowUpIcon size={14} weight="bold" /> Cloud storage is optional. Recordings stay local unless you choose Google Drive, OneDrive, or three-day sharing for that encounter.</small>
+      <small className="connected-account-note"><CloudArrowUpIcon size={14} /> Cloud storage is optional. Recordings stay local unless you choose Google Drive, OneDrive, or three-day sharing for that encounter.</small>
     </section>
   );
 }

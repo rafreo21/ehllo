@@ -1,29 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { DownloadSimpleIcon } from "@phosphor-icons/react/dist/csr/DownloadSimple";
-import { LockKeyIcon } from "@phosphor-icons/react/dist/csr/LockKey";
-import { MicrophoneIcon } from "@phosphor-icons/react/dist/csr/Microphone";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { Download as DownloadSimpleIcon } from "react-feather";
+import { Copy as CopyIcon } from "react-feather";
+import { Lock as LockKeyIcon } from "react-feather";
+import { Mic as MicrophoneIcon } from "react-feather";
 import { encounterFromSharedPayload, readEncounters, type Encounter } from "../../../lib/encounters";
 import { buildAuthHref } from "../../../lib/auth/visitor-intent";
 import { CLOUD_RECORDING_RETENTION_DAYS, formatRecordingAvailableUntil } from "../../../lib/recording-metadata";
 import { Button, LinkButton } from "../../components/Button";
+import { SelectField, TextAreaField, TextField } from "../../components/FormField";
+import { followUpDueDate } from "../../../lib/follow-up-templates";
 import { BrandMark } from "../../components/BrandMark";
+import { displayFollowUpTitle, FOLLOW_UP_CHANNELS, SELECTABLE_FOLLOW_UP_CHANNELS } from "../../../lib/follow-up-channels";
 import "../../app/product.css";
 import "../../app/flow.css";
 
 const LOCAL_PREVIEW_AUDIO = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
-const GUEST_FOLLOW_UP_CHANNELS: Array<{ value: Encounter["actions"][number]["channel"]; label: string }> = [
-  { value: "email", label: "Send an email" },
-  { value: "call", label: "Make a call" },
-  { value: "meeting", label: "Schedule a meeting" },
-  { value: "linkedin", label: "Connect on LinkedIn" },
-  { value: "whatsapp", label: "Message on WhatsApp" },
-  { value: "send", label: "Send something" },
-  { value: "other", label: "Something else" },
-];
 
 function buildLocalPreviewEncounter(): Encounter {
   const now = new Date();
@@ -62,16 +57,22 @@ export default function GuestEncounterPage() {
   const [encounter, setEncounter] = useState<Encounter | null | undefined>(undefined);
   const [followUpNote, setFollowUpNote] = useState("");
   const [followUpChannel, setFollowUpChannel] = useState<Encounter["actions"][number]["channel"]>("email");
-  const [followUpDueAt, setFollowUpDueAt] = useState("");
+  const [followUpDueAt, setFollowUpDueAt] = useState(followUpDueDate(1));
   const [followUpSubmitting, setFollowUpSubmitting] = useState(false);
   const [followUpError, setFollowUpError] = useState("");
   const [recordingDownloading, setRecordingDownloading] = useState(false);
   const [recordingDownloadError, setRecordingDownloadError] = useState("");
+  const [guestSummaryTab, setGuestSummaryTab] = useState<"recap" | "transcript">("recap");
+  const [copiedGuestSummaryField, setCopiedGuestSummaryField] = useState<"recap" | "transcript" | null>(null);
+
+  const setEncounterPayload = (nextEncounter: Encounter | null | undefined) => {
+    setEncounter(nextEncounter);
+  };
 
   useEffect(() => {
     const token = window.location.pathname.split("/").filter(Boolean).at(-1) || "";
     if (token === "preview" && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
-      void Promise.resolve().then(() => setEncounter(buildLocalPreviewEncounter()));
+      void Promise.resolve().then(() => setEncounterPayload(buildLocalPreviewEncounter()));
       return;
     }
     void fetch(`/api/encounters/share/${encodeURIComponent(token)}`)
@@ -79,16 +80,16 @@ export default function GuestEncounterPage() {
         if (response.ok) {
           const payload = await response.json() as { encounter?: Record<string, unknown> };
           if (payload.encounter) {
-            setEncounter(encounterFromSharedPayload(payload.encounter) ?? null);
+            setEncounterPayload(encounterFromSharedPayload(payload.encounter) ?? null);
             return;
           }
         }
-        setEncounter(
+        setEncounterPayload(
           readEncounters().find((item) => item.shareToken === token && item.status === "shared") ?? null,
         );
       })
       .catch(() => {
-        setEncounter(
+        setEncounterPayload(
           readEncounters().find((item) => item.shareToken === token && item.status === "shared") ?? null,
         );
       });
@@ -107,7 +108,7 @@ export default function GuestEncounterPage() {
       </main>
     );
   }
-  if (!encounter) return <main className="guest-page"><section className="guest-panel guest-panel-empty"><span className="guest-empty-icon"><LockKeyIcon size={28} weight="bold" /></span><span className="guest-eyebrow">Private meeting record</span><h1>This link is no longer available.</h1><p>Ask the person who shared it to approve the record or send you a new secure link.</p><LinkButton href="/">Go to ehllo</LinkButton></section></main>;
+  if (!encounter) return <main className="guest-page"><section className="guest-panel guest-panel-empty"><span className="guest-empty-icon"><LockKeyIcon size={28} /></span><span className="guest-eyebrow">Private meeting record</span><h1>This link is no longer available.</h1><p>Ask the person who shared it to approve the record or send you a new secure link.</p><LinkButton href="/">Go to ehllo</LinkButton></section></main>;
 
   async function downloadRecording(url: string, filename: string) {
     if (recordingDownloading) return;
@@ -139,11 +140,7 @@ export default function GuestEncounterPage() {
 
   async function commitFollowUp() {
     if (!encounter || followUpSubmitting) return;
-    const note = followUpNote.trim();
-    if (note.length < 3) {
-      setFollowUpError("Add the next step you intend to take.");
-      return;
-    }
+    const note = displayFollowUpTitle(followUpNote.trim(), followUpChannel);
     setFollowUpSubmitting(true);
     setFollowUpError("");
     if (encounter.shareToken === "preview" && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
@@ -170,7 +167,6 @@ export default function GuestEncounterPage() {
     }
   }
 
-  const guestActions = encounter.actions.filter((action) => action.owner === "guest");
   const sharedRecordingUrl = encounter.recording?.sharedAudioUrl
     ? (encounter.recording.sharedAudioUrl.startsWith("http") || encounter.recording.sharedAudioUrl.startsWith("data:")
       ? encounter.recording.sharedAudioUrl
@@ -178,12 +174,20 @@ export default function GuestEncounterPage() {
     : null;
   const recordingAvailableUntil = formatRecordingAvailableUntil(encounter.recording?.cloudExpiresAt);
 
+  function copyGuestSummaryField(field: "recap" | "transcript", value: string) {
+    void navigator.clipboard.writeText(value || "");
+    setCopiedGuestSummaryField(field);
+    window.setTimeout(() => {
+      setCopiedGuestSummaryField((current) => (current === field ? null : current));
+    }, 1200);
+  }
+
   return (
     <main className="guest-page">
       <section className="guest-panel">
         <header className="guest-topbar">
           <a className="guest-brand" href="/"><BrandMark size={36} />ehllo</a>
-          <span className="guest-secure"><LockKeyIcon size={14} weight="bold" />Private link</span>
+          <span className="guest-secure"><LockKeyIcon size={14} />Private link</span>
         </header>
         <div className="guest-hero">
           <span className="guest-eyebrow">Shared with you</span>
@@ -193,7 +197,7 @@ export default function GuestEncounterPage() {
         {sharedRecordingUrl ? (
           <article className="guest-recording">
             <header>
-              <span><MicrophoneIcon size={19} weight="bold" /></span>
+              <span><MicrophoneIcon size={19} /></span>
               <div><h2>Meeting recording</h2><p>Listen back or save a copy before it expires.</p></div>
             </header>
             <audio controls preload="metadata" src={sharedRecordingUrl} />
@@ -206,7 +210,7 @@ export default function GuestEncounterPage() {
                   loading={recordingDownloading}
                   onClick={() => void downloadRecording(sharedRecordingUrl, `${encounter.title.replace(/[^\w\- ]+/g, "").trim() || "ehllo"}-recording`)}
                 >
-                  <DownloadSimpleIcon size={16} weight="bold" />
+                  <DownloadSimpleIcon size={16} />
                   {recordingDownloading ? "Preparing…" : "Save to my device"}
                 </Button>
               </div>
@@ -222,65 +226,93 @@ export default function GuestEncounterPage() {
           </article>
         ) : (
           <article className="guest-recording guest-recording-expired">
-            <header><span><MicrophoneIcon size={19} weight="bold" /></span><div><h2>Recording expired</h2><p>The audio is no longer online, but the shared meeting record remains available below.</p></div></header>
+            <header><span><MicrophoneIcon size={19} /></span><div><h2>Recording expired</h2><p>The audio is no longer online, but the shared meeting record remains available below.</p></div></header>
           </article>
         )}
         <div className="guest-content-grid">
-          <article className="guest-summary"><span>Meeting summary</span><h2>What you agreed</h2><p>{encounter.sharedSummary || "The shared summary is still being prepared."}</p></article>
-          <section className="guest-actions">
-            <span>Assigned to you</span><h2>Your next steps</h2>
-            {guestActions.length ? guestActions.map((action) => <article key={action.id}><CheckCircleIcon size={22} weight="bold" /><div><strong>{action.title}</strong><small>{action.dueAt ? `Due ${action.dueAt}` : "No due date"} · {action.channel}</small></div></article>) : <div className="guest-actions-empty"><CheckCircleIcon size={20} /><p>No actions have been assigned to you.</p></div>}
-          </section>
+          <article className="guest-summary">
+            <span>Meeting summary</span>
+            <h2>What you agreed</h2>
+            <div className="review-tabs" role="tablist" aria-label="Meeting recap and transcript">
+              <button type="button" role="tab" aria-selected={guestSummaryTab === "recap"} className={guestSummaryTab === "recap" ? "active" : ""} onClick={() => setGuestSummaryTab("recap")}>
+                Recap
+              </button>
+              <button type="button" role="tab" aria-selected={guestSummaryTab === "transcript"} className={guestSummaryTab === "transcript" ? "active" : ""} onClick={() => setGuestSummaryTab("transcript")}>
+                Transcript
+              </button>
+            </div>
+            {guestSummaryTab === "recap" ? (
+              <div className="guest-summary-tab-content">
+                <p className="guest-summary-text">{encounter.sharedSummary || "The shared summary is still being prepared."}</p>
+                <button
+                  type="button"
+                  className="review-textfield-copy"
+                  onClick={() => copyGuestSummaryField("recap", encounter.sharedSummary || "The shared summary is still being prepared.")}
+                  aria-label="Copy recap"
+                >
+                  {copiedGuestSummaryField === "recap" ? <CheckCircleIcon size={15} /> : <CopyIcon size={15} />}
+                </button>
+              </div>
+            ) : (
+              <div className="guest-summary-tab-content">
+                <p className="guest-summary-transcript">{encounter.transcript || "No transcript has been shared with you yet."}</p>
+                <button
+                  type="button"
+                  className="review-textfield-copy"
+                  onClick={() => copyGuestSummaryField("transcript", encounter.transcript || "No transcript has been shared with you yet.")}
+                  aria-label="Copy transcript"
+                >
+                  {copiedGuestSummaryField === "transcript" ? <CheckCircleIcon size={15} /> : <CopyIcon size={15} />}
+                </button>
+              </div>
+            )}
+          </article>
         </div>
         <section className="guest-follow-up">
-          <span>Your next step</span><h2>What will you do after this meeting?</h2>
+          <h2>What will you do next?</h2>
           {encounter.guestFollowUp?.committedAt ? (
-            <article><CheckCircleIcon size={24} weight="fill" /><div><strong>Your next step was shared with the meeting host.</strong>{encounter.guestFollowUp.note ? <small>{encounter.guestFollowUp.note}</small> : null}<small>{encounter.guestFollowUp.channel ? GUEST_FOLLOW_UP_CHANNELS.find((item) => item.value === encounter.guestFollowUp?.channel)?.label : "Follow-up"}{encounter.guestFollowUp.dueAt ? ` · Due ${encounter.guestFollowUp.dueAt}` : ""}</small></div></article>
+            <article><CheckCircleIcon size={24} /><div><strong>Your next step was shared with the meeting host.</strong>{encounter.guestFollowUp.note ? <small>{encounter.guestFollowUp.note}</small> : null}<small>{encounter.guestFollowUp.dueAt ? `Date: ${encounter.guestFollowUp.dueAt} · ` : ""}{encounter.guestFollowUp.channel ? FOLLOW_UP_CHANNELS.find((item) => item.id === encounter.guestFollowUp?.channel)?.label || encounter.guestFollowUp.channel : "Follow-up"}</small></div></article>
           ) : (
             <>
-              <p>Add the action you intend to take. It will appear in the host&apos;s ehllo follow-up view alongside this meeting.</p>
-              <label className="guest-follow-up-label" htmlFor="guest-follow-up-note">
-                What will you do?
-              </label>
-              <textarea
+              <div className="guest-actions-empty">
+                <CheckCircleIcon size={20} />
+                <p>No actions yet. Add one, and it will appear in the host&apos;s follow-up list for this meeting.</p>
+              </div>
+              <div className="guest-follow-up-fields">
+                <SelectField inline label="How will you follow up?" value={followUpChannel} onChange={(event) => setFollowUpChannel(event.target.value as Encounter["actions"][number]["channel"])}>
+                  {SELECTABLE_FOLLOW_UP_CHANNELS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+                </SelectField>
+                <TextField inline label="Date" type="date" value={followUpDueAt} onChange={(event) => setFollowUpDueAt(event.target.value)} />
+              </div>
+              <TextAreaField
+                inline
                 id="guest-follow-up-note"
+                label="What do you need to do? (optional)"
                 value={followUpNote}
                 onChange={(event) => setFollowUpNote(event.target.value)}
                 placeholder="For example: I’ll send the proposal on Friday."
-                rows={2}
                 maxLength={280}
-                required
               />
               <small className="guest-follow-up-help">Be specific enough to remember later. For example, include what you will send, who you will contact, or when you will respond.</small>
-              <div className="guest-follow-up-fields">
-                <label>How?
-                  <select value={followUpChannel} onChange={(event) => setFollowUpChannel(event.target.value as Encounter["actions"][number]["channel"])}>
-                    {GUEST_FOLLOW_UP_CHANNELS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-                  </select>
-                </label>
-                <label>By when? <span>Optional</span>
-                  <input type="date" value={followUpDueAt} min={new Date().toISOString().slice(0, 10)} onChange={(event) => setFollowUpDueAt(event.target.value)} />
-                </label>
-              </div>
               {followUpError ? <small className="guest-form-error">{followUpError}</small> : null}
               <Button
                 type="button"
                 variant="primary"
-                size="normal"
+                size="small"
                 loading={followUpSubmitting}
-                disabled={followUpNote.trim().length < 3}
+                disabled={followUpSubmitting}
                 onClick={() => void commitFollowUp()}
               >
-                {followUpSubmitting ? "Sharing…" : "Share my next step"}
+                {followUpSubmitting ? "Sharing…" : "Share next step"}
               </Button>
             </>
           )}
         </section>
         <div className="guest-claim">
           <div><span>Continue in ehllo</span><strong>Keep this relationship moving.</strong><p>Create your private workspace to claim actions, receive reminders, and add your own notes.</p></div>
-          <LinkButton className="guest-create-account" href={buildAuthHref({ intent: "visitor", shareToken: encounter.shareToken })}>Create account <ArrowRightIcon size={16} weight="bold" /></LinkButton>
+          <LinkButton size="small" className="guest-create-account" href={buildAuthHref({ intent: "visitor", shareToken: encounter.shareToken })}>Create account <ArrowRightIcon size={15} /></LinkButton>
         </div>
-        <small className="guest-privacy"><LockKeyIcon size={14} weight="bold" />Private notes and the full transcript stay with the host. This page shows the shared summary{sharedRecordingUrl ? " and meeting recording" : ""} only.</small>
+        <small className="guest-privacy"><LockKeyIcon size={14} />Private notes and the full transcript stay with the host. This page shows the shared summary{sharedRecordingUrl ? " and meeting recording" : ""} only.</small>
       </section>
     </main>
   );

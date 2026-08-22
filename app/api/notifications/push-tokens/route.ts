@@ -32,15 +32,28 @@ export async function POST(request: Request) {
 
   const supabase = await createApiSupabaseClient(request);
 
-  // A token Expo previously issued to a different install must be released
-  // before this device can claim it — the active-token unique index would
-  // otherwise reject the upsert below.
+  // A token Expo previously issued elsewhere must be released before this row can
+  // claim it, because push_tokens_token_active_uidx allows exactly one active row
+  // per token.
+  //
+  // This used to filter on a different device_id only, which quietly made push
+  // first-account-only: Expo issues one token per device+install regardless of who
+  // is signed in, so a second account on the same device kept the same token and
+  // the same device_id. The release skipped it, the upsert's (user_id, device_id)
+  // target did not match the first account's row, so it attempted an insert and hit
+  // the unique index. Proven against staging: "duplicate key value violates unique
+  // constraint push_tokens_token_active_uidx". The route answered 500 and the client
+  // discarded it, so the second account looked like it had simply never registered.
+  //
+  // Release every active holder of this token except the exact row we are about to
+  // write - a different user OR a different device. One physical device has one
+  // notification stream, and it belongs to whoever is signed in on it.
   await supabase
     .from("push_tokens")
     .update({ disabled_at: new Date().toISOString() })
     .eq("expo_push_token", expoPushToken)
-    .neq("device_id", deviceId)
-    .is("disabled_at", null);
+    .is("disabled_at", null)
+    .or(`user_id.neq.${user.id},device_id.neq.${deviceId}`);
 
   const { error } = await supabase.from("push_tokens").upsert({
     user_id: user.id,

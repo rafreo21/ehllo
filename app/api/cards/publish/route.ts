@@ -4,6 +4,7 @@ import { MAX_CARDS } from "../../../../lib/card-library";
 import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
 import { resolveCardImagesForPublish } from "../../../../lib/card-publish-images";
 import { createServiceSupabaseClient } from "../../../../lib/supabase/service";
+import { notifyWalletPassUpdated } from "../../../../lib/wallet-pass-updates";
 
 const slugPattern = /^card-[a-f0-9]{16}$|^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const themePattern = /^#[0-9a-f]{6}$/i;
@@ -90,12 +91,30 @@ export async function POST(request: Request) {
   if (error) {
     const limitReached = error.message.toLowerCase().includes("five active cards");
     const conflict = error.message.toLowerCase().includes("card_conflict");
+
+    // The clients' whole recovery path keys off serverUpdatedAt: adopt the value,
+    // then publish again. /api/cards has always returned it on a conflict and this
+    // route never did, so a publish conflict was unrecoverable by design - the
+    // message said "reload the latest card" while withholding the one field that
+    // makes reloading possible.
+    let serverUpdatedAt: string | null = null;
+    if (conflict) {
+      const { data: current } = await supabase
+        .from("cards")
+        .select("updated_at")
+        .eq("workspace_id", user.workspaceId)
+        .eq("slug", slug.toLowerCase())
+        .maybeSingle();
+      serverUpdatedAt = (current?.updated_at as string | null | undefined) ?? null;
+    }
+
     return NextResponse.json(
       {
         error: conflict
           ? "This card changed on another device. Reload the latest card before publishing again."
           : limitReached ? `You can publish a maximum of ${MAX_CARDS} cards.` : "We couldn’t publish this card.",
         ...(conflict ? { conflict: true } : {}),
+        ...(serverUpdatedAt ? { serverUpdatedAt } : {}),
       },
       { status: limitReached || conflict ? 409 : 500 },
     );
@@ -106,6 +125,14 @@ export async function POST(request: Request) {
     .eq("id", data)
     .eq("workspace_id", user.workspaceId)
     .maybeSingle();
+  // Anyone already holding this card's Apple Wallet pass is now looking at stale
+  // details, so tell their devices to refetch. Awaited rather than fired and
+  // forgotten, because a promise left running after the response is returned is not
+  // guaranteed to finish in a serverless runtime - and the cost is one indexed
+  // SELECT for the overwhelmingly common case of a card nobody has registered a
+  // pass for, which returns before any network call happens. It never throws.
+  await notifyWalletPassUpdated(slug);
+
   return NextResponse.json({
     ok: true,
     cardId: data,

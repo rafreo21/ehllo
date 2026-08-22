@@ -31,7 +31,7 @@ export function buildGuestAddedEmail(input: { guestName: string; addedByName: st
           <td style="padding:0 24px 16px;">
             <p style="margin:0;font-size:14px;line-height:1.5;color:#454745;">
               After a conversation, ${escapeHtml(addedBy)} saved your details in ehllo so they can follow up with you.
-              We've set aside a free spot for your own card — sign in to claim it, add your details, and share it back.
+              We've set aside a free spot for your own card - sign in to claim it, add your details, and share it back.
             </p>
           </td>
         </tr>
@@ -43,7 +43,7 @@ export function buildGuestAddedEmail(input: { guestName: string; addedByName: st
         <tr>
           <td style="padding:0 24px 24px;">
             <p style="margin:0;font-size:13px;line-height:1.5;color:#454745;">
-              Once you're in, you'll also see a reminder to follow up with ${escapeHtml(addedBy)} — no need to keep it in your head.
+              Once you're in, you'll also see a reminder to follow up with ${escapeHtml(addedBy)} - no need to keep it in your head.
             </p>
           </td>
         </tr>

@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
     // Best-effort: if this encounter would passively attach to an event
     // (see resolveCurrentEventIdForUser), let the model know so it can
-    // reference it naturally — never required, never invented if absent.
+    // reference it naturally - never required, never invented if absent.
     const supabase = await createApiSupabaseClient(request);
     const currentEventId = await resolveCurrentEventIdForUser(supabase, user.id).catch(() => null);
     let eventContext: ExtractionEventContext | undefined;

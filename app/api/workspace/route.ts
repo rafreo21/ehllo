@@ -43,7 +43,11 @@ export async function GET() {
 
   const workspaces = (memberships ?? [])
     .map((membership) => {
-      const workspace = membership.workspace as { id: string; name: string; type: "personal" | "team" } | null;
+      const embedded = membership.workspace as unknown;
+      const workspace = (Array.isArray(embedded) ? embedded[0] : embedded) as
+        | { id: string; name: string; type: "personal" | "team" }
+        | null
+        | undefined;
       if (!workspace) return null;
       return workspaceSummaryFromRow({
         id: workspace.id,

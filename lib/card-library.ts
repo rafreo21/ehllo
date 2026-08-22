@@ -1,4 +1,5 @@
 export const CARD_LIBRARY_KEY = "aftermeet-card-library-v1";
+export const CARD_LIBRARY_CHANGE_EVENT = "ehllo-card-library-change";
 export const ACTIVE_CARD_KEY = "aftermeet-active-card-v1";
 export const MAX_CARDS = 5;
 
@@ -22,6 +23,7 @@ export type LibraryCard = {
   companyLogo: string;
   coverPhoto: string;
   showCompanyDetails?: boolean;
+  isPrimary?: boolean;
   methods: LibraryMethod[];
   createdAt: string;
   updatedAt: string;
@@ -30,6 +32,31 @@ export type LibraryCard = {
 };
 
 type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+
+const imageFingerprintCache = new Map<string, string>();
+
+function imageFingerprint(value: string) {
+  if (!value) return "";
+  const cached = imageFingerprintCache.get(value);
+  if (cached) return cached;
+
+  // FNV-1a gives publish-state comparisons a compact, deterministic image
+  // identity. Cache the result so changing a lightweight field such as theme
+  // never walks multi-megabyte base64 image strings again.
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  const fingerprint = `${value.length}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
+  imageFingerprintCache.set(value, fingerprint);
+  // Keep only the current/recent card assets rather than retaining an
+  // unbounded history of large data URLs.
+  if (imageFingerprintCache.size > 6) {
+    imageFingerprintCache.delete(imageFingerprintCache.keys().next().value!);
+  }
+  return fingerprint;
+}
 
 function newIdentity() {
   const id = crypto.randomUUID();
@@ -70,9 +97,9 @@ export function cardPublishFingerprint(card: LibraryCard) {
     company: card.company.trim(),
     bio: card.bio.trim(),
     theme: card.theme.toLowerCase(),
-    photo: card.photo,
-    companyLogo: card.companyLogo,
-    coverPhoto: card.coverPhoto,
+    photo: imageFingerprint(card.photo),
+    companyLogo: imageFingerprint(card.companyLogo),
+    coverPhoto: imageFingerprint(card.coverPhoto),
     showCompanyDetails: card.showCompanyDetails !== false,
     methods: card.methods.map((method) => ({
       id: method.id,
@@ -92,10 +119,40 @@ export function preserveLocalCardImages(server: LibraryCard, local: LibraryCard)
   };
 }
 
+// A card with none of these fields set was never actually edited - only
+// created (e.g. by loading the create-card route and then navigating away
+// before typing anything). It holds no user data, so it is safe to drop
+// automatically rather than let it sit forever consuming one of MAX_CARDS
+// slots. Never matches a published card: `status`/`publishedAt` are excluded
+// from the check on purpose.
+export function isOrphanDraftCard(card: LibraryCard) {
+  return (
+    card.status !== "published" &&
+    !card.publishedAt &&
+    !card.name.trim() &&
+    !card.role.trim() &&
+    !card.company.trim() &&
+    !card.bio.trim() &&
+    !card.photo &&
+    !card.companyLogo &&
+    !card.coverPhoto &&
+    card.methods.length === 0
+  );
+}
+
+export function canAddCard(storage: StorageLike, excludeId?: string) {
+  const cards = readCardLibrary(storage);
+  return cards.some((card) => card.id === excludeId) || cards.length < MAX_CARDS;
+}
+
 export function readCardLibrary(storage: StorageLike): LibraryCard[] {
   try {
     const stored = JSON.parse(storage.getItem(CARD_LIBRARY_KEY) || "[]");
-    if (Array.isArray(stored) && stored.length) return stored.slice(0, MAX_CARDS);
+    if (Array.isArray(stored) && stored.length) {
+      const pruned = (stored as LibraryCard[]).filter((card) => !isOrphanDraftCard(card));
+      if (pruned.length !== stored.length) writeCardLibrary(storage, pruned);
+      return pruned.slice(0, MAX_CARDS);
+    }
 
     const legacy = JSON.parse(storage.getItem("aftermeet-card-v2") || "null");
     if (legacy) {
@@ -114,6 +171,9 @@ export function readCardLibrary(storage: StorageLike): LibraryCard[] {
 
 export function writeCardLibrary(storage: StorageLike, cards: LibraryCard[]) {
   storage.setItem(CARD_LIBRARY_KEY, JSON.stringify(cards.slice(0, MAX_CARDS)));
+  if (typeof window !== "undefined" && storage === window.localStorage) {
+    window.dispatchEvent(new Event(CARD_LIBRARY_CHANGE_EVENT));
+  }
 }
 
 export function getActiveCardId(storage: StorageLike, cards: LibraryCard[]) {

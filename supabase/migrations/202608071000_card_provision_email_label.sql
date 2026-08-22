@@ -75,8 +75,7 @@ begin
 
     if v_email <> '' then
       insert into public.card_methods (card_id, method_type, value, sort_order)
-      values (v_card_id, 'email', v_email, 0)
-      on conflict (card_id, method_type) do nothing;
+      values (v_card_id, 'email', v_email, 0);
     end if;
   end if;
 

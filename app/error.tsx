@@ -36,7 +36,18 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   return (
     <main className="route-state">
       <div className="route-error-panel" role="alert">
-        <span className="route-state-mark">A</span>
+        <svg className="route-state-illustration" width="104" height="104" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+          <circle cx="60" cy="62" r="52" fill="#E2F6D5" />
+          <rect x="32" y="38" width="56" height="40" rx="10" fill="#FFFFFF" stroke="#163300" strokeWidth="3" />
+          <path d="M32 54h56" stroke="#163300" strokeWidth="3" />
+          <circle cx="41" cy="46" r="3" fill="#163300" />
+          <circle cx="51" cy="46" r="3" fill="#163300" />
+          <path d="M42 66h30" stroke="#163300" strokeWidth="3" strokeLinecap="round" strokeDasharray="1 7" />
+          <path d="M42 72h20" stroke="#163300" strokeWidth="3" strokeLinecap="round" strokeDasharray="1 7" />
+          <circle cx="94" cy="40" r="3.5" fill="#9FE870" />
+          <circle cx="100" cy="52" r="2.5" fill="#9FE870" />
+          <circle cx="24" cy="88" r="3" fill="#9FE870" />
+        </svg>
         <h1>{offline ? "You’re offline." : "Something didn’t load."}</h1>
         <p>
           {offline

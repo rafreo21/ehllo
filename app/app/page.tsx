@@ -1,18 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
-import { ListChecksIcon } from "@phosphor-icons/react/dist/csr/ListChecks";
-import { MicrophoneIcon } from "@phosphor-icons/react/dist/csr/Microphone";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { CreditCard as IdentificationCardIcon } from "react-feather";
+import { CheckSquare as ListChecksIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
-import { LinkButton } from "../components/Button";
+import { HandWavingIcon } from "@phosphor-icons/react/dist/csr/HandWaving";
+import { TrendingUp as TrendUpIcon } from "react-feather";
+import { Users as UsersThreeIcon } from "react-feather";
+import { X as XIcon } from "react-feather";
+import { AddFollowUpModal } from "../components/AddFollowUpModal";
+import { Button, LinkButton } from "../components/Button";
 import { PageSkeleton } from "../components/AsyncState";
+import { EncounterDrawerView } from "../components/EncounterDrawerView";
 import { useAppUser } from "../components/AppUserContext";
 import {
   connectionAvatarUrl,
+  enrichConnectionPhotos,
   fetchAllConnectionsMerged,
   formatConnectionDate,
   sortConnections,
@@ -35,6 +40,38 @@ type FollowUpNudge = {
   completedCount: number;
   completionRate: number;
 };
+
+type HomeNudge = {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  actionId: string;
+  readAt: string | null;
+};
+
+const HOME_FOLLOW_UP_TIP_DISMISSED_KEY = "ehllo-home-follow-up-tip-dismissed-v1";
+
+function GooglePlayMark({ size = 17 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 466 511.98" fillRule="evenodd" clipRule="evenodd" aria-hidden="true">
+      <g fillRule="nonzero">
+        <path fill="#EA4335" d="M199.9 237.8 1.4 470.17c7.22 24.57 30.16 41.81 55.8 41.81 11.16 0 20.93-2.79 29.3-8.37l244.16-139.46L199.9 237.8z" />
+        <path fill="#FBBC04" d="m433.91 205.1-104.65-60-111.61 110.22 113.01 108.83 104.64-58.6c18.14-9.77 30.7-29.3 30.7-50.23-1.4-20.93-13.95-40.46-32.09-50.22z" />
+        <path fill="#34A853" d="M199.42 273.45 329.27 145.1 87.9 8.37C79.53 2.79 68.36 0 57.2 0 30.7 0 6.98 18.14 1.4 41.86l198.02 231.59z" />
+        <path fill="#4285F4" d="M1.39 41.86C0 46.04 0 51.63 0 57.2v397.64c0 5.57 0 9.76 1.4 15.34l216.27-214.86L1.39 41.86z" />
+      </g>
+    </svg>
+  );
+}
+
+function AppleBrandMark({ size = 17 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" role="img" aria-label="Apple">
+      <path fill="#000" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
+    </svg>
+  );
+}
 
 function isDueNow(dueAt: string) {
   if (!dueAt.trim()) return false;
@@ -79,6 +116,10 @@ export default function HomeDashboard() {
   const [connectionsFailed, setConnectionsFailed] = useState(false);
   const [card, setCard] = useState<LibraryCard | null>(null);
   const [hasCards, setHasCards] = useState(false);
+  const [activeEncounterId, setActiveEncounterId] = useState("");
+  const [addFollowUpModalOpen, setAddFollowUpModalOpen] = useState(false);
+  const [homeNudges, setHomeNudges] = useState<HomeNudge[]>([]);
+  const [followUpTipVisible, setFollowUpTipVisible] = useState(false);
 
   function loadFollowUps() {
     return fetch("/api/follow-ups", { cache: "no-store" }).then(async (response) => {
@@ -102,8 +143,38 @@ export default function HomeDashboard() {
       .then((items) => {
         setSortedConnections(sortConnections(items, "date"));
         setConnectionsFailed(false);
+        void enrichConnectionPhotos(items).then((enriched) => setSortedConnections(sortConnections(enriched, "date")));
       })
       .catch(() => setConnectionsFailed(true));
+  }
+
+  function loadHomeNudges() {
+    return fetch("/api/notifications", { cache: "no-store" }).then(async (response) => {
+      if (!response.ok) throw new Error("Could not load notifications");
+      const payload = await response.json() as { notifications?: HomeNudge[] };
+      setHomeNudges((payload.notifications ?? []).filter((item) => item.type === "keep_in_touch" && !item.readAt));
+    }).catch(() => undefined);
+  }
+
+  function nudgeHref(item: HomeNudge) {
+    const [source, sourceId] = item.actionId.split(":");
+    if ((source === "met" || source === "inbound") && sourceId) {
+      return `/app/people?connection=${encodeURIComponent(`${source}-${sourceId}`)}`;
+    }
+    return "/app/people";
+  }
+
+  async function dismissHomeNudge(id: string) {
+    setHomeNudges((current) => current.filter((item) => item.id !== id));
+    try {
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+    } catch {
+      // Best effort: the server will return the card on refresh if it could not save.
+    }
   }
 
   function loadLocalData() {
@@ -118,14 +189,15 @@ export default function HomeDashboard() {
     const library = readCardLibrary(localStorage);
     setHasCards(library.length > 0);
     const activeId = getActiveCardId(localStorage, library);
-    setCard(library.find((item) => item.id === activeId) || library[0] || null);
+    setCard(library.find((item) => item.isPrimary) || library.find((item) => item.id === activeId) || library[0] || null);
   }
 
   useEffect(() => {
     void Promise.resolve().then(async () => {
       setGreeting(timeGreeting());
+      setFollowUpTipVisible(localStorage.getItem(HOME_FOLLOW_UP_TIP_DISMISSED_KEY) !== "1");
       loadLocalData();
-      await Promise.allSettled([loadFollowUps(), loadConnections()]);
+      await Promise.allSettled([loadFollowUps(), loadConnections(), loadHomeNudges()]);
       setHydrated(true);
     });
     function refreshWhenVisible() {
@@ -133,6 +205,7 @@ export default function HomeDashboard() {
         loadLocalData();
         void loadFollowUps();
         void loadConnections();
+        void loadHomeNudges();
       }
     }
     window.addEventListener("focus", refreshWhenVisible);
@@ -145,23 +218,23 @@ export default function HomeDashboard() {
     };
   }, []);
 
-  const attentionHeadline = nudge.urgentCount
-    ? `${nudge.urgentCount} follow-up${nudge.urgentCount === 1 ? "" : "s"} need you`
-    : (nudge.completedCount || nudge.openCount)
-      ? "You’re all caught up"
-      : "No follow-ups yet";
-  const attentionCopy = (nudge.completedCount || nudge.openCount)
-    ? `${nudge.completedCount} completed · ${nudge.completionRate}% of ${nudge.completedCount + nudge.openCount} kept`
-    : "Your commitments will appear here.";
+  function dismissFollowUpTip() {
+    setFollowUpTipVisible(false);
+    localStorage.setItem(HOME_FOLLOW_UP_TIP_DISMISSED_KEY, "1");
+  }
+
+  const followUpStatLabel = nudge.urgentCount
+    ? `${nudge.urgentCount} need${nudge.urgentCount === 1 ? "s" : ""} you`
+    : "Open follow-ups";
 
   const activeWork = useMemo(() => {
-    const items: Array<{ key: string; icon: typeof ListChecksIcon; label: string; href: string }> = [];
+    const items: Array<{ key: string; icon: typeof ListChecksIcon; label: string; onSelect: () => void }> = [];
     if (reviewCount > 0 && latestDraftId) {
       items.push({
         key: "review",
         icon: ListChecksIcon,
         label: reviewCount === 1 ? "Ready to review" : `${reviewCount} ready to review`,
-        href: `/app/encounters/${latestDraftId}`,
+        onSelect: () => setActiveEncounterId(latestDraftId),
       });
     }
     return items;
@@ -179,7 +252,12 @@ export default function HomeDashboard() {
         <div className="flow-heading">
           <div>
             <h1>{firstName ? `${greeting}, ${firstName}` : greeting}</h1>
-            <p>Here’s what needs your attention.</p>
+            <p>Your day at a glance.</p>
+          </div>
+          <div className="home-quick-actions">
+            <LinkButton size="small" href="/app/cards#share"><QrCodeIcon size={15} weight="bold" />Share my card</LinkButton>
+            <Button size="small" variant="secondary" onClick={() => setAddFollowUpModalOpen(true)}><ListChecksIcon size={15} />Quick follow-up</Button>
+            <LinkButton size="small" variant="secondary" href="/app/scan"><ScanIcon size={15} weight="bold" />Quick scan</LinkButton>
           </div>
         </div>
 
@@ -187,37 +265,80 @@ export default function HomeDashboard() {
           <PageSkeleton rows={3} />
         ) : (
           <>
-            <a className="home-followup-summary" href="/app/followups">
-              <span className={nudge.urgentCount ? "attention" : ""}>
-                <ListChecksIcon size={25} weight="bold" />
-              </span>
-              <div>
-                <strong>{attentionHeadline}</strong>
-                <small>{attentionCopy}</small>
+            <div className="home-stats">
+              <a className="home-stat-tile" href="/app/followups">
+                <span className={`home-stat-icon${nudge.urgentCount ? " home-stat-icon-attention" : ""}`}>
+                  <ListChecksIcon size={19} />
+                </span>
+                <strong className="home-stat-value">{nudge.openCount}</strong>
+                <span className="home-stat-label">{followUpStatLabel}</span>
+              </a>
+              <a className="home-stat-tile" href="/app/people">
+                <span className="home-stat-icon">
+                  <UsersThreeIcon size={19} />
+                </span>
+                <strong className="home-stat-value">{sortedConnections.length}</strong>
+                <span className="home-stat-label">People met</span>
+              </a>
+              <div className="home-stat-tile">
+                <span className="home-stat-icon">
+                  <TrendUpIcon size={19} />
+                </span>
+                <strong className="home-stat-value">{nudge.completionRate}%</strong>
+                <span className="home-stat-label">Follow-ups kept</span>
               </div>
-              <ArrowRightIcon size={19} weight="bold" />
-            </a>
+            </div>
             {followUpsFailed ? <p className="home-inline-error">Could not load follow-ups. <button type="button" onClick={() => void loadFollowUps()}>Retry</button></p> : null}
 
-            {activeWork.length ? (
-              <div className="home-active-work">
-                {activeWork.map((item) => (
-                  <a className="home-active-work-row" href={item.href} key={item.key}>
-                    <span><item.icon size={17} weight="bold" /></span>
-                    <strong>{item.label}</strong>
-                    <ArrowRightIcon size={15} weight="bold" />
-                  </a>
+            {homeNudges.length ? (
+              <div className="home-nudges" aria-label="Reminders">
+                {homeNudges.map((item) => (
+                  <article className="home-nudge-card" key={item.id}>
+                    <a href={nudgeHref(item)}>
+                      <span className="home-nudge-icon"><HandWavingIcon size={19} weight="bold" /></span>
+                      <span className="home-nudge-copy">
+                        <strong>{item.title}</strong>
+                        {item.body ? <small>{item.body}</small> : null}
+                      </span>
+                      <ArrowRightIcon size={15} />
+                    </a>
+                    <button type="button" aria-label={`Dismiss ${item.title}`} onClick={() => void dismissHomeNudge(item.id)}>
+                      <XIcon size={14} />
+                    </button>
+                  </article>
                 ))}
               </div>
             ) : null}
 
-            <div className="home-quick-actions">
-              <LinkButton href="/app/encounters/new"><MicrophoneIcon size={17} weight="fill" />Capture context</LinkButton>
-              <LinkButton variant="secondary" href="/app/cards#share"><QrCodeIcon size={17} weight="bold" />Share my card</LinkButton>
-              <LinkButton variant="secondary" href="/app/followups/new"><ListChecksIcon size={17} weight="bold" />Quick follow-up</LinkButton>
-              <LinkButton variant="secondary" href="/app/scan"><ScanIcon size={17} weight="bold" />Quick scan</LinkButton>
-            </div>
+            {followUpTipVisible ? (
+              <article className="home-nudge-card home-feature-card">
+                <a href="/app/followups">
+                  <span className="home-nudge-icon"><ListChecksIcon size={18} /></span>
+                  <span className="home-nudge-copy">
+                    <strong>Keep your connections moving</strong>
+                    <small>Review what is due and close the loop on your next follow-up.</small>
+                  </span>
+                  <span className="home-feature-action">View follow-ups <ArrowRightIcon size={14} /></span>
+                </a>
+                <button type="button" aria-label="Dismiss follow-up suggestion" onClick={dismissFollowUpTip}>
+                  <XIcon size={14} />
+                </button>
+              </article>
+            ) : null}
 
+            {activeWork.length ? (
+              <div className="home-active-work">
+                {activeWork.map((item) => (
+                  <button type="button" className="home-active-work-row" onClick={item.onSelect} key={item.key}>
+                    <span><item.icon size={17} /></span>
+                    <strong>{item.label}</strong>
+                    <ArrowRightIcon size={15} />
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="home-content-grid">
             <section className="home-section">
               <div className="home-section-head">
                 <h2>Recent people</h2>
@@ -236,25 +357,27 @@ export default function HomeDashboard() {
                         || (item.personName || "").trim().toLowerCase() === connection.name.trim().toLowerCase())
                     ));
                     return (
-                      <a className="home-person-row" href={`/app/people/${encodeURIComponent(connection.id)}`} key={connection.id}>
+                      <a className="home-person-row" href={`/app/people?connection=${encodeURIComponent(connection.id)}`} key={connection.id}>
                         <img className="connections-avatar" src={connection.photoUrl || connectionAvatarUrl(connection)} alt="" />
                         <span>
-                          <strong>{connection.name}</strong>
+                          <span className="home-person-name">
+                            <strong>{connection.name}</strong>
+                            {openFollowUp ? (
+                              <em className={isOverdue(openFollowUp.dueAt ?? "") ? "home-person-tag home-person-tag-overdue" : "home-person-tag"}>
+                                {isOverdue(openFollowUp.dueAt ?? "") ? "Overdue" : "Follow-up due"}
+                              </em>
+                            ) : null}
+                          </span>
                           <small>{connection.subtitle}{connection.connectedAt ? ` · ${formatConnectionDate(connection.connectedAt)}` : ""}</small>
                         </span>
-                        {openFollowUp ? (
-                          <em className={isOverdue(openFollowUp.dueAt ?? "") ? "home-person-tag home-person-tag-overdue" : "home-person-tag"}>
-                            {isOverdue(openFollowUp.dueAt ?? "") ? "Overdue" : "Follow-up due"}
-                          </em>
-                        ) : null}
-                        <ArrowRightIcon size={15} weight="bold" />
+                        <ArrowRightIcon size={15} />
                       </a>
                     );
                   })}
                 </div>
               ) : (
                 <div className="home-empty-compact">
-                  <UsersThreeIcon size={20} weight="fill" />
+                  <UsersThreeIcon size={20} />
                   <div>
                     <strong>No recent people yet.</strong>
                     <p>Scan a card or add someone after your next conversation.</p>
@@ -265,22 +388,22 @@ export default function HomeDashboard() {
             </section>
 
             <section className="home-section">
-              <h2>My card</h2>
+              <h2>Primary card</h2>
               {hasCards && card ? (
                 <a className="home-card-row" href="/app/cards">
                   {card.photo ? <img className="home-card-avatar" src={card.photo} alt="" /> : (
-                    <span className="home-card-avatar home-card-avatar-fallback"><IdentificationCardIcon size={20} weight="bold" /></span>
+                    <span className="home-card-avatar home-card-avatar-fallback"><IdentificationCardIcon size={20} /></span>
                   )}
                   <span>
                     <strong>{card.label || "My card"}</strong>
                     <small>{cardSubtitle || "Add your details"}</small>
                   </span>
                   <em>Open card</em>
-                  <ArrowRightIcon size={15} weight="bold" />
+                  <ArrowRightIcon size={15} />
                 </a>
               ) : (
                 <div className="home-empty-compact">
-                  <IdentificationCardIcon size={20} weight="bold" />
+                  <IdentificationCardIcon size={20} />
                   <div>
                     <strong>Create your first card</strong>
                     <p>Publish a card so people can save your details instantly.</p>
@@ -289,9 +412,46 @@ export default function HomeDashboard() {
                 </div>
               )}
             </section>
+            </div>
+
+            <section className="home-mobile-beta" aria-labelledby="mobile-beta-title">
+              <div className="home-mobile-beta-copy">
+                <h2 id="mobile-beta-title">Take ehllo with you.</h2>
+                <p>Join the iOS or Android beta and help shape the app.</p>
+                <Button size="small" disabled title="Testing form link coming soon">Join mobile testing</Button>
+              </div>
+              <div className="home-mobile-beta-art" aria-hidden="true">
+                <div className="home-mobile-platform-card">
+                  <span className="home-mobile-brand-icon"><AppleBrandMark size={31} /></span>
+                  <span><strong>Test on iOS</strong><small>iPhone beta</small></span>
+                </div>
+                <div className="home-mobile-platform-card">
+                  <span className="home-mobile-brand-icon"><GooglePlayMark size={30} /></span>
+                  <span><strong>Test on Android</strong><small>Android beta</small></span>
+                </div>
+              </div>
+            </section>
           </>
         )}
       </div>
+      {activeEncounterId ? (
+        <div className="followup-drawer-backdrop" role="presentation" onClick={() => setActiveEncounterId("")}>
+          <div className="followup-drawer" role="dialog" aria-label="Review" onClick={(event) => event.stopPropagation()}>
+            <div className="followup-drawer-header">
+              <h2>Review</h2>
+              <div className="followup-drawer-header-actions">
+                <button type="button" aria-label="Close" onClick={() => setActiveEncounterId("")}><XIcon size={18} /></button>
+              </div>
+            </div>
+            <EncounterDrawerView encounterId={activeEncounterId} />
+          </div>
+        </div>
+      ) : null}
+      <AddFollowUpModal
+        open={addFollowUpModalOpen}
+        onClose={() => setAddFollowUpModalOpen(false)}
+        popup
+      />
     </>
   );
 }

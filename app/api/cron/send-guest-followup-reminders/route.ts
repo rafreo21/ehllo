@@ -72,7 +72,7 @@ export async function GET(request: Request) {
       });
       const result = await sendEmail({ to: item.personEmail.trim(), subject, html });
 
-      // Recorded regardless of outcome — a bad address should never retry
+      // Recorded regardless of outcome - a bad address should never retry
       // forever, matching the notifications table's at-most-once pattern.
       await service.from("guest_followup_reminders").insert({
         encounter_id: encounter.id,

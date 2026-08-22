@@ -5,7 +5,7 @@
 // using debug-ID based matching so it doesn't depend on Sentry "release"
 // tracking lining up with the SDK's init config.
 //
-// Scoped to the client bundle only (.vercel/output/static) — server-side
+// Scoped to the client bundle only (.vercel/output/static) - server-side
 // Sentry is currently disabled (see sentry.server.config.ts removal), so
 // there's nothing to match server-side maps against yet.
 
@@ -17,13 +17,13 @@ const org = process.env.SENTRY_ORG;
 const project = process.env.SENTRY_PROJECT;
 
 if (!authToken || !org || !project) {
-  console.log("Sentry env vars not set — skipping source map upload.");
+  console.log("Sentry env vars not set - skipping source map upload.");
   process.exit(0);
 }
 
 const outDir = ".vercel/output/static";
 if (!existsSync(outDir)) {
-  console.log(`${outDir} not found — skipping source map upload.`);
+  console.log(`${outDir} not found - skipping source map upload.`);
   process.exit(0);
 }
 

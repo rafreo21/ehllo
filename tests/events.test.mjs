@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  calendarSyncRetryDelayMinutes,
   candidateSuppressionKey,
+  decideCalendarImport,
+  decideCalendarPush,
+  normalizeCalendarCandidate,
   externalAttendeeCount,
   isEventCandidateWorthy,
   isVirtualLocation,
@@ -59,15 +63,26 @@ describe("isEventCandidateWorthy", () => {
     assert.equal(isEventCandidateWorthy(baseCandidate), true);
   });
 
-  it("rejects a recurring event regardless of other signals", () => {
-    assert.equal(isEventCandidateWorthy({ ...baseCandidate, isRecurring: true }), false);
+  it("keeps a recurring event - a weekly meetup is still a meetup", () => {
+    // Previously excluded outright. People looked at a calendar they knew had events
+    // in it and saw nothing, with nothing saying why.
+    assert.equal(isEventCandidateWorthy({ ...baseCandidate, isRecurring: true }), true);
   });
 
-  it("rejects an event shorter than the duration floor", () => {
+  it("keeps a short event - a half-hour coffee is a real meeting", () => {
+    // There was a 45 minute floor. A 20 minute entry is a real thing someone did.
     assert.equal(isEventCandidateWorthy({
       ...baseCandidate,
       endsAt: "2026-08-10T14:20:00.000Z",
-    }), false);
+    }), true);
+  });
+
+  it("still judges nothing on the title", () => {
+    // The one rule that has not moved: no keyword matching, in either direction.
+    // It has no reliable stopping point across languages and produces exactly the
+    // false confidence that makes an inference feature feel stupid.
+    assert.equal(isEventCandidateWorthy({ ...baseCandidate, title: "Dentist" }), true);
+    assert.equal(isEventCandidateWorthy({ ...baseCandidate, title: "Annual Conference" }), true);
   });
 
   it("accepts an event with only internal attendees", () => {
@@ -77,7 +92,7 @@ describe("isEventCandidateWorthy", () => {
     }), true);
   });
 
-  it("accepts a bare self-added block with no attendees at all — a real event can be added by hand, not just invited to", () => {
+  it("accepts a bare self-added block with no attendees at all - a real event can be added by hand, not just invited to", () => {
     assert.equal(isEventCandidateWorthy({
       ...baseCandidate,
       attendeeEmails: [],
@@ -185,5 +200,299 @@ describe("candidateSuppressionKey", () => {
       candidateSuppressionKey("manager@example.com", "1:1", "2026-08-11T09:00:00Z"),
       candidateSuppressionKey("manager@example.com", "1:1", "2026-08-11T16:00:00Z"),
     );
+  });
+});
+
+
+describe("resolveCurrentEvent with check-in", () => {
+  const now = new Date("2026-09-04T14:00:00.000Z");
+  // Two events overlapping the same afternoon - the case the clock cannot decide.
+  const conference = { id: "conference", startsAt: "2026-09-04T09:00:00.000Z", endsAt: "2026-09-04T18:00:00.000Z", leftAt: null, checkedInAt: null };
+  const meetup = { id: "meetup", startsAt: "2026-09-04T13:00:00.000Z", endsAt: "2026-09-04T17:00:00.000Z", leftAt: null, checkedInAt: null };
+
+  it("falls back to the most recently started event when nobody has checked in", () => {
+    assert.equal(resolveCurrentEvent([conference, meetup], now), "meetup");
+  });
+
+  it("lets an explicit check-in beat the later start time", () => {
+    // Without check-in this returns "meetup"; the user says they are at the
+    // conference, so scans and encounters must attribute there instead.
+    const checkedIn = { ...conference, checkedInAt: "2026-09-04T09:15:00.000Z" };
+    assert.equal(resolveCurrentEvent([checkedIn, meetup], now), "conference");
+  });
+
+  it("prefers the most recent check-in when the user moved between events", () => {
+    const first = { ...conference, checkedInAt: "2026-09-04T09:15:00.000Z" };
+    const second = { ...meetup, checkedInAt: "2026-09-04T13:30:00.000Z" };
+    assert.equal(resolveCurrentEvent([first, second], now), "meetup");
+  });
+
+  it("ignores a check-in on an event whose window has already closed", () => {
+    // A forgotten check-in must expire with its event rather than capturing
+    // every later scan for the rest of the week.
+    const yesterday = {
+      id: "yesterday",
+      startsAt: "2026-09-03T09:00:00.000Z",
+      endsAt: "2026-09-03T18:00:00.000Z",
+      leftAt: null,
+      checkedInAt: "2026-09-03T09:10:00.000Z",
+    };
+    assert.equal(resolveCurrentEvent([yesterday, meetup], now), "meetup");
+  });
+
+  it("respects leaving an event you had checked into", () => {
+    const left = { ...conference, checkedInAt: "2026-09-04T09:15:00.000Z", leftAt: "2026-09-04T12:00:00.000Z" };
+    assert.equal(resolveCurrentEvent([left, meetup], now), "meetup");
+  });
+
+  it("ignores a check-in timestamped in the future", () => {
+    const skewed = { ...conference, checkedInAt: "2026-09-04T16:00:00.000Z" };
+    assert.equal(resolveCurrentEvent([skewed, meetup], now), "meetup");
+  });
+});
+
+
+describe("early check-in grace", () => {
+  const start = "2026-09-04T09:00:00.000Z";
+  const end = "2026-09-04T18:00:00.000Z";
+  const base = { id: "conference", startsAt: start, endsAt: end, leftAt: null, checkedInAt: null };
+
+  it("does not treat an RSVP as presence before the event starts", () => {
+    // Doors open at 09:00; at 08:30 an un-checked-in RSVP is still just an RSVP.
+    assert.equal(resolveCurrentEvent([base], new Date("2026-09-04T08:30:00.000Z")), null);
+  });
+
+  it("counts an explicit check-in made before the scheduled start", () => {
+    // Arriving early and meeting someone in the queue should file to the event
+    // you are standing at.
+    const early = { ...base, checkedInAt: "2026-09-04T08:20:00.000Z" };
+    assert.equal(resolveCurrentEvent([early], new Date("2026-09-04T08:30:00.000Z")), "conference");
+  });
+
+  it("does not let the grace reach back further than an hour", () => {
+    const early = { ...base, checkedInAt: "2026-09-04T07:00:00.000Z" };
+    assert.equal(resolveCurrentEvent([early], new Date("2026-09-04T07:30:00.000Z")), null);
+  });
+});
+
+
+describe("one place at a time, over time", () => {
+  const conference = { id: "conference", startsAt: "2026-09-04T09:00:00.000Z", endsAt: "2026-09-04T18:00:00.000Z", leftAt: null, checkedInAt: null };
+  const meetup = { id: "meetup", startsAt: "2026-09-04T13:00:00.000Z", endsAt: "2026-09-04T17:00:00.000Z", leftAt: null, checkedInAt: null };
+
+  it("does not hand you back to an event you walked out of", () => {
+    // 09:00 at the conference, 13:05 you walk to the meetup. Moving records
+    // leaving, so when the meetup ends at 17:00 the still-running conference
+    // must not silently reclaim you.
+    const walkedOut = { ...conference, checkedInAt: null, leftAt: "2026-09-04T13:05:00.000Z" };
+    const nowAt = { ...meetup, checkedInAt: "2026-09-04T13:05:00.000Z" };
+
+    assert.equal(resolveCurrentEvent([walkedOut, nowAt], new Date("2026-09-04T14:00:00.000Z")), "meetup");
+    assert.equal(resolveCurrentEvent([walkedOut, nowAt], new Date("2026-09-04T17:30:00.000Z")), null);
+  });
+
+  it("lets you go back to where you were", () => {
+    // Checking in again clears the recorded departure, so returning works.
+    const returned = { ...conference, leftAt: null, checkedInAt: "2026-09-04T17:20:00.000Z" };
+    const ended = { ...meetup, checkedInAt: null, leftAt: "2026-09-04T17:20:00.000Z" };
+    assert.equal(resolveCurrentEvent([returned, ended], new Date("2026-09-04T17:30:00.000Z")), "conference");
+  });
+
+  it("never reports two places at once", () => {
+    // Even if two check-ins somehow coexist, exactly one answer comes back.
+    const a = { ...conference, checkedInAt: "2026-09-04T09:10:00.000Z" };
+    const b = { ...meetup, checkedInAt: "2026-09-04T13:10:00.000Z" };
+    const at = resolveCurrentEvent([a, b], new Date("2026-09-04T14:00:00.000Z"));
+    assert.equal(at, "meetup");
+    assert.equal(typeof at, "string");
+  });
+});
+
+describe("decideCalendarImport", () => {
+  const candidate = {
+    title: "Connect X Ignite",
+    location: "Lagos",
+    startsAt: "2026-09-04T09:00:00.000Z",
+    endsAt: "2026-09-04T12:00:00.000Z",
+    organizerEmail: "host@example.com",
+  };
+  const imported = {
+    source: "calendar",
+    status: "scheduled",
+    title: "Connect X Ignite",
+    location: "Lagos",
+    starts_at: "2026-09-04T09:00:00.000Z",
+    ends_at: "2026-09-04T12:00:00.000Z",
+    organizer_email: "host@example.com",
+  };
+
+  it("inserts an entry it has not seen before", () => {
+    assert.equal(decideCalendarImport(undefined, candidate).decision, "insert");
+  });
+
+  it("leaves an unchanged row alone rather than rewriting it", () => {
+    assert.equal(decideCalendarImport(imported, candidate).decision, "keep");
+  });
+
+  it("does not resurrect an event cancelled in ehllo", () => {
+    const result = decideCalendarImport({ ...imported, status: "cancelled" }, candidate);
+    assert.equal(result.decision, "keep");
+    assert.equal(result.reason, "cancelled-locally");
+  });
+
+  it("will not rewrite an ehllo-authored event the provider echoed back", () => {
+    for (const source of ["manual", "link"]) {
+      // Agreeing: nothing to do, and nothing to report.
+      const agreed = decideCalendarImport({ ...imported, source }, candidate);
+      assert.equal(agreed.decision, "keep", `${source} must stay ehllo's`);
+      assert.equal(agreed.reason, "not-importer-owned");
+
+      // Diverging: still never an update, but no longer silent about it.
+      const diverged = decideCalendarImport({ ...imported, source, title: "My own title" }, candidate);
+      assert.equal(diverged.decision, "conflict", `${source} divergence must surface`);
+      assert.notEqual(diverged.decision, "update");
+    }
+  });
+
+  it("takes a real schedule change from the provider", () => {
+    const result = decideCalendarImport(imported, { ...candidate, startsAt: "2026-09-04T14:00:00.000Z" });
+    assert.equal(result.decision, "update");
+    assert.equal(result.scheduleChanged, true);
+  });
+
+  it("treats the same instant written differently as no change", () => {
+    const result = decideCalendarImport(
+      { ...imported, starts_at: "2026-09-04T10:00:00.000+01:00" },
+      candidate,
+    );
+    assert.equal(result.decision, "keep");
+  });
+
+  it("updates a changed organizer without claiming the schedule moved", () => {
+    const result = decideCalendarImport(imported, { ...candidate, organizerEmail: "new-host@example.com" });
+    assert.equal(result.decision, "update");
+    assert.equal(result.scheduleChanged, false);
+  });
+
+  it("clamps an overlong title the same way the column does", () => {
+    const long = "x".repeat(200);
+    assert.equal(normalizeCalendarCandidate({ ...candidate, title: long }).title.length, 160);
+    assert.equal(normalizeCalendarCandidate({ ...candidate, title: "   " }).title, "Untitled event");
+  });
+});
+
+describe("decideCalendarImport conflict surfacing", () => {
+  const candidate = {
+    title: "Connect X Ignite",
+    location: "Lagos",
+    startsAt: "2026-09-04T09:00:00.000Z",
+    endsAt: "2026-09-04T12:00:00.000Z",
+    organizerEmail: "host@example.com",
+  };
+  const ehlloAuthored = {
+    source: "manual",
+    status: "scheduled",
+    title: "Connect X Ignite",
+    location: "Lagos",
+    starts_at: "2026-09-04T09:00:00.000Z",
+    ends_at: "2026-09-04T12:00:00.000Z",
+    organizer_email: "host@example.com",
+  };
+
+  it("stays quiet when the provider agrees with an ehllo-authored event", () => {
+    const result = decideCalendarImport(ehlloAuthored, candidate);
+    assert.equal(result.decision, "keep");
+    assert.equal(result.reason, "not-importer-owned");
+  });
+
+  it("reports a conflict instead of silently keeping when the provider diverged", () => {
+    const result = decideCalendarImport(ehlloAuthored, { ...candidate, startsAt: "2026-09-04T15:00:00.000Z" });
+    assert.equal(result.decision, "conflict");
+    assert.equal(result.scheduleChanged, true);
+  });
+
+  it("never overwrites an ehllo-authored event, however it disagrees", () => {
+    for (const change of [{ title: "Renamed by provider" }, { location: "Abuja" }]) {
+      const result = decideCalendarImport(ehlloAuthored, { ...candidate, ...change });
+      assert.notEqual(result.decision, "update");
+    }
+  });
+});
+
+describe("decideCalendarPush", () => {
+  const base = {
+    source: "manual",
+    status: "scheduled",
+    external_id: null,
+    calendar_push_enabled: true,
+    sync_state: "pending",
+  };
+
+  it("creates on the first push of an opted-in event", () => {
+    assert.equal(decideCalendarPush(base).action, "create");
+  });
+
+  it("updates once the provider has an id for it", () => {
+    assert.equal(decideCalendarPush({ ...base, external_id: "abc" }).action, "update");
+  });
+
+  it("refuses to push the provider's own entry back to it", () => {
+    const result = decideCalendarPush({ ...base, source: "calendar", external_id: "abc" });
+    assert.equal(result.action, "skip");
+    assert.equal(result.reason, "provider-owned");
+  });
+
+  it("refuses to overwrite the provider while a conflict is unresolved", () => {
+    const result = decideCalendarPush({ ...base, external_id: "abc", sync_state: "conflict" });
+    assert.equal(result.action, "skip");
+    assert.equal(result.reason, "conflict-unresolved");
+  });
+
+  it("cancels on the provider when the event is cancelled here", () => {
+    assert.equal(decideCalendarPush({ ...base, status: "cancelled", external_id: "abc" }).action, "cancel");
+  });
+
+  it("does nothing for an event cancelled before it was ever pushed", () => {
+    const result = decideCalendarPush({ ...base, status: "cancelled" });
+    assert.equal(result.action, "skip");
+    assert.equal(result.reason, "never-pushed");
+  });
+
+  it("withdraws an entry it already created when the opt-in is turned off", () => {
+    const result = decideCalendarPush({ ...base, calendar_push_enabled: false, external_id: "abc" });
+    assert.equal(result.action, "cancel");
+    assert.equal(result.reason, "opted-out-after-push");
+  });
+
+  it("stays out of the calendar entirely without an opt-in", () => {
+    const result = decideCalendarPush({ ...base, calendar_push_enabled: false });
+    assert.equal(result.action, "skip");
+    assert.equal(result.reason, "not-opted-in");
+  });
+
+  it("puts loop prevention ahead of every other rule", () => {
+    // A calendar-sourced event must be refused even when everything else about
+    // it argues for a push, because echoing it back is the actual loop.
+    const result = decideCalendarPush({
+      source: "calendar", status: "cancelled", external_id: "abc",
+      calendar_push_enabled: true, sync_state: "pending",
+    });
+    assert.equal(result.reason, "provider-owned");
+  });
+});
+
+describe("calendarSyncRetryDelayMinutes", () => {
+  it("matches the email outbox curve", () => {
+    assert.equal(calendarSyncRetryDelayMinutes(1), 5);
+    assert.equal(calendarSyncRetryDelayMinutes(2), 10);
+    assert.equal(calendarSyncRetryDelayMinutes(3), 20);
+  });
+
+  it("caps at a day however many attempts have been made", () => {
+    assert.equal(calendarSyncRetryDelayMinutes(20), 24 * 60);
+  });
+
+  it("does not go backwards on a zeroth attempt", () => {
+    assert.equal(calendarSyncRetryDelayMinutes(0), 5);
   });
 });

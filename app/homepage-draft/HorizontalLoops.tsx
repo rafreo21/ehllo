@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRightIcon } from "@phosphor-icons/react";
-
+import { ArrowRight as ArrowRightIcon } from "react-feather";
 const loops = [
   ["Share identity", "A card, QR or tap starts the connection.", "Your card", "QR · NFC · Wallet"],
   ["Capture people", "Keep the person and where you met together.", "Eve Chen", "ProductCon London"],
@@ -66,12 +65,12 @@ export function HorizontalLoops() {
                   <div className="draft-loop-example"><small>In ehllo</small><strong>{example}</strong><span>{meta}</span></div>
                 )}
                 <div className="draft-loop-card-copy"><h3>{title}</h3><p>{detail}</p></div>
-                {index < 3 && <b className="draft-loop-connector"><ArrowRightIcon size={17} weight="bold"/></b>}
+                {index < 3 && <b className="draft-loop-connector"><ArrowRightIcon size={17}/></b>}
               </article>
             ))}
           </div>
         </div>
-        <div className="draft-horizontal-hint"><span>Vertical scroll</span><ArrowRightIcon size={15} weight="bold"/><strong>Relationship progress</strong></div>
+        <div className="draft-horizontal-hint"><span>Vertical scroll</span><ArrowRightIcon size={15}/><strong>Relationship progress</strong></div>
       </div>
     </section>
   );

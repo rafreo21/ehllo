@@ -42,7 +42,7 @@ async function readUploadPayload(request: Request) {
   const formData = await request.formData();
   const cardId = String(formData.get("cardId") || "").trim();
   const field = String(formData.get("field") || "").trim() as CardAssetField;
-  const file = formData.get("file");
+  const file: unknown = formData.get("file");
 
   if (!cardId || !allowedFields.has(field)) {
     return { error: "A valid card and image field are required." as const, status: 400 as const };
@@ -52,11 +52,9 @@ async function readUploadPayload(request: Request) {
   let mimeType = "image/jpeg";
   let fileSize = 0;
 
-  if (file instanceof File) {
-    fileSize = file.size;
-    mimeType = file.type || mimeType;
-    buffer = Buffer.from(await file.arrayBuffer());
-  } else if (file instanceof Blob) {
+  // File extends Blob, and some runtimes hand back a bare Blob rather than a
+  // File. One check covers both.
+  if (file instanceof Blob) {
     fileSize = file.size;
     mimeType = file.type || mimeType;
     buffer = Buffer.from(await file.arrayBuffer());

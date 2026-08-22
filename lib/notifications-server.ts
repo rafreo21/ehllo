@@ -1,12 +1,34 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type NotificationType =
-  | "review_ready"
-  | "follow_up_due"
-  | "follow_up_overdue"
-  | "shared_meeting_update"
-  | "connection_added"
-  | "keep_in_touch";
+/**
+ * Every notification type, in the order they are shown in preferences.
+ *
+ * The single source. This existed as a hand-kept literal inside
+ * app/api/settings/notifications, and it was never updated as types were added -
+ * so saving preferences rebuilt the object from the original four and silently
+ * dropped connection_added, keep_in_touch and contact_request. Turning those on
+ * appeared to work and then reverted the moment the screen reloaded.
+ *
+ * Deriving the type from this array means adding a value here is the only step:
+ * a new type cannot be half-added again.
+ */
+export const NOTIFICATION_TYPES = [
+  "review_ready",
+  "follow_up_due",
+  "follow_up_overdue",
+  "shared_meeting_update",
+  "connection_added",
+  "keep_in_touch",
+  "contact_request",
+  "follow_up_completed",
+  // Somebody asking the host to share a meeting, and the host having done so. Added to the
+  // table's check constraint in the same migration as this line: a type the code writes and
+  // the table refuses is how answering a contact request failed silently for two days.
+  "access_request",
+  "access_granted",
+] as const;
+
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 export type NotificationRow = {
   id: string;
@@ -25,7 +47,7 @@ const POSTGRES_UNIQUE_VIOLATION = "23505";
  * Inserts a notification, relying on the (user_id, dedupe_key) unique
  * constraint to make creation at-most-once per event. Works with either the
  * per-request RLS-scoped client (self-triggered events) or the service-role
- * client (cron and guest-triggered events) — both simply insert a row.
+ * client (cron and guest-triggered events) - both simply insert a row.
  */
 export async function createNotification(
   supabase: SupabaseClient,
@@ -57,7 +79,7 @@ export async function createNotification(
 }
 
 /**
- * A missing key means the type has never been explicitly disabled — every
+ * A missing key means the type has never been explicitly disabled - every
  * notification type defaults to enabled so preferences never need a
  * migration when a new type is added.
  */

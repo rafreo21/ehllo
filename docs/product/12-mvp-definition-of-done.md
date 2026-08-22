@@ -103,7 +103,7 @@ A feature or vertical slice is complete only when every applicable item below is
 ## Product review
 
 - Copy uses final product terminology.
-- No Contacts/Follow-ups legacy terminology remains where People/Inbox is intended.
+- No Contacts legacy terminology remains where People is intended. Follow-ups is the correct consumer name for that surface (DEC-034); Inbox Item remains an internal state-machine object only.
 - No dead links or unreachable states remain.
 - The implementation matches the current product specification.
 - Any independent architecture decision is added to the decision log.
@@ -134,5 +134,5 @@ A slice is **Done** only when:
 3. No mocked logic remains in that path.
 4. The product owner can reproduce the outcome.
 
-Anything less is Prototype, In progress, or Blocked—not Done.
+Anything less is Prototype, In progress, or Blocked-not Done.
 

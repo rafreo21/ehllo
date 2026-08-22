@@ -68,15 +68,20 @@ test("libraryCardToRow preserves uuid ids and normalizes slug", () => {
   assert.equal(row.status, "draft");
 });
 
-test("methodsForUpsert dedupes by method type", () => {
+test("methodsForUpsert keeps repeated method types in order", () => {
   const rows = methodsForUpsert("card-id", [
     { id: "1", type: "email", value: "old@example.com", label: "Old" },
     { id: "2", type: "email", value: "new@example.com", label: "New" },
     { id: "3", type: "website", value: "https://example.com", label: "Site" },
   ]);
 
-  assert.equal(rows.length, 2);
-  assert.equal(rows.find((row) => row.method_type === "email")?.value, "new@example.com");
+  assert.equal(rows.length, 3);
+  assert.deepEqual(rows.map((row) => row.value), [
+    "old@example.com",
+    "new@example.com",
+    "https://example.com",
+  ]);
+  assert.deepEqual(rows.map((row) => row.sort_order), [0, 1, 2]);
 });
 
 test("cardMatchesLocal matches by id or slug", () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
 import { Button } from "../components/Button";
 import { TextField } from "../components/FormField";
 import { PhoneField } from "../components/PhoneField";
@@ -115,7 +115,7 @@ export function FirstCardForm({ initialName, initialEmail }: { initialName: stri
         </div>
         {error ? <p className="onboarding-error" role="alert">{error}</p> : null}
         <Button fullWidth type="submit" loading={loading}>
-          {loading ? "Creating your card…" : "Create card and continue"} {!loading && <ArrowRightIcon weight="bold" />}
+          {loading ? "Creating your card…" : "Create card and continue"} {!loading && <ArrowRightIcon />}
         </Button>
         <p className="onboarding-footnote">You can add LinkedIn, photos, and more contact methods from Cards after setup.</p>
       </form>

@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   try {
     // This request arrives from Google's redirect, not the user's own
     // authenticated app session, so there's no session-scoped Supabase
-    // client available here — identity was already verified via the
+    // client available here - identity was already verified via the
     // signed, httpOnly flow cookie + matching state param above. Use the
     // service-role client so the write isn't blocked by RLS policies that
     // expect a live auth.uid().

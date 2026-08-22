@@ -92,7 +92,7 @@ async function uniqueVisitorSlug(
   return `${base}-${Date.now().toString(36).slice(-4)}`;
 }
 
-// Typo-tolerant on purpose — this only decides which existing account to
+// Typo-tolerant on purpose - this only decides which existing account to
 // reuse, it never changes what gets stored or emailed for a new signup.
 async function findAuthUserIdByEmail(
   admin: NonNullable<ReturnType<typeof createServiceSupabaseClient>>,
@@ -235,7 +235,7 @@ export async function provisionVisitorFromExchange(input: VisitorExchangeInput) 
     pending_exchange_id: input.exchangeId,
   };
 
-  // Check for an existing account under a typo-tolerant match first — a
+  // Check for an existing account under a typo-tolerant match first - a
   // literal typo (icloud.con vs icloud.com) is a different string to
   // Supabase auth, so createUser would otherwise happily succeed and create
   // a duplicate account instead of ever hitting the "already exists" path

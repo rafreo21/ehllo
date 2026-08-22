@@ -2,7 +2,7 @@ begin;
 
 -- Replace the single anonymous jsonb blob with real rows in
 -- encounter_guest_follow_ups (added in 202607311300_encounter_participants.sql).
--- Same signature as before — the anonymous guest page's submit flow is
+-- Same signature as before - the anonymous guest page's submit flow is
 -- unchanged; multiple guests can now each submit independently instead of
 -- overwriting one another.
 create or replace function public.commit_guest_follow_up(p_share_token text, p_note text default null)
@@ -122,7 +122,7 @@ grant execute on function public.get_shared_encounter(text) to anon, authenticat
 -- were captured as on this shared encounter, and to any guest_follow_up
 -- rows they left before signing up. Mirrors link_people_connection_from_exchange
 -- in 202607261400_visitor_connections.sql. A claiming guest is never added
--- to the host's workspace_memberships — access is only ever through this
+-- to the host's workspace_memberships - access is only ever through this
 -- narrow SECURITY DEFINER projection, same as people_connections.
 create or replace function public.claim_guest_encounter_participants(p_share_token text)
 returns integer

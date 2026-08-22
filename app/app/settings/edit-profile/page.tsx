@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { IdentificationBadgeIcon } from "@phosphor-icons/react/dist/csr/IdentificationBadge";
-import { ShieldCheckIcon } from "@phosphor-icons/react/dist/csr/ShieldCheck";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { CreditCard as IdentificationBadgeIcon } from "react-feather";
+import { Shield as ShieldCheckIcon } from "react-feather";
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import { Button } from "../../../components/Button";
 import { FormSection, TextField } from "../../../components/FormField";
 import { PhoneField } from "../../../components/PhoneField";
 import { PageSkeleton, StatusMessage } from "../../../components/AsyncState";
+import { useToast } from "../../../components/ToastContext";
 
 type AccountProfile = {
   displayName: string;
@@ -19,6 +20,7 @@ type AccountProfile = {
 };
 
 export default function EditProfilePage() {
+  const { showToast } = useToast();
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [phone, setPhone] = useState("");
@@ -66,9 +68,13 @@ export default function EditProfilePage() {
         phone: payload.phone,
         phoneVerified: payload.phoneVerified,
       });
-      setSuccess("Your account details are saved.");
+      const text = "Your account details are saved.";
+      setSuccess(text);
+      showToast({ tone: "success", message: text });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not save your account details.");
+      const text = caught instanceof Error ? caught.message : "Could not save your account details.";
+      setError(text);
+      showToast({ tone: "error", message: text });
     } finally {
       setSaving(false);
     }
@@ -79,7 +85,7 @@ export default function EditProfilePage() {
     <>
       <div className="flow-page settings-page">
         <header className="flow-heading">
-          <div><h1>Edit profile</h1><p>These details are for your account only. Your public card is separate — edit it anytime from My card.</p></div>
+          <div><h1>Edit profile</h1><p>These details are for your account only. Your public card is separate - edit it anytime from My card.</p></div>
         </header>
 
         {loading ? <PageSkeleton rows={2} /> : (
@@ -87,9 +93,10 @@ export default function EditProfilePage() {
             <FormSection
               title="Your details"
               description="Shown only to you, never shared publicly."
-              icon={<IdentificationBadgeIcon size={18} weight="bold" />}
+              icon={<IdentificationBadgeIcon size={18} />}
             >
               <TextField
+                inline
                 label="Full name"
                 name="displayName"
                 autoComplete="name"
@@ -98,30 +105,27 @@ export default function EditProfilePage() {
                 required
               />
 
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm font-semibold text-[#454745]">Email</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-base text-[#0e0f0c]">{profile?.primaryEmail || "—"}</span>
+              <div className="account-inline-value">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="text-base text-[#0e0f0c]">{profile?.primaryEmail || "-"}</span>
                   {profile?.emailVerified ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-[#e2f6d5] px-2 py-0.5 text-xs font-bold text-[#163300]">
-                      <CheckCircleIcon size={13} weight="fill" /> Verified
+                      <CheckCircleIcon size={13} /> Verified
                     </span>
                   ) : null}
                 </div>
-                <small className="text-xs text-[#6b7168]">Confirmed every time you sign in with an email code.</small>
+                <small>Signed-in email</small>
               </div>
 
               <div className="grid gap-2">
-                <PhoneField label="Phone number" value={phone} onChange={setPhone} />
+                <PhoneField inline label="Phone number" value={phone} onChange={setPhone} />
                 <button
                   type="button"
                   disabled={Boolean(profile?.phoneVerified)}
                   onClick={() => setVerifyNoticeOpen(true)}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-md border border-[#aeb8aa] bg-white px-4 text-sm font-bold text-[#163300] transition hover:bg-[#f2f5f0] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="account-phone-verify inline-flex min-h-9 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold text-[#163300] transition disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {profile?.phoneVerified ? <CheckCircleIcon size={18} weight="fill" /> : <ShieldCheckIcon size={18} weight="bold" />}
+                  {profile?.phoneVerified ? <CheckCircleIcon size={18} /> : <ShieldCheckIcon size={18} />}
                   {profile?.phoneVerified ? "Verified" : "Verify"}
                 </button>
                 <small className="text-xs text-[#6b7168]">
@@ -133,7 +137,7 @@ export default function EditProfilePage() {
             {success ? <StatusMessage tone="success">{success}</StatusMessage> : null}
             {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
 
-            <Button type="submit" loading={saving} fullWidth>Save changes</Button>
+            <Button type="submit" loading={saving} className="account-save-changes">Save changes</Button>
           </form>
         )}
 

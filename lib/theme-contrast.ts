@@ -28,7 +28,7 @@ function mixHex(hex: string, targetHex: string, weight: number) {
   return `#${channels.map((channel) => channel.toString(16).padStart(2, "0")).join("").toUpperCase()}`;
 }
 
-export function normalizeThemeColor(value: string, fallback = "#9FE870") {
+export function normalizeThemeColor(value: string | null | undefined, fallback = "#9FE870") {
   const trimmed = value?.trim() || fallback;
   if (!/^#[0-9A-Fa-f]{6}$/.test(trimmed)) return fallback.toUpperCase();
   return trimmed.toUpperCase();
@@ -100,7 +100,10 @@ export function themeSurfaceStyle(hex: string): ThemeSurfaceStyle {
 export function themeCoverBadgeStyle(hex: string) {
   const surface = themeSurfaceStyle(hex);
   return {
-    background: surface.color === WHITE ? "rgba(255,255,255,0.18)" : INK,
-    color: WHITE,
+    // Keep the company and profile badges structurally consistent across all
+    // swatches. Dark themes can carry their accent as the mark; very light
+    // themes use ink so the mark remains readable against the white badge.
+    background: WHITE,
+    color: surface.color === WHITE ? surface.backgroundColor : INK,
   };
 }

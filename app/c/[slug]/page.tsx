@@ -29,13 +29,30 @@ async function getCard(slug: string) {
   if (!url || !key) return null;
   const supabase = createServiceSupabaseClient()
     ?? createClient(url, key, { auth: { persistSession: false } });
+  const normalized = slug.toLowerCase();
   const { data } = await supabase
     .from("cards")
     .select("*, card_methods(*)")
-    .eq("slug", slug.toLowerCase())
+    .eq("slug", normalized)
     .eq("status", "published")
     .maybeSingle();
-  return data;
+  if (data) return data;
+
+  // Auto-generated slugs are "card-" + 16 hex, and those five characters are the
+  // difference between a 33x33 QR and a 29x29 one - so the wallet pass encodes the
+  // slug without them. Resolving the short form here is what makes that safe. Tried
+  // second, never first, so a real card whose own slug happens to look like a bare
+  // code still wins.
+  if (!normalized.startsWith("card-")) {
+    const { data: prefixed } = await supabase
+      .from("cards")
+      .select("*, card_methods(*)")
+      .eq("slug", `card-${normalized}`)
+      .eq("status", "published")
+      .maybeSingle();
+    return prefixed;
+  }
+  return null;
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {

@@ -17,7 +17,7 @@ export function cleanLiveTranscript(raw: string) {
   return unique.join(" ").trim();
 }
 
-/** Prepare noisy speech-to-text for AI extraction — repair gaps, keep meaning. */
+/** Prepare noisy speech-to-text for AI extraction - repair gaps, keep meaning. */
 export function normalizeTranscriptForExtraction(raw: string) {
   let text = cleanLiveTranscript(raw);
   if (!text) return "";

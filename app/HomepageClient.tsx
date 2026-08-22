@@ -62,6 +62,6 @@ export default function HomepageClient({ includeDraftReviewLink = false }: Homep
       <div className="metric"><div className="metric-window"><span>Follow-up window</span><strong>72h</strong></div><div className="metric-copy"><span>The outcome that matters</span><h3>A completed next move.</h3><p>Not another contact stored. A relationship moved forward with something timely, useful and personal.</p></div></div>
     </section>
 
-    <footer><div><BrandMark className="brand-mark" size={38}/><strong>ehllo</strong></div><p>Meet someone. Remember what mattered. Make the next move.</p><LinkButton variant="ghost" href="/auth?next=/onboarding">Start for free <ArrowUpIcon size={15} weight="bold"/></LinkButton></footer>
+    <footer><div><BrandMark className="brand-mark" size={38}/><strong>ehllo</strong></div><p>Meet someone. Remember what mattered. Make the next move.</p><LinkButton variant="ghost" href="/auth?next=/onboarding">Start for free <ArrowUpIcon size={15} weight="bold"/></LinkButton><p className="footer-links"><a href="/activity">Activity log</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></p></footer>
   </main>;
 }

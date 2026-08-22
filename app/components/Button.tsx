@@ -11,18 +11,22 @@ type SharedButtonProps = {
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & SharedButtonProps;
 type LinkButtonProps = AnchorHTMLAttributes<HTMLAnchorElement> & SharedButtonProps & { href: string };
 
+// Flowbite's button conventions (flowbite.com/docs/components/buttons):
+// rounded-lg, font-medium (not bold), a visible focus ring, and - for the
+// secondary/"Alternative" style - a bordered white button instead of a
+// flat tinted fill.
 const variants = {
   primary:
-    "bg-[#9fe870] text-[#163300] shadow-sm hover:bg-[#8dde5f] active:bg-[#7fd250] focus-visible:ring-[#9fe870]/50",
+    "bg-[#9fe870] text-[#163300] hover:bg-[#8dde5f] active:bg-[#7fd250] focus-visible:ring-[#9fe870]/50",
   secondary:
-    "bg-[#f2f5f0] text-[#163300] hover:bg-[#e5e9e2] active:bg-[#dce2d8] focus-visible:ring-[#aeb8aa]/40",
+    "bg-white text-[#163300] border border-[#d5d9d3] hover:bg-[#f2f5f0] hover:border-[#c3cabd] active:bg-[#e5e9e2] focus-visible:ring-[#d5d9d3]/60",
   ghost:
     "bg-transparent text-[#163300] hover:bg-[#f2f5f0] active:bg-[#e5e9e2] focus-visible:ring-[#aeb8aa]/40",
 };
 
 const sizes = {
   small: "min-h-9 px-3 py-2 text-xs",
-  normal: "min-h-11 px-4 py-2.5 text-sm",
+  normal: "min-h-11 px-5 py-2.5 text-sm",
 };
 
 function buttonClasses(
@@ -32,9 +36,9 @@ function buttonClasses(
   className = "",
 ) {
   return [
-    "inline-flex items-center justify-center gap-2 rounded-md font-bold",
+    "inline-flex items-center justify-center gap-2 rounded-lg font-medium",
     "outline-none transition-colors focus-visible:ring-4",
-    "disabled:cursor-not-allowed disabled:bg-[#e7eae5] disabled:text-[#5f675c] disabled:shadow-none aria-disabled:cursor-not-allowed aria-disabled:bg-[#e7eae5] aria-disabled:text-[#5f675c] aria-disabled:shadow-none",
+    "disabled:cursor-not-allowed disabled:bg-[#e7eae5] disabled:text-[#5f675c] disabled:border-transparent disabled:shadow-none aria-disabled:cursor-not-allowed aria-disabled:bg-[#e7eae5] aria-disabled:text-[#5f675c] aria-disabled:border-transparent aria-disabled:shadow-none",
     variants[variant],
     sizes[size],
     fullWidth ? "w-full" : "",

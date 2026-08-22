@@ -2,10 +2,14 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
+export type NavigationRequestHandler = (href: string, proceed: () => void) => void;
+
 export type AppShellChrome = {
   backHref?: string;
   backLabel?: string;
+  leading?: ReactNode;
   actions?: ReactNode;
+  requestNavigation?: NavigationRequestHandler;
 };
 
 type ChromeContextValue = {
@@ -30,9 +34,9 @@ export function useAppShellChromeValue(): AppShellChrome {
 export function useAppShellChrome(chrome: AppShellChrome) {
   const context = useContext(AppShellChromeContext);
   const setChrome = context?.setChrome;
-  const { backHref, backLabel, actions } = chrome;
+  const { backHref, backLabel, leading, actions, requestNavigation } = chrome;
   useEffect(() => {
-    void Promise.resolve().then(() => setChrome?.({ backHref, backLabel, actions }));
+    void Promise.resolve().then(() => setChrome?.({ backHref, backLabel, leading, actions, requestNavigation }));
     return () => void Promise.resolve().then(() => setChrome?.({}));
-  }, [setChrome, backHref, backLabel, actions]);
+  }, [setChrome, backHref, backLabel, leading, actions, requestNavigation]);
 }

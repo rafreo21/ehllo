@@ -1,7 +1,7 @@
 import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
 
-import { buildBrandedQrDataUri } from "./branded-qr.ts";
+import { buildBrandedQrPngDataUri } from "./branded-qr.ts";
 import { resolveShareQrPayload } from "./contact-qr.ts";
 import { loadShareAssetFontBuffers } from "./share-asset-fonts.ts";
 import type { ShareAssetProfile } from "./share-assets.ts";
@@ -13,7 +13,7 @@ function profileSubtitle(profile: ShareAssetProfile) {
   return [role, company].filter(Boolean).join(" · ");
 }
 
-/** Renders the white card panel (text + branded QR) to PNG — matches the in-app preview. */
+/** Renders the white card panel (text + branded QR) to PNG - matches the in-app preview. */
 export async function buildVirtualBackgroundPanelPng(profile: ShareAssetProfile, scale = 2) {
   const width = VIRTUAL_BG_PANEL.width * scale;
   const height = VIRTUAL_BG_PANEL.height * scale;
@@ -23,13 +23,17 @@ export async function buildVirtualBackgroundPanelPng(profile: ShareAssetProfile,
   const name = profile.name.trim() || "Your name";
   const subtitle = profileSubtitle(profile);
   const fonts = loadShareAssetFontBuffers();
-  const qrDataUri = await buildBrandedQrDataUri(
+  // A PNG, not the SVG variant. satori renders <img> by decoding a raster, and hands back
+  // an empty box for an SVG data URI - silently, which is why the panel shipped with a blank
+  // white square where the code should be. The QR is the only reason this asset exists, so
+  // the one thing it must never do is quietly omit it.
+  const qrDataUri = await buildBrandedQrPngDataUri(
     resolveShareQrPayload(profile),
     VIRTUAL_BG_PANEL.qrSize * 5 * scale,
   );
 
   const svg = await satori(
-    {
+    ({
       type: "div",
       props: {
         style: {
@@ -119,7 +123,9 @@ export async function buildVirtualBackgroundPanelPng(profile: ShareAssetProfile,
           },
         ],
       },
-    },
+      // satori's first parameter is a ReactNode; a hand-built element object is
+      // the documented way to call it without JSX.
+    } as unknown as Parameters<typeof satori>[0]),
     {
       width,
       height,

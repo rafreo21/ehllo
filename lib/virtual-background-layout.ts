@@ -8,9 +8,12 @@ type VirtualBackgroundProfile = {
 export const VIRTUAL_BG_PANEL = {
   canvasWidth: 1920,
   canvasHeight: 1080,
-  x: 1460,
+  // 1420/440 rather than 1460/360: at the old width the text column came to 174px, and
+  // "Raphael Okojie" at 28px bold does not fit - it wrapped onto two lines and pushed the
+  // subtitle out of the panel. Same right margin, more room for the part that varies.
+  x: 1420,
   y: 72,
-  width: 360,
+  width: 440,
   height: 168,
   pad: 28,
   qrSize: 120,
@@ -20,10 +23,18 @@ export const VIRTUAL_BG_PANEL = {
   radius: 20,
 } as const;
 
-/** Left-side slot used in exports so Meet/Zoom self-view mirror places the card top-right. */
-export function virtualBackgroundPanelLeftForVideoApps() {
-  return VIRTUAL_BG_PANEL.canvasWidth - VIRTUAL_BG_PANEL.x - VIRTUAL_BG_PANEL.width;
-}
+/**
+ * Deliberately removed: the export is not mirrored.
+ *
+ * This existed to place the panel on the left and flip it, on the reasoning that Meet and
+ * Zoom mirror your video. They mirror your *self-view* only - the stream everyone else
+ * receives is unmirrored. So flipping it made the panel read backwards for every participant,
+ * and left the QR mirrored, which no scanner will read. The code is the entire point of the
+ * asset, so that trade was never worth making.
+ *
+ * The consequence to know: your own preview shows it reversed, the way lettering on a shirt
+ * looks in a mirror. Everyone you are talking to sees it the right way round.
+ */
 
 export type VirtualBackgroundLayout = {
   subtitle: string;

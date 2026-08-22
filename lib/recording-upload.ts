@@ -31,7 +31,7 @@ export async function uploadEncounterRecording(
       ? "Your session has expired. Sign in again; your local recording is safe."
       : response.status === 413
         ? "This recording is too large to upload for sharing. Your local copy is safe."
-        : "The recording could not be uploaded for sharing. Your local copy is safe—check your connection and retry."));
+        : "The recording could not be uploaded for sharing. Your local copy is safe-check your connection and retry."));
     Object.assign(error, { code: payload.code, retryable: payload.retryable ?? response.status >= 500 });
     throw error;
   }

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import {
   buildKeepInTouchEmail,
   keepInTouchBody,
+  keepInTouchNoAddressBody,
   keepInTouchTitle,
   type KeepInTouchThreshold,
 } from "../../../../lib/keep-in-touch-email";
@@ -27,7 +28,7 @@ function daysSince(iso: string, now: Date) {
   return Math.floor((now.getTime() - new Date(iso).getTime()) / DAY_MS);
 }
 
-/** The single threshold this connection is currently due for, if any — the
+/** The single threshold this connection is currently due for, if any - the
  * grace window means a threshold is only attempted for a few days after it's
  * crossed, so a years-old connection isn't re-checked forever. */
 function dueThreshold(connectedAt: string, now: Date): KeepInTouchThreshold | null {
@@ -87,19 +88,17 @@ export async function GET(request: Request) {
         .from("people_connections")
         .select("id, person_name, person_email, connected_at")
         .eq("workspace_id", workspaceId)
-        .neq("person_email", "")
         .gte("connected_at", oldestRelevant)
         .limit(200),
       service
         .from("card_exchanges")
         .select("id, visitor_name, visitor_email, created_at")
         .eq("workspace_id", workspaceId)
-        .neq("visitor_email", "")
         .gte("created_at", oldestRelevant)
         .limit(200),
     ]);
 
-    const candidates: NudgeCandidate[] = [
+    const rawCandidates: NudgeCandidate[] = [
       ...(metRows ?? []).map((row) => ({
         source: "met" as const,
         sourceId: row.id as string,
@@ -116,24 +115,62 @@ export async function GET(request: Request) {
       })),
     ];
 
+    // One person can arrive twice: as a people_connections row, and as the
+    // card_exchanges row that produced it. record_connection now writes the
+    // reverse row for the exchange paths too, so that overlap is the normal
+    // case rather than a rarity - and dedupeKey below includes `source`, so an
+    // undeduped pair is two notifications, two pushes and two emails about the
+    // same person. Collapse on the address; keep the earliest meeting, because
+    // the nudge threshold is measured from when they actually met; prefer the
+    // connection row so actionId points at something People can open.
+    const byPerson = new Map<string, NudgeCandidate>();
+    for (const candidate of rawCandidates) {
+      // With no address there is nothing to collapse on, so key on the row
+      // itself. Skipping these is what removed them from the queue before.
+      const address = candidate.personEmail.trim().toLowerCase();
+      const key = address || `${candidate.source}:${candidate.sourceId}`;
+      const existing = byPerson.get(key);
+      if (!existing) {
+        byPerson.set(key, candidate);
+        continue;
+      }
+      const earliest = Date.parse(candidate.connectedAt) < Date.parse(existing.connectedAt)
+        ? candidate.connectedAt
+        : existing.connectedAt;
+      const preferred = existing.source === "met"
+        ? existing
+        : candidate.source === "met" ? candidate : existing;
+      byPerson.set(key, { ...preferred, connectedAt: earliest });
+    }
+    const candidates = [...byPerson.values()];
+
     for (const candidate of candidates) {
       const threshold = dueThreshold(candidate.connectedAt, now);
       if (!threshold) continue;
 
-      // Already engaged — a real encounter with this person after they
+      // Already engaged - a real encounter with this person after they
       // connected means they don't need a nudge to reach out.
-      const { data: existingEncounter } = await service
-        .from("encounters")
-        .select("id")
-        .eq("workspace_id", workspaceId)
-        .ilike("person_email", candidate.personEmail)
-        .gt("created_at", candidate.connectedAt)
-        .limit(1)
-        .maybeSingle();
-      if (existingEncounter) continue;
+      //
+      // Only checkable when we have an address. ilike against "" matches every
+      // encounter that also lacks one, so running this on a blank address would
+      // silently suppress exactly the people this change is meant to surface.
+      const hasAddress = candidate.personEmail.trim() !== "";
+      if (hasAddress) {
+        const { data: existingEncounter } = await service
+          .from("encounters")
+          .select("id")
+          .eq("workspace_id", workspaceId)
+          .ilike("person_email", candidate.personEmail)
+          .gt("created_at", candidate.connectedAt)
+          .limit(1)
+          .maybeSingle();
+        if (existingEncounter) continue;
+      }
 
       const title = keepInTouchTitle(threshold, candidate.personName);
-      const body = keepInTouchBody(threshold, candidate.personName);
+      const body = hasAddress
+        ? keepInTouchBody(threshold, candidate.personName)
+        : keepInTouchNoAddressBody(threshold, candidate.personName);
       const dedupeKey = `keep_in_touch:${candidate.source}:${candidate.sourceId}:${threshold}`;
 
       try {
@@ -157,13 +194,15 @@ export async function GET(request: Request) {
           actionId: `${candidate.source}:${candidate.sourceId}`,
         });
 
-        if (user.reminder_emails_enabled && user.primary_email?.trim()) {
+        // The reminder email goes to the user, not the connection, so it is
+        // still worth sending; only its copy changes.
+        if (hasAddress && user.reminder_emails_enabled && user.primary_email?.trim()) {
           const { subject, html } = buildKeepInTouchEmail(threshold, candidate.personName, appUrl);
           const result = await sendEmail({ to: user.primary_email.trim(), subject, html });
           if (result.ok) emailsSent += 1;
         }
       } catch {
-        // Best-effort — one missed nudge must never block the rest.
+        // Best-effort - one missed nudge must never block the rest.
       }
     }
   }

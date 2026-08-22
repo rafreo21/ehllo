@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { BuildingsIcon } from "@phosphor-icons/react/dist/csr/Buildings";
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
-import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
+import { CreditCard as IdentificationCardIcon } from "react-feather";
+import { Plus as PlusIcon } from "react-feather";
+import { Users as UsersThreeIcon } from "react-feather";
 import { Button } from "./Button";
 import { StatusMessage } from "./AsyncState";
 import { TextField } from "./FormField";
 import type { CardTemplate, WorkspaceSummary } from "../../lib/workspace/types";
+import { useToast } from "./ToastContext";
 
 type WorkspacePayload = {
   active?: WorkspaceSummary | null;
@@ -18,6 +19,7 @@ type WorkspacePayload = {
 };
 
 export function TeamWorkspacePanel() {
+  const { showToast } = useToast();
   const [active, setActive] = useState<WorkspaceSummary | null>(null);
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [templates, setTemplates] = useState<CardTemplate[]>([]);
@@ -51,12 +53,16 @@ export function TeamWorkspacePanel() {
     });
     const payload = await response.json() as { error?: string };
     if (!response.ok) {
-      setError(payload.error || "We couldn’t create that team workspace.");
+      const message = payload.error || "We couldn’t create that team workspace.";
+      setError(message);
+      showToast({ tone: "error", message });
       setLoading("");
       return;
     }
     setTeamName("");
-    setMessage("Team workspace created. Reloading your workspace context…");
+    const message = "Team workspace created. Reloading your workspace context…";
+    setMessage(message);
+    showToast({ tone: "success", message });
     window.setTimeout(() => window.location.reload(), 600);
   }
 
@@ -71,11 +77,15 @@ export function TeamWorkspacePanel() {
     });
     const payload = await response.json() as { error?: string };
     if (!response.ok) {
-      setError(payload.error || "We couldn’t switch workspaces.");
+      const message = payload.error || "We couldn’t switch workspaces.";
+      setError(message);
+      showToast({ tone: "error", message });
       setLoading("");
       return;
     }
-    setMessage("Workspace switched. Reloading cards and contacts…");
+    const message = "Workspace switched. Reloading cards and contacts…";
+    setMessage(message);
+    showToast({ tone: "success", message });
     window.setTimeout(() => window.location.reload(), 600);
   }
 
@@ -90,12 +100,16 @@ export function TeamWorkspacePanel() {
     });
     const payload = await response.json() as { error?: string; template?: CardTemplate };
     if (!response.ok) {
-      setError(payload.error || "We couldn’t create that template.");
+      const message = payload.error || "We couldn’t create that template.";
+      setError(message);
+      showToast({ tone: "error", message });
       setLoading("");
       return;
     }
     setTemplateCompany("");
-    setMessage("Org card template saved for this workspace.");
+    const message = "Org card template saved for this workspace.";
+    setMessage(message);
+    showToast({ tone: "success", message });
     await refresh();
     setLoading("");
   }
@@ -106,7 +120,7 @@ export function TeamWorkspacePanel() {
     <section className="activate-panel">
       <header>
         <span className="step-pill">Team workspace</span>
-        <h2><UsersThreeIcon size={22} weight="bold" /> Shared workspace and org cards</h2>
+        <h2><UsersThreeIcon size={22} /> Shared workspace and org cards</h2>
         <p>Create a team workspace, switch between personal and team context, and publish card templates members can start from.</p>
       </header>
 
@@ -138,13 +152,13 @@ export function TeamWorkspacePanel() {
 
       <div className="team-workspace-actions">
         <TextField label="Team name" value={teamName} onChange={(event) => setTeamName(event.target.value)} placeholder="Northstar Advisory" />
-        <Button loading={loading === "team"} onClick={() => void createTeam()}><PlusIcon size={16} weight="bold" />Create team workspace</Button>
+        <Button loading={loading === "team"} onClick={() => void createTeam()}><PlusIcon size={16} />Create team workspace</Button>
       </div>
 
       {canManageTemplates && active?.type === "team" ? (
         <div className="team-template-panel">
           <header>
-            <h3><IdentificationCardIcon size={18} weight="bold" /> Org card templates</h3>
+            <h3><IdentificationCardIcon size={18} /> Org card templates</h3>
             <p>Members create cards from these defaults so branding stays consistent.</p>
           </header>
           {templates.length ? (
@@ -157,7 +171,7 @@ export function TeamWorkspacePanel() {
             <p className="team-template-empty">No templates yet. Create one to give members a branded starting point.</p>
           )}
           <TextField label="Company name for template" value={templateCompany} onChange={(event) => setTemplateCompany(event.target.value)} placeholder="Northstar Advisory" />
-          <Button variant="secondary" loading={loading === "template"} onClick={() => void createTemplate()}><PlusIcon size={16} weight="bold" />Save org template</Button>
+          <Button variant="secondary" loading={loading === "template"} onClick={() => void createTemplate()}><PlusIcon size={16} />Save org template</Button>
         </div>
       ) : null}
 

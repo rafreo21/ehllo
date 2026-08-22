@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { createApiSupabaseClient, resolveApiUser } from "../../../lib/auth/api-request";
 import { encounterFromApi } from "../../../lib/encounters";
 import { fetchParticipantsByEncounter } from "../../../lib/encounter-participants-server";
@@ -31,11 +33,89 @@ function participantMethods(
   participant: { id: string; email: string; phone: string; linkedIn: string } | undefined,
 ): FollowUpContactMethod[] {
   if (!participant) return [];
-  return [
-    participant.email.trim() ? { id: `${participant.id}-email`, type: "email" as const, value: participant.email.trim(), label: "Email" } : null,
-    participant.phone.trim() ? { id: `${participant.id}-phone`, type: "phone" as const, value: participant.phone.trim(), label: "Phone" } : null,
-    participant.linkedIn.trim() ? { id: `${participant.id}-linkedin`, type: "linkedin" as const, value: participant.linkedIn.trim(), label: "LinkedIn" } : null,
-  ].filter((method): method is FollowUpContactMethod => method !== null);
+  const candidates: Array<FollowUpContactMethod | null> = [
+    participant.email.trim() ? { id: `${participant.id}-email`, type: "email", value: participant.email.trim(), label: "Email" } : null,
+    participant.phone.trim() ? { id: `${participant.id}-phone`, type: "phone", value: participant.phone.trim(), label: "Phone" } : null,
+    participant.linkedIn.trim() ? { id: `${participant.id}-linkedin`, type: "linkedin", value: participant.linkedIn.trim(), label: "LinkedIn" } : null,
+  ];
+  return candidates.filter((method): method is FollowUpContactMethod => method !== null);
+}
+
+/**
+ * Contact methods from the person's own published card, keyed by their address.
+ *
+ * This was the missing source, and it is the one that matters most. A card is
+ * where someone actually publishes how to reach them - Raphael's card carries a
+ * phone, a LinkedIn and a website - but follow-ups only ever read the contacts
+ * table and encounter_participants, both of which are populated from what the
+ * *other* person happened to type during a capture. So a follow-up for someone
+ * whose card lists a phone number reported that no phone number existed, and the
+ * sheet degraded to "Not now" because it could not see an address either.
+ */
+async function cardMethodsByEmail(supabase: SupabaseClient, emails: string[]) {
+  const wanted = [...new Set(emails.map((value) => value.trim().toLowerCase()).filter(Boolean))];
+  const byEmail = new Map<string, FollowUpContactMethod[]>();
+  if (!wanted.length) return byEmail;
+
+  // Which published card belongs to each address.
+  const { data: owners, error: ownersError } = await supabase
+    .from("card_methods")
+    .select("card_id, value, cards!inner(status)")
+    .eq("method_type", "email");
+  if (ownersError) {
+    console.error("[follow-ups] could not resolve cards for contact methods", {
+      code: ownersError.code, message: ownersError.message,
+    });
+    return byEmail;
+  }
+
+  const cardIdByEmail = new Map<string, string>();
+  for (const row of (owners ?? []) as unknown as Array<{ card_id: string; value: string; cards: { status: string } | null }>) {
+    if (row.cards?.status !== "published") continue;
+    const email = row.value.trim().toLowerCase();
+    if (wanted.includes(email) && !cardIdByEmail.has(email)) cardIdByEmail.set(email, row.card_id);
+  }
+  if (!cardIdByEmail.size) return byEmail;
+
+  const { data: methods, error: methodsError } = await supabase
+    .from("card_methods")
+    .select("card_id, method_type, value, label, sort_order")
+    .in("card_id", [...cardIdByEmail.values()])
+    .order("sort_order", { ascending: true });
+  if (methodsError) {
+    console.error("[follow-ups] could not read card contact methods", {
+      code: methodsError.code, message: methodsError.message,
+    });
+    return byEmail;
+  }
+
+  for (const [email, cardId] of cardIdByEmail) {
+    const rows = ((methods ?? []) as Array<{ card_id: string; method_type: string; value: string; label: string | null }>)
+      .filter((row) => row.card_id === cardId && row.value.trim());
+    byEmail.set(email, rows.map((row) => ({
+      id: `${cardId}-${row.method_type}`,
+      type: row.method_type as FollowUpContactMethod["type"],
+      value: row.value.trim(),
+      label: row.label?.trim() || row.method_type,
+    })));
+  }
+  return byEmail;
+}
+
+/**
+ * Merge, never replace. The participant row often holds the address while the
+ * card holds the phone, so preferring one source wholesale loses whichever the
+ * other one had - which is how this looked like "no phone number" for someone
+ * who published one.
+ */
+function mergeMethods(...groups: FollowUpContactMethod[][]) {
+  const byType = new Map<string, FollowUpContactMethod>();
+  for (const group of groups) {
+    for (const method of group) {
+      if (!byType.has(method.type)) byType.set(method.type, method);
+    }
+  }
+  return [...byType.values()];
 }
 
 export async function GET(request: Request) {
@@ -88,7 +168,34 @@ export async function GET(request: Request) {
     }
   }
 
-  // "Where we met" / follow-up email opener context — event is an activator,
+  // The people you have actually connected with, keyed by name.
+  //
+  // The chain above reads the encounter participant, then the CRM contact, and
+  // stops. Neither necessarily holds an email: a participant captured during a
+  // meeting often has only a name, and contactId points at the contacts table,
+  // not at people_connections. So a follow-up for somebody you scanned - whose
+  // email ehllo already knows, whose card publishes it, who signed up with it -
+  // could still report "we don't have their email", and the request sheet
+  // offered nothing but "Not now".
+  //
+  // Matched on name because that is what a participant reliably carries. Used
+  // last, so anything actually recorded against the encounter still wins.
+  const connectionEmailByName = new Map<string, string>();
+  {
+    const { data: connectionRows } = await supabase
+      .from("people_connections")
+      .select("person_name, person_email")
+      .eq("workspace_id", user.workspaceId);
+    for (const row of connectionRows ?? []) {
+      const name = String((row as { person_name?: string }).person_name ?? "").trim().toLowerCase();
+      const email = String((row as { person_email?: string }).person_email ?? "").trim();
+      if (name && email.includes("@") && !connectionEmailByName.has(name)) {
+        connectionEmailByName.set(name, email);
+      }
+    }
+  }
+
+  // "Where we met" / follow-up email opener context - event is an activator,
   // so this map only ever adds a title for encounters that actually have one.
   const eventIds = [...new Set(encounters.map((encounter) => encounter.eventId).filter((id): id is string => Boolean(id)))];
   const eventTitlesById = new Map<string, string>();
@@ -107,24 +214,75 @@ export async function GET(request: Request) {
   const scoped = hasConnectionFilter
     ? followUpsForConnection(flattened, connectionInput)
     : flattened;
-  const followUps = sortFollowUps(scoped).map((item) => {
+  const ordered = sortFollowUps(scoped);
+
+  const cardMethods = await cardMethodsByEmail(supabase, ordered.flatMap((item) => {
     const participant = item.participantId
       ? item.participants.find((candidate) => candidate.id === item.participantId)
       : undefined;
-    const participantContactMethods = participantMethods(participant);
     const contact = item.contactId ? contactsById.get(item.contactId) : undefined;
+    return [
+      participant?.email ?? "",
+      contact?.email ?? "",
+      item.personEmail,
+      connectionEmailByName.get(item.personName.trim().toLowerCase()) ?? "",
+    ];
+  }));
+
+  const followUps = ordered.map((item) => {
+    const participant = item.participantId
+      ? item.participants.find((candidate) => candidate.id === item.participantId)
+      : undefined;
+    const contact = item.contactId ? contactsById.get(item.contactId) : undefined;
+    const knownEmail = [
+      participant?.email,
+      contact?.email,
+      item.personEmail,
+      connectionEmailByName.get(item.personName.trim().toLowerCase()),
+    ]
+      .map((value) => value?.trim().toLowerCase() || "")
+      .find(Boolean) || "";
+
     return {
       ...item,
-      contactMethods: participantContactMethods.length
-        ? participantContactMethods
-        : contact
-          ? contactMethods(contact)
-          : item.personEmail.trim()
-            ? [{ id: `${item.actionId}-email`, type: "email" as const, value: item.personEmail.trim(), label: "Email" }]
-            : [],
+      contactMethods: mergeMethods(
+        participantMethods(participant),
+        contact ? contactMethods(contact) : [],
+        // knownEmail rather than item.personEmail, so an address we hold only on
+        // the connection still reaches the sheet as a usable method.
+        knownEmail
+          ? [{ id: `${item.actionId}-email`, type: "email" as const, value: knownEmail, label: "Email" }]
+          : [],
+        // Last, so anything captured about this person wins over the card - but
+        // every method the card publishes and nobody typed still gets through.
+        cardMethods.get(knownEmail) ?? [],
+      ),
       eventTitle: item.eventId ? eventTitlesById.get(item.eventId) : undefined,
     };
   });
 
-  return NextResponse.json({ followUps }, { headers: { "Cache-Control": "private, no-store" } });
+  // Follow-ups somebody else recorded against this user's address.
+  //
+  // These live in the other person's workspace, so the query above cannot see
+  // them - it reads the caller's own encounters. Without this a commitment made
+  // to you during their capture never reached you: you could read it in the
+  // shared history and do nothing with it.
+  //
+  // Returned as a separate list rather than merged, because the shapes differ:
+  // these carry who owes it to you and are not yours to edit or complete on their
+  // behalf. The client decides how to present them.
+  const { data: addressed, error: addressedError } = await supabase.rpc("get_follow_ups_addressed_to_me");
+  if (addressedError) {
+    // Say why. A silently shorter list is indistinguishable from having nothing
+    // owed to you, which is exactly the failure this whole surface kept making.
+    console.error("[follow-ups] could not read follow-ups addressed to this user", {
+      code: addressedError.code,
+      message: addressedError.message,
+    });
+  }
+
+  return NextResponse.json(
+    { followUps, addressedToMe: addressed ?? [] },
+    { headers: { "Cache-Control": "private, no-store" } },
+  );
 }

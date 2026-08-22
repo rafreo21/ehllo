@@ -2,23 +2,24 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
-import { CaretRightIcon } from "@phosphor-icons/react/dist/csr/CaretRight";
-import { CaretUpIcon } from "@phosphor-icons/react/dist/csr/CaretUp";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
-import { PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
-import { PencilSimpleLineIcon } from "@phosphor-icons/react/dist/csr/PencilSimpleLine";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/csr/PencilSimple";
-import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
+import { ChevronDown as CaretDownIcon } from "react-feather";
+import { ChevronRight as CaretRightIcon } from "react-feather";
+import { ChevronUp as CaretUpIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { Search as MagnifyingGlassIcon } from "react-feather";
+import { Send as PaperPlaneTiltIcon } from "react-feather";
+import { Edit2 as PencilSimpleLineIcon } from "react-feather";
+import { Edit2 as PencilSimpleIcon } from "react-feather";
+import { Plus as PlusIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
-import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import { X as XIcon } from "react-feather";
 import QRCode from "qrcode";
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import { StatusMessage } from "../../../components/AsyncState";
 import { Button } from "../../../components/Button";
 import { SelectField, TextField } from "../../../components/FormField";
+import { useToast } from "../../../components/ToastContext";
 import { getActiveCardId, readCardLibrary } from "../../../../lib/card-library";
 import { fetchAllConnectionsMerged, filterConnections, type ConnectionItem } from "../../../../lib/connections";
 import { encounterToApiBody, writeEncounter, type Encounter } from "../../../../lib/encounters";
@@ -38,6 +39,7 @@ function createId() {
 }
 
 export default function NewFollowUpPage() {
+  const { showToast } = useToast();
   const router = useRouter();
   const params = useSearchParams();
   const initialName = params.get("personName")?.trim() ?? "";
@@ -209,9 +211,11 @@ export default function NewFollowUpPage() {
         const payload = await response.json().catch(() => ({})) as { error?: string };
         throw new Error(payload.error || "Could not sync this follow-up.");
       }
+      showToast({ tone: "success", message: "Follow-up created." });
       router.push("/app/followups");
     } catch (caught) {
       setError(`${caught instanceof Error ? caught.message : "Could not sync this follow-up."} It is saved on this browser and can be retried later.`);
+      showToast({ tone: "error", message: caught instanceof Error ? caught.message : "Could not sync this follow-up." });
       setSaving(false);
     }
   }
@@ -246,7 +250,7 @@ export default function NewFollowUpPage() {
                 <span className="block text-sm text-[#6b7168]">Who is this follow-up for?</span>
               )}
             </span>
-            {personName.trim() ? <PencilSimpleIcon size={18} weight="bold" /> : <PlusIcon size={18} weight="bold" />}
+            {personName.trim() ? <PencilSimpleIcon size={18} /> : <PlusIcon size={18} />}
           </button>
 
           <div className="quick-follow-up-owner">
@@ -258,10 +262,10 @@ export default function NewFollowUpPage() {
           </div>
 
           <div className="quick-follow-up-meta">
-            <SelectField label={`How will ${pronoun} follow up?`} value={channel} onChange={(event) => setChannel(event.target.value as FollowUpChannel)}>
+            <SelectField inline label={`How will ${pronoun} follow up?`} value={channel} onChange={(event) => setChannel(event.target.value as FollowUpChannel)}>
               {SELECTABLE_FOLLOW_UP_CHANNELS.map((option) => <option value={option.id} key={option.id}>{option.label}</option>)}
             </SelectField>
-            <TextField label="Due date" type="date" value={dueAt} onChange={(event) => setDueAt(event.target.value)} />
+            <TextField inline label="Due date" type="date" value={dueAt} onChange={(event) => setDueAt(event.target.value)} />
           </div>
 
           <div className="quick-follow-up-detail">
@@ -272,12 +276,12 @@ export default function NewFollowUpPage() {
               className="quick-follow-up-detail-toggle"
             >
               <small className="block text-[11px] font-extrabold uppercase tracking-wide text-[#8391a5]">What do {pronoun} need to do? (optional)</small>
-              {detailOpen ? <CaretUpIcon size={16} weight="bold" /> : <CaretDownIcon size={16} weight="bold" />}
+              {detailOpen ? <CaretUpIcon size={16} /> : <CaretDownIcon size={16} />}
             </button>
             {detailOpen ? (
               <TextField
+                inline
                 label="Next step"
-                hint="Shown in your reminders so you know what this one's about."
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="e.g. Send Sarah the revised product draft"
@@ -287,11 +291,11 @@ export default function NewFollowUpPage() {
 
           <div className="quick-follow-up-actions">
             <Button variant="ghost" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" loading={saving}><CheckCircleIcon size={18} weight="bold" />Add follow-up</Button>
+            <Button type="submit" loading={saving}><CheckCircleIcon size={18} />Add follow-up</Button>
           </div>
         </form>
 
-        <p className="quick-follow-up-note"><PaperPlaneTiltIcon size={16} weight="bold" />Nothing is sent automatically. ehllo reminds you until you complete it.</p>
+        <p className="quick-follow-up-note"><PaperPlaneTiltIcon size={16} />Nothing is sent automatically. ehllo reminds you until you complete it.</p>
       </div>
 
       {addPersonOpen ? (
@@ -299,10 +303,10 @@ export default function NewFollowUpPage() {
           <div className="connections-modal" role="dialog" aria-label="Add someone" onClick={(event) => event.stopPropagation()}>
             <header>
               <h2>Add someone</h2>
-              <button type="button" aria-label="Close" onClick={() => { setAddPersonOpen(false); setPersonQuery(""); }}><XIcon size={18} weight="bold" /></button>
+              <button type="button" aria-label="Close" onClick={() => { setAddPersonOpen(false); setPersonQuery(""); }}><XIcon size={18} /></button>
             </header>
             <label className="connections-search">
-              <MagnifyingGlassIcon size={18} weight="bold" />
+              <MagnifyingGlassIcon size={18} />
               <input value={personQuery} onChange={(event) => setPersonQuery(event.target.value)} placeholder="Search your connections" />
             </label>
 
@@ -333,12 +337,12 @@ export default function NewFollowUpPage() {
                   onClick={() => setManualOpen(true)}
                   className="flex min-h-[64px] items-center gap-3 rounded-[10px] border border-[#e5e9e2] bg-[#fbfdf9] px-4 py-3 text-left"
                 >
-                  <PencilSimpleLineIcon size={20} weight="bold" />
+                  <PencilSimpleLineIcon size={20} />
                   <span className="min-w-0 flex-1">
                     <strong className="block text-sm text-[#163300]">Add manually</strong>
                     <small className="block text-xs text-[#6b7168]">Enter their name and contact details</small>
                   </span>
-                  <CaretRightIcon size={16} weight="bold" />
+                  <CaretRightIcon size={16} />
                 </button>
                 <button
                   type="button"
@@ -350,7 +354,7 @@ export default function NewFollowUpPage() {
                     <strong className="block text-sm text-[#163300]">Share QR code</strong>
                     <small className="block text-xs text-[#6b7168]">Let them scan your card and return their details</small>
                   </span>
-                  <CaretRightIcon size={16} weight="bold" />
+                  <CaretRightIcon size={16} />
                 </button>
                 <button
                   type="button"
@@ -362,7 +366,7 @@ export default function NewFollowUpPage() {
                     <strong className="block text-sm text-[#163300]">Recent scans</strong>
                     <small className="block text-xs text-[#6b7168]">Choose someone who recently scanned your card</small>
                   </span>
-                  <CaretRightIcon size={16} weight="bold" />
+                  <CaretRightIcon size={16} />
                 </button>
               </div>
             )}
@@ -375,14 +379,14 @@ export default function NewFollowUpPage() {
           <div className="connections-modal" role="dialog" aria-label="Add manually" onClick={(event) => event.stopPropagation()}>
             <header>
               <h2>Add manually</h2>
-              <button type="button" aria-label="Close" onClick={() => setManualOpen(false)}><XIcon size={18} weight="bold" /></button>
+              <button type="button" aria-label="Close" onClick={() => setManualOpen(false)}><XIcon size={18} /></button>
             </header>
             <form
               className="connections-manual-form"
               onSubmit={(event) => { event.preventDefault(); saveManualPerson(); }}
             >
-              <TextField label="Full name" value={manualName} onChange={(event) => setManualName(event.target.value)} required />
-              <TextField label="Email" type="email" hint="Optional" value={manualEmail} onChange={(event) => setManualEmail(event.target.value)} />
+              <TextField inline label="Full name" value={manualName} onChange={(event) => setManualName(event.target.value)} required />
+              <TextField inline label="Email address (optional)" type="email" value={manualEmail} onChange={(event) => setManualEmail(event.target.value)} />
               <div className="form-actions">
                 <Button type="button" variant="ghost" onClick={() => setManualOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={!manualName.trim()}>Add person</Button>
@@ -397,7 +401,7 @@ export default function NewFollowUpPage() {
           <div className="connections-modal connections-modal-compact" role="dialog" aria-label="Share your card" onClick={(event) => event.stopPropagation()}>
             <header>
               <h2>Share your card</h2>
-              <button type="button" aria-label="Close" onClick={() => setQrOpen(false)}><XIcon size={18} weight="bold" /></button>
+              <button type="button" aria-label="Close" onClick={() => setQrOpen(false)}><XIcon size={18} /></button>
             </header>
             <p>They scan this code and their details link here automatically.</p>
             <div style={{ display: "grid", justifyItems: "center", gap: 12, marginTop: 12 }}>
@@ -417,7 +421,7 @@ export default function NewFollowUpPage() {
           <div className="connections-modal" role="dialog" aria-label="Recent scans" onClick={(event) => event.stopPropagation()}>
             <header>
               <h2>Recent scans</h2>
-              <button type="button" aria-label="Close" onClick={() => setScansOpen(false)}><XIcon size={18} weight="bold" /></button>
+              <button type="button" aria-label="Close" onClick={() => setScansOpen(false)}><XIcon size={18} /></button>
             </header>
             {loadingExchanges ? (
               <p>Checking for new scans…</p>

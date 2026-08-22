@@ -322,12 +322,12 @@ export function mergeVoyagerIntoProfile<T extends Record<string, string | undefi
   base: T,
   voyager: Partial<LinkedInVoyagerProfile>,
 ): T {
-  const merged = { ...base };
+  const merged: Record<string, string | undefined> = { ...base };
   (["firstName", "lastName", "role", "company", "email", "phone", "companyWebsite", "personalWebsite"] as const).forEach((field) => {
     const value = clean(voyager[field]);
     if (value) merged[field] = value;
   });
-  return merged;
+  return merged as T;
 }
 
 export const PROFILE_VIEW_FIXTURE = {

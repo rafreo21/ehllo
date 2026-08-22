@@ -6,7 +6,7 @@ export async function register() {
 
 // @sentry/nextjs's own captureRequestError (and any other import from its
 // barrel index.server.js) drags in withSentryConfig's bundler-plugin chain
-// even when unused — Rolldown can't tree-shake through its dynamic imports,
+// even when unused - Rolldown can't tree-shake through its dynamic imports,
 // and one of those chunks does `createRequire(__filename)` at module scope,
 // which throws immediately in this project's pure-ESM Vercel runtime. This
 // reimplements captureRequestError's actual logic (see

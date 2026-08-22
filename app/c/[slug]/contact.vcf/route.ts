@@ -11,7 +11,7 @@ import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import { resolveCurrentEventIdForWorkspace } from "@/lib/events-server";
 
 // Anonymous scanners never have their own session, so the only "who's at an
-// event right now" we can know here is the card owner's — if they're
+// event right now" we can know here is the card owner's - if they're
 // currently checked in somewhere, that's where this scan is happening.
 // Best-effort: any failure just means no event line, never a broken vCard.
 async function currentEventTitleForCardOwner(workspaceId: string): Promise<string | undefined> {

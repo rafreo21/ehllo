@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
+import { normalizeConnectionSource, resolveStoredCardSlug } from "../../../../lib/card-slug";
 import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
+import { recordConnectionScanSource } from "../../../../lib/connection-scan-source";
 
 export async function GET(request: Request) {
   const user = await resolveApiUser(request);
@@ -27,6 +29,7 @@ export async function POST(request: Request) {
 
   const payload = await request.json().catch(() => null) as {
     slug?: string;
+    source?: string;
     eventSnapshot?: { eventId?: string; eventTitle?: string; eventLocation?: string; occurredAt?: string };
   } | null;
   const slug = payload?.slug?.trim().toLowerCase();
@@ -35,15 +38,85 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createApiSupabaseClient(request);
+
+  // Resolve the slug to the spelling the card is actually stored under before handing
+  // it to the RPC, which matches c.slug exactly and raises 'card not found' otherwise.
+  // Both wallet passes encode the slug with the generated "card-" prefix dropped to
+  // keep the QR at 29x29, so scanning a card from Apple or Google Wallet could not
+  // create a connection at all - on mobile or on the web - while the same card scanned
+  // from the app worked. Done here rather than in the RPC so every caller of this
+  // endpoint gets it without a migration.
+  const storedSlug = await resolveStoredCardSlug(slug, async (candidate) => {
+    const { data: card } = await supabase
+      .from("cards")
+      .select("slug")
+      .eq("slug", candidate)
+      .eq("status", "published")
+      .maybeSingle();
+    return (card?.slug as string | undefined) ?? null;
+  });
+  if (!storedSlug) {
+    return NextResponse.json({ error: "That card could not be found.", code: "card_not_found" }, { status: 404 });
+  }
+
+  // Whether this person was already a connection, established before the RPC runs -
+  // record_connection is idempotent on the pair, so afterwards there is no way to tell
+  // "just met" from "met months ago" and every client had to guess. Clients need the
+  // difference: landing on a profile with no word either way is what made scanning a
+  // wallet pass feel like nothing had happened.
+  //
+  // limit(1), not maybeSingle(). maybeSingle throws when more than one row matches, and
+  // more than one legitimately can: a team workspace where two members have each
+  // connected to the same person holds a row per member. That would have turned every
+  // scan of a shared contact into a failure the moment a workspace had a second member -
+  // invisible with one user, which is exactly why it needed saying out loud.
+  const { data: priorConnections } = await supabase
+    .from("people_connections")
+    .select("id")
+    .eq("card_slug", storedSlug)
+    .limit(1);
+  const alreadyConnected = Boolean(priorConnections?.length);
+
   const snapshot = payload?.eventSnapshot;
   const { data, error } = await supabase.rpc("link_people_connection_from_scan", {
-    p_slug: slug,
+    p_slug: storedSlug,
     p_event_id: snapshot?.eventId || null,
     p_event_title: snapshot?.eventTitle?.trim().slice(0, 160) || null,
     p_event_location: snapshot?.eventLocation?.trim().slice(0, 320) || null,
     p_occurred_at: snapshot?.occurredAt || null,
   });
   if (error) {
+    // Returning only the friendly sentence made every cause identical from the
+    // outside: a card that does not exist in this environment looked exactly
+    // like a database fault, so the offline queue retried a request that could
+    // never succeed and blamed the user's people list for it. Log the real
+    // reason; the slug is not sensitive and is what makes this diagnosable.
+    console.error("[people-connections] link_people_connection_from_scan failed", {
+      slug,
+      code: error.code,
+      message: error.message,
+    });
+
+    // A missing card is a permanent answer, not a transient one. Say so with a
+    // 404 so the client can stop retrying and explain what actually happened.
+    const { data: card } = await supabase
+      .from("cards")
+      .select("slug")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (!card) {
+      return NextResponse.json(
+        {
+          // A code, not just prose. The client has to decide whether to keep
+          // retrying, and matching on the sentence broke the moment the copy
+          // used a typographic apostrophe the client did not.
+          code: "card_not_found",
+          error: "That card isn’t available here. It may belong to a different ehllo environment, or have been unpublished.",
+        },
+        { status: 404 },
+      );
+    }
+
     return NextResponse.json({ error: "We couldn’t link that card to your people list." }, { status: 500 });
   }
 
@@ -53,13 +126,32 @@ export async function POST(request: Request) {
     personName?: string;
     personRole?: string;
     personCompany?: string;
+    personEmail?: string;
   } | null;
+  // First touch wins, and the rule lives in one place now: lib/connection-scan-source.ts.
+  // Three paths create connections - this one, the auth callback and visitor onboarding -
+  // and each used to decide this for itself, which on the web meant not at all.
+  //
+  // It deliberately no longer requires a brand new connection. That condition protected
+  // nothing the null check was not already protecting, and it made a null permanent: the
+  // only rows that can still be null are ones created before this column existed or by a
+  // path that never wrote one, and every one of them is a connection you already have -
+  // so the single path that could fill them in was the path being skipped.
+  const source = normalizeConnectionSource(payload?.source);
+  await recordConnectionScanSource(supabase, result?.connectionId, source);
+
   return NextResponse.json({
     ok: true,
     connectionId: result?.connectionId,
+    // So every client can say the same thing rather than each guessing. Landing on a
+    // profile with no word either way is what made a wallet scan feel like nothing
+    // had happened.
+    alreadyConnected,
+    source: source ?? null,
     mutual: result?.mutual ?? false,
     personName: result?.personName,
     personRole: result?.personRole,
     personCompany: result?.personCompany,
+    personEmail: result?.personEmail,
   }, { headers: { "Cache-Control": "private, no-store" } });
 }

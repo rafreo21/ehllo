@@ -1,15 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { CameraIcon } from "@phosphor-icons/react/dist/csr/Camera";
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
-import { LinkedinLogoIcon } from "@phosphor-icons/react/dist/csr/LinkedinLogo";
-import { MicrophoneIcon } from "@phosphor-icons/react/dist/csr/Microphone";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Camera as CameraIcon } from "react-feather";
+import { CreditCard as IdentificationCardIcon } from "react-feather";
+import { ExternalLink as ExternalLinkIcon } from "react-feather";
+import { Linkedin as LinkedinLogoIcon } from "react-feather";
+import { Mic as MicrophoneIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { useAppShellChrome } from "../../components/AppShellChromeContext";
 import { StatusMessage } from "../../components/AsyncState";
 import { Button, LinkButton } from "../../components/Button";
+import { CaptureComingSoonModal } from "../../components/CaptureComingSoonModal";
 import { TextField } from "../../components/FormField";
+import { useToast } from "../../components/ToastContext";
 import {
   contactFromPublicCard,
   type Contact,
@@ -93,6 +97,7 @@ function contactFromScanTarget(target: ScanTarget, card?: PublicCard | null): Co
 }
 
 export default function ScanPage() {
+  const { showToast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -105,6 +110,10 @@ export default function ScanPage() {
   const [card, setCard] = useState<PublicCard | null>(null);
   const [loadError, setLoadError] = useState("");
   const [savedContactId, setSavedContactId] = useState("");
+  const [captureModalOpen, setCaptureModalOpen] = useState(false);
+
+  const searchParams = useSearchParams();
+  const linkedSlug = searchParams.get("card")?.trim() ?? "";
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -212,7 +221,22 @@ export default function ScanPage() {
     };
   }, [handlePayload, mode, stopCamera, target]);
 
-  function resetScan() {
+  // Lets a card link drive this page, so someone arriving from a wallet pass, an NFC
+  // tag or a shared link on a desktop gets the same connect-or-open outcome the phone
+  // gives them. Runs once: handlePayload guards on the value it last handled, so a
+  // re-render cannot re-add anybody.
+  useEffect(() => {
+    if (!linkedSlug) return;
+    // Deferred a tick. handlePayload sets state as its first act, and doing that
+    // synchronously inside an effect is the cascading render the linter refuses -
+    // correctly, since the work behind it is asynchronous anyway.
+    const timer = setTimeout(() => {
+      void handlePayload(`${window.location.origin}/c/${linkedSlug}`);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [linkedSlug, handlePayload]);
+
+  const resetScan = useCallback(() => {
     handledRef.current = "";
     setTarget(null);
     setCard(null);
@@ -220,7 +244,7 @@ export default function ScanPage() {
     setSavedContactId("");
     setManualValue("");
     setCameraState("idle");
-  }
+  }, []);
 
   function saveContact(contact: Contact | null) {
     if (!contact) return;
@@ -230,16 +254,28 @@ export default function ScanPage() {
     };
     const saved = resolveAndSaveContact(withCampaign);
     setSavedContactId(saved.id);
+    showToast({ tone: "success", message: "Saved to your contacts." });
     void fetch("/api/people/connections", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug: target?.type === "aftermeet_card" ? target.slug : undefined }),
+      // Named so the web scanner is attributable alongside the phone's camera, NFC
+      // taps and every other surface, rather than arriving indistinguishable.
+      body: JSON.stringify({
+        slug: target?.type === "aftermeet_card" ? target.slug : undefined,
+        source: "web",
+      }),
     }).catch(() => undefined);
   }
 
   const draftContact = target ? contactFromScanTarget(target, card) : null;
+  const scanActions = useMemo(() => target ? (
+    <Button size="small" variant="secondary" onClick={resetScan}>
+      <QrCodeIcon size={16} weight="bold" />
+      Scan another
+    </Button>
+  ) : null, [resetScan, target]);
 
-  useAppShellChrome({ backHref: "/app/people" });
+  useAppShellChrome({ backHref: "/app/people", actions: scanActions });
   return (
     <>
       <div className="flow-page scan-page">
@@ -253,9 +289,9 @@ export default function ScanPage() {
             </div>
             <div className="scan-panel">
               <ol className="scan-steps">
-                <li><span>1</span>Allow camera access</li>
-                <li><span>2</span>Line up the QR code</li>
-                <li><span>3</span>Add them or capture the moment</li>
+                <li><span>1</span><div><strong>Camera</strong><small>Allow access</small></div></li>
+                <li><span>2</span><div><strong>QR code</strong><small>Line it up</small></div></li>
+                <li><span>3</span><div><strong>Add</strong><small>Save details</small></div></li>
               </ol>
               {mode === "camera" ? (
                 <div className="scan-viewport-wrap">
@@ -269,7 +305,7 @@ export default function ScanPage() {
                     <>
                       <video ref={videoRef} className="scan-viewport" playsInline muted />
                       <div className="scan-viewport-overlay">
-                        <CameraIcon size={18} weight="bold" />
+                        <CameraIcon size={18} />
                         {cameraState === "starting" ? "Starting camera…" : "Hold steady over the QR code"}
                       </div>
                     </>
@@ -298,7 +334,6 @@ export default function ScanPage() {
               {mode === "camera" && cameraState !== "unsupported" ? (
                 <div className="scan-secondary-actions">
                   <Button variant="ghost" onClick={() => setMode("manual")}>Paste instead</Button>
-                  <LinkButton variant="ghost" href="/business/contacts/linkedin"><LinkedinLogoIcon size={16} weight="bold" />Add from LinkedIn</LinkButton>
                 </div>
               ) : null}
             </div>
@@ -315,37 +350,36 @@ export default function ScanPage() {
             {savedContactId ? <StatusMessage tone="success">Saved to your contacts.</StatusMessage> : null}
             <div className="scan-result-actions">
               {draftContact ? (
-                <Button onClick={() => saveContact(draftContact)}>
-                  <IdentificationCardIcon size={18} weight="bold" />Add to contacts
+                <Button size="small" onClick={() => saveContact(draftContact)}>
+                  <IdentificationCardIcon size={16} />Add to contacts
                 </Button>
               ) : null}
               {savedContactId ? (
-                <LinkButton variant="secondary" href={`/business/contacts/${savedContactId}`}>Open contact</LinkButton>
+                <LinkButton size="small" variant="secondary" href={`/business/contacts/${savedContactId}`}>Open contact</LinkButton>
               ) : null}
               {draftContact ? (
-                <LinkButton variant="secondary" href={`/app/encounters/new?contact=${encodeURIComponent(draftContact.id)}`}>
-                  <MicrophoneIcon size={18} weight="fill" />Capture moment
-                </LinkButton>
+                <Button size="small" variant="secondary" onClick={() => setCaptureModalOpen(true)}>
+                  <MicrophoneIcon size={16} />Capture moment
+                </Button>
               ) : null}
               {target.type === "aftermeet_card" ? (
-                <LinkButton variant="ghost" href={`/c/${target.slug}`}>Open public card</LinkButton>
+                <LinkButton size="small" variant="secondary" href={`/c/${target.slug}`}><ExternalLinkIcon size={15} />Open public card</LinkButton>
               ) : null}
               {target.type === "linkedin" ? (
-                <LinkButton variant="ghost" href={target.url} target="_blank" rel="noreferrer">Open LinkedIn</LinkButton>
+                <LinkButton size="small" variant="secondary" href={target.url} target="_blank" rel="noreferrer"><ExternalLinkIcon size={15} />Open LinkedIn</LinkButton>
               ) : null}
               {target.type === "url" ? (
-                <LinkButton variant="ghost" href={target.url} target="_blank" rel="noreferrer">Open link</LinkButton>
+                <LinkButton size="small" variant="secondary" href={target.url} target="_blank" rel="noreferrer"><ExternalLinkIcon size={15} />Open link</LinkButton>
               ) : null}
               {target.type === "linkedin" ? (
                 <LinkButton href={`/business/contacts/linkedin?url=${encodeURIComponent(target.url)}`}>Review LinkedIn import</LinkButton>
               ) : null}
             </div>
-            <div className="form-actions">
-              <Button variant="ghost" onClick={resetScan}>Scan another</Button>
-            </div>
           </section>
         )}
       </div>
+
+      <CaptureComingSoonModal open={captureModalOpen} onClose={() => setCaptureModalOpen(false)} />
     </>
   );
 }

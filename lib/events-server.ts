@@ -4,7 +4,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AppUser } from "./auth/context";
 import { deliverQueuedEventEmail, enqueueEventEmail, type EventEmailKind } from "./event-email-outbox";
 import { buildEventCancelledEmail, buildEventScheduleChangedEmail } from "./event-invitation-email";
-import { candidateSuppressionKey, isEventCandidateWorthy, resolveCurrentEvent, type EventSource } from "./events";
+import {
+  candidateSuppressionKey,
+  decideCalendarImport,
+  isEventCandidateWorthy,
+  normalizeCalendarCandidate,
+  resolveCurrentEvent,
+  type EventSource,
+} from "./events";
 import { getConnectedAccountAccessTokenStatus } from "./integrations/connected-accounts";
 import {
   CalendarProviderAuthError,
@@ -14,11 +21,11 @@ import {
 } from "./integrations/providers";
 
 /**
- * "ok" — synced fine. "not_connected" — user never linked this provider (or
- * unlinked it), a normal state, not an error. "needs_reconnect" — a
+ * "ok" - synced fine. "not_connected" - user never linked this provider (or
+ * unlinked it), a normal state, not an error. "needs_reconnect" - a
  * connection exists but its token is dead (revoked grant, refresh
  * rejected, or the provider itself returned 401/403) and nothing will
- * sync again until the user reconnects. "error" — a transient failure
+ * sync again until the user reconnects. "error" - a transient failure
  * (network, 5xx); worth retrying, not worth alarming the user about.
  */
 export type CalendarProviderStatus = "ok" | "not_connected" | "needs_reconnect" | "error";
@@ -39,6 +46,9 @@ export type EventRow = {
   cancelled_at: string | null;
   created_at: string;
   updated_at: string;
+  sync_state?: "none" | "pending" | "synced" | "failed" | "conflict";
+  calendar_push_enabled?: boolean;
+  sync_provider?: "google" | "microsoft" | null;
 };
 
 export type EventRecord = {
@@ -52,6 +62,10 @@ export type EventRecord = {
   organizerEmail: string;
   status: "scheduled" | "cancelled";
   updatedAt: string;
+  /** Push state toward the calendar. 'conflict' means the provider's copy diverged and was deliberately not applied. */
+  syncState: "none" | "pending" | "synced" | "failed" | "conflict";
+  calendarPushEnabled: boolean;
+  syncProvider: "google" | "microsoft" | null;
 };
 
 export function eventFromRow(row: EventRow): EventRecord {
@@ -66,6 +80,12 @@ export function eventFromRow(row: EventRow): EventRecord {
     organizerEmail: row.organizer_email,
     status: row.status ?? "scheduled",
     updatedAt: row.updated_at,
+    // Without these the client cannot tell a pushed event from an unpushed one,
+    // or show that the calendar disagrees - which is what made the conflict
+    // state unreachable when it was first added.
+    syncState: row.sync_state ?? "none",
+    calendarPushEnabled: row.calendar_push_enabled ?? false,
+    syncProvider: row.sync_provider ?? null,
   };
 }
 
@@ -73,7 +93,7 @@ const CANDIDATE_WINDOW_DAYS_AHEAD = 14;
 
 /**
  * Organizer+title keys the user has already dismissed ("not going") on a
- * past calendar-sourced candidate — see candidateSuppressionKey in
+ * past calendar-sourced candidate - see candidateSuppressionKey in
  * lib/events.ts for why this catches near-duplicate future invites that
  * aren't flagged as a formal recurring series.
  */
@@ -121,7 +141,7 @@ async function fetchProviderEvents(
  * Pulls, filters, and upserts calendar-derived event candidates across
  * every connected provider with calendar access. Upserting on
  * (workspace_id, external_id) makes repeated calls idempotent instead of
- * creating duplicate rows per fetch — see the migration's unique index.
+ * creating duplicate rows per fetch - see the migration's unique index.
  * Best-effort per provider: one provider failing (expired grant, outage)
  * does not block candidates from the other, but each provider's own status
  * is still reported back so the UI can tell "nothing new" apart from
@@ -172,47 +192,114 @@ export async function syncCalendarCandidates(
   const surviving = worthy.filter((item) => !suppressed.has(candidateSuppressionKey(item.organizerEmail, item.title, item.startsAt)));
   if (!surviving.length) return { candidates: [], providerStatus, syncedAt };
 
-  const { data, error } = await supabase
-    .from("events")
-    .upsert(surviving.map((item) => ({
-      workspace_id: user.workspaceId,
-      created_by_user_id: user.id,
-      title: item.title.trim().slice(0, 160) || "Untitled event",
-      location: item.location.trim().slice(0, 320),
-      starts_at: item.startsAt,
-      ends_at: item.endsAt,
-      source: "calendar" as const,
-      organizer_email: item.organizerEmail.trim().slice(0, 320),
-      external_id: item.externalId,
-      status: "scheduled",
-      cancelled_at: null,
-    })), { onConflict: "workspace_id,external_id" })
-    .select("*");
+  // This used to be one blanket upsert of every surviving candidate, which made
+  // Google's copy win on conflict: `source` flipped to 'calendar',
+  // `created_by_user_id` became whoever synced last, and status/cancelled_at
+  // were forced back to 'scheduled'/null. Two consequences, both silent. An
+  // event cancelled in ehllo came back to life on the next pull. And a
+  // multi-user workspace where two members both attend the same entry has the
+  // second member's sync quietly take ownership of the first member's row,
+  // because the unique arc is (workspace_id, external_id) and the payload
+  // rewrote created_by_user_id.
+  //
+  // The importer now only writes rows it owns. Google is authoritative for the
+  // entries it created; it is not authoritative for a row ehllo authored, nor
+  // for a decision the user made here. DEC-031 forbids resolving that kind of
+  // conflict by overwriting, so where the two disagree the local record stands.
+  const newItems = surviving.filter((item) => !beforeByExternalId.has(item.externalId));
+  const existingItems = surviving.filter((item) => beforeByExternalId.has(item.externalId));
 
-  if (error || !data) return { candidates: [], providerStatus, syncedAt };
-  for (const item of surviving) {
+  const rows: EventRow[] = [];
+
+  if (newItems.length) {
+    const { data: insertedRows, error: insertError } = await supabase
+      .from("events")
+      .insert(newItems.map((item) => ({
+        workspace_id: user.workspaceId,
+        created_by_user_id: user.id,
+        title: item.title.trim().slice(0, 160) || "Untitled event",
+        location: item.location.trim().slice(0, 320),
+        starts_at: item.startsAt,
+        ends_at: item.endsAt,
+        source: "calendar" as const,
+        organizer_email: item.organizerEmail.trim().slice(0, 320),
+        external_id: item.externalId,
+        status: "scheduled",
+        cancelled_at: null,
+      })))
+      .select("*");
+    if (insertError) return { candidates: [], providerStatus, syncedAt };
+    rows.push(...((insertedRows ?? []) as EventRow[]));
+  }
+
+  for (const item of existingItems) {
     const existing = beforeByExternalId.get(item.externalId);
     if (!existing) continue;
-    const changed = existing.title !== item.title.trim().slice(0, 160)
-      || existing.location !== item.location.trim().slice(0, 320)
-      || !sameInstant(existing.starts_at, item.startsAt)
-      || !sameInstant(existing.ends_at, item.endsAt)
-      || existing.status === "cancelled";
-    if (!changed) continue;
+
+    // The policy itself lives in lib/events.ts so it can be tested without a
+    // database or a provider token; see decideCalendarImport for why each
+    // "keep" is a keep.
+    const { decision, scheduleChanged } = decideCalendarImport(existing, {
+      title: item.title,
+      location: item.location,
+      startsAt: item.startsAt,
+      endsAt: item.endsAt,
+      organizerEmail: item.organizerEmail,
+    });
+    if (decision === "conflict") {
+      // Do not apply it, and do not stay quiet about it. The row keeps ehllo's
+      // values; sync_state says the two sides disagree so something can ask.
+      const conflictAt = new Date().toISOString();
+      const { data: flagged } = await supabase
+        .from("events")
+        .update({ sync_state: "conflict", sync_conflict_at: conflictAt, updated_at: conflictAt })
+        .eq("id", existing.id)
+        .neq("sync_state", "conflict")
+        .select("*")
+        .maybeSingle();
+      rows.push(((flagged ?? existing) as EventRow));
+      continue;
+    }
+
+    if (decision !== "update") {
+      rows.push(existing);
+      continue;
+    }
+
+    const { title, location, organizerEmail } = normalizeCalendarCandidate({
+      title: item.title,
+      location: item.location,
+      startsAt: item.startsAt,
+      endsAt: item.endsAt,
+      organizerEmail: item.organizerEmail,
+    });
+
+    // Deliberately narrow: never source, never created_by_user_id, never
+    // status or cancelled_at.
+    const { data: updatedRow } = await supabase
+      .from("events")
+      .update({
+        title,
+        location,
+        starts_at: item.startsAt,
+        ends_at: item.endsAt,
+        organizer_email: organizerEmail,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id)
+      .select("*")
+      .maybeSingle();
+    rows.push(((updatedRow ?? existing) as EventRow));
+
+    if (!scheduleChanged) continue;
     await notifyCalendarEventGuests(supabase, existing.id, buildEventScheduleChangedEmail({
       eventTitle: item.title,
       startsAt: item.startsAt,
       location: item.location,
     }), "schedule_notice_sent_at", "schedule_changed", syncedAt, true);
   }
-  return { candidates: (data as EventRow[]).map(eventFromRow), providerStatus, syncedAt };
-}
 
-function sameInstant(left: string | null, right: string | null) {
-  if (!left || !right) return left === right;
-  const leftTime = Date.parse(left);
-  const rightTime = Date.parse(right);
-  return !Number.isNaN(leftTime) && !Number.isNaN(rightTime) && leftTime === rightTime;
+  return { candidates: rows.map(eventFromRow), providerStatus, syncedAt };
 }
 
 async function notifyCalendarEventGuests(
@@ -246,25 +333,25 @@ async function notifyCalendarEventGuests(
   }
 }
 
-export type GoingEventWindow = { id: string; startsAt: string; endsAt: string | null; leftAt: string | null };
+export type GoingEventWindow = { id: string; startsAt: string; endsAt: string | null; leftAt: string | null; checkedInAt: string | null };
 
 export async function fetchGoingEventWindows(supabase: SupabaseClient, userId: string): Promise<GoingEventWindow[]> {
   const { data } = await supabase
     .from("event_attendance")
-    .select("left_at, events!inner(id, starts_at, ends_at)")
+    .select("left_at, checked_in_at, events!inner(id, starts_at, ends_at)")
     .eq("user_id", userId)
     .eq("status", "going");
 
-  return ((data ?? []) as unknown as Array<{ left_at: string | null; events: { id: string; starts_at: string; ends_at: string | null } | null }>)
+  return ((data ?? []) as unknown as Array<{ left_at: string | null; checked_in_at: string | null; events: { id: string; starts_at: string; ends_at: string | null } | null }>)
     .flatMap((row) => (row.events
-      ? [{ id: row.events.id, startsAt: row.events.starts_at, endsAt: row.events.ends_at, leftAt: row.left_at }]
+      ? [{ id: row.events.id, startsAt: row.events.starts_at, endsAt: row.events.ends_at, leftAt: row.left_at, checkedInAt: row.checked_in_at }]
       : []));
 }
 
 /**
  * The server-side entry point for passive presence (see resolveCurrentEvent
  * in lib/events.ts). Called from the encounter save route so Capture and
- * Quick Follow-up — the only two flows that create an Encounter — both
+ * Quick Follow-up - the only two flows that create an Encounter - both
  * inherit it automatically through one choke point, without either mobile
  * screen needing its own copy of this decision.
  */
@@ -280,7 +367,7 @@ export async function resolveCurrentEventIdForUser(
 /**
  * Anonymous visitors (a card scan, a guest exchange submission) never have
  * their own session, so the only "who's at an event right now" we can know
- * is the card owner's — if they're currently checked in somewhere, that's
+ * is the card owner's - if they're currently checked in somewhere, that's
  * where this visit is happening. Best-effort: any failure just means no
  * event, never a broken save.
  */

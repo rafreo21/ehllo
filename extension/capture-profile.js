@@ -95,7 +95,7 @@
   function normalizeProfileName(value) {
     return clean(value)
       .replace(/\s*\|\s*LinkedIn\s*$/i, "")
-      .replace(/\s*[-–—]\s*LinkedIn\s*$/i, "")
+      .replace(/\s*[-–-]\s*LinkedIn\s*$/i, "")
       .replace(/\s*·\s*LinkedIn\s*$/i, "");
   }
 
@@ -104,8 +104,8 @@
     const ogTitle = normalizeProfileName(readMeta("og:title"));
     const titleName = normalizeProfileName(document.title);
     return h1
-      || ogTitle.split(/\s+[-–—]\s+/)[0]
-      || titleName.split(/\s+[-–—]\s+/)[0]
+      || ogTitle.split(/\s+[-–-]\s+/)[0]
+      || titleName.split(/\s+[-–-]\s+/)[0]
       || titleName.split("|")[0]
       || "";
   }

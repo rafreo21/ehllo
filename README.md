@@ -5,11 +5,11 @@ capture context, organise the person, and surface the right next action.
 
 ## Products in this repository
 
-- `app/` — responsive web application and public contact cards
-- `mobile/` — Expo SDK 57 native app for iOS, Android, and web
-- `supabase/` — authentication, workspace, card, RLS, and event migrations
-- `docs/` — product architecture, state machines, vertical slices, and runbooks
-- `docs/planning/` — early product lab notes, MVP scope, and technical plan
+- `app/` - responsive web application and public contact cards
+- `mobile/` - Expo SDK 57 native app for iOS, Android, and web
+- `supabase/` - authentication, workspace, card, RLS, and event migrations
+- `docs/` - product architecture, state machines, vertical slices, and runbooks
+- `docs/planning/` - early product lab notes, MVP scope, and technical plan
 
 ## Web app
 

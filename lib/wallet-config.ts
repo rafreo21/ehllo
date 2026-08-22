@@ -7,7 +7,6 @@ export type WalletCardPayload = {
   themeColor: string;
   cardUrl: string;
   profileImageUrl?: string;
-  companyLogoUrl?: string;
   showCompany?: boolean;
 };
 

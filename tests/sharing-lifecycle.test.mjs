@@ -58,7 +58,7 @@ test("missing object: no storagePath means no active access even with a future e
 test("repeated expiry job: re-evaluating an already-expired recording stays expired without error", () => {
   const recording = { audioLocation: "user_device", storagePath: "", cloudExpiresAt: "2026-08-01T00:00:00.000Z" };
   // Simulates the cron running twice in a row against the same (already
-  // cleaned-up) row — both calls must agree, and neither should throw.
+  // cleaned-up) row - both calls must agree, and neither should throw.
   assert.equal(hasActiveCloudRecording(recording, Date.parse("2026-08-03T00:00:00.000Z")), false);
   assert.equal(hasActiveCloudRecording(recording, Date.parse("2026-08-03T00:00:00.000Z")), false);
 });
@@ -67,7 +67,7 @@ test("repeated expiry job: re-evaluating an already-expired recording stays expi
 
 test("private-field exclusion: the shared payload never carries transcript or private notes", () => {
   // Mirrors the exact shape get_shared_encounter() returns (see
-  // supabase/migrations/202608011500_guest_follow_up_details.sql) — it has
+  // supabase/migrations/202608011500_guest_follow_up_details.sql) - it has
   // no transcript/privateNotes keys at all, which is the actual boundary
   // that keeps them private. This guards the client mapper's contract with
   // that shape.

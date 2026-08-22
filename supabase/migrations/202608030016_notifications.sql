@@ -99,7 +99,7 @@ create policy "notifications_insert_self" on public.notifications for insert to 
   ));
 
 comment on table public.notifications is
-  'Cross-device notification records shared by mobile and consumer web. Follow-up notifications only ever reference reviewed encounters — see lib/follow-ups-server.ts and the API routes that insert here.';
+  'Cross-device notification records shared by mobile and consumer web. Follow-up notifications only ever reference reviewed encounters - see lib/follow-ups-server.ts and the API routes that insert here.';
 
 alter table public.users
   add column if not exists notification_preferences jsonb not null default '{}'::jsonb;

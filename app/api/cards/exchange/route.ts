@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
   const supabase = createClient(url, key, { auth: { persistSession: false } });
 
-  // Best-effort: the card owner's currently-happening event, if any — an
+  // Best-effort: the card owner's currently-happening event, if any - an
   // anonymous visitor has no session of their own, so this is the only
   // "where did this exchange happen" signal available. Never blocks the
   // submission.
@@ -92,6 +92,37 @@ export async function POST(request: Request) {
       visitorRole,
       visitorPhone,
       note,
+    });
+  }
+
+  // Record the meeting now, both directions. Until this call an exchange
+  // existed only as a card_exchanges row: the owner never saw the visitor in
+  // People at all, and the visitor saw the owner only if they later signed in
+  // and the email backfill happened to run. Both parties have a workspace by
+  // this point - provisioning above creates one for the visitor - so there is
+  // nothing left to defer.
+  //
+  // Best-effort: the details are captured either way, so a failure here must
+  // not fail the submission. It must still say why, or this becomes another
+  // silent one-way connect.
+  try {
+    const service = createServiceSupabaseClient();
+    if (service) {
+      const { error: connectionError } = await service.rpc("record_exchange_connection", {
+        p_exchange_id: String(data),
+      });
+      if (connectionError) {
+        console.error("[card-exchange] record_exchange_connection failed", {
+          exchangeId: String(data),
+          code: connectionError.code,
+          message: connectionError.message,
+        });
+      }
+    }
+  } catch (caught) {
+    console.error("[card-exchange] record_exchange_connection threw", {
+      exchangeId: String(data),
+      message: caught instanceof Error ? caught.message : String(caught),
     });
   }
 

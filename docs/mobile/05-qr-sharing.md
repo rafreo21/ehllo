@@ -1,4 +1,4 @@
-# QR sharing — online vs offline
+# QR sharing - online vs offline
 
 ehllo uses two QR modes on **Quick Share**. Every other share surface defaults to **online** (card URL).
 
@@ -43,13 +43,13 @@ Stock **Contacts** apps show the profile photo in the avatar. Company logo and c
 
 ## ehllo in-app scanner
 
-Quick Scan inside the app is for **ehllo users** adding cards to their network — not the public visitor flow.
+Quick Scan inside the app is for **ehllo users** adding cards to their network - not the public visitor flow.
 
 | Scan type | In-app scanner | Phone camera |
 |-----------|----------------|--------------|
 | Online URL QR | Adds to connections | Opens card page |
 | Offline vCard QR with ehllo link | Adds to connections | Saves to Contacts |
-| Offline vCard QR without link | Error — ask for online QR | Saves to Contacts only |
+| Offline vCard QR without link | Error - ask for online QR | Saves to Contacts only |
 
 ## Before testing
 
@@ -59,7 +59,7 @@ Quick Scan inside the app is for **ehllo users** adding cards to their network �
 
 ## Tap to share + Wallet
 
-- **Tap to share (Android):** shares the card URL over NFC — requires a dev/prod build with the HCE native module
+- **Tap to share (Android):** shares the card URL over NFC - requires a dev/prod build with the HCE native module
 - **Google / Apple Wallet:** barcode is URL-only (platform requirement)
 
 See [WALLET_SETUP.md](./WALLET_SETUP.md) for server credentials.

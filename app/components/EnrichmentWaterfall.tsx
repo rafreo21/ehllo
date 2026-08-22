@@ -1,8 +1,8 @@
 "use client";
 
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { CircleIcon } from "@phosphor-icons/react/dist/csr/Circle";
-import { MinusCircleIcon } from "@phosphor-icons/react/dist/csr/MinusCircle";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { Circle as CircleIcon } from "react-feather";
+import { MinusCircle as MinusCircleIcon } from "react-feather";
 import type { EnrichmentProvider, EnrichmentStep } from "../../lib/contact-enrichment";
 
 const statusStyles: Record<EnrichmentStep["status"], string> = {
@@ -34,7 +34,7 @@ export function EnrichmentWaterfall({
           <li key={step.id} className="grid grid-cols-[28px_minmax(0,1fr)] gap-3">
             <div className="relative flex justify-center">
               {step.status === "found" ? (
-                <CheckCircleIcon size={18} weight="fill" className={statusStyles.found} />
+                <CheckCircleIcon size={18} className={statusStyles.found} />
               ) : step.status === "skipped" || step.status === "miss" ? (
                 <MinusCircleIcon size={18} className={statusStyles[step.status]} />
               ) : (

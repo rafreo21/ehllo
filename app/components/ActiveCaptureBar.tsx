@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { MicrophoneIcon } from "@phosphor-icons/react/dist/csr/Microphone";
-
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { Mic as MicrophoneIcon } from "react-feather";
 import { LinkButton } from "./Button";
 
 type ActiveCaptureSession = {
@@ -75,7 +74,7 @@ export function ActiveCaptureBar() {
       className={`active-capture-bar${interrupted ? " active-capture-bar-interrupted" : ""}`}
       aria-label={interrupted ? "Interrupted capture" : "Active capture"}
     >
-      <span className="active-capture-bar-icon"><MicrophoneIcon size={20} weight="fill" /></span>
+      <span className="active-capture-bar-icon"><MicrophoneIcon size={20} /></span>
       <div className="active-capture-bar-copy">
         <small>{statusLabel(session.sessionStatus)}</small>
         <strong>{name}</strong>
@@ -87,7 +86,7 @@ export function ActiveCaptureBar() {
         size="small"
         href={`/app/encounters/new?draftId=${encodeURIComponent(session.encounterId)}`}
       >
-        {interrupted ? "Review draft" : "Continue"} <ArrowRightIcon size={15} weight="bold" />
+        {interrupted ? "Review draft" : "Continue"} <ArrowRightIcon size={15} />
       </LinkButton>
     </aside>
   );

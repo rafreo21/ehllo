@@ -84,7 +84,7 @@ export function normalizeLinkedInProfileName(value: string) {
     .replace(/\s+/g, " ")
     .trim()
     .replace(/\s*\|\s*LinkedIn\s*$/i, "")
-    .replace(/\s*[-–—]\s*LinkedIn\s*$/i, "")
+    .replace(/\s*[-–-]\s*LinkedIn\s*$/i, "")
     .replace(/\s*·\s*LinkedIn\s*$/i, "");
 }
 

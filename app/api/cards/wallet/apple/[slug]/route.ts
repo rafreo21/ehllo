@@ -55,7 +55,15 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
       cardUrl: cardUrlForSlug(normalized, request),
     };
     const pass = await buildAppleWalletPass(previewCard, certs);
-    return new NextResponse(pass, {
+    // A Node Buffer is not a BodyInit. Handing over its bytes is, and copying
+    // into a fresh Uint8Array avoids shipping the whole pooled ArrayBuffer
+    // that Buffer may be a view into.
+    //
+    // The comment sits above the `return`, not after it. Below it, JavaScript's
+    // automatic semicolon insertion turned this into a bare `return;` and left
+    // the response unreachable, so every Apple Wallet pass answered 500 with an
+    // empty body - a blank page instead of the Add to Wallet sheet.
+    return new NextResponse(new Uint8Array(pass), {
       headers: {
         "Content-Type": "application/vnd.apple.pkpass",
         "Content-Disposition": `attachment; filename="${normalized}.pkpass"`,
@@ -85,7 +93,15 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
 
   try {
     const pass = await buildAppleWalletPass(card, readAppleWalletCerts()!);
-    return new NextResponse(pass, {
+    // A Node Buffer is not a BodyInit. Handing over its bytes is, and copying
+    // into a fresh Uint8Array avoids shipping the whole pooled ArrayBuffer
+    // that Buffer may be a view into.
+    //
+    // The comment sits above the `return`, not after it. Below it, JavaScript's
+    // automatic semicolon insertion turned this into a bare `return;` and left
+    // the response unreachable, so every Apple Wallet pass answered 500 with an
+    // empty body - a blank page instead of the Add to Wallet sheet.
+    return new NextResponse(new Uint8Array(pass), {
       headers: {
         "Content-Type": "application/vnd.apple.pkpass",
         "Content-Disposition": `attachment; filename="${normalized}.pkpass"`,
@@ -93,6 +109,13 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
       },
     });
   } catch (error) {
+    // See the mobile wallet route: an unlogged failure here is invisible in
+    // Vercel's runtime errors, which is how a broken image pipeline survived.
+    console.error("[apple-wallet] pass build failed", {
+      slug: normalized,
+      name: error instanceof Error ? error.name : typeof error,
+      message: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({
       error: error instanceof Error ? error.message : "We couldn’t sign this Wallet pass.",
     }, { status: 500 });

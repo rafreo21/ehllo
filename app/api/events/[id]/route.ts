@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createApiSupabaseClient, resolveApiUser } from "../../../../lib/auth/api-request";
 import { buildEventCancelledEmail, buildEventScheduleChangedEmail } from "../../../../lib/event-invitation-email";
 import { deliverQueuedEventEmail, enqueueEventEmail } from "../../../../lib/event-email-outbox";
+import { calendarPushAvailability, queueEventCalendarPush } from "../../../../lib/events-calendar-push";
 import { eventFromRow, type EventRow } from "../../../../lib/events-server";
 
 type UpdateBody = {
@@ -12,6 +13,9 @@ type UpdateBody = {
   endsAt?: string | null;
   status?: "scheduled" | "cancelled";
   expectedUpdatedAt?: string;
+  addToCalendar?: boolean;
+  /** Resolve a calendar disagreement in ehllo's favour: keep these values and push them over the provider's. */
+  resolveCalendarConflict?: boolean;
 };
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -49,10 +53,26 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     title !== current.title || location !== current.location || startsAt !== current.starts_at || endsAt !== current.ends_at
   );
 
+  // Turning the calendar on has to clear the same health gate as create; turning
+  // it off never needs one. A push already made is withdrawn by the push path
+  // itself rather than left orphaned on the calendar.
+  let calendarToggle: boolean | undefined;
+  let calendarReason: string | null = null;
+  if (body.addToCalendar !== undefined) {
+    if (body.addToCalendar) {
+      const availability = await calendarPushAvailability(user, supabase);
+      calendarToggle = availability.available;
+      calendarReason = availability.reason;
+    } else {
+      calendarToggle = false;
+    }
+  }
+
   const now = new Date().toISOString();
   let updateQuery = supabase.from("events").update({
     title, location, starts_at: startsAt, ends_at: endsAt, status: nextStatus,
     cancelled_at: nextStatus === "cancelled" ? (current.cancelled_at || now) : null,
+    ...(calendarToggle === undefined ? {} : { calendar_push_enabled: calendarToggle }),
     updated_at: now,
   }).eq("id", id).eq("workspace_id", user.workspaceId);
   if (body.expectedUpdatedAt) updateQuery = updateQuery.eq("updated_at", body.expectedUpdatedAt);
@@ -66,6 +86,43 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       conflict: true,
       event: latest ? eventFromRow(latest as EventRow) : undefined,
     }, { status: 409, headers: { "Cache-Control": "private, no-store" } });
+  }
+
+  // Resolving a conflict is the one thing allowed to clear it, and it has to be
+  // explicit: queueEventCalendarPush refuses to touch a conflicted row precisely
+  // so an ordinary edit cannot silently overwrite the provider while the two
+  // sides disagree. Answering "keep mine" is the user deciding, which is what
+  // DEC-031 asks for instead of last-writer-wins.
+  //
+  // There is no "use the calendar's version" counterpart because ehllo does not
+  // keep what the provider said - the importer declines the change rather than
+  // storing it. The sheet says so rather than offering a choice that cannot be
+  // honoured.
+  if (body.resolveCalendarConflict && current.sync_state === "conflict") {
+    const resolvedAt = new Date().toISOString();
+    await supabase
+      .from("events")
+      .update({
+        sync_state: "pending",
+        sync_conflict_at: null,
+        sync_attempt_count: 0,
+        sync_next_attempt_at: resolvedAt,
+        sync_last_error: "",
+        updated_at: resolvedAt,
+      })
+      .eq("id", id)
+      .eq("workspace_id", user.workspaceId);
+  }
+
+  // Only after the conditional update succeeded, so a write rejected for being
+  // stale never queues a push built on the version it lost with. The cron drains
+  // it; this request does not wait on somebody else's API.
+  const calendarRelevant = cancelled
+    || scheduleChanged
+    || calendarToggle !== undefined
+    || Boolean((updated as { external_id?: string | null }).external_id);
+  if (calendarRelevant) {
+    await queueEventCalendarPush(supabase, id);
   }
 
   let emailsSent = 0;
@@ -101,7 +158,17 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
   }
 
-  return NextResponse.json({ ok: true, event: eventFromRow(updated as EventRow), emailsSent, emailsFailed }, {
+  return NextResponse.json({
+    ok: true,
+    event: eventFromRow(updated as EventRow),
+    emailsSent,
+    emailsFailed,
+    // Asking to add this to a calendar and not getting it should be visible in
+    // the answer, not discovered later by the event's absence there.
+    ...(calendarToggle === undefined
+      ? {}
+      : { calendar: { requested: body.addToCalendar === true, enabled: calendarToggle, reason: calendarReason } }),
+  }, {
     headers: { "Cache-Control": "private, no-store" },
   });
 }

@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CaretRightIcon } from "@phosphor-icons/react/dist/csr/CaretRight";
-import { CloudArrowUpIcon } from "@phosphor-icons/react/dist/csr/CloudArrowUp";
-import { DeviceMobileIcon } from "@phosphor-icons/react/dist/csr/DeviceMobile";
+import { ChevronRight as CaretRightIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { UploadCloud as CloudArrowUpIcon } from "react-feather";
+import { Smartphone as DeviceMobileIcon } from "react-feather";
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import type { ConnectedAccountStatus } from "../../../../lib/integrations/types";
 
@@ -13,9 +14,9 @@ type RecordingStorageDestination = "local_only" | "google_drive" | "onedrive";
 const STORAGE_KEY = "aftermeet.web.recording-storage-destination";
 
 const STORAGE_OPTIONS: { id: RecordingStorageDestination; label: string; icon: React.ReactNode }[] = [
-  { id: "local_only", label: "Only in this browser", icon: <DeviceMobileIcon size={18} weight="bold" /> },
-  { id: "google_drive", label: "Google Drive", icon: <CloudArrowUpIcon size={18} weight="bold" /> },
-  { id: "onedrive", label: "OneDrive", icon: <CloudArrowUpIcon size={18} weight="bold" /> },
+  { id: "local_only", label: "Only in this browser", icon: <DeviceMobileIcon size={18} /> },
+  { id: "google_drive", label: "Google Drive", icon: <CloudArrowUpIcon size={18} /> },
+  { id: "onedrive", label: "OneDrive", icon: <CloudArrowUpIcon size={18} /> },
 ];
 
 export default function RecordingStorageSettingsPage() {
@@ -47,6 +48,15 @@ export default function RecordingStorageSettingsPage() {
     return Boolean(status?.microsoft.connected && status.microsoft.capabilities.onedrive);
   }
 
+  function openConnectedAccounts() {
+    const event = new CustomEvent("ehllo:open-settings-panel", {
+      cancelable: true,
+      detail: { href: "/app/settings/connected-accounts" },
+    });
+    window.dispatchEvent(event);
+    if (!event.defaultPrevented) router.push("/app/settings/connected-accounts");
+  }
+
   useAppShellChrome({ backHref: "/app/settings", backLabel: "Settings" });
   return (
     <>
@@ -54,9 +64,9 @@ export default function RecordingStorageSettingsPage() {
         <div className="flow-heading">
           <div><h1>Recording storage</h1><p>Where new recordings are stored by default. Doesn&apos;t affect guest sharing.</p></div>
         </div>
-        <section className="activate-panel">
+        <section className="activate-panel recording-storage-panel">
           <header>
-            <h2><CloudArrowUpIcon size={22} weight="bold" /> Recording storage</h2>
+            <h2><CloudArrowUpIcon size={22} /> Recording storage</h2>
           </header>
           <div className="grid gap-2">
             {STORAGE_OPTIONS.map((option) => {
@@ -66,19 +76,15 @@ export default function RecordingStorageSettingsPage() {
                 <button
                   key={option.id}
                   type="button"
-                  onClick={() => (enabled ? select(option.id) : router.push("/app/settings/connected-accounts"))}
-                  className={[
-                    "flex min-h-14 items-center gap-3 rounded-md border px-4 text-left transition",
-                    selected ? "border-[#163300] bg-[#e2f6d5]" : "border-[#aeb8aa] bg-white",
-                    "hover:bg-[#f2f5f0]",
-                  ].join(" ")}
+                  onClick={() => (enabled ? select(option.id) : openConnectedAccounts())}
+                  className={`recording-storage-option${selected ? " selected" : ""}`}
                 >
-                  {option.icon}
+                  <span className="recording-storage-option-icon">{option.icon}</span>
                   <span className="flex-1">
                     <strong className="block text-sm text-[#163300]">{option.label}</strong>
                     {!enabled ? <small className="text-xs text-[#6b7168]">Tap to connect this account</small> : null}
                   </span>
-                  {selected ? <CaretRightIcon size={16} weight="bold" /> : !enabled ? <CaretRightIcon size={16} weight="bold" className="text-[#6b7168]" /> : null}
+                  {selected ? <CheckCircleIcon size={18} /> : !enabled ? <CaretRightIcon size={16} className="text-[#6b7168]" /> : null}
                 </button>
               );
             })}

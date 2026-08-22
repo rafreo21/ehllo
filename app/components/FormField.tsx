@@ -1,7 +1,6 @@
 import { forwardRef } from "react";
 import type { FieldsetHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
-
+import { ChevronDown as CaretDownIcon } from "react-feather";
 type SharedProps = {
   label: string;
   hint?: string;
@@ -9,22 +8,30 @@ type SharedProps = {
   leadingIcon?: ReactNode;
   hideLabel?: boolean;
   compact?: boolean;
+  inline?: boolean;
 };
 
 const fieldLabelClass = "text-sm font-semibold text-[#454745]";
+const compactLabelClass = "text-xs font-semibold text-[#6b7168]";
 const fieldControlClass = [
   "block min-h-12 w-full rounded-md border bg-white px-3.5 py-2.5 text-base text-[#0e0f0c]",
   "outline-none transition",
   "focus:border-[#163300] focus:ring-4 focus:ring-[#aeb8aa]/45",
   "disabled:cursor-not-allowed disabled:bg-[#f2f5f0] disabled:text-[#858b82]",
-  "border-[#aeb8aa]",
+  "border-[var(--p-line)] shadow-[0_1px_2px_rgba(22,51,0,.04)]",
 ].join(" ");
 const compactControlClass = [
-  "block h-[42px] min-h-[42px] w-full rounded-[7px] border bg-white px-3 text-[13px] font-extrabold text-[#0e0f0c]",
+  "block h-9 min-h-9 w-full rounded-md border bg-white px-2.5 text-[13px] font-normal text-[#0e0f0c]",
   "outline-none transition",
   "focus:border-[#163300] focus:ring-4 focus:ring-[#aeb8aa]/45",
   "disabled:cursor-not-allowed disabled:bg-[#f2f5f0] disabled:text-[#858b82]",
-  "border-[#aeb8aa]",
+  "border-[var(--p-line)] shadow-[0_1px_2px_rgba(22,51,0,.04)]",
+].join(" ");
+const inlineControlClass = [
+  "block h-11 min-h-11 w-full rounded-lg border border-transparent bg-[#f2f5f0] px-3.5 text-[14px] font-medium text-[#163300]",
+  "outline-none transition placeholder:text-[#7b8477]",
+  "hover:bg-[#edf1ea] focus:border-[#9fbe8c] focus:bg-white focus:ring-4 focus:ring-[#dff2d3]",
+  "disabled:cursor-not-allowed disabled:bg-[#f2f5f0] disabled:text-[#858b82]",
 ].join(" ");
 
 type FormSectionProps = FieldsetHTMLAttributes<HTMLFieldSetElement> & {
@@ -68,6 +75,9 @@ export const TextField = forwardRef<HTMLInputElement, SharedProps & InputHTMLAtt
     hint,
     error,
     leadingIcon,
+    hideLabel = false,
+    compact = false,
+    inline = false,
     id,
     className = "",
     ...props
@@ -76,29 +86,31 @@ export const TextField = forwardRef<HTMLInputElement, SharedProps & InputHTMLAtt
 ) {
   const fieldId = id ?? `field-${props.name ?? label.toLowerCase().replace(/\s+/g, "-")}`;
   const descriptionId = hint || error ? `${fieldId}-description` : undefined;
+  const visuallyHideLabel = hideLabel || inline;
 
   return (
-    <div className={`grid gap-2 ${className}`}>
-      <div className="flex items-center justify-between gap-4">
-        <label htmlFor={fieldId} className={fieldLabelClass}>{label}</label>
-        {hint && !error && <span className="text-xs text-[#6b7168]">{hint}</span>}
+    <div className={`grid ${visuallyHideLabel ? "gap-0" : compact ? "gap-1" : "gap-2"} ${className}`}>
+      <div className={visuallyHideLabel ? "sr-only" : "grid gap-0.5"}>
+        <label htmlFor={fieldId} className={compact ? compactLabelClass : fieldLabelClass}>{label}</label>
+        {hint && !error && !hideLabel && <span className="text-xs text-[#6b7168]">{hint}</span>}
       </div>
       <div className="relative">
         {leadingIcon && (
-          <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-[#52604b]">
+          <span className={`pointer-events-none absolute inset-y-0 left-0 flex items-center text-[#52604b] ${compact ? "pl-3" : "pl-3.5"}`}>
             {leadingIcon}
           </span>
         )}
         <input
           {...props}
+          placeholder={props.placeholder ?? (inline ? label : undefined)}
           ref={ref}
           id={fieldId}
           aria-invalid={Boolean(error)}
           aria-describedby={descriptionId}
           className={[
-            fieldControlClass,
-            "placeholder:text-[#858b82]",
-            leadingIcon ? "pl-11" : "",
+            inline ? inlineControlClass : compact ? compactControlClass : fieldControlClass,
+            inline ? "" : "placeholder:text-[#858b82]",
+            leadingIcon ? (compact ? "pl-9" : "pl-11") : "",
             error ? "border-[#b42318] focus:border-[#b42318] focus:ring-[#fecdca]/50" : "",
           ].join(" ")}
         />
@@ -115,6 +127,7 @@ export const SelectField = forwardRef<HTMLSelectElement, SharedProps & SelectHTM
     error,
     hideLabel = false,
     compact = false,
+    inline = false,
     id,
     className = "",
     children,
@@ -126,9 +139,9 @@ export const SelectField = forwardRef<HTMLSelectElement, SharedProps & SelectHTM
   const descriptionId = hint || error ? `${fieldId}-description` : undefined;
 
   return (
-    <div className={`grid ${compact && hideLabel ? "gap-0" : "gap-2"} ${className}`}>
-      <div className={hideLabel ? "sr-only" : "flex items-center justify-between gap-4"}>
-        <label htmlFor={fieldId} className={fieldLabelClass}>{label}</label>
+    <div className={`grid ${compact && hideLabel ? "gap-0" : compact ? "gap-1" : "gap-2"} ${className}`}>
+      <div className={hideLabel ? "sr-only" : "grid gap-0.5"}>
+        <label htmlFor={fieldId} className={compact ? compactLabelClass : fieldLabelClass}>{label}</label>
         {hint && !error && !hideLabel && <span className="text-xs text-[#6b7168]">{hint}</span>}
       </div>
       <div className="relative">
@@ -139,19 +152,18 @@ export const SelectField = forwardRef<HTMLSelectElement, SharedProps & SelectHTM
           aria-invalid={Boolean(error)}
           aria-describedby={descriptionId}
           className={[
-            compact ? compactControlClass : fieldControlClass,
+            inline ? inlineControlClass : compact ? compactControlClass : fieldControlClass,
             "appearance-none",
-            compact ? "pr-9" : "pr-11",
+            inline || compact ? "pr-9" : "pr-11",
             error ? "border-[#b42318] focus:border-[#b42318] focus:ring-[#fecdca]/50" : "",
           ].join(" ")}
         >
           {children}
         </select>
         <CaretDownIcon
-          size={compact ? 14 : 16}
-          weight="bold"
+          size={inline || compact ? 14 : 16}
           aria-hidden="true"
-          className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-[#52604b] ${compact ? "right-3" : "right-3.5"}`}
+          className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-[#52604b] ${inline || compact ? "right-3" : "right-3.5"}`}
         />
       </div>
       {error && <p id={descriptionId} className="text-sm font-medium text-[#b42318]">{error}</p>}
@@ -163,6 +175,8 @@ export function TextAreaField({
   label,
   hint,
   error,
+  hideLabel = false,
+  inline = false,
   id,
   className = "",
   ...props
@@ -171,8 +185,8 @@ export function TextAreaField({
   const descriptionId = hint || error ? `${fieldId}-description` : undefined;
 
   return (
-    <div className={`grid gap-2 ${className}`}>
-      <div className="flex items-center justify-between gap-4">
+    <div className={`grid ${inline ? "gap-0" : "gap-2"} ${className}`}>
+      <div className={hideLabel || inline ? "sr-only" : "flex items-center justify-between gap-4"}>
         <label htmlFor={fieldId} className={fieldLabelClass}>{label}</label>
         {hint && !error && <span id={descriptionId} className="text-xs text-[#6b7168]">{hint}</span>}
       </div>
@@ -182,9 +196,9 @@ export function TextAreaField({
         aria-invalid={Boolean(error)}
         aria-describedby={descriptionId}
         className={[
-          fieldControlClass,
-          "resize-y py-3",
-          "placeholder:text-[#858b82]",
+          inline ? inlineControlClass : fieldControlClass,
+          inline ? "h-auto min-h-[88px] resize-none py-3" : "resize-y py-3",
+          inline ? "" : "placeholder:text-[#858b82]",
           error ? "border-[#b42318] focus:border-[#b42318] focus:ring-[#fecdca]/50" : "",
         ].join(" ")}
       />

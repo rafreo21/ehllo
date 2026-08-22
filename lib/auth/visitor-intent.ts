@@ -1,3 +1,5 @@
+import { normalizeConnectionSource } from "../card-slug.ts";
+
 export type VisitorIntent = {
   intent: "visitor";
   slug?: string;
@@ -5,6 +7,15 @@ export type VisitorIntent = {
   shareToken?: string;
   eventInviteToken?: string;
   email?: string;
+  /**
+   * Which surface the card link came from, carried as `s` the whole way through the
+   * funnel: card page, /auth, the OAuth callback, visitor onboarding. Without it, an
+   * NFC tag tapped by somebody who does not have the app - who therefore lands in a
+   * browser and signs up there - was indistinguishable from any other web arrival, and
+   * the tap was the only interesting thing about it. Short name because it rides on a
+   * QR-shortened URL.
+   */
+  source?: string;
 };
 
 export const VISITOR_DEFAULT_DESTINATION = "/app/people";
@@ -18,10 +29,13 @@ export function parseVisitorIntent(searchParams: URLSearchParams): VisitorIntent
     shareToken: searchParams.get("shareToken")?.trim() || undefined,
     eventInviteToken: searchParams.get("eventInviteToken")?.trim() || undefined,
     email: searchParams.get("email")?.trim().toLowerCase() || undefined,
+    // Validated here rather than carried raw, so an unrecognised value is dropped at the
+    // edge instead of travelling three redirects to be rejected at the far end.
+    source: normalizeConnectionSource(searchParams.get("s")) || undefined,
   };
 }
 
-export function buildAuthHref(intent: VisitorIntent | { slug?: string; exchangeId?: string; shareToken?: string; eventInviteToken?: string; email?: string }) {
+export function buildAuthHref(intent: VisitorIntent | { slug?: string; exchangeId?: string; shareToken?: string; eventInviteToken?: string; email?: string; source?: string }) {
   const params = new URLSearchParams({
     intent: "visitor",
     next: VISITOR_DEFAULT_DESTINATION,
@@ -31,6 +45,7 @@ export function buildAuthHref(intent: VisitorIntent | { slug?: string; exchangeI
   if ("shareToken" in intent && intent.shareToken) params.set("shareToken", intent.shareToken);
   if ("eventInviteToken" in intent && intent.eventInviteToken) params.set("eventInviteToken", intent.eventInviteToken);
   if ("email" in intent && intent.email) params.set("email", intent.email.trim().toLowerCase());
+  if ("source" in intent && intent.source) params.set("s", intent.source);
   return `/auth?${params.toString()}`;
 }
 
@@ -41,6 +56,20 @@ export function appendVisitorIntentToCallback(callback: URL, intent: VisitorInte
   if (intent.exchangeId) callback.searchParams.set("exchangeId", intent.exchangeId);
   if (intent.shareToken) callback.searchParams.set("shareToken", intent.shareToken);
   if (intent.eventInviteToken) callback.searchParams.set("eventInviteToken", intent.eventInviteToken);
+  if (intent.source) callback.searchParams.set("s", intent.source);
+}
+
+/**
+ * The surface marker off the live URL, for client components on the public card page.
+ *
+ * They sit two and three levels below a server component that has the query string, and
+ * threading `s` down as a prop to reach a single href was more plumbing than reading it
+ * where it is needed. Returns undefined on the server, so it is safe to call during
+ * render.
+ */
+export function scanSourceFromLocation(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  return normalizeConnectionSource(new URLSearchParams(window.location.search).get("s")) || undefined;
 }
 
 export function visitorOnboardingPath(intent: VisitorIntent | null) {
@@ -49,6 +78,7 @@ export function visitorOnboardingPath(intent: VisitorIntent | null) {
   if (intent?.exchangeId) params.set("exchangeId", intent.exchangeId);
   if (intent?.shareToken) params.set("shareToken", intent.shareToken);
   if (intent?.eventInviteToken) params.set("eventInviteToken", intent.eventInviteToken);
+  if (intent?.source) params.set("s", intent.source);
   const query = params.toString();
   return query ? `/onboarding/visitor?${query}` : "/onboarding/visitor";
 }

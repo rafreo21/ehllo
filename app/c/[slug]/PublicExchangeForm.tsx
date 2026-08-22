@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { BriefcaseIcon } from "@phosphor-icons/react/dist/csr/Briefcase";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { Briefcase as BriefcaseIcon } from "react-feather";
 import { BuildingsIcon } from "@phosphor-icons/react/dist/csr/Buildings";
-import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import { X as XIcon } from "react-feather";
 import { Button } from "../../components/Button";
 import { ContactMethodIcon } from "../../components/ContactMethodIcon";
 import { TextField } from "../../components/FormField";
@@ -14,7 +14,7 @@ import { themeForegroundColor, themeGradientCss } from "@/lib/theme-contrast";
 type OptionalField = "x" | "instagram" | "tiktok" | "linkedin" | "role" | "company";
 
 const OPTIONAL_PILLS: { id: OptionalField; label: string; fieldLabel: string; placeholder: string }[] = [
-  { id: "x", label: "X", fieldLabel: "X handle (optional)", placeholder: "@username" },
+  { id: "x", label: "Twitter", fieldLabel: "Twitter handle (optional)", placeholder: "@username" },
   { id: "instagram", label: "Instagram", fieldLabel: "Instagram handle (optional)", placeholder: "@username" },
   { id: "tiktok", label: "TikTok", fieldLabel: "TikTok handle (optional)", placeholder: "@username" },
   { id: "linkedin", label: "LinkedIn", fieldLabel: "LinkedIn profile (optional)", placeholder: "linkedin.com/in/you" },
@@ -23,7 +23,7 @@ const OPTIONAL_PILLS: { id: OptionalField; label: string; fieldLabel: string; pl
 ];
 
 function OptionalPillIcon({ field }: { field: OptionalField }) {
-  if (field === "role") return <BriefcaseIcon size={14} weight="bold" aria-hidden />;
+  if (field === "role") return <BriefcaseIcon size={14} aria-hidden />;
   if (field === "company") return <BuildingsIcon size={14} weight="bold" aria-hidden />;
   return <ContactMethodIcon type={field} size={14} />;
 }
@@ -143,33 +143,51 @@ export function PublicExchangeForm({
 
   return (
     <form className="public-exchange-form" onSubmit={submit} noValidate>
-      <TextField
-        id="exchange-full-name"
-        label="Full name"
-        value={fullName}
-        onChange={(event) => setFullName(event.target.value)}
-        autoComplete="name"
-        required
-      />
-      <TextField
-        id="exchange-email"
-        label="Email"
-        type="email"
-        value={visitorEmail}
-        onChange={(event) => setVisitorEmail(event.target.value)}
-        autoComplete="email"
-        required
-      />
-      <PhoneField
-        id="exchange-phone"
-        label="Phone number (optional)"
-        value={visitorPhone}
-        onChange={setVisitorPhone}
-      />
+      <div className="public-exchange-required">
+        <TextField
+          id="exchange-full-name"
+          label="Full name"
+          value={fullName}
+          onChange={(event) => setFullName(event.target.value)}
+          autoComplete="name"
+          hideLabel
+          compact
+          placeholder="Full name"
+          required
+        />
+        <div className="public-exchange-method-field">
+          <span className="public-exchange-method-icon" style={{ color: themeColor }}><ContactMethodIcon type="email" size={17} color={themeColor} /></span>
+          <TextField
+            id="exchange-email"
+            label="Email"
+            type="email"
+            value={visitorEmail}
+            onChange={(event) => setVisitorEmail(event.target.value)}
+            autoComplete="email"
+            hideLabel
+            compact
+            placeholder="Email address"
+            required
+          />
+        </div>
+        <div className="public-exchange-method-field">
+          <span className="public-exchange-method-icon" style={{ color: themeColor }}><ContactMethodIcon type="phone" size={17} color={themeColor} /></span>
+          <PhoneField
+            id="exchange-phone"
+            label="Phone number (optional)"
+            hideLabel
+            compact
+            placeholder="Phone number (optional)"
+            value={visitorPhone}
+            onChange={setVisitorPhone}
+          />
+        </div>
+      </div>
 
       <div className="public-exchange-optional">
         {OPTIONAL_PILLS.filter((pill) => activeFields.has(pill.id)).map((pill) => (
           <div key={pill.id} className="public-exchange-optional-field">
+            <span className="public-exchange-method-icon" style={{ color: themeColor }}><OptionalPillIcon field={pill.id} /></span>
             <TextField
               id={`exchange-${pill.id}`}
               label={pill.fieldLabel}
@@ -177,6 +195,8 @@ export function PublicExchangeForm({
               onChange={(event) => setFieldValue(pill.id, event.target.value)}
               autoComplete={pill.id === "role" ? "organization-title" : pill.id === "company" ? "organization" : "off"}
               placeholder={pill.placeholder}
+              hideLabel
+              compact
             />
             <button
               type="button"
@@ -184,7 +204,7 @@ export function PublicExchangeForm({
               aria-label={`Remove ${pill.label}`}
               onClick={() => hideField(pill.id)}
             >
-              <XIcon size={16} weight="bold" aria-hidden />
+              <XIcon size={16} aria-hidden />
             </button>
           </div>
         ))}
@@ -192,7 +212,7 @@ export function PublicExchangeForm({
         <div className="public-exchange-optional-pills">
           {OPTIONAL_PILLS.map((pill) =>
             activeFields.has(pill.id) ? null : (
-              <button key={pill.id} type="button" className="public-exchange-add" onClick={() => showField(pill.id)}>
+              <button key={pill.id} type="button" className="public-exchange-add" aria-label={`Add ${pill.label}`} onClick={() => showField(pill.id)}>
                 <OptionalPillIcon field={pill.id} />
                 {pill.label}
               </button>
@@ -207,9 +227,9 @@ export function PublicExchangeForm({
         type="submit"
         loading={loading}
         style={{ background: themeGradientCss(themeColor), color: themeForegroundColor(themeColor) }}>
-        {loading ? "Sending…" : "Send my details"} {!loading && <ArrowRightIcon size={18} weight="bold" />}
+        {loading ? "Sending…" : "Send my details"} {!loading && <ArrowRightIcon size={18} />}
       </Button>
-      <small className="public-exchange-privacy">We don&apos;t sell your contact details.</small>
+      <small className="public-exchange-privacy">Your details are only shared with {ownerName}.</small>
     </form>
   );
 }

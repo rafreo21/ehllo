@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
 import { Button } from "../components/Button";
 import { TextField } from "../components/FormField";
 
@@ -66,7 +66,7 @@ export function OnboardingForm({
       </p>
       <Button fullWidth type="submit" loading={loading}>
         {loading ? "Saving…" : mode === "team" ? "Continue to workspace" : "Continue to card setup"}
-        {!loading && <ArrowRightIcon weight="bold" />}
+        {!loading && <ArrowRightIcon />}
       </Button>
     </form>
   );

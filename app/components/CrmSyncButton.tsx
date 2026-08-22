@@ -1,17 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { CloudArrowUpIcon } from "@phosphor-icons/react/dist/csr/CloudArrowUp";
+import { UploadCloud as CloudArrowUpIcon } from "react-feather";
 import { StatusMessage } from "./AsyncState";
 import { Button } from "./Button";
 import type { Contact } from "../../lib/contacts";
 import { crmSyncRecordForContact, writeCrmSyncRecord } from "../../lib/crm/sync-state";
 import type { Encounter } from "../../lib/encounters";
+import { useToast } from "./ToastContext";
 
 type CrmSyncButtonProps = {
   contact: Contact;
   encounters: Encounter[];
-  size?: "small" | "medium";
+  size?: "small" | "normal";
   variant?: "primary" | "secondary" | "ghost";
   onSynced?: (externalId: string) => void;
 };
@@ -23,6 +24,7 @@ export function CrmSyncButton({
   variant = "secondary",
   onSynced,
 }: CrmSyncButtonProps) {
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -46,9 +48,13 @@ export function CrmSyncButton({
       };
       if (!response.ok) {
         if (payload.configured === false) {
-          setError(payload.error || "HubSpot is not configured yet.");
+          const errorMessage = payload.error || "HubSpot is not configured yet.";
+          setError(errorMessage);
+          showToast({ tone: "error", message: errorMessage });
         } else {
-          setError(payload.error || "We couldn’t sync this contact to HubSpot.");
+          const errorMessage = payload.error || "We couldn’t sync this contact to HubSpot.";
+          setError(errorMessage);
+          showToast({ tone: "error", message: errorMessage });
         }
         return;
       }
@@ -60,9 +66,13 @@ export function CrmSyncButton({
         });
         onSynced?.(payload.externalId);
       }
-      setMessage("Synced to HubSpot with meeting notes.");
+      const success = "Synced to HubSpot with meeting notes.";
+      setMessage(success);
+      showToast({ tone: "success", message: success });
     } catch {
-      setError("We couldn’t reach HubSpot. Try again in a moment.");
+      const message = "We couldn’t reach HubSpot. Try again in a moment.";
+      setError(message);
+      showToast({ tone: "error", message });
     } finally {
       setLoading(false);
     }
@@ -71,7 +81,7 @@ export function CrmSyncButton({
   return (
     <div className="crm-sync-control">
       <Button size={size} variant={variant} loading={loading} onClick={() => void syncToHubSpot()}>
-        <CloudArrowUpIcon size={16} weight="bold" />
+        <CloudArrowUpIcon size={16} />
         {existing ? "Re-sync to HubSpot" : "Sync to HubSpot"}
       </Button>
       {existing ? <small className="contact-source">Last synced {new Date(existing.syncedAt).toLocaleString()}</small> : null}

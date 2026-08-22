@@ -68,9 +68,14 @@ Object.assign(childEnv, selected, {
   WRANGLER_LOG_PATH: '.wrangler/wrangler.log',
 });
 
+const childArgs = process.argv.slice(3);
+if (!childArgs.includes('--hostname') && !childArgs.includes('--host') && !childArgs.includes('-H')) {
+  childArgs.push('--hostname', '0.0.0.0');
+}
+
 console.log(`Starting ehllo consumer web against ${environment}.`);
 const executable = resolve(process.cwd(), 'node_modules/.bin/vinext');
-const child = spawn(executable, ['dev'], { env: childEnv, stdio: 'inherit' });
+const child = spawn(executable, ['dev', ...childArgs], { env: childEnv, stdio: 'inherit' });
 child.on('exit', (code, signal) => {
   if (signal) process.kill(process.pid, signal);
   process.exit(code ?? 1);

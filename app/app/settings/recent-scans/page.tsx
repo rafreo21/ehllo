@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
+import { Trash2 as TrashIcon } from "react-feather";
 import { useAppShellChrome } from "../../../components/AppShellChromeContext";
 import { Button } from "../../../components/Button";
 import { PageSkeleton, StatusMessage } from "../../../components/AsyncState";
 import { normalizeEmailForMatching, normalizePhoneForMatching } from "../../../../lib/contact-identity";
+import { useToast } from "../../../components/ToastContext";
 
 type InboundExchange = {
   id: string;
@@ -95,6 +96,7 @@ export default function RecentScansPage() {
   const [loading, setLoading] = useState(true);
   const [busyKey, setBusyKey] = useState("");
   const [error, setError] = useState("");
+  const { showToast } = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -151,8 +153,12 @@ export default function RecentScansPage() {
       const duplicates = group.scans.filter((item) => item.id !== exchange.id);
       await Promise.all(duplicates.map((item) => patchExchange(item.id, "dismissed").catch(() => {})));
       await load();
+      const name = `${firstName} ${rest.join(" ")}`.trim();
+      showToast({ tone: "success", message: `${name} added to your directory.` });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not save this person to your directory.");
+      const message = caught instanceof Error ? caught.message : "Could not save this person to your directory.";
+      setError(message);
+      showToast({ tone: "error", message });
     } finally {
       setBusyKey("");
     }
@@ -164,8 +170,11 @@ export default function RecentScansPage() {
     try {
       await Promise.all(group.scans.map((item) => patchExchange(item.id, "dismissed")));
       setExchanges((current) => current.filter((item) => !group.scans.some((scan) => scan.id === item.id)));
+      showToast({ tone: "success", message: "Scan group dismissed." });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not update this scan.");
+      const message = caught instanceof Error ? caught.message : "Could not update this scan.";
+      setError(message);
+      showToast({ tone: "error", message });
     } finally {
       setBusyKey("");
     }
@@ -202,7 +211,7 @@ export default function RecentScansPage() {
                       <strong className="truncate">{group.latest.visitor_name || "Unknown visitor"}</strong>
                       {saved ? (
                         <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#e2f6d5] px-2 py-0.5 text-[10px] font-bold text-[#163300]">
-                          <CheckCircleIcon size={11} weight="fill" /> Saved
+                          <CheckCircleIcon size={11} /> Saved
                         </span>
                       ) : null}
                     </div>
@@ -219,11 +228,11 @@ export default function RecentScansPage() {
                     <div className="flex shrink-0 items-center gap-2">
                       {!saved ? (
                         <Button size="small" onClick={() => void addGroup(group)}>
-                          <CheckCircleIcon size={15} weight="bold" /> Add
+                          <CheckCircleIcon size={15} /> Add
                         </Button>
                       ) : null}
                       <Button size="small" variant="ghost" onClick={() => void dismissGroup(group)}>
-                        <TrashIcon size={15} weight="bold" /> Dismiss
+                        <TrashIcon size={15} /> Dismiss
                       </Button>
                     </div>
                   )}

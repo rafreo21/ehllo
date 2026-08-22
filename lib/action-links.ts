@@ -101,6 +101,16 @@ function normalizeProfileUrl(value: string, platform: "instagram" | "x" | "tikto
   return `https://tiktok.com/@${handle}`;
 }
 
+function meetingOpener(eventTitle?: string) {
+  const trimmed = eventTitle?.trim();
+  return trimmed ? `It was great meeting you at ${trimmed}.` : "It was great meeting you.";
+}
+
+function followUpEmailBody(personName: string, eventTitle?: string) {
+  const greeting = personName.trim() ? `Hey ${personName.trim().split(" ")[0]},` : "Hey there,";
+  return `${greeting}\n\n${meetingOpener(eventTitle)} I'd love to stay in touch.\n\nThanks!`;
+}
+
 function linkedInSearchUrl(personName: string) {
   const query = personName.trim() || "contact";
   return `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(query)}`;
@@ -121,6 +131,13 @@ function gmailComposeLink(to: string, subject: string, body: string) {
   if (subject) params.set("su", subject);
   if (body) params.set("body", body);
   return `https://mail.google.com/mail/?${params.toString()}`;
+}
+
+export function buildRequestEmailLink(context: ActionLinkContext, channel: EncounterAction["channel"]): string {
+  const label = channelLabel(channel);
+  const subject = `Quick ask - your ${label}`;
+  const body = `Hi ${context.personName || "there"},\n\nCould you share your ${label} so I can follow up there?\n\nThanks!`;
+  return gmailComposeLink(context.personEmail, subject, body);
 }
 
 function outlookComposeLink(to: string, subject: string, body: string) {
@@ -245,7 +262,22 @@ export function resolveActionLink(
         external: true,
       };
     }
-    case "email":
+    case "email": {
+      const emailSubject = "Great meeting you";
+      const emailBody = followUpEmailBody(context.personName, context.encounterTitle);
+      if (context.personEmail) {
+        return {
+          href: gmailComposeLink(context.personEmail, emailSubject, emailBody),
+          label: "Send in Gmail",
+          external: true,
+        };
+      }
+      return {
+        href: mailtoLink("", emailSubject, emailBody),
+        label: "Send email",
+        external: false,
+      };
+    }
     case "other":
     default: {
       if (context.personEmail) {

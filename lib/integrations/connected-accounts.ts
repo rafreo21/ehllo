@@ -39,7 +39,7 @@ export async function connectedAccountStatus(user: AppUser, client?: SupabaseCli
   status.configured.microsoft = Boolean(process.env.MICROSOFT_INTEGRATION_CLIENT_ID && process.env.MICROSOFT_INTEGRATION_CLIENT_SECRET);
 
   for (const row of await listConnectedAccounts(user, client)) {
-    // A row existing only means we once connected — it says nothing about
+    // A row existing only means we once connected - it says nothing about
     // whether the refresh token still works. Check it for real so a dead
     // connection shows "Reconnect" instead of a falsely healthy "Disconnect".
     const tokenResult = await getConnectedAccountAccessTokenStatus(user, row.provider, client);
@@ -149,7 +149,7 @@ export async function connectProviderFromCode(
 export type AccessTokenResult =
   | { status: "ok"; token: string }
   | { status: "not_connected" }
-  /** A connection exists but can't produce a working token right now (revoked grant, no refresh token, provider rejected the refresh) — distinct from never having connected, so the UI can say "reconnect" instead of "connect". */
+  /** A connection exists but can't produce a working token right now (revoked grant, no refresh token, provider rejected the refresh) - distinct from never having connected, so the UI can say "reconnect" instead of "connect". */
   | { status: "needs_reconnect" };
 
 /**
@@ -204,7 +204,7 @@ export async function getConnectedAccountAccessTokenStatus(
     return { status: "ok", token: refreshed.access_token };
   } catch {
     // Refresh token was rejected (revoked in Google/Microsoft's own security
-    // settings, expired past its own lifetime, etc.) — the stored connection
+    // settings, expired past its own lifetime, etc.) - the stored connection
     // is dead weight until the user reconnects.
     return { status: "needs_reconnect" };
   }

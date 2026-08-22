@@ -7,6 +7,7 @@ import {
   visitorOnboardingPath,
 } from "../../../lib/auth/visitor-intent";
 import { sanitizeIntendedDestination } from "../../../lib/auth/redirect";
+import { browserConnectionSource, recordConnectionScanSource } from "../../../lib/connection-scan-source";
 import { requirePublicSupabaseConfig } from "../../../lib/supabase/env";
 
 type ProvisionResult = {
@@ -41,13 +42,35 @@ async function linkVisitorConnections(
   intent: ReturnType<typeof parseVisitorIntent>,
 ) {
   if (!intent) return;
+
+  // Same defect the visitor onboarding route had: these were awaited and thrown
+  // away, so a visitor who followed a card here and got no connection looked
+  // exactly like one whose link worked. This is the primary sign-in path, so it
+  // mattered more here. Sign-in itself must still succeed - the account is real
+  // either way - but the reason has to be recoverable.
+  const logLinkFailure = (name: string, error: { code?: string; message: string } | null) => {
+    if (!error) return;
+    console.error(`[auth-callback] ${name} failed`, { code: error.code, message: error.message });
+  };
+
   if (intent.eventInviteToken) {
-    await supabase.rpc("claim_event_invitation", { p_token: intent.eventInviteToken });
+    const { error } = await supabase.rpc("claim_event_invitation", { p_token: intent.eventInviteToken });
+    logLinkFailure("claim_event_invitation", error);
   }
   if (intent.exchangeId) {
-    await supabase.rpc("link_people_connection_from_exchange", { p_exchange_id: intent.exchangeId });
+    const { error } = await supabase.rpc("link_people_connection_from_exchange", { p_exchange_id: intent.exchangeId });
+    logLinkFailure("link_people_connection_from_exchange", error);
   } else if (intent.slug) {
-    await supabase.rpc("link_people_connection_from_scan", { p_slug: intent.slug });
+    const { data, error } = await supabase.rpc("link_people_connection_from_scan", { p_slug: intent.slug });
+    logLinkFailure("link_people_connection_from_scan", error);
+    // The surface, which this path never recorded. Somebody following a stranger's card
+    // to a browser and signing up is the most valuable arrival in the product, and it
+    // was the one with no attribution at all - so "which surface gets people
+    // connecting" could not see it. Defaults to web; an NFC tap says nfc.
+    if (!error) {
+      const connectionId = (data as { connectionId?: string } | null)?.connectionId;
+      await recordConnectionScanSource(supabase, connectionId, browserConnectionSource(intent.source));
+    }
   }
 }
 
@@ -88,7 +111,21 @@ export async function GET(request: NextRequest) {
     return redirectToAuth(request, "provisioning");
   }
 
-  await supabase.rpc("link_people_connections_for_email");
+  const { error: backfillError } = await supabase.rpc("link_people_connections_for_email");
+  // Meetings shared with this address, claimed the same way and at the same moment. Until
+  // now this only ran during visitor onboarding, so a share to somebody who already had an
+  // account was never attached to it and the meeting stayed invisible to them.
+  const { error: encounterClaimError } = await supabase.rpc("claim_my_encounter_participants");
+  if (encounterClaimError) {
+    console.error("[auth-callback] claim_my_encounter_participants failed", {
+      code: encounterClaimError.code, message: encounterClaimError.message,
+    });
+  }
+  if (backfillError) {
+    console.error("[auth-callback] link_people_connections_for_email failed", {
+      code: backfillError.code, message: backfillError.message,
+    });
+  }
 
   if (onboardingStatus !== "completed") {
     const destination = intent ? visitorOnboardingPath(intent) : "/onboarding";

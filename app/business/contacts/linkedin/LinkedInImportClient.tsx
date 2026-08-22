@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { ArrowsClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
-import { FloppyDiskIcon } from "@phosphor-icons/react/dist/csr/FloppyDisk";
-import { LinkedinLogoIcon } from "@phosphor-icons/react/dist/csr/LinkedinLogo";
-import { MicrophoneIcon } from "@phosphor-icons/react/dist/csr/Microphone";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { RefreshCw as ArrowsClockwiseIcon } from "react-feather";
+import { Save as FloppyDiskIcon } from "react-feather";
+import { Linkedin as LinkedinLogoIcon } from "react-feather";
+import { Mic as MicrophoneIcon } from "react-feather";
 import { BusinessShell } from "../../../components/BusinessShell";
 import { StatusMessage } from "../../../components/AsyncState";
 import { Button, LinkButton } from "../../../components/Button";
@@ -368,7 +368,7 @@ export function LinkedInImportClient({ initial }: { initial: LinkedInImportIniti
       <form className="contact-form-card max-w-3xl mx-auto grid gap-6" onSubmit={save}>
         <header>
           <span className="step-pill">Capture people</span>
-          <h1><LinkedinLogoIcon size={28} weight="bold" />LinkedIn profile</h1>
+          <h1><LinkedinLogoIcon size={28} />LinkedIn profile</h1>
           <p>Review each field below. Personal email and phone come from LinkedIn Contact info. Use Find work email to run our verified database waterfall. We never fill guessed addresses.</p>
         </header>
 
@@ -394,7 +394,7 @@ export function LinkedInImportClient({ initial }: { initial: LinkedInImportIniti
 
         <div className="form-actions align-start">
           <Button type="button" variant="secondary" loading={lookupStatus === "loading"} onClick={refreshProfile}>
-            <ArrowsClockwiseIcon size={16} weight="bold" />Check LinkedIn again
+            <ArrowsClockwiseIcon size={16} />Check LinkedIn again
           </Button>
         </div>
 
@@ -411,7 +411,7 @@ export function LinkedInImportClient({ initial }: { initial: LinkedInImportIniti
             <StatusMessage tone="success">Saved to your contacts.</StatusMessage>
             <div className="form-actions align-start">
               <LinkButton variant="secondary" href="/business/contacts/linkedin">
-                <LinkedinLogoIcon size={16} weight="bold" />Capture another profile
+                <LinkedinLogoIcon size={16} />Capture another profile
               </LinkButton>
             </div>
           </>
@@ -419,12 +419,12 @@ export function LinkedInImportClient({ initial }: { initial: LinkedInImportIniti
         <div className="form-actions">
           <LinkButton variant="ghost" href="/business/contacts">Cancel</LinkButton>
           {!savedId ? (
-            <Button type="submit"><FloppyDiskIcon size={18} weight="bold" />Save contact</Button>
+            <Button type="submit"><FloppyDiskIcon size={18} />Save contact</Button>
           ) : (
             <>
               <LinkButton variant="secondary" href={`/business/contacts/${savedId}`}>Open contact</LinkButton>
               <LinkButton href={`/app/encounters/new?contact=${encodeURIComponent(savedId)}`}>
-                <MicrophoneIcon size={18} weight="fill" />Capture moment
+                <MicrophoneIcon size={18} />Capture moment
               </LinkButton>
             </>
           )}

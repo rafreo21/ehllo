@@ -47,7 +47,7 @@ export function buildGuestFollowUpReminderEmail(input: {
         <tr>
           <td style="padding:0 24px 24px;">
             <p style="margin:0;font-size:12px;line-height:1.5;color:#8a8f86;">
-              No account needed — this link takes you straight to it.
+              No account needed - this link takes you straight to it.
             </p>
           </td>
         </tr>

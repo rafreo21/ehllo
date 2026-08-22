@@ -49,7 +49,7 @@ function readMetaContent(
 
 function headlineFromTitle(title: string) {
   const titleName = title.replace(/\s*\|\s*LinkedIn\s*$/i, "").trim();
-  const dashParts = titleName.split(/\s+[-–—]\s+/);
+  const dashParts = titleName.split(/\s+[-–-]\s+/);
   if (dashParts.length > 1) return dashParts.slice(1).join(" - ");
   return "";
 }
@@ -59,7 +59,7 @@ function headlineFromOpenGraph(documentLike: {
 }) {
   const ogTitle = readMetaContent(documentLike, "og:title").replace(/\s*\|\s*LinkedIn\s*$/i, "");
   if (ogTitle) {
-    const dashParts = ogTitle.split(/\s+[-–—]\s+/);
+    const dashParts = ogTitle.split(/\s+[-–-]\s+/);
     if (dashParts.length > 1) return dashParts.slice(1).join(" - ");
   }
   return readMetaContent(documentLike, "og:description");
@@ -90,7 +90,10 @@ function extractLinks(documentLike: {
   let companyWebsite = "";
   let personalWebsite = "";
 
-  for (const node of documentLike.querySelectorAll("a[href^='mailto:'], a[href^='tel:'], a[href^='http']")) {
+  // Array.from rather than a for..of: querySelectorAll is typed ArrayLike here
+  // (these run against scraped fragments as well as a live document), and
+  // ArrayLike has no iterator.
+  for (const node of Array.from(documentLike.querySelectorAll("a[href^='mailto:'], a[href^='tel:'], a[href^='http']"))) {
     const href = node.getAttribute?.("href") ?? "";
     if (!email && href.startsWith("mailto:")) email = clean(href.replace(/^mailto:/i, "").split("?")[0]);
     if (!phone && href.startsWith("tel:")) phone = clean(href.replace(/^tel:/i, "").split("?")[0]);
@@ -117,7 +120,7 @@ export function captureFromLinkedInDocument(documentLike: {
   const h1 = clean(documentLike.querySelector("h1")?.textContent);
   const ogTitle = readMetaContent(documentLike, "og:title").replace(/\s*\|\s*LinkedIn\s*$/i, "");
   const fullName = normalizeLinkedInProfileName(
-    h1 || ogTitle.split(/\s+[-–—]\s+/)[0] || titleName.split(/\s+[-–—]\s+/)[0] || titleName.split("|")[0] || "",
+    h1 || ogTitle.split(/\s+[-–-]\s+/)[0] || titleName.split(/\s+[-–-]\s+/)[0] || titleName.split("|")[0] || "",
   );
 
   const experience = parseExperienceFromText(pageText);

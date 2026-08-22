@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { parseVisitorIntent } from "../../../../lib/auth/visitor-intent";
+import { browserConnectionSource, recordConnectionScanSource } from "../../../../lib/connection-scan-source";
 import { createClient } from "../../../../lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -33,20 +34,50 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "We couldn’t finish setting up your account." }, { status: 500 });
   }
 
+  // Linking is the entire reason this visitor followed a card, an exchange, or
+  // a shared meeting here, and every one of these calls used to fail in total
+  // silence: the result was awaited and then discarded. A visitor whose link
+  // raised ("card not found", "exchange email mismatch") got the same cheerful
+  // {ok:true} as one whose link worked, and the first symptom was an empty
+  // People list with no way to tell a missing card from a database fault.
+  //
+  // Onboarding itself has already succeeded by the time we get here, so a
+  // failed link must not fail the request - the account is real either way.
+  // But it must say why, for the same reason the scan route does.
+  const logLinkFailure = (name: string, error: { code?: string; message: string } | null) => {
+    if (!error) return;
+    console.error(`[visitor-onboarding] ${name} failed`, { code: error.code, message: error.message });
+  };
+
   if (intent?.exchangeId) {
-    await supabase.rpc("link_people_connection_from_exchange", { p_exchange_id: intent.exchangeId });
+    const { error } = await supabase.rpc("link_people_connection_from_exchange", { p_exchange_id: intent.exchangeId });
+    logLinkFailure("link_people_connection_from_exchange", error);
   } else if (intent?.slug) {
-    await supabase.rpc("link_people_connection_from_scan", { p_slug: intent.slug });
+    const { data, error } = await supabase.rpc("link_people_connection_from_scan", { p_slug: intent.slug });
+    logLinkFailure("link_people_connection_from_scan", error);
+    // Same omission as the auth callback, same fix, same writer.
+    if (!error) {
+      const connectionId = (data as { connectionId?: string } | null)?.connectionId;
+      await recordConnectionScanSource(supabase, connectionId, browserConnectionSource(intent.source));
+    }
   } else if (intent?.shareToken) {
-    await supabase.rpc("link_people_connection_from_share_token", { p_share_token: intent.shareToken });
-    await supabase.rpc("claim_guest_encounter_participants", { p_share_token: intent.shareToken });
+    const { error: linkError } = await supabase.rpc("link_people_connection_from_share_token", { p_share_token: intent.shareToken });
+    logLinkFailure("link_people_connection_from_share_token", linkError);
+    const { error: claimError } = await supabase.rpc("claim_guest_encounter_participants", { p_share_token: intent.shareToken });
+    logLinkFailure("claim_guest_encounter_participants", claimError);
   }
   if (intent?.eventInviteToken) {
     const { error: claimError } = await supabase.rpc("claim_event_invitation", { p_token: intent.eventInviteToken });
     if (claimError) return NextResponse.json({ error: "This event invitation belongs to a different email or is no longer available." }, { status: 409 });
   }
 
-  await supabase.rpc("link_people_connections_for_email");
+  const { error: backfillError } = await supabase.rpc("link_people_connections_for_email");
+  // Meetings shared with this address, claimed the same way and at the same moment. Until
+  // now this only ran during visitor onboarding, so a share to somebody who already had an
+  // account was never attached to it and the meeting stayed invisible to them.
+  const { error: encounterClaimError } = await supabase.rpc("claim_my_encounter_participants");
+  logLinkFailure("claim_my_encounter_participants", encounterClaimError);
+  logLinkFailure("link_people_connections_for_email", backfillError);
 
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "private, no-store" } });
 }

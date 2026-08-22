@@ -1,3 +1,4 @@
+import { capturedNodes, type CapturedNode } from "./captured-node.ts";
 function clean(value: string | null | undefined) {
   return (value ?? "").replace(/\s+/g, " ").trim();
 }
@@ -65,7 +66,7 @@ export function parseExperienceSectionText(sectionText: string) {
 
 export type ExperienceSectionLike = {
   innerText?: string | null;
-  querySelectorAll?: (selector: string) => ArrayLike<{ textContent: string | null }>;
+  querySelectorAll?: (selector: string) => ArrayLike<CapturedNode>;
 };
 
 export function captureExperienceFromSection(section: ExperienceSectionLike | null | undefined) {
@@ -76,7 +77,7 @@ export function captureExperienceFromSection(section: ExperienceSectionLike | nu
   );
   const firstEntry = entries?.[0];
   if (firstEntry) {
-    const hiddenSpans = [...firstEntry.querySelectorAll("span[aria-hidden=\"true\"]")]
+    const hiddenSpans = capturedNodes(firstEntry.querySelectorAll?.("span[aria-hidden=\"true\"]"))
       .map((node) => clean(node.textContent))
       .filter(Boolean);
 
@@ -88,13 +89,13 @@ export function captureExperienceFromSection(section: ExperienceSectionLike | nu
     }
 
     const role = clean(
-      firstEntry.querySelector(".t-bold span[aria-hidden=\"true\"]")?.textContent
-      || firstEntry.querySelector(".mr1.hoverable-link-text span")?.textContent
-      || firstEntry.querySelector(".t-bold")?.textContent,
+      firstEntry.querySelector?.(".t-bold span[aria-hidden=\"true\"]")?.textContent
+      || firstEntry.querySelector?.(".mr1.hoverable-link-text span")?.textContent
+      || firstEntry.querySelector?.(".t-bold")?.textContent,
     );
     const companyLine = clean(
-      firstEntry.querySelector(".t-14.t-normal span[aria-hidden=\"true\"]")?.textContent
-      || firstEntry.querySelector(".t-14.t-normal")?.textContent,
+      firstEntry.querySelector?.(".t-14.t-normal span[aria-hidden=\"true\"]")?.textContent
+      || firstEntry.querySelector?.(".t-14.t-normal")?.textContent,
     );
 
     const parsed = sanitizeExperienceRoleCompany({

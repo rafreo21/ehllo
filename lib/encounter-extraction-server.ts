@@ -130,7 +130,7 @@ function buildExtractionPrompt(
     personHints?.personEmail ? `Primary email hint: ${personHints.personEmail}` : "",
     personHints?.personPhone ? `Primary phone hint: ${personHints.personPhone}` : "",
     eventContext?.title
-      ? `Event this was captured at: ${eventContext.title}${eventContext.location ? ` (${eventContext.location})` : ""}. Mention it naturally in the summary or follow-up only if it adds real value — do not force it into every sentence, and never invent event details beyond what's given here.`
+      ? `Event this was captured at: ${eventContext.title}${eventContext.location ? ` (${eventContext.location})` : ""}. Mention it naturally in the summary or follow-up only if it adds real value - do not force it into every sentence, and never invent event details beyond what's given here.`
       : "",
   ].filter(Boolean);
 
@@ -172,6 +172,7 @@ export async function extractEncounterDraft(
   }
 
   if (!(await isAiExtractionConfigured())) {
+    console.warn("[encounter-extraction] falling back to heuristic: no AI provider configured (checked OPENAI_API_KEY and AI Gateway credentials)");
     return {
       draft: heuristic,
       source: "heuristic",
@@ -215,7 +216,8 @@ export async function extractEncounterDraft(
       source: "ai",
       uncertainFields: output.uncertainFields ?? [],
     };
-  } catch {
+  } catch (error) {
+    console.error("[encounter-extraction] AI call failed, falling back to heuristic:", error);
     return {
       draft: heuristic,
       source: "heuristic",

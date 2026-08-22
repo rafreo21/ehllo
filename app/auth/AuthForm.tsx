@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
-import { XLogoIcon } from "@phosphor-icons/react/dist/csr/XLogo";
+import { ArrowRight as ArrowRightIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
 import { describeOtpDeliveryError } from "../../lib/auth/otp-delivery-error";
 import { appendVisitorIntentToCallback, VISITOR_DEFAULT_DESTINATION, type VisitorIntent, visitorOnboardingPath } from "../../lib/auth/visitor-intent";
 import { Button } from "../components/Button";
-import { GoogleProviderIcon, LinkedInProviderIcon } from "../components/ProviderIcons";
+import { GoogleProviderIcon } from "../components/ProviderIcons";
 import { TextField } from "../components/FormField";
 import { createClient } from "../../lib/supabase/client";
 
@@ -91,12 +90,14 @@ export function AuthForm({
 
       const { data: provisioned, error: provisionError } = await supabase
         .rpc("provision_personal_workspace")
-        .single<ProvisionResult>();
+        .single();
 
-      let onboardingStatus = provisioned?.onboarding_status;
+      // Cast rather than a type argument: this client is loosely typed, so
+      // .single() is an untyped call and cannot take one.
+      let onboardingStatus = (provisioned as ProvisionResult | null)?.onboarding_status;
       if (provisionError || !onboardingStatus) {
-        const { data: context } = await supabase.rpc("get_my_app_context").single<ProvisionResult>();
-        onboardingStatus = context?.onboarding_status;
+        const { data: context } = await supabase.rpc("get_my_app_context").single();
+        onboardingStatus = (context as ProvisionResult | null)?.onboarding_status;
       }
 
       if (!onboardingStatus) {
@@ -106,6 +107,8 @@ export function AuthForm({
       }
 
       await supabase.rpc("link_people_connections_for_email");
+      // And meetings shared with this address, which had no path to an existing account.
+      await supabase.rpc("claim_my_encounter_participants");
       if (visitorIntent?.eventInviteToken) {
         const { error: claimError } = await supabase.rpc("claim_event_invitation", { p_token: visitorIntent.eventInviteToken });
         if (claimError) {
@@ -160,7 +163,7 @@ export function AuthForm({
   if (step === "code" && sentTo) {
     return (
       <div className="auth-success" aria-live="polite">
-        <div><CheckCircleIcon size={35} weight="fill" /></div>
+        <div><CheckCircleIcon size={35} /></div>
         <span>Code sent</span>
         <h1>Check your inbox.</h1>
         <p>We sent a 6-digit sign-in code to <strong>{sentTo}</strong>. Enter it below to continue.</p>
@@ -195,9 +198,9 @@ export function AuthForm({
       <form onSubmit={sendCode} noValidate>
         <TextField id="auth-email" label="Email address" type="email" autoComplete="email" inputMode="email"
           placeholder="you@example.com" value={email} onChange={(event) => setEmail(event.target.value)}
-          leadingIcon={<EnvelopeSimpleIcon size={21} weight="bold" />} error={error} autoFocus />
+          leadingIcon={<EnvelopeSimpleIcon size={21} />} error={error} autoFocus />
         <Button fullWidth type="submit" loading={loading} disabled={!email || Boolean(loadingProvider)}>
-          {loading ? "Sending code…" : "Continue"} {!loading && <ArrowRightIcon size={20} weight="bold" />}
+          {loading ? "Sending code…" : "Continue"} {!loading && <ArrowRightIcon size={20} />}
         </Button>
       </form>
       <div className="auth-divider"><span>or continue with</span></div>
@@ -211,16 +214,6 @@ export function AuthForm({
           <GoogleProviderIcon />
           {loadingProvider === "google" ? "Connecting to Google…" : "Continue with Google"}
           <span>{providerAvailability?.google === false ? "Soon" : "Account"}</span>
-        </Button>
-        <Button className="provider-button" fullWidth variant="secondary" disabled={Boolean(loadingProvider) || providerAvailability?.linkedin_oidc === false} onClick={() => void signInWithProvider("linkedin_oidc")}>
-          <LinkedInProviderIcon />
-          {loadingProvider === "linkedin_oidc" ? "Connecting to LinkedIn…" : "Continue with LinkedIn"}
-          <span>{providerAvailability?.linkedin_oidc === false ? "Soon" : "Profile"}</span>
-        </Button>
-        <Button className="provider-button" fullWidth variant="secondary" disabled={Boolean(loadingProvider) || providerAvailability?.x === false} onClick={() => void signInWithProvider("x")}>
-          <XLogoIcon size={20} weight="bold" />
-          {loadingProvider === "x" ? "Connecting to X…" : "Continue with X"}
-          <span>{providerAvailability?.x === false ? "Soon" : "Profile"}</span>
         </Button>
       </div>
       {providerError && <p className="auth-provider-error" role="alert">{providerError}</p>}

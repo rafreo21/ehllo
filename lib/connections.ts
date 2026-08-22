@@ -287,6 +287,23 @@ export async function deleteConnection(connection: ConnectionItem) {
   if (!response.ok) throw new Error(payload.error || "Could not remove this contact.");
 }
 
+export async function updateConnectionName(connection: ConnectionItem, name: string) {
+  const cleanName = name.trim();
+  if (!cleanName) throw new Error("Enter a name for this connection.");
+  const url = connection.source === "contact"
+    ? `/api/contacts/${encodeURIComponent(connection.sourceId)}`
+    : connection.source === "met"
+      ? `/api/people/connections/${encodeURIComponent(connection.sourceId)}`
+      : "/api/cards/exchanges";
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(connection.source === "inbound" ? { id: connection.sourceId, name: cleanName } : { name: cleanName }),
+  });
+  const payload = await response.json().catch(() => ({})) as { error?: string };
+  if (!response.ok) throw new Error(payload.error || "Could not update this connection.");
+}
+
 export function formatConnectionDate(value?: string) {
   if (!value) return "";
   const date = new Date(value);

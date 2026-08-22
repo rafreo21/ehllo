@@ -16,7 +16,7 @@ Examples:
 
 **Verdict:** Strong if we already have distribution in a profession.
 
-## Option 2: Meeting-to-follow-up assistant — recommended
+## Option 2: Meeting-to-follow-up assistant - recommended
 
 Build a personal relationship workspace where a card or scanner starts the workflow, but follow-up is the product.
 

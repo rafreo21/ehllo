@@ -1,6 +1,6 @@
 begin;
 
--- "connection_added" — the other side of a mutual scan connect. See
+-- "connection_added" - the other side of a mutual scan connect. See
 -- link_people_connection_from_scan below: when the scanner also has a
 -- published card, the person they scanned gets connected back automatically
 -- and is notified here.
@@ -8,7 +8,7 @@ alter table public.notifications drop constraint notifications_type_check;
 alter table public.notifications add constraint notifications_type_check
   check (type in ('review_ready', 'follow_up_due', 'follow_up_overdue', 'shared_meeting_update', 'connection_added'));
 
--- Replaces the prior uuid-returning version — return shape changes to also
+-- Replaces the prior uuid-returning version - return shape changes to also
 -- report whether the connection was mutual, so the client can show the
 -- right success copy. CREATE OR REPLACE cannot change a return type.
 drop function if exists public.link_people_connection_from_scan(text, uuid, text, text, timestamptz);
@@ -87,7 +87,7 @@ begin
   returning id into v_connection_id;
 
   -- Mutual side: only when the scanner isn't scanning their own card and
-  -- actually has a published card of their own to connect back with —
+  -- actually has a published card of their own to connect back with -
   -- otherwise this silently stays one-directional (the client never blocks
   -- on this, see registerScannedCard).
   if v_card.workspace_id <> v_workspace_id then
@@ -117,7 +117,7 @@ begin
 
       v_mutual := true;
 
-      -- Notify the person who was scanned — best-effort, the scan itself
+      -- Notify the person who was scanned - best-effort, the scan itself
       -- must never fail because a notification insert did.
       begin
         insert into public.notifications (
@@ -128,7 +128,7 @@ begin
           v_card.workspace_id,
           'connection_added',
           coalesce(v_scanner_display_name, 'Someone') || ' connected with you',
-          'You''re now connected on ehllo — add a follow-up or view their card.',
+          'You''re now connected on ehllo - add a follow-up or view their card.',
           'connection_added:' || v_card.workspace_id::text || ':' || v_workspace_id::text
         from public.workspace_memberships owner_membership
         where owner_membership.workspace_id = v_card.workspace_id

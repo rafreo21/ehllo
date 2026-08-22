@@ -1,5 +1,5 @@
 ---
-description: ehllo — two separate web builds (consumer vs business). Call out with "two web builds" or "consumer/business web".
+description: ehllo - two separate web builds (consumer vs business). Call out with "two web builds" or "consumer/business web".
 alwaysApply: true
 ---
 
@@ -11,7 +11,7 @@ Ship **two separate web apps**, not one mixed product. Mobile consumer is the UX
 
 | App | Base path | Scope |
 |-----|-----------|--------|
-| **Consumer** | `/app` | Exact mobile consumer — Home, Card, Connections, Follow-ups, Capture, Scan. **No business.** |
+| **Consumer** | `/app` | Exact mobile consumer - Home, Card, Connections, Follow-ups, Capture, Scan. **No business.** |
 | **Business** | `/business` | Card creation + Contacts CRM · Activate · Outbound. Labeled **business / not consumer pilot**. |
 
 Legacy `/app/contacts`, `/app/activate`, `/app/outbound` redirect into `/business/*`.

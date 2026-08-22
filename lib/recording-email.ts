@@ -7,7 +7,7 @@ export type RecordingShareEmailInput = {
   guestUrl: string;
   sharedSummary?: string;
   meetingDate?: string;
-  /** Cloud copy no longer available — host sends from device. */
+  /** Cloud copy no longer available - host sends from device. */
   cloudExpired?: boolean;
 };
 
@@ -31,7 +31,7 @@ export function buildRecordingShareEmail(input: RecordingShareEmailInput) {
     "",
     "Please attach the meeting recording file before sending if your email app did not attach it automatically.",
     "",
-    "— Sent via ehllo",
+    "- Sent via ehllo",
   ].filter((line) => line !== "");
 
   return {

@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { CalendarBlankIcon } from "@phosphor-icons/react/dist/csr/CalendarBlank";
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/csr/IdentificationCard";
-import { LinkedinLogoIcon } from "@phosphor-icons/react/dist/csr/LinkedinLogo";
-import { MicrophoneIcon } from "@phosphor-icons/react/dist/csr/Microphone";
-import { PhoneIcon } from "@phosphor-icons/react/dist/csr/Phone";
+import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { Calendar as CalendarBlankIcon } from "react-feather";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
+import { CreditCard as IdentificationCardIcon } from "react-feather";
+import { Linkedin as LinkedinLogoIcon } from "react-feather";
+import { Mic as MicrophoneIcon } from "react-feather";
+import { Phone as PhoneIcon } from "react-feather";
 import { BusinessShell } from "../../../components/BusinessShell";
 import { LinkButton } from "../../../components/Button";
+import { EncounterDrawerView } from "../../../components/EncounterDrawerView";
 import { contactDisplayName, findContactById, type Contact } from "../../../../lib/contacts";
 import { CrmSyncButton } from "../../../components/CrmSyncButton";
 import { encountersForContact } from "../../../../lib/person-links";
@@ -28,6 +29,7 @@ export default function ContactDetailPage() {
   const [contactId, setContactId] = useState("");
   const [contact, setContact] = useState<Contact | null | undefined>(undefined);
   const [encounters, setEncounters] = useState<Encounter[]>([]);
+  const [activeEncounterId, setActiveEncounterId] = useState("");
 
   useEffect(() => {
     const id = window.location.pathname.split("/").filter(Boolean).at(-1) || "";
@@ -78,7 +80,7 @@ export default function ContactDetailPage() {
             <p>{[contact.role, contact.company].filter(Boolean).join(" · ") || "No company listed yet"}</p>
           </div>
           <div className="contact-detail-actions">
-            <LinkButton href={`/app/encounters/new?contact=${encodeURIComponent(contactId)}`}><MicrophoneIcon size={16} weight="bold" />Capture moment</LinkButton>
+            <LinkButton href={`/app/encounters/new?contact=${encodeURIComponent(contactId)}`}><MicrophoneIcon size={16} />Capture moment</LinkButton>
             <CrmSyncButton contact={contact} encounters={encounters} />
             <LinkButton variant="secondary" href="/app/followups">Open inbox</LinkButton>
           </div>
@@ -90,7 +92,7 @@ export default function ContactDetailPage() {
             <div className="contact-method-list">
               {methods.map(({ label, href, Icon }) => (
                 <a key={href} className="contact-method" href={href} target={href.startsWith("http") ? "_blank" : undefined} rel={href.startsWith("http") ? "noreferrer" : undefined}>
-                  <Icon size={18} weight="bold" />
+                  <Icon size={18} />
                   <span>{label}</span>
                 </a>
               ))}
@@ -113,7 +115,7 @@ export default function ContactDetailPage() {
           <section className="contact-detail-section">
             <header><h2>Card exchange</h2><p>They shared their details back from your public card.</p></header>
             <div className="contact-exchange-card">
-              <IdentificationCardIcon size={22} weight="bold" />
+              <IdentificationCardIcon size={22} />
               <div><strong>Linked exchange</strong><small>Exchange ID {contact.exchangeId.slice(0, 8)}…</small></div>
             </div>
           </section>
@@ -124,22 +126,39 @@ export default function ContactDetailPage() {
           {encounters.length ? (
             <div className="contact-encounter-list">
               {encounters.map((encounter) => (
-                <LinkButton key={encounter.id} variant="secondary" href={`/app/encounters/${encounter.id}`} className="contact-encounter-row">
+                <button
+                  type="button"
+                  className="contact-encounter-row"
+                  key={encounter.id}
+                  onClick={() => setActiveEncounterId(encounter.id)}
+                  style={{ border: 0, background: "transparent", width: "100%", textAlign: "left", cursor: "pointer" }}
+                >
                   <div>
                     <strong>{encounter.title || displayName}</strong>
                     <small>{formatDuration(encounter.durationSeconds)} · {encounter.status}{encounter.startedAt ? ` · ${new Date(encounter.startedAt).toLocaleDateString()}` : ""}</small>
                   </div>
                   <CalendarBlankIcon size={18} />
-                </LinkButton>
+                </button>
               ))}
             </div>
           ) : (
             <div className="contact-detail-empty-inline">
               <p>No encounters linked yet.</p>
-              <LinkButton href={`/app/encounters/new?contact=${encodeURIComponent(contactId)}`}><MicrophoneIcon size={16} weight="bold" />Start capture</LinkButton>
+              <LinkButton href={`/app/encounters/new?contact=${encodeURIComponent(contactId)}`}><MicrophoneIcon size={16} />Start capture</LinkButton>
             </div>
           )}
         </section>
+
+        {activeEncounterId ? (
+          <div className="followup-drawer-backdrop" role="presentation" onClick={() => setActiveEncounterId("") }>
+            <div className="followup-drawer" role="dialog" aria-label="Review context" onClick={(event) => event.stopPropagation()}>
+              <div className="followup-drawer-header">
+                <h2>Review context</h2>
+              </div>
+              <EncounterDrawerView encounterId={activeEncounterId} />
+            </div>
+          </div>
+        ) : null}
       </div>
     </BusinessShell>
   );

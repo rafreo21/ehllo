@@ -1,18 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { BellIcon } from "@phosphor-icons/react/dist/csr/Bell";
-import { CalendarCheckIcon } from "@phosphor-icons/react/dist/csr/CalendarCheck";
-import { CheckIcon } from "@phosphor-icons/react/dist/csr/Check";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { ClockCounterClockwiseIcon } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
-import { ShareNetworkIcon } from "@phosphor-icons/react/dist/csr/ShareNetwork";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
+import type { IconComponent } from "../../lib/icon-component";
+import { useCallback, useEffect, useRef, useState, type ComponentType } from "react";
+import { Bell as BellIcon } from "react-feather";
+import { Calendar as CalendarCheckIcon } from "react-feather";
+import { Check as CheckIcon } from "react-feather";
+import { CheckCircle as CheckCircleIcon } from "react-feather";
+import { Mail as EnvelopeSimpleIcon } from "react-feather";
+import { RotateCcw as ClockCounterClockwiseIcon } from "react-feather";
+import { Share2 as ShareNetworkIcon } from "react-feather";
+import { Users as UsersThreeIcon } from "react-feather";
 import { HandWavingIcon } from "@phosphor-icons/react/dist/csr/HandWaving";
 import { LinkButton } from "./Button";
+import { EncounterDrawerView } from "./EncounterDrawerView";
 import { BROWSER_NOTIFICATION_CHANGE_EVENT, BROWSER_NOTIFICATION_KEY } from "./NotificationPreferences";
 
-type NotificationType = "review_ready" | "follow_up_due" | "follow_up_overdue" | "shared_meeting_update" | "connection_added" | "keep_in_touch";
+import type { NotificationType } from "../../lib/notifications-server";
 
 type NotificationAlert = {
   id: string;
@@ -43,7 +46,9 @@ function isUrgent(dueAt: string): boolean {
   return due <= startOfToday();
 }
 
-function iconForType(type: NotificationType) {
+// "keep_in_touch" alone still renders a Phosphor icon (HandWaving has no
+// react-feather equivalent), so it alone keeps the `weight="bold"` prop below.
+function iconForType(type: NotificationType): IconComponent {
   switch (type) {
     case "review_ready": return CheckCircleIcon;
     case "follow_up_due": return CalendarCheckIcon;
@@ -51,13 +56,35 @@ function iconForType(type: NotificationType) {
     case "shared_meeting_update": return ShareNetworkIcon;
     case "connection_added": return UsersThreeIcon;
     case "keep_in_touch": return HandWavingIcon;
+    case "contact_request": return EnvelopeSimpleIcon;
+    case "follow_up_completed": return CheckIcon;
     default: return BellIcon;
   }
 }
 
 function notificationHref(alert: NotificationAlert) {
+  // Somebody asking for your details has nothing to do with follow-ups, and this sent
+  // them there because it only knew how to route by encounter. A contact request has no
+  // encounter, so it fell through to /app/followups - a screen with no trace of what the
+  // notification was about. `open` carries the intent through so the sheet is already up
+  // when the page arrives, rather than making you find the row you were just told about.
+  if (alert.type === "contact_request") return "/app/settings/contact-requests?open=1";
+  if (alert.type === "follow_up_completed") return "/app/followups";
+
+  // Everything with a meeting used to point at /app/encounters/[id]. That route does not
+  // exist - the only page under encounters is `new` - so every notification about a meeting,
+  // a follow-up or a share led to a 404 on the web, silently, for every type. /app/meeting
+  // resolves what the reader is actually entitled to see.
   if (!alert.encounterId) return "/app/followups";
-  return `/app/encounters/${alert.encounterId}`;
+
+  switch (alert.type) {
+    // A follow-up is acted on in Follow-ups, not by reading the meeting it came from.
+    case "follow_up_due":
+    case "follow_up_overdue":
+      return "/app/followups";
+    default:
+      return `/app/meeting/${alert.encounterId}`;
+  }
 }
 
 function relativeTime(iso: string) {
@@ -79,6 +106,7 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
   const [failed, setFailed] = useState(false);
   const shellRef = useRef<HTMLDivElement>(null);
   const [browserNotificationsEnabled, setBrowserNotificationsEnabled] = useState(false);
+  const [activeEncounterId, setActiveEncounterId] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -96,7 +124,7 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
   }, []);
 
   // The "Follow-ups" nav badge counts due/overdue work items, which is a
-  // distinct concept from unread notifications — notifications are alerts
+  // distinct concept from unread notifications - notifications are alerts
   // that point at work, not the work queue itself.
   const loadActionableFollowUpCount = useCallback(async () => {
     try {
@@ -182,7 +210,7 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
         body: JSON.stringify({ id: alert.id }),
       });
     } catch {
-      // Best-effort — the next load() reconciles state if this failed.
+      // Best-effort - the next load() reconciles state if this failed.
     }
   }
 
@@ -197,14 +225,14 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
         body: JSON.stringify({ markAllRead: true }),
       });
     } catch {
-      // Best-effort — the next load() reconciles state if this failed.
+      // Best-effort - the next load() reconciles state if this failed.
     }
   }
 
   return (
     <div className="notification-bell-shell" ref={shellRef}>
       <button type="button" className="notification-bell-button" aria-label={unreadCount ? `Notifications, ${unreadCount} unread` : "Notifications"} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((value) => !value)}>
-        <BellIcon size={20} weight={unreadCount ? "fill" : "bold"} />
+        <BellIcon size={20} />
         {unreadCount ? <span>{unreadCount > 9 ? "9+" : unreadCount}</span> : null}
       </button>
 
@@ -212,7 +240,7 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
         <section className="notification-popover" role="dialog" aria-label="Notifications">
           <header>
             <div><span>Attention centre</span><h2>Notifications</h2></div>
-            {unreadCount ? <button type="button" onClick={() => void markAllRead()}><CheckIcon size={14} weight="bold" />Mark all read</button> : null}
+            {unreadCount ? <button type="button" onClick={() => void markAllRead()}><CheckIcon size={14} />Mark all read</button> : null}
           </header>
           <div className="notification-popover-body">
             {loading ? <div className="notification-loading"><i /><i /><i /></div> : failed ? (
@@ -220,19 +248,42 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
             ) : alerts.length ? alerts.slice(0, 8).map((alert) => {
               const Icon = iconForType(alert.type);
               const isUnread = !alert.readAt;
+              const onReadAndOpen = (nextAlert: NotificationAlert) => {
+                void markRead(nextAlert);
+                if (nextAlert.encounterId && !activeEncounterId) {
+                  setActiveEncounterId(nextAlert.encounterId);
+                }
+              };
               return (
-                <a className={`notification-item ${isUnread ? "is-unread" : ""}`} href={notificationHref(alert)} key={alert.id} onClick={() => void markRead(alert)}>
-                  <span className={`notification-status notification-status-${alert.type}`}><Icon size={17} weight="bold" /></span>
+                <button
+                  type="button"
+                  className={`notification-item ${isUnread ? "is-unread" : ""}`}
+                  style={{ border: 0, background: "transparent", width: "100%", textAlign: "left", cursor: "pointer", color: "inherit" }}
+                  key={alert.id}
+                  onClick={() => onReadAndOpen(alert)}
+                >
+                  <span className={`notification-status notification-status-${alert.type}`}>{alert.type === "keep_in_touch" ? <Icon size={17} weight="bold" /> : <Icon size={17} />}</span>
                   <span><strong>{alert.title}</strong>{alert.body ? <small>{alert.body}</small> : null}<em>{relativeTime(alert.createdAt)}</em></span>
                   {isUnread ? <i aria-label="Unread" /> : null}
-                </a>
+                </button>
               );
             }) : (
-              <div className="notification-empty"><span><CheckIcon size={22} weight="bold" /></span><strong>You&apos;re all caught up</strong><p>Review-ready captures, due follow-ups, and shared-meeting updates will appear here.</p></div>
+              <div className="notification-empty"><span><CheckIcon size={22} /></span><strong>You&apos;re all caught up</strong><p>Review-ready captures, due follow-ups, and shared-meeting updates will appear here.</p></div>
             )}
           </div>
           <footer><LinkButton fullWidth variant="secondary" href="/app/followups" onClick={() => setOpen(false)}>Open follow-ups</LinkButton></footer>
         </section>
+      ) : null}
+
+      {activeEncounterId ? (
+        <div className="followup-drawer-backdrop" role="presentation" onClick={() => setActiveEncounterId("") }>
+          <div className="followup-drawer" role="dialog" aria-label="Review context" onClick={(event) => event.stopPropagation()}>
+            <div className="followup-drawer-header">
+              <h2>Review context</h2>
+            </div>
+            <EncounterDrawerView encounterId={activeEncounterId} />
+          </div>
+        </div>
       ) : null}
     </div>
   );

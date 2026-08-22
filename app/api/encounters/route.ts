@@ -15,6 +15,7 @@ import { buildGuestAddedEmail } from "../../../lib/guest-added-email";
 import { sendEmail } from "../../../lib/send-email";
 import { applyFollowUpTransition } from "../../../lib/follow-up-lifecycle";
 import { resolveCurrentEventIdForUser } from "../../../lib/events-server";
+import { createServiceSupabaseClient } from "../../../lib/supabase/service";
 
 const allowedStatuses = new Set(["draft", "reviewed", "shared", "archived"]);
 
@@ -49,8 +50,19 @@ async function syncEncounterParticipants(
   workspaceId: string,
   participants: EncounterParticipant[],
 ) {
-  await supabase.from("encounter_participants").delete().eq("encounter_id", encounterId);
-  if (!participants.length) return;
+  // Delete-then-insert with neither result checked, and no transaction to hold
+  // the two together: if the insert failed, the participants were already gone
+  // and the route still answered ok. That is silent data loss on the record the
+  // whole encounter hangs off, so both halves are checked and the caller is told.
+  const { error: clearError } = await supabase
+    .from("encounter_participants").delete().eq("encounter_id", encounterId);
+  if (clearError) {
+    console.error("[encounters] could not clear participants before rewriting them", {
+      encounterId, code: clearError.code, message: clearError.message,
+    });
+    return { ok: false as const, error: clearError.message };
+  }
+  if (!participants.length) return { ok: true as const };
 
   const rows = participants.map((participant, index) => ({
     id: participant.id,
@@ -64,7 +76,21 @@ async function syncEncounterParticipants(
     is_primary: index === 0,
     sort_order: index,
   }));
-  await supabase.from("encounter_participants").insert(rows);
+  const { error: insertError } = await supabase.from("encounter_participants").insert(rows);
+  if (insertError) {
+    // The delete has already happened and cannot be undone from here. Say so
+    // loudly, with the names, so the loss is recoverable from the log rather
+    // than only discovered by the person whose guests vanished.
+    console.error("[encounters] participants were cleared but could not be rewritten", {
+      encounterId,
+      participantCount: rows.length,
+      participantNames: rows.map((row) => row.display_name),
+      code: insertError.code,
+      message: insertError.message,
+    });
+    return { ok: false as const, error: insertError.message };
+  }
+  return { ok: true as const };
 }
 
 function splitParticipantName(name: string) {
@@ -75,7 +101,7 @@ function splitParticipantName(name: string) {
 }
 
 // People typed manually into a capture only ever land in encounter_participants,
-// which nothing outside that one encounter's detail view ever reads — they were
+// which nothing outside that one encounter's detail view ever reads - they were
 // invisible in Connections. Upserting them into contacts (already merged into
 // the Connections list on both clients) closes that gap: existing contacts are
 // matched by email and left as the source of truth, new ones are created with
@@ -83,7 +109,7 @@ function splitParticipantName(name: string) {
 // re-saving the same encounter doesn't spawn duplicates.
 //
 // A genuinely new contact with an email also gets a bare guest account (if
-// they don't already have one) and a one-time "you were added" email —
+// they don't already have one) and a one-time "you were added" email -
 // provision_personal_workspace() takes over the rest of onboarding the
 // moment they actually sign in, so this only ever needs to create the
 // auth.users row and point them at /auth.
@@ -137,7 +163,7 @@ async function syncParticipantsToContacts(
           newGuestNames.push(participant.name.trim());
         }
       } catch {
-        // Best-effort — the contact is already saved either way.
+        // Best-effort - the contact is already saved either way.
       }
     } else {
       await supabase.from("contacts").upsert({
@@ -276,7 +302,7 @@ export async function POST(request: Request) {
   }
 
   // The client only sends eventId when it has an opinion (an explicit pick,
-  // or "" to clear it via the correction flow) — see encounterToApiBody.
+  // or "" to clear it via the correction flow) - see encounterToApiBody.
   // Otherwise: a brand-new encounter gets the passive-presence guess
   // (Capture and Quick Follow-up both funnel through this one route, so
   // neither needs its own copy of this decision); an existing encounter
@@ -350,10 +376,113 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "The encounter was saved on this device but could not sync." }, { status: 500 });
   }
 
-  await syncEncounterParticipants(supabase, body.id, user.workspaceId, participants);
+  const participantSync = await syncEncounterParticipants(supabase, body.id, user.workspaceId, participants);
+  if (!participantSync.ok) {
+    return NextResponse.json(
+      { error: "We saved the meeting but couldn’t save who was there. Open it and add them again." },
+      { status: 500 },
+    );
+  }
   const newGuestNames = await syncParticipantsToContacts(supabase, user.workspaceId, user.id, user.displayName || "Someone you met", participants);
 
-  // The encounter is reviewable — and its transcript actually has content —
+  // Sharing answers whoever asked to see it. Anybody waiting is told the moment it happens,
+  // because being refused and being unread look identical from their side - the same silence
+  // that made contact requests feel broken. Best effort: the meeting is already shared, and
+  // failing the save over a notification would undo work the host actually completed.
+  if (nextStatus === "shared") {
+    try {
+      const { data: resolved } = await supabase.rpc("resolve_encounter_access_requests", {
+        p_encounter_id: body.id,
+      });
+      const waiting = (resolved ?? {}) as {
+        granted?: Array<{ userId?: string; workspaceId?: string }>;
+        encounterTitle?: string;
+        ownerName?: string;
+      };
+      // Everybody who can now read it, not only whoever happened to ask. A meeting can have
+      // any number of people in it, and telling one of three that it was shared leaves the
+      // other two holding access they do not know about - which is the same as not sharing
+      // it, from where they are standing.
+      //
+      // Those who asked are told they were answered; the rest are simply told it exists.
+      // Deduplicated by user, so asking does not earn you two notifications.
+      const asked = new Map<string, string>();
+      for (const person of waiting.granted ?? []) {
+        if (person.userId && person.workspaceId) asked.set(person.userId, person.workspaceId);
+      }
+
+      const { data: claimedRows } = await supabase
+        .from("encounter_participants")
+        .select("claimed_by_user_id")
+        .eq("encounter_id", body.id)
+        .not("claimed_by_user_id", "is", null);
+
+      const recipients = new Map<string, { workspaceId: string | null; didAsk: boolean }>();
+      for (const [userId, workspaceId] of asked) {
+        recipients.set(userId, { workspaceId, didAsk: true });
+      }
+      for (const row of (claimedRows ?? []) as Array<{ claimed_by_user_id: string }>) {
+        const claimedBy = row.claimed_by_user_id;
+        // Never the host themselves: they are the one who just shared it.
+        if (!claimedBy || claimedBy === user.id || recipients.has(claimedBy)) continue;
+        recipients.set(claimedBy, { workspaceId: null, didAsk: false });
+      }
+
+      const service = recipients.size ? createServiceSupabaseClient() : null;
+      const meetingTitle = waiting.encounterTitle ?? "a meeting";
+      const ownerName = waiting.ownerName ?? "Someone";
+
+      for (const [userId, info] of recipients) {
+        if (!service) break;
+        // A participant's workspace is not carried on the participant row, so it is resolved
+        // here. Notifications belong in the reader's own workspace, not the host's.
+        let workspaceId = info.workspaceId;
+        if (!workspaceId) {
+          const { data: membership } = await service
+            .from("workspace_memberships")
+            .select("workspace_id")
+            .eq("user_id", userId)
+            .eq("status", "active")
+            .limit(1)
+            .maybeSingle();
+          workspaceId = (membership?.workspace_id as string | undefined) ?? null;
+        }
+        if (!workspaceId) continue;
+
+        const type = info.didAsk ? "access_granted" as const : "shared_meeting_update" as const;
+        const title = info.didAsk
+          ? `${ownerName} shared “${meetingTitle}” with you`
+          : `${ownerName} shared the recap of “${meetingTitle}”`;
+        const notificationBody = "Open it to read the recap.";
+
+        const created = await createNotification(service, {
+          userId,
+          workspaceId,
+          type,
+          title,
+          body: notificationBody,
+          encounterId: body.id,
+          dedupeKey: `${type}:${body.id}:${userId}`,
+        });
+        if (created) {
+          await dispatchPushForUser(service, {
+            userId,
+            type,
+            title,
+            body: notificationBody,
+            encounterId: body.id,
+          });
+        }
+      }
+    } catch (caught) {
+      console.error("[encounters] shared, but telling the people waiting threw", {
+        encounterId: body.id,
+        message: caught instanceof Error ? caught.message : String(caught),
+      });
+    }
+  }
+
+  // The encounter is reviewable - and its transcript actually has content -
   // the first time it is saved. This is the single place both mobile and
   // consumer web funnel through, so it is the one spot to raise
   // "review ready": one row per encounter, regardless of which client saved

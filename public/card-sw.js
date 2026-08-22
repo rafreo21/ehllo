@@ -3,7 +3,7 @@
 // always try for a fresh card, but if the network fails (offline, or the
 // signal drops after someone already opened this card once), fall back to
 // the last successful response instead of a hard failure. This does not
-// make an unvisited card work offline — there is nothing to fall back to
+// make an unvisited card work offline - there is nothing to fall back to
 // until it has been opened at least once while online.
 
 const CACHE_NAME = 'aftermeet-card-cache-v1';

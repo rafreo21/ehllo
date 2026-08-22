@@ -73,6 +73,6 @@ revoke all on function public.submit_card_exchange(text, text, text, text, text,
 grant execute on function public.submit_card_exchange(text, text, text, text, text, text, text, boolean, uuid) to anon, authenticated;
 
 comment on column public.card_exchanges.event_id is
-  'The card owner''s currently-happening event at submission time, if any — resolveCurrentEventIdForWorkspace in lib/events-server.ts. An activator: null means this exchange has no event context, same as before this column existed.';
+  'The card owner''s currently-happening event at submission time, if any - resolveCurrentEventIdForWorkspace in lib/events-server.ts. An activator: null means this exchange has no event context, same as before this column existed.';
 
 commit;
