@@ -36,6 +36,10 @@ export async function readUriAsBase64(uri: string) {
 export async function ensureWidgetLogoUri() {
   const directory = widgetStorageDirectory();
   if (!directory) return undefined;
+  // On iOS the widget can only read the shared App Group container. Without it, anything we
+  // write goes to the app's own sandbox and the extension silently fails to load it - so the
+  // avatar vanishes with no error rather than falling back to the initials circle.
+  if (Platform.OS === 'ios' && !appleWidgetGroup()) return undefined;
 
   const destination = `${directory}${LOGO_FILE}`;
   const existing = await FileSystem.getInfoAsync(destination);

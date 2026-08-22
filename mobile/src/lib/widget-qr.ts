@@ -51,6 +51,12 @@ export async function buildWidgetQrFileUri(cardUrl: string, fileKey = 'primary')
       });
       return file.uri;
     }
+    // No App Group, no usable path. This used to fall through to the cache directory below -
+    // which lives in the APP's sandbox and the widget extension cannot read. The widget was
+    // handed a path that looked perfectly valid, failed to load it, and drew its white card
+    // with nothing inside: the "widgets are all white" report. Returning nothing is far better,
+    // because "no code yet" is a state the widget renders on purpose.
+    return undefined;
   }
 
   const path = `${FileSystem.cacheDirectory}${QR_FILE_NAME}`;

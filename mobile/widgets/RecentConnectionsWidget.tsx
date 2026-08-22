@@ -96,10 +96,6 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
     actionGap: 8,
   };
 
-  const DEMO_CONNECTIONS: WidgetConnectionRecord[] = [
-    { name: 'Raphael Okojie', subtitle: 'Connected 2 mins ago', initials: 'RO' },
-    { name: 'Christain Bale', subtitle: 'Connected 1 day ago', initials: 'CB' },
-  ];
 
   function connectionSlots(props: Record<string, string | number | boolean | undefined>) {
     const rows = [1, 2].map((slot) => {
@@ -288,8 +284,10 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
   // which is the actual next step rather than a sentence about one. The gallery - where
   // signedIn is absent entirely - keeps realistic sample rows.
   const signedOut = props.signedIn === '0' || props.signedIn === false;
-  const preview = props.signedIn === undefined;
-  const visible = preview && rows.length === 0 ? DEMO_CONNECTIONS : rows;
+  // Same reasoning as the business card: an absent snapshot is indistinguishable from a widget
+  // placed before the app ever synced, so sample people must not stand in for real ones. A new
+  // user used to see Jordan Lee and Christain Bale listed as their own connections.
+  const visible = rows;
   // Nothing yet: a dummy row in the real row's shape, then the add pill. An empty widget with
   // only a header reads as broken rather than as new.
   const empty = !signedOut && visible.length === 0;

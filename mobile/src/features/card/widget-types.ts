@@ -29,19 +29,7 @@ export type WidgetCardPayload = {
   initials: string;
 };
 
-export const WIDGET_DEMO_CARD: WidgetCardPayload = {
-  name: 'Alex Morgan',
-  role: 'Product Designer',
-  company: 'ehllo',
-  cardUrl: 'https://ehllo.io/c/demo',
-  shareDeepLink: 'ehllo://share-card',
-  initials: 'AM',
-};
 
-export const WIDGET_DEMO_CONNECTIONS: WidgetConnection[] = [
-  { name: 'Jordan Lee', subtitle: 'Connected 2 mins ago', initials: 'JL' },
-  { name: 'Cameron Williamson', subtitle: 'Connected 1 day ago', initials: 'CW' },
-];
 
 export type WidgetSnapshot = {
   cards: WidgetCardPayload[];
@@ -85,3 +73,12 @@ export const WIDGET_OPTIONS = [
 ] as const;
 
 export type WidgetOptionId = (typeof WIDGET_OPTIONS)[number]['id'];
+
+// There are deliberately NO demo card or demo connection constants here any more.
+//
+// They existed so a widget with no data had something to draw, and that is exactly how a real
+// person's home screen ended up showing "Alex Morgan - Product Designer - ehllo" as though it
+// were theirs, with a QR pointing at a demo page. Every widget now renders an explicit
+// placeholder ("Your name", "Your connections") when there is nothing real to show, which is
+// honest and needs no sample identity. If you find yourself wanting a demo record, you want a
+// placeholder state instead.

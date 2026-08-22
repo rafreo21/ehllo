@@ -116,7 +116,15 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
   // this is the placeholder state: dummy name, role and company against a blank white QR
   // panel, which reads as "set your card up" rather than as somebody else's finished card.
   const hasCard = Boolean(props.cardsJson?.trim()) && cards.length > 0 && cards[0] !== DEMO_CARD;
-  const noPrimary = props.signedIn !== undefined && !hasCard;
+  // Any absence of a real card shows the placeholder - including when there is no snapshot at
+  // all. This was gated on `props.signedIn !== undefined`, on the reasoning that an absent
+  // snapshot means the widget gallery, where sample content is right. But a widget somebody
+  // PLACED on a device that has not synced yet also has no snapshot, and there is no way to
+  // tell the two apart from in here. So a brand-new user who added this widget before opening
+  // the app saw Alex Morgan's name, role and company presented as their own - the exact fault
+  // we have spent the day removing everywhere else. The gallery showing "Your name" is a small
+  // cost; a stranger's details on a real home screen is not.
+  const noPrimary = !hasCard;
   const deepLink = card.shareDeepLink || props.shareDeepLink || 'ehllo://share-card';
   const qrImageUri = card.qrImageUri || props.qrImageUri;
   const photoImageUri = card.photoImageUri || props.photoImageUri;
