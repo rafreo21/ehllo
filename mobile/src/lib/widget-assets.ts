@@ -180,32 +180,37 @@ export async function cacheWidgetPhotoUri(photo: string, fileKey = 'default') {
 
   const PHOTO_FILE = photoFileName(fileKey);
   const destination = `${directory}${PHOTO_FILE}`;
+  let staged: string | undefined;
+  let resized: string | undefined;
 
   try {
-    const staged = await stageSourcePhoto(trimmed, PHOTO_FILE);
+    staged = await stageSourcePhoto(trimmed, PHOTO_FILE);
     if (!staged) return undefined;
 
     // Downscaled before it ever reaches the App Group container - see WIDGET_PHOTO_MAX_WIDTH.
     // A resize failure returns undefined here rather than falling through to the full-size
     // `staged` file, which would put the exact memory bomb this exists to prevent onto a
     // real device's home screen.
-    const resized = await downsizeForWidget(staged);
-    await FileSystem.deleteAsync(staged, { idempotent: true });
+    resized = await downsizeForWidget(staged);
     if (!resized) return undefined;
 
     if (Platform.OS === 'ios') {
       if (group) {
         const file = new File(group, PHOTO_FILE);
         await FileSystem.copyAsync({ from: resized, to: file.uri });
-        await FileSystem.deleteAsync(resized, { idempotent: true });
         return file.uri;
       }
     }
     await FileSystem.copyAsync({ from: resized, to: destination });
-    await FileSystem.deleteAsync(resized, { idempotent: true });
     return destination;
-  } catch {
-    return undefined;
+  } catch (caught) {
+    // The widget snapshot builder owns graceful degradation and Sentry reporting. Swallowing
+    // here meant its `card photo` / `connection photo` catch blocks never ran, making the
+    // instrumentation claim success while the actual App Group copy failed invisibly.
+    throw caught;
+  } finally {
+    if (staged) await FileSystem.deleteAsync(staged, { idempotent: true }).catch(() => undefined);
+    if (resized) await FileSystem.deleteAsync(resized, { idempotent: true }).catch(() => undefined);
   }
 }
 

@@ -147,6 +147,18 @@ export function CardProvider({ children }: PropsWithChildren) {
     await AsyncStorage.setItem(DIRTY_CARDS_STORAGE_KEY, JSON.stringify([...next]));
   }, []);
 
+  const syncWidgetsForCards = useCallback(async (
+    normalized: MobileCard[],
+    resolvedActiveId: string,
+    rethrow = false,
+  ) => {
+    const active = normalized.find((item) => item.id === resolvedActiveId) || normalized[0];
+    const env = readEnv();
+    const urlForCard = (target: MobileCard) =>
+      `${env?.publicCardBaseUrl || 'http://localhost:3000'}/c/${target.slug}`;
+    await syncCardToolsForCard(normalized, urlForCard, accessToken, active, { rethrow });
+  }, [accessToken]);
+
   const persistCards = useCallback(async (nextCards: MobileCard[], nextActiveId?: string) => {
     const normalized = nextCards.map(normalizeCard);
     const resolvedActiveId = nextActiveId ?? activeCardIdRef.current;
@@ -162,7 +174,6 @@ export function CardProvider({ children }: PropsWithChildren) {
       await AsyncStorage.setItem(ACTIVE_CARD_KEY, resolvedActiveId);
     }
 
-    const active = normalized.find((item) => item.id === resolvedActiveId) || normalized[0];
     // Runs on EVERY call, changed or not, and is not gated on there being an active card.
     //
     // The widgets' snapshot lives outside React state - in an App Group plist on iOS and
@@ -173,11 +184,8 @@ export function CardProvider({ children }: PropsWithChildren) {
     // a freshly installed build kept showing the previous build's widget.
     //
     // The no-card case matters for the same reason - it is a state the widgets render.
-    const env = readEnv();
-    const urlForCard = (target: MobileCard) =>
-      `${env?.publicCardBaseUrl || 'http://localhost:3000'}/c/${target.slug}`;
-    await syncCardToolsForCard(normalized, urlForCard, accessToken, active);
-  }, [accessToken]);
+    await syncWidgetsForCards(normalized, resolvedActiveId);
+  }, [syncWidgetsForCards]);
 
   // Foreground remote sync is intentionally session-gated, but widget initialization is not
   // remote sync. A never-authenticated device previously returned before anything wrote the
@@ -192,11 +200,30 @@ export function CardProvider({ children }: PropsWithChildren) {
       return;
     }
     if (signedOutWidgetSnapshotWrittenRef.current) return;
-    signedOutWidgetSnapshotWrittenRef.current = true;
-    void persistCards(cardsRef.current, activeCardIdRef.current).catch(() => {
-      signedOutWidgetSnapshotWrittenRef.current = false;
-    });
-  }, [loading, persistCards, session]);
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let attempt = 0;
+
+    const writeSignedOutSnapshot = async () => {
+      attempt += 1;
+      try {
+        await syncWidgetsForCards(cardsRef.current.map(normalizeCard), activeCardIdRef.current, true);
+        if (!cancelled) signedOutWidgetSnapshotWrittenRef.current = true;
+      } catch {
+        // App launch is busy and the widget bridge can genuinely be unavailable for a moment.
+        // Retry twice with a short backoff, but do not spin forever on a broken App Group.
+        if (!cancelled && attempt < 3) {
+          retryTimer = setTimeout(() => void writeSignedOutSnapshot(), attempt * 2_000);
+        }
+      }
+    };
+
+    void writeSignedOutSnapshot();
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [loading, session, syncWidgetsForCards]);
 
   /**
    * Archives a card through /api/cards, the same authenticated route every other card write

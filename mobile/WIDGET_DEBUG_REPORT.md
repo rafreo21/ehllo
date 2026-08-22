@@ -132,3 +132,24 @@ Repo: `site/mobile` (Expo SDK 57 / React Native 0.86). App: `com.ehllo.app.stagi
 3. Resolve #9 (App Group not writable) on the iPhone 8 — confirm whether delete+reinstall fixes it; if not, this needs Apple-side or `expo-file-system`-level investigation, possibly a GitHub issue against `expo-modules-core`.
 4. Decide whether #10's signed-out snapshot gap is worth fixing regardless (better UX: "Sign in to ehllo" beats a red error box or nothing).
 5. Native Android build for the `WidgetRenderer.kt` fix, whenever the next Android build ships anyway.
+
+## Codex follow-up stress review (22 Aug 2026)
+
+- **#10 signed-out snapshot gap: fixed in code.** After local card storage hydrates,
+  `card-context.tsx` now writes an explicit signed-out widget snapshot even when there is no
+  session and no card. The write uses the real error-returning path and retries twice with a
+  bounded backoff; it does not loop forever on a broken native bridge.
+- **#9 App Group failure: hardened, not root-fixed.** `widget-assets.ts` now validates that the
+  resolved App Group has a string URI and performs one cached write/delete probe per process.
+  Logo, photo, and QR writes stop after a failed probe, and the probe produces one tagged
+  Sentry warning instead of a cascade. This cannot repair an iOS container that the OS failed
+  to mount; delete/reinstall on the affected iPhone 8 is still required to test that root cause.
+- The review found and corrected two flaws in the first Codex pass: the signed-out retry was
+  initially routed through a best-effort wrapper that swallowed its rejection, and photo-cache
+  errors were swallowed below the Sentry reporting boundary. Photo failures now propagate to
+  the snapshot builder for graceful fallback plus telemetry, and temporary files are cleaned in
+  `finally` even when the App Group copy fails.
+- Verification completed: `npm run typecheck`, `npm run lint`, iOS Expo export, and Android Expo
+  export all pass. These checks validate JS/TS and OTA bundling; they do **not** prove that the
+  iPhone 8's OS-level App Group container is repaired or that WidgetKit renders on the three
+  physical devices.
