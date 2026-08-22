@@ -202,8 +202,8 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
 .share-contact { margin: 20px 0 0; display: grid; gap: 8px; font-size: 13px; overflow-wrap: anywhere; }
 .share-contact a, .share-contact .unavailable-method { min-width: 0; min-height: 64px; padding: 10px 12px; display: grid; grid-template-columns: 36px minmax(0, 1fr) 18px; align-items: center; gap: 11px; border: 1px solid #e7ebe4; border-radius: 14px; background: rgba(248,250,247,.9); color: var(--p-navy); text-decoration: none; }
 .share-contact .unavailable-method { grid-template-columns: 36px minmax(0, 1fr); }
-.share-contact a { transition: background .14s ease, border-color .14s ease, box-shadow .14s ease, transform .14s ease; }
-.share-contact a:hover, .share-contact a:focus-visible { border-color: color-mix(in srgb, var(--p-navy) 18%, #e7ebe4); background: var(--p-sky); box-shadow: 0 7px 18px rgba(22,51,0,.07); transform: translateY(-1px); }
+.share-contact a { transition: padding-left .14s ease, background .14s ease, border-color .14s ease, box-shadow .14s ease, transform .14s ease; }
+.share-contact a:hover, .share-contact a:focus-visible { padding-left: 38px; border-color: color-mix(in srgb, var(--p-navy) 18%, #e7ebe4); background: var(--p-sky); box-shadow: 0 7px 18px rgba(22,51,0,.07); transform: translateY(-1px); }
 .share-contact a:active { box-shadow: 0 2px 8px rgba(22,51,0,.06); transform: translateY(0); }
 .share-contact a:focus-visible { outline: 3px solid rgba(159,232,112,.65); outline-offset: 2px; }
 .share-contact .share-contact-icon { position: relative; isolation: isolate; width: 36px; height: 36px; display: grid; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, currentColor 30%, white); border-radius: 50%; background: rgba(255,255,255,.58); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 5px 14px color-mix(in srgb, currentColor 14%, transparent); backdrop-filter: blur(8px) saturate(1.25); }
@@ -214,7 +214,10 @@ a.home-stat-tile:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba
 .share-contact .share-contact-copy strong, .share-contact .share-contact-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .share-contact .share-contact-action { color: var(--p-muted); opacity: 0; transform: translate(-2px, 2px); transition: opacity .14s ease, transform .14s ease; }
 .share-contact a:hover .share-contact-action, .share-contact a:focus-visible .share-contact-action { opacity: 1; transform: translate(0, 0); }
-@media (hover: none) { .share-contact .share-contact-action { opacity: 1; transform: none; } }
+@media (hover: none) {
+  .share-contact .share-contact-action { opacity: 1; transform: none; }
+  .share-contact a:hover, .share-contact a:focus-visible { padding-left: 12px; }
+}
 .share-contact small { color: var(--p-muted); overflow-wrap: anywhere; }
 .share-contact svg { flex: 0 0 auto; }
 .inline-qr-panel { padding: 26px; }
