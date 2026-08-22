@@ -40,6 +40,7 @@ import { CardImage } from "../../../components/CardImage";
 import { InlineEditField } from "../../../components/InlineEditField";
 import { useToast } from "../../../components/ToastContext";
 import { Check as CheckIcon } from "react-feather";
+import { ChevronRight as ChevronRightIcon } from "react-feather";
 import { themeCoverBadgeStyle, themeForegroundColor, themeGradientCss, themeSurfaceStyle } from "../../../../lib/theme-contrast";
 import {
   cardPublishFingerprint,
@@ -269,6 +270,7 @@ export default function CardEditor() {
   const [leaveAction, setLeaveAction] = useState<"save" | "discard" | "">("");
   const [editing, setEditing] = useState<ContactMethod | null>(null);
   const [showMethodLibrary, setShowMethodLibrary] = useState(false);
+  const [showThemePicker, setShowThemePicker] = useState(false);
   const [methodError, setMethodError] = useState("");
   const [draggingMethodId, setDraggingMethodId] = useState<string | null>(null);
   const [dropTargetMethodId, setDropTargetMethodId] = useState<string | null>(null);
@@ -637,10 +639,13 @@ export default function CardEditor() {
   }, [shouldShowLeavePrompt, leaveAction, cancelNavigation]);
 
   useEffect(() => {
-    if (!showMethodLibrary) return;
+    if (!showMethodLibrary && !showThemePicker) return;
     const previousOverflow = document.body.style.overflow;
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setShowMethodLibrary(false);
+      if (event.key === "Escape") {
+        setShowMethodLibrary(false);
+        setShowThemePicker(false);
+      }
     };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleEscape);
@@ -648,7 +653,7 @@ export default function CardEditor() {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [showMethodLibrary]);
+  }, [showMethodLibrary, showThemePicker]);
 
   if (!hydrated) return <CardFlowSkeleton />;
 
@@ -712,6 +717,33 @@ export default function CardEditor() {
                   </div>
                 </section>;
               })}
+            </div>
+          </section>
+        </div>
+      )}
+      {showThemePicker && (
+        <div className="method-library-sheet-backdrop" role="presentation" onClick={() => setShowThemePicker(false)}>
+          <section className="method-library-sheet theme-picker-sheet" role="dialog" aria-modal="true" aria-labelledby="theme-picker-title" onClick={(event) => event.stopPropagation()}>
+            <header className="method-library-sheet-header">
+              <div>
+                <span className="theme-picker-current" aria-hidden="true" style={{ background: previewTheme.backgroundGradient }} />
+                <div><h2 id="theme-picker-title">Card colour</h2><p>Choose the colour used across your card.</p></div>
+              </div>
+              <button type="button" aria-label="Close card colour sheet" onClick={() => setShowThemePicker(false)}><XIcon size={19} /></button>
+            </header>
+            <div className="theme-picker-sheet-content">
+              <div className="theme-swatches theme-swatches--sheet">{themes.map((theme, index) => (
+                <button
+                  type="button"
+                  key={theme}
+                  aria-label={`Use card colour ${index + 1}`}
+                  aria-pressed={draft.theme === theme}
+                  className={draft.theme === theme ? "selected" : ""}
+                  style={{ background: themeGradientCss(theme) }}
+                  onClick={() => { update("theme", theme); setShowThemePicker(false); }}>
+                  {draft.theme === theme ? <CheckIcon size={20} color={themeForegroundColor(theme)} /> : null}
+                </button>
+              ))}</div>
             </div>
           </section>
         </div>
@@ -926,19 +958,11 @@ export default function CardEditor() {
                   <span aria-hidden="true" />
                 </button>
               </div>
-              <div className="theme-panel"><h2>Card colour</h2><p>Used for the cover and primary actions.</p>
-                <div className="theme-swatches">{themes.map((theme) => (
-                  <button
-                    type="button"
-                    key={theme}
-                    aria-label={`Use ${theme}`}
-                    className={draft.theme === theme ? "selected" : ""}
-                    style={{ background: themeGradientCss(theme) }}
-                    onClick={() => update("theme", theme)}>
-                    {draft.theme === theme ? <CheckIcon size={16} color={themeForegroundColor(theme)} /> : null}
-                  </button>
-                ))}</div>
-              </div>
+              <button type="button" className="theme-picker-trigger" onClick={() => setShowThemePicker(true)}>
+                <span className="theme-picker-current" aria-hidden="true" style={{ background: previewTheme.backgroundGradient }} />
+                <span><strong>Card colour</strong><small>Choose the colour used across your card.</small></span>
+                <ChevronRightIcon size={18} aria-hidden="true" />
+              </button>
 
               <button type="button" className="method-library-trigger" onClick={() => setShowMethodLibrary(true)}>
                 <div className="method-library-heading">
