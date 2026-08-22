@@ -544,6 +544,16 @@ body:has(.product-shell) { background: var(--p-ice); }
   .creator-steps button > span { grid-row: auto; width: 34px; height: 34px; }
   .creator-steps small, .creator-steps strong { display: none; }
   .creator-section { padding: 24px 18px; }
+  .company-visibility-option { padding: 12px; grid-template-columns: 34px minmax(0,1fr) auto; gap: 10px; border-radius: 10px; }
+  .company-option-icon { width: 34px; height: 34px; }
+  .company-option-icon > svg { width: 16px; height: 16px; }
+  .company-option-copy > div { gap: 5px; }
+  .company-option-copy strong { font-size: 13px; }
+  .company-option-copy > div > span { padding: 2px 5px; font-size: 8px; }
+  .company-option-copy p { margin-top: 3px; display: -webkit-box; overflow: hidden; font-size: 10px; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .company-switch { width: 40px; height: 24px; }
+  .company-switch > span { width: 18px; height: 18px; }
+  .company-switch.is-on > span { transform: translateX(16px); }
   .image-panel-heading { align-items: flex-start; }
   .image-options { grid-template-columns: 1fr; }
   .image-options > div > button:first-child { min-height: 88px; }

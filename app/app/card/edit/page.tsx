@@ -944,7 +944,7 @@ export default function CardEditor() {
                 <span className="company-option-icon" aria-hidden="true" style={showCompanyDetails ? { color: previewTheme.backgroundColor } : undefined}><BriefcaseIcon size={19} /></span>
                 <div className="company-option-copy">
                   <div><strong>Company details</strong><span style={showCompanyDetails ? { background: previewTheme.backgroundGradient, color: previewTheme.color } : undefined}>{showCompanyDetails ? "Shown" : "Hidden"}</span></div>
-                  <p id="company-details-description">Show your logo, company name, and company website on the card.</p>
+                  <p id="company-details-description">Show your company name, logo and website.</p>
                 </div>
                 <button
                   type="button"
