@@ -253,6 +253,7 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .card-detail-page .card-detail-back > span,
   .card-detail-page .card-detail-title > span { display: none; }
   .card-detail-page .card-detail-title { justify-items: start; text-align: left; }
+  .card-detail-page .card-detail-title strong { font-size: 14px; line-height: 1.2; }
 }
 .card-actions-sheet-backdrop { z-index: 110; }
 .card-actions-sheet { border-radius: 16px 16px 12px 12px; }
