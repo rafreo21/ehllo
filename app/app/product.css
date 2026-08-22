@@ -456,6 +456,14 @@ body:has(.product-shell) { background: var(--p-ice); }
 .company-switch.is-on { background: var(--p-lime); }
 .company-switch.is-on > span { transform: translateX(18px); }
 .company-switch:focus-visible { outline: 3px solid rgba(159,232,112,.65); outline-offset: 2px; }
+@media (min-width: 1200px) {
+  .company-visibility-option { padding: 20px; grid-template-columns: 42px minmax(0,1fr) auto; gap: 12px; align-items: center; }
+  .company-option-icon { width: 42px; height: 42px; }
+  .company-option-copy { align-self: center; }
+  .company-option-copy > div { gap: 8px; }
+  .company-option-copy strong { font-size: 18px; line-height: 1.2; letter-spacing: -.02em; }
+  .company-option-copy p { margin-top: 3px; font-size: 11px; line-height: 1.4; }
+}
 .method-modal-backdrop { position: fixed; inset: 0; z-index: 100; padding: 20px; display: grid; place-items: center; background: rgba(22,51,0,.3); backdrop-filter: blur(5px); }
 .method-modal { width: min(100%,560px); border-radius: 12px; background: white; box-shadow: 0 30px 90px rgba(22,51,0,.25); overflow: hidden; }
 .method-modal > header, .method-modal > footer { min-height: 0; padding: 18px 22px; display: flex; grid-template-columns: none; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--p-line); background: white; color: var(--p-navy); }
