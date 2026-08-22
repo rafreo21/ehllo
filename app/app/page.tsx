@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowRight as ArrowRightIcon } from "react-feather";
 import { CreditCard as IdentificationCardIcon } from "react-feather";
 import { CheckSquare as ListChecksIcon } from "react-feather";
-import { Mic as MicrophoneIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
 import { HandWavingIcon } from "@phosphor-icons/react/dist/csr/HandWaving";
@@ -51,7 +50,7 @@ type HomeNudge = {
   readAt: string | null;
 };
 
-const HOME_CAPTURE_TIP_DISMISSED_KEY = "ehllo-home-capture-tip-dismissed-v1";
+const HOME_FOLLOW_UP_TIP_DISMISSED_KEY = "ehllo-home-follow-up-tip-dismissed-v1";
 
 function isDueNow(dueAt: string) {
   if (!dueAt.trim()) return false;
@@ -99,7 +98,7 @@ export default function HomeDashboard() {
   const [activeEncounterId, setActiveEncounterId] = useState("");
   const [addFollowUpModalOpen, setAddFollowUpModalOpen] = useState(false);
   const [homeNudges, setHomeNudges] = useState<HomeNudge[]>([]);
-  const [captureTipVisible, setCaptureTipVisible] = useState(false);
+  const [followUpTipVisible, setFollowUpTipVisible] = useState(false);
 
   function loadFollowUps() {
     return fetch("/api/follow-ups", { cache: "no-store" }).then(async (response) => {
@@ -175,7 +174,7 @@ export default function HomeDashboard() {
   useEffect(() => {
     void Promise.resolve().then(async () => {
       setGreeting(timeGreeting());
-      setCaptureTipVisible(localStorage.getItem(HOME_CAPTURE_TIP_DISMISSED_KEY) !== "1");
+      setFollowUpTipVisible(localStorage.getItem(HOME_FOLLOW_UP_TIP_DISMISSED_KEY) !== "1");
       loadLocalData();
       await Promise.allSettled([loadFollowUps(), loadConnections(), loadHomeNudges()]);
       setHydrated(true);
@@ -198,9 +197,9 @@ export default function HomeDashboard() {
     };
   }, []);
 
-  function dismissCaptureTip() {
-    setCaptureTipVisible(false);
-    localStorage.setItem(HOME_CAPTURE_TIP_DISMISSED_KEY, "1");
+  function dismissFollowUpTip() {
+    setFollowUpTipVisible(false);
+    localStorage.setItem(HOME_FOLLOW_UP_TIP_DISMISSED_KEY, "1");
   }
 
   const followUpStatLabel = nudge.urgentCount
@@ -290,17 +289,17 @@ export default function HomeDashboard() {
               </div>
             ) : null}
 
-            {captureTipVisible ? (
+            {followUpTipVisible ? (
               <article className="home-nudge-card home-feature-card">
-                <a href="/app/encounters/new">
-                  <span className="home-nudge-icon"><MicrophoneIcon size={18} /></span>
+                <a href="/app/followups">
+                  <span className="home-nudge-icon"><ListChecksIcon size={18} /></span>
                   <span className="home-nudge-copy">
-                    <strong>Capture your next conversation</strong>
-                    <small>Record the context now and let ehllo help you remember the follow-up.</small>
+                    <strong>Keep your connections moving</strong>
+                    <small>Review what is due and close the loop on your next follow-up.</small>
                   </span>
-                  <span className="home-feature-action">Start capture <ArrowRightIcon size={14} /></span>
+                  <span className="home-feature-action">View follow-ups <ArrowRightIcon size={14} /></span>
                 </a>
-                <button type="button" aria-label="Dismiss Capture suggestion" onClick={dismissCaptureTip}>
+                <button type="button" aria-label="Dismiss follow-up suggestion" onClick={dismissFollowUpTip}>
                   <XIcon size={14} />
                 </button>
               </article>
