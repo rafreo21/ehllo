@@ -12,6 +12,12 @@ import { appDeepLink, appScheme } from '@/lib/app-scheme';
 import { readEnv } from '@/lib/env';
 import { buildWidgetQrFileUri } from '@/lib/widget-qr';
 import { buildFollowUpMailto } from '@/features/follow-ups/action-links';
+import {
+  normalizeThemeColor,
+  themeForegroundColor,
+  themeMutedForegroundColor,
+  themeSoftForegroundColor,
+} from '@/features/card/theme-colors';
 
 export const CONNECTIONS_DEEP_LINK = appDeepLink('connections');
 export const SCANNER_DEEP_LINK = appDeepLink('scanner');
@@ -156,6 +162,7 @@ async function buildWidgetCardPayload(
   assetKey: string,
 ): Promise<WidgetCardPayload> {
   const showCompany = showsCompanyDetails(card);
+  const themeColor = normalizeThemeColor(card.theme);
   let qrImageBase64: string | undefined;
   let photoImageBase64: string | undefined;
   let qrImageUri: string | undefined;
@@ -202,6 +209,10 @@ async function buildWidgetCardPayload(
     qrImageUri,
     photoImageUri,
     initials: initialsFor(card.name),
+    themeColor,
+    themeTextColor: themeForegroundColor(themeColor),
+    themeMutedColor: themeMutedForegroundColor(themeColor),
+    themeSoftColor: themeSoftForegroundColor(themeColor),
   };
 }
 
@@ -323,6 +334,7 @@ async function buildWidgetSnapshotImpl(
 }
 
 function bridgePayload(snapshot: WidgetSnapshot): Record<string, string | undefined> {
+  const primary = snapshot.cards[0];
   const payload: Record<string, string | undefined> = {
     cardsJson: JSON.stringify(snapshot.cards),
     // The native bridge persists a key/value store. Send empty values deliberately so logout,
@@ -335,6 +347,10 @@ function bridgePayload(snapshot: WidgetSnapshot): Record<string, string | undefi
     scannerDeepLink: SCANNER_DEEP_LINK,
     recentConnectionsJson: JSON.stringify(snapshot.connections),
     signedIn: snapshot.signedIn ? '1' : '0',
+    themeColor: primary?.themeColor || '#000000',
+    themeTextColor: primary?.themeTextColor || '#FFFFFF',
+    themeMutedColor: primary?.themeMutedColor || '#BDBDBD',
+    themeSoftColor: primary?.themeSoftColor || '#8F8F8F',
   };
 
   for (const slot of [1, 2]) {
@@ -390,6 +406,10 @@ function iosWidgetPayload(snapshot: WidgetSnapshot): IosWidgetPayload {
     // Crosses as a string because the bridge carries strings and numbers, not booleans. Its
     // absence means the widget gallery, where sample content is the right thing to show.
     signedIn: snapshot.signedIn ? '1' : '0',
+    themeColor: primary?.themeColor || '#000000',
+    themeTextColor: primary?.themeTextColor || '#FFFFFF',
+    themeMutedColor: primary?.themeMutedColor || '#BDBDBD',
+    themeSoftColor: primary?.themeSoftColor || '#8F8F8F',
   };
 
   for (const slot of [1, 2]) {

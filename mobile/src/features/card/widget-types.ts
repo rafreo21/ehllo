@@ -27,6 +27,10 @@ export type WidgetCardPayload = {
   qrImageUri?: string;
   photoImageUri?: string;
   initials: string;
+  themeColor: string;
+  themeTextColor: string;
+  themeMutedColor: string;
+  themeSoftColor: string;
 };
 
 

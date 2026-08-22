@@ -11,6 +11,7 @@ type WidgetCardRecord = {
   initials: string;
   qrImageUri?: string;
   photoImageUri?: string;
+  themeColor?: string;
 };
 
 export type QrScanWidgetProps = {
@@ -20,6 +21,7 @@ export type QrScanWidgetProps = {
   cardsJson?: string;
   /** '1' or '0'. Absent means the widget gallery, where sample content is the right answer. */
   signedIn?: string | boolean;
+  themeColor?: string;
 };
 
 function QrScanWidget(props: QrScanWidgetProps) {
@@ -67,6 +69,7 @@ function QrScanWidget(props: QrScanWidgetProps) {
         initials: card.initials?.trim() || DEMO_CARD.initials,
         qrImageUri: card.qrImageUri,
         photoImageUri: card.photoImageUri,
+        themeColor: card.themeColor,
       }));
     } catch {
       return [DEMO_CARD];
@@ -82,15 +85,16 @@ function QrScanWidget(props: QrScanWidgetProps) {
   const card = activeCard(cards, 0);
   const deepLink = card.shareDeepLink || props.shareDeepLink || 'ehllo://share-card';
   const qrImageUri = card.qrImageUri || props.qrImageUri;
+  const canvasColor = card.themeColor || props.themeColor || WIDGET_COLORS.canvas;
 
   return (
     <VStack
       modifiers={[
-        containerBackground(WIDGET_COLORS.canvas, 'widget'),
+        containerBackground(canvasColor, 'widget'),
         // containerBackground(_:for:) is iOS 17+ only and no-ops below that - see the same
         // comment in BusinessCardWidget.tsx. background() has no such gate and is the fallback
         // for the iOS 16 devices this app's deployment target (ios/Podfile) says it must serve.
-        background(WIDGET_COLORS.canvas),
+        background(canvasColor),
         // A minimum guard only - the card below is a fixed size and the VStack centres it, so
         // the visible margin is (widget - card) / 2: about 14pt on this phone, which matches
         // the business card's 16pt closely, and 5pt on the smallest iPhone where there simply

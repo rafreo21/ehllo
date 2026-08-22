@@ -49,6 +49,9 @@ export type RecentConnectionsWidgetProps = {
   scannerDeepLink?: string;
   /** '1' or '0'. Absent means the widget gallery, where sample content is the right answer. */
   signedIn?: string | boolean;
+  themeColor?: string;
+  themeTextColor?: string;
+  themeMutedColor?: string;
 };
 
 function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
@@ -95,6 +98,9 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
     textGap: 1,
     actionGap: 8,
   };
+  const canvasColor = props.themeColor || WIDGET_COLORS.canvas;
+  const textColor = props.themeTextColor || WIDGET_COLORS.text;
+  const mutedColor = props.themeMutedColor || WIDGET_COLORS.subtle;
 
 
   function connectionSlots(props: Record<string, string | number | boolean | undefined>) {
@@ -178,7 +184,7 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
           // which draws nothing, so the initial floated with no shape behind it.
           <Text
             modifiers={[
-              foregroundStyle(WIDGET_COLORS.text),
+              foregroundStyle(textColor),
               font({ family: FONTS.regular, size: 12 }),
               frame({ width: SIZES.avatar, height: SIZES.avatar }),
               background(placeholder ? WIDGET_COLORS.chip : WIDGET_COLORS.avatarFallback),
@@ -195,7 +201,7 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
           <VStack spacing={SIZES.textGap} alignment="leading">
             <Text
               modifiers={[
-                foregroundStyle(placeholder ? WIDGET_COLORS.subtle : WIDGET_COLORS.text),
+                foregroundStyle(placeholder ? mutedColor : textColor),
                 font({ family: FONTS.regular, size: 14 }),
                 lineLimit(1),
               ]}>
@@ -203,7 +209,7 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
             </Text>
             <Text
               modifiers={[
-                foregroundStyle(WIDGET_COLORS.subtle),
+                foregroundStyle(mutedColor),
                 font({ family: FONTS.regular, size: 11 }),
                 lineLimit(1),
               ]}>
@@ -222,7 +228,7 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
             <Image
               systemName="phone.fill"
               modifiers={[
-                foregroundStyle(WIDGET_COLORS.text),
+                foregroundStyle(textColor),
                 font({ size: 11 }),
                 frame({ width: SIZES.action, height: SIZES.action }),
                 background(WIDGET_COLORS.chip),
@@ -237,7 +243,7 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
             <Image
               systemName="envelope.fill"
               modifiers={[
-                foregroundStyle(WIDGET_COLORS.text),
+                foregroundStyle(textColor),
                 font({ size: 11 }),
                 frame({ width: SIZES.action, height: SIZES.action }),
                 background(WIDGET_COLORS.chip),
@@ -269,11 +275,11 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
           ]}>
           <Image
             systemName="plus.circle.fill"
-            modifiers={[foregroundStyle(WIDGET_COLORS.text), font({ size: 13 })]}
+            modifiers={[foregroundStyle(textColor), font({ size: 13 })]}
           />
           <Text
             modifiers={[
-              foregroundStyle(WIDGET_COLORS.text),
+              foregroundStyle(textColor),
               font({ family: FONTS.regular, size: 12 }),
               lineLimit(1),
             ]}>
@@ -313,11 +319,11 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
       spacing={SIZES.rowGap}
       alignment="leading"
       modifiers={[
-        containerBackground(WIDGET_COLORS.canvas, 'widget'),
+        containerBackground(canvasColor, 'widget'),
         // containerBackground(_:for:) is iOS 17+ only and no-ops below that - see the same
         // comment in BusinessCardWidget.tsx. background() has no such gate and is the fallback
         // for the iOS 16 devices this app's deployment target (ios/Podfile) says it must serve.
-        background(WIDGET_COLORS.canvas),
+        background(canvasColor),
         // 16pt, the same margin as the business card widget, so the two do not look like they
         // were laid out to different rules when they sit together on a home screen.
         padding({ leading: 16, trailing: 16, top: 16 }),
@@ -334,7 +340,7 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
       {signedOut ? (
         <Text
           modifiers={[
-            foregroundStyle(WIDGET_COLORS.subtle),
+            foregroundStyle(mutedColor),
             font({ family: FONTS.regular, size: 12 }),
             lineLimit(2),
           ]}>

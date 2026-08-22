@@ -23,6 +23,10 @@ type WidgetCardRecord = {
   initials: string;
   qrImageUri?: string;
   photoImageUri?: string;
+  themeColor?: string;
+  themeTextColor?: string;
+  themeMutedColor?: string;
+  themeSoftColor?: string;
 };
 
 export type BusinessCardWidgetProps = {
@@ -36,6 +40,10 @@ export type BusinessCardWidgetProps = {
   initials?: string;
   qrImageUri?: string;
   photoImageUri?: string;
+  themeColor?: string;
+  themeTextColor?: string;
+  themeMutedColor?: string;
+  themeSoftColor?: string;
   /** '1' or '0'. Absent means the widget gallery, where sample content is correct. */
   signedIn?: string | boolean;
 };
@@ -89,6 +97,10 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
         initials: card.initials?.trim() || DEMO_CARD.initials,
         qrImageUri: card.qrImageUri,
         photoImageUri: card.photoImageUri,
+        themeColor: card.themeColor,
+        themeTextColor: card.themeTextColor,
+        themeMutedColor: card.themeMutedColor,
+        themeSoftColor: card.themeSoftColor,
       }));
     } catch {
       return [DEMO_CARD];
@@ -133,6 +145,10 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
   // Morgan's name, role and company as though they were yours. Apple's guidance is explicit
   // that a widget needing an account should say so rather than inventing content.
   const signedOut = props.signedIn === '0' || props.signedIn === false;
+  const canvasColor = card.themeColor || props.themeColor || WIDGET_COLORS.canvas;
+  const textColor = card.themeTextColor || props.themeTextColor || WIDGET_COLORS.text;
+  const mutedColor = card.themeMutedColor || props.themeMutedColor || WIDGET_COLORS.muted;
+  const subtleColor = card.themeSoftColor || props.themeSoftColor || WIDGET_COLORS.subtle;
 
   return (
     // 340x164 with a 308x117 inner row: horizontal, 16pt between the card and the text,
@@ -146,7 +162,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
       spacing={16}
       alignment="center"
       modifiers={[
-        containerBackground(WIDGET_COLORS.canvas, 'widget'),
+        containerBackground(canvasColor, 'widget'),
         // containerBackground(_:for:) is iOS 17+ only - @expo/ui's own modifier no-ops below
         // that (ContainerBackgroundModifier.swift falls through to `content` unchanged on
         // iOS < 17), so on iOS 16 nothing paints this canvas at all and WidgetKit falls back
@@ -155,7 +171,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
         // report this app's own iOS 16.4 deployment target (ios/Podfile) says it must support.
         // Plain background() carries no such gate, so it is the fallback for iOS < 17;
         // redundant with containerBackground on 17+, which is harmless.
-        background(WIDGET_COLORS.canvas),
+        background(canvasColor),
         // Horizontal padding only. A fixed 24pt top against a 16pt bottom pushed everything
         // low and left uneven margins, and any fixed pair is wrong on some device anyway:
         // a medium widget is 164pt tall here and 141pt on the smallest iPhones, so the spare
@@ -240,7 +256,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
 
         <Text
           modifiers={[
-            foregroundStyle(WIDGET_COLORS.text),
+              foregroundStyle(textColor),
             font({ family: FONTS.regular, size: 16, weight: 'regular' }),
             lineLimit(1),
           ]}>
@@ -249,7 +265,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
 
         <VStack spacing={3} alignment="leading" modifiers={[frame({ width: 175, alignment: 'leading' })]}>
           {signedOut ? (
-            <Text modifiers={[foregroundStyle(WIDGET_COLORS.muted), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
+            <Text modifiers={[foregroundStyle(mutedColor), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
               Your card appears here
             </Text>
           ) : noPrimary ? (
@@ -257,17 +273,17 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
             // card, and inventing Alex Morgan here is what put a stranger's details on a real
             // home screen before.
             <>
-              <Text modifiers={[foregroundStyle(WIDGET_COLORS.muted), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
+              <Text modifiers={[foregroundStyle(mutedColor), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
                 Your role
               </Text>
-              <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
+              <Text modifiers={[foregroundStyle(subtleColor), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
                 Your company
               </Text>
             </>
           ) : (
             <>
               {(card.role || props.role) ? (
-                <Text modifiers={[foregroundStyle(WIDGET_COLORS.muted), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
+                <Text modifiers={[foregroundStyle(mutedColor), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
                   {card.role || props.role}
                 </Text>
               ) : null}
@@ -275,7 +291,7 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
                 // Same 12pt as the role above it, so the two lines read as one block rather
                 // than a step down in scale. Only the colour separates them now, which also
                 // puts it back above Apple's 11pt legibility floor.
-                <Text modifiers={[foregroundStyle(WIDGET_COLORS.subtle), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
+                <Text modifiers={[foregroundStyle(subtleColor), font({ family: FONTS.regular, size: 12, weight: 'regular' }), lineLimit(1)]}>
                   {card.company || props.company}
                 </Text>
               ) : null}

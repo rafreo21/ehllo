@@ -112,7 +112,16 @@ export async function readUriAsBase64(uri: string) {
 export async function ensureWidgetLogoUri() {
   const group = Platform.OS === 'ios' ? await getWritableAppleWidgetGroup() : undefined;
   const directory = Platform.OS === 'ios' ? group?.uri : FileSystem.cacheDirectory;
-  if (!directory) return undefined;
+  if (!directory) {
+    if (Platform.OS !== 'ios') return undefined;
+    const asset = Asset.fromModule(logoAsset);
+    await asset.downloadAsync();
+    if (!asset.localUri) return undefined;
+    const resized = await downsizeForWidget(asset.localUri, 128);
+    const base64 = await readUriAsBase64(resized || asset.localUri);
+    if (resized) await FileSystem.deleteAsync(resized, { idempotent: true }).catch(() => undefined);
+    return base64 ? `data:image/png;base64,${base64}` : undefined;
+  }
   // On iOS the widget can only read the shared App Group container. Without it, anything we
   // write goes to the app's own sandbox and the extension silently fails to load it - so the
   // avatar vanishes with no error rather than falling back to the initials circle.
@@ -134,9 +143,15 @@ export async function ensureWidgetLogoUri() {
   if (Platform.OS === 'ios') {
     if (group) {
       const file = new File(group, LOGO_FILE);
-      await FileSystem.copyAsync({ from: source, to: file.uri });
-      if (resizedLogo) await FileSystem.deleteAsync(resizedLogo, { idempotent: true });
-      return file.uri;
+      try {
+        await FileSystem.copyAsync({ from: source, to: file.uri });
+        if (resizedLogo) await FileSystem.deleteAsync(resizedLogo, { idempotent: true });
+        return file.uri;
+      } catch {
+        const base64 = await readUriAsBase64(source);
+        if (resizedLogo) await FileSystem.deleteAsync(resizedLogo, { idempotent: true }).catch(() => undefined);
+        return base64 ? `data:image/png;base64,${base64}` : undefined;
+      }
     }
   }
 
@@ -176,10 +191,15 @@ export async function cacheWidgetPhotoUri(photo: string, fileKey = 'default') {
 
   const group = Platform.OS === 'ios' ? await getWritableAppleWidgetGroup() : undefined;
   const directory = Platform.OS === 'ios' ? group?.uri : FileSystem.cacheDirectory;
-  if (!directory) return undefined;
+  // Foundation's Data(contentsOf:) supports data: URLs, which lets WidgetKit decode an
+  // embedded, downsized image even on devices where iOS exposes App Group UserDefaults but
+  // refuses to mount the App Group file container. Text snapshots already cross that bridge;
+  // this fallback carries the small raster in the same snapshot instead of dropping it.
+  const embedForIos = Platform.OS === 'ios' && !directory;
+  if (!directory && !embedForIos) return undefined;
 
   const PHOTO_FILE = photoFileName(fileKey);
-  const destination = `${directory}${PHOTO_FILE}`;
+  const destination = directory ? `${directory}${PHOTO_FILE}` : '';
   let staged: string | undefined;
   let resized: string | undefined;
 
@@ -194,6 +214,11 @@ export async function cacheWidgetPhotoUri(photo: string, fileKey = 'default') {
     resized = await downsizeForWidget(staged);
     if (!resized) return undefined;
 
+    if (embedForIos) {
+      const base64 = await readUriAsBase64(resized);
+      return base64 ? `data:image/png;base64,${base64}` : undefined;
+    }
+
     if (Platform.OS === 'ios') {
       if (group) {
         const file = new File(group, PHOTO_FILE);
@@ -204,6 +229,10 @@ export async function cacheWidgetPhotoUri(photo: string, fileKey = 'default') {
     await FileSystem.copyAsync({ from: resized, to: destination });
     return destination;
   } catch (caught) {
+    if (Platform.OS === 'ios' && resized) {
+      const base64 = await readUriAsBase64(resized);
+      if (base64) return `data:image/png;base64,${base64}`;
+    }
     // The widget snapshot builder owns graceful degradation and Sentry reporting. Swallowing
     // here meant its `card photo` / `connection photo` catch blocks never ran, making the
     // instrumentation claim success while the actual App Group copy failed invisibly.

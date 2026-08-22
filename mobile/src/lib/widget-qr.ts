@@ -32,7 +32,6 @@ export async function buildWidgetQrFileUri(cardUrl: string, fileKey = 'primary')
   // Probe before rendering the QR. If iOS has not mounted the App Group, generating a raster
   // we cannot store only adds memory/CPU pressure and then produces another native failure.
   const appleGroup = Platform.OS === 'ios' ? await getWritableAppleWidgetGroup() : undefined;
-  if (Platform.OS === 'ios' && !appleGroup) return undefined;
   // Divided by the pixel ratio because the rasterizer treats this as points and multiplies by
   // the screen scale. Asking in pixels and letting it triple was the bug.
   const requestedSize = Math.max(120, Math.round(QR_TARGET_PIXELS / PixelRatio.get()));
@@ -44,17 +43,19 @@ export async function buildWidgetQrFileUri(cardUrl: string, fileKey = 'primary')
   if (Platform.OS === 'ios') {
     if (appleGroup) {
       const file = new File(appleGroup, QR_FILE_NAME);
-      await FileSystem.writeAsStringAsync(file.uri, base64, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      return file.uri;
+      try {
+        await FileSystem.writeAsStringAsync(file.uri, base64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        return file.uri;
+      } catch {
+        return `data:image/png;base64,${base64}`;
+      }
     }
-    // No App Group, no usable path. This used to fall through to the cache directory below -
-    // which lives in the APP's sandbox and the widget extension cannot read. The widget was
-    // handed a path that looked perfectly valid, failed to load it, and drew its white card
-    // with nothing inside: the "widgets are all white" report. Returning nothing is far better,
-    // because "no code yet" is a state the widget renders on purpose.
-    return undefined;
+    // The native widget image loader uses Foundation Data(contentsOf:), which can read data:
+    // URLs. Embed the small QR in the widget snapshot when the OS has not mounted the App
+    // Group file directory; UserDefaults still crosses successfully on affected devices.
+    return `data:image/png;base64,${base64}`;
   }
 
   const path = `${FileSystem.cacheDirectory}${QR_FILE_NAME}`;
