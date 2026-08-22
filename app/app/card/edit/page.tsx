@@ -334,6 +334,7 @@ export default function CardEditor() {
     ? draft.methods
     : draft.methods.filter((method) => method.type !== "website");
   const collapsedPreviewMethods = visibleMethods.filter((method) => method.id !== editing?.id);
+  const editingMethodIndex = editing ? visibleMethods.findIndex((method) => method.id === editing.id) : -1;
   const hasUnpublishedChanges = hydrated && (hasEditBaseline ? cardPublishFingerprint(draft) !== publishedFingerprint : isCreating);
   useEffect(() => {
     hasUnpublishedRef.current = hasUnpublishedChanges;
@@ -863,14 +864,14 @@ export default function CardEditor() {
                   multiline
                   maxLength={180}
                 />
-                {collapsedPreviewMethods.length > 0 ? <div className="preview-methods">{collapsedPreviewMethods.map((method) => {
+                {(visibleMethods.length > 0 || editing) ? <div className="preview-methods">{collapsedPreviewMethods.map((method) => {
                   const meta = methodMeta[method.type];
                   return <button
                     type="button"
                     key={method.id}
                     draggable
                     className={`${draggingMethodId === method.id ? "is-dragging" : ""}${dropTargetMethodId === method.id && draggingMethodId !== method.id ? " is-drop-target" : ""}`}
-                    style={{ "--card-accent": previewTheme.backgroundColor } as React.CSSProperties}
+                    style={{ "--card-accent": previewTheme.backgroundColor, order: visibleMethods.findIndex((item) => item.id === method.id) * 2 } as React.CSSProperties}
                     onDragStart={(event) => {
                       methodDragRef.current = true;
                       setDraggingMethodId(method.id);
@@ -908,9 +909,10 @@ export default function CardEditor() {
                       <p><strong>{method.label}</strong><small>{method.value}</small></p>
                       <PencilSimpleIcon size={16} />
                     </button>;
-                })}</div> : null}
+                })}
                 {editing && <section
                   className="preview-method-editor"
+                  style={{ order: (editingMethodIndex >= 0 ? editingMethodIndex : visibleMethods.length) * 2 } as React.CSSProperties}
                   aria-label={`Edit ${methodMeta[editing.type].name}`}
                   onBlur={finishMethodEditing}
                   onKeyDown={(event) => {
@@ -943,6 +945,7 @@ export default function CardEditor() {
                     </div>
                   </div>
                 </section>}
+                </div> : null}
                 <button
                   type="button"
                   className="preview-add-method-trigger editor-compact-only"

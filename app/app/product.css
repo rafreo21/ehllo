@@ -414,6 +414,7 @@ body:has(.product-shell) { background: var(--p-ice); }
 .preview-method-save:hover { background: #dde2da; }
 .preview-method-cancel:focus-visible, .preview-method-delete:focus-visible, .preview-method-save:focus-visible { outline: 2px solid rgba(159,232,112,.7); outline-offset: 1px; }
 .preview-methods { margin-top: 18px; display: grid; gap: 8px; }
+.preview-methods > .preview-method-editor { margin: 0; }
 .preview-methods > button { position: relative; width: 100%; min-height: 64px; padding: 9px 11px; display: grid; grid-template-columns: 36px minmax(0, 1fr) 18px; gap: 11px; align-items: center; border: 1px solid #e7ebe4; border-radius: 14px; background: rgba(248,250,247,.9); color: inherit; font: inherit; text-align: left; cursor: grab; transition: padding-left .14s ease, background .14s ease, border-color .14s ease, box-shadow .14s ease, opacity .14s ease, transform .14s ease; }
 .preview-methods > button:active { cursor: grabbing; }
 .preview-methods > button.is-dragging { opacity: .42; transform: scale(.985); }
