@@ -61,9 +61,15 @@
 .consumer-sidebar .nav-group-label { margin: 0 0 10px; padding: 0 16px; font-size: 11px; color: #9aa39a; }
 .sidebar-bottom { margin-top: auto; display: grid; gap: 12px; }
 .workspace-card { padding: 10px; display: flex; align-items: center; gap: 10px; border-radius: 6px; background: var(--p-ice); color: var(--p-navy); text-align: left; }
-.workspace-card > span { width: 34px; height: 34px; border-radius: 5px; display: grid; place-items: center; background: var(--p-navy); color: white; font-size: 11px; font-weight: 900; }
-.workspace-card div { display: flex; flex-direction: column; font-weight: 800; font-size: 12px; }
+.workspace-card-avatar { position: relative; width: 36px; height: 36px; display: grid; place-items: center; overflow: hidden; flex: 0 0 auto; border-radius: 50%; background: var(--p-navy); color: white; font-size: 11px; font-weight: 900; }
+.workspace-card-avatar > img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.workspace-card-avatar > span { display: grid; place-items: center; }
+.workspace-card-copy { min-width: 0; flex: 1; display: flex; flex-direction: column; font-size: 12px; }
+.workspace-card-copy strong, .workspace-card-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .workspace-card small { color: #7d8ba0; font-weight: 500; margin-top: 3px; }
+.workspace-signout { margin-left: auto; flex: 0 0 auto; }
+.workspace-signout-button { border-radius: 50% !important; background: white !important; color: var(--p-navy) !important; }
+.workspace-signout-button:hover { background: var(--p-sky) !important; }
 .product-main { min-width: 0; }
 .consumer-topbar { position: fixed; top: 16px; right: 24px; z-index: 90; display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 999px; background: white; box-shadow: 0 8px 24px rgba(22,51,0,.1); }
 .consumer-topbar-avatar { width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; background: var(--p-navy); color: white; font-size: 11px; font-weight: 900; text-decoration: none; flex: 0 0 auto; }

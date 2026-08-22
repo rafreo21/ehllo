@@ -10,7 +10,7 @@ import { Menu as MenuIcon } from "react-feather";
 import { Send as PaperPlaneTiltIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { Users as UsersThreeIcon } from "react-feather";
-import { LogOut as SignOutIcon } from "react-feather";
+import { Power as SignOutIcon } from "react-feather";
 import { User as UserCircleIcon } from "react-feather";
 import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { X as XIcon } from "react-feather";
@@ -166,10 +166,12 @@ export function AppShell({ children }: AppShellProps) {
         </nav>
         <div className="sidebar-bottom">
           <div className="workspace-card">
-            <span>{initials || "AM"}</span>
-            <div>{label}<small>{user.email}</small></div>
-            <form action="/auth/signout" method="post">
-              <IconButton type="submit" aria-label="Sign out" title="Sign out"><SignOutIcon /></IconButton>
+            <div className="workspace-card-avatar">
+              <CardImage src={primaryCard?.photo} alt="" fallback={<span>{initials || "AM"}</span>} />
+            </div>
+            <div className="workspace-card-copy"><strong>{label}</strong><small>{user.email}</small></div>
+            <form className="workspace-signout" action="/auth/signout" method="post">
+              <IconButton className="workspace-signout-button" type="submit" aria-label="Sign out" title="Sign out"><SignOutIcon size={16} /></IconButton>
             </form>
           </div>
         </div>
