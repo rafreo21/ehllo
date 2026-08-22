@@ -689,7 +689,14 @@ export default function CardEditor() {
       )}
       {showMethodLibrary && (
         <div className="method-library-sheet-backdrop" role="presentation" onClick={() => setShowMethodLibrary(false)}>
-          <section className="method-library-sheet" role="dialog" aria-modal="true" aria-labelledby="method-library-title" onClick={(event) => event.stopPropagation()}>
+          <section
+            className="method-library-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="method-library-title"
+            style={{ "--card-accent": previewTheme.backgroundColor } as React.CSSProperties}
+            onClick={(event) => event.stopPropagation()}
+          >
             <header className="method-library-sheet-header">
               <div>
                 <span className="method-library-add-icon" aria-hidden="true" style={{ color: previewTheme.backgroundColor }}><PlusIcon size={18} /></span>
@@ -988,7 +995,10 @@ export default function CardEditor() {
                   </button>
                 ))}</div>
               </div>
-              <div className="method-library editor-desktop-only">
+              <div
+                className="method-library editor-desktop-only"
+                style={{ "--card-accent": previewTheme.backgroundColor } as React.CSSProperties}
+              >
                 <header className="method-library-heading">
                   <span className="method-library-add-icon" aria-hidden="true" style={{ color: previewTheme.backgroundColor }}><PlusIcon size={18} /></span>
                   <div><h2>Add a contact method</h2><p>Choose how people can connect with you.</p></div>
