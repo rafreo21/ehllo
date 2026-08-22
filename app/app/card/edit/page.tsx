@@ -851,40 +851,6 @@ export default function CardEditor() {
                   multiline
                   maxLength={180}
                 />
-                {editing && <section
-                  className="preview-method-editor"
-                  aria-label={`Edit ${methodMeta[editing.type].name}`}
-                  onBlur={finishMethodEditing}
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape") { setMethodError(""); setEditing(null); }
-                    if (event.key === "Enter" && event.target instanceof HTMLInputElement) { event.preventDefault(); saveMethod(); }
-                  }}
-                >
-                  <div className="preview-method-editor-content">
-                    <div className="preview-method-suggestions" aria-label="Suggested labels">
-                      {suggestionsFor(editing.type).map((label) => (
-                        <button key={label} type="button" aria-pressed={editing.label === label} onClick={() => setEditing({ ...editing, label })}>{label}</button>
-                      ))}
-                    </div>
-                    <input aria-label="Button label" placeholder="Button label" value={editing.label} onChange={(event) => setEditing({ ...editing, label: event.target.value })} />
-                    <input
-                      autoFocus
-                      aria-label={fieldLabel(editing.type)}
-                      placeholder={fieldLabel(editing.type)}
-                      type={editing.type === "email" ? "email" : editing.type === "phone" || editing.type === "whatsapp" ? "tel" : "text"}
-                      value={editing.value}
-                      onChange={(event) => { setMethodError(""); setEditing({ ...editing, value: event.target.value }); }}
-                    />
-                    {methodError ? <small className="preview-method-error" role="alert">{methodError}</small> : null}
-                    <div className="preview-method-mini-actions">
-                      {draft.methods.some((item) => item.id === editing.id) ? (
-                        <button type="button" className="preview-method-delete" onClick={() => { update("methods", draft.methods.filter((item) => item.id !== editing.id)); setMethodError(""); setEditing(null); }}>Delete</button>
-                      ) : null}
-                      <button type="button" className="preview-method-cancel" onClick={() => { setMethodError(""); setEditing(null); }}>Cancel</button>
-                      <button type="button" className="preview-method-save" onClick={saveMethod}>Save</button>
-                    </div>
-                  </div>
-                </section>}
                 {collapsedPreviewMethods.length > 0 ? <div className="preview-methods">{collapsedPreviewMethods.map((method) => {
                   const meta = methodMeta[method.type];
                   return <button
@@ -931,6 +897,40 @@ export default function CardEditor() {
                       <PencilSimpleIcon size={16} />
                     </button>;
                 })}</div> : null}
+                {editing && <section
+                  className="preview-method-editor"
+                  aria-label={`Edit ${methodMeta[editing.type].name}`}
+                  onBlur={finishMethodEditing}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") { setMethodError(""); setEditing(null); }
+                    if (event.key === "Enter" && event.target instanceof HTMLInputElement) { event.preventDefault(); saveMethod(); }
+                  }}
+                >
+                  <div className="preview-method-editor-content">
+                    <div className="preview-method-suggestions" aria-label="Suggested labels">
+                      {suggestionsFor(editing.type).map((label) => (
+                        <button key={label} type="button" aria-pressed={editing.label === label} onClick={() => setEditing({ ...editing, label })}>{label}</button>
+                      ))}
+                    </div>
+                    <input aria-label="Button label" placeholder="Button label" value={editing.label} onChange={(event) => setEditing({ ...editing, label: event.target.value })} />
+                    <input
+                      autoFocus
+                      aria-label={fieldLabel(editing.type)}
+                      placeholder={fieldLabel(editing.type)}
+                      type={editing.type === "email" ? "email" : editing.type === "phone" || editing.type === "whatsapp" ? "tel" : "text"}
+                      value={editing.value}
+                      onChange={(event) => { setMethodError(""); setEditing({ ...editing, value: event.target.value }); }}
+                    />
+                    {methodError ? <small className="preview-method-error" role="alert">{methodError}</small> : null}
+                    <div className="preview-method-mini-actions">
+                      {draft.methods.some((item) => item.id === editing.id) ? (
+                        <button type="button" className="preview-method-delete" onClick={() => { update("methods", draft.methods.filter((item) => item.id !== editing.id)); setMethodError(""); setEditing(null); }}>Delete</button>
+                      ) : null}
+                      <button type="button" className="preview-method-cancel" onClick={() => { setMethodError(""); setEditing(null); }}>Cancel</button>
+                      <button type="button" className="preview-method-save" onClick={saveMethod}>Save</button>
+                    </div>
+                  </div>
+                </section>}
               </div>
             </article>
           </aside>
