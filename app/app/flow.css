@@ -1876,3 +1876,59 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .scan-steps small { display: none; }
   .scan-viewport-wrap { height: clamp(270px, 50dvh, 380px); }
 }
+
+/* On card detail, this toolbar becomes the single mobile/tablet header. */
+@media (max-width: 1023px) {
+  .product-shell:has(.card-detail-page) .product-mobile-header,
+  .product-shell:has(.card-detail-page) .consumer-topbar { display: none; }
+  .card-detail-page .card-detail-topbar {
+    position: sticky;
+    top: max(10px, env(safe-area-inset-top));
+    z-index: 90;
+    min-height: 64px;
+    padding: 9px 10px;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) 38px;
+    align-items: center;
+    gap: 9px;
+    border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(22,51,0,.09);
+  }
+  .card-detail-page .card-detail-back {
+    grid-column: 1;
+    grid-row: 1;
+    width: 38px;
+    min-height: 38px;
+    padding: 0;
+  }
+  .card-detail-page .card-detail-back > span { display: none; }
+  .card-detail-page .card-detail-title {
+    order: initial;
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    justify-items: start;
+    text-align: left;
+  }
+  .card-detail-page .card-detail-title strong {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card-detail-page .card-detail-actions { display: none; }
+  .card-detail-page .card-detail-more {
+    grid-column: 3;
+    grid-row: 1;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #f2f5f0;
+    cursor: pointer;
+  }
+  .card-detail-page .card-detail-more:hover,
+  .card-detail-page .card-detail-more:active,
+  .card-detail-page .card-detail-more[aria-expanded="true"] { background: #e5e9e2; }
+}
