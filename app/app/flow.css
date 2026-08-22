@@ -1509,13 +1509,32 @@ a.home-stat-tile:hover { background: var(--p-ice); }
     grid-row: 2;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
+    gap: 0;
+    padding: 3px;
+    border: 1px solid #e7eae5;
+    border-radius: 10px;
+    background: #f5f7f3;
   }
   .card-detail-topbar > div:last-child > * {
     width: 100%;
     min-width: 0;
-    padding-inline: 7px;
+    min-height: 36px;
+    padding: 6px 5px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    box-shadow: none;
+    font-size: 11px;
     white-space: nowrap;
+  }
+  .card-detail-topbar > div:last-child > * + * {
+    border-left: 1px solid #dfe4dc;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  .card-detail-topbar > div:last-child > *:hover,
+  .card-detail-topbar > div:last-child > *:active {
+    background: white;
   }
   .card-action-label-full { display: none; }
   .card-action-label-compact { display: inline; }
