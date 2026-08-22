@@ -1416,7 +1416,8 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .encounter-layout { grid-template-columns: 1fr; }
   .encounter-privacy-rail { display: none; }
 }
-@media (max-width: 800px) {
+/* Flow layouts switch with the application shell: desktop starts at 1024px. */
+@media (max-width: 1023px) {
   .flow-grid, .cards-grid, .qr-layout, .card-share-layout, .dashboard-grid, .review-layout { grid-template-columns: 1fr; }
   .privacy-rail, .share-rail { position: static; }
   .follow-up-meta { grid-template-columns: 1fr; }
@@ -1881,6 +1882,13 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 @media (max-width: 1023px) {
   .product-shell:has(.card-detail-page) .product-mobile-header,
   .product-shell:has(.card-detail-page) .consumer-topbar { display: none; }
+  .product-shell:has(.card-detail-page) { height: auto; min-height: 100vh; overflow: visible; }
+  .product-shell:has(.card-detail-page) .product-main { min-height: 0; overflow: visible; }
+  .product-shell:has(.card-detail-page) .product-content {
+    max-width: 760px;
+    padding: 12px 22px 56px;
+  }
+  .card-detail-page { height: auto; min-height: 0; }
   .card-detail-page .card-detail-topbar {
     position: sticky;
     top: max(10px, env(safe-area-inset-top));
@@ -1931,4 +1939,21 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .card-detail-page .card-detail-more:hover,
   .card-detail-page .card-detail-more:active,
   .card-detail-page .card-detail-more[aria-expanded="true"] { background: #e5e9e2; }
+  .card-detail-page .card-share-layout {
+    width: 100%;
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: visible;
+  }
+  .card-detail-page .share-card-preview { width: 100%; max-width: 680px; margin-inline: auto; }
+}
+
+@media (max-width: 599px) {
+  .product-shell:has(.card-detail-page) .product-content { padding: 10px 12px 42px; }
+  .card-detail-page .card-detail-topbar { top: max(8px, env(safe-area-inset-top)); }
+  .card-detail-page .share-card-cover { min-height: 156px; padding: 18px; }
+  .card-detail-page .share-card-body { padding: 0 18px 22px; }
+  .card-detail-page .share-avatar { width: 82px; height: 82px; margin-top: -41px; border-width: 4px; }
+  .card-detail-page .share-card-body h2 { margin-top: 14px; font-size: 28px; }
+  .card-detail-page .share-contact { margin-top: 16px; }
 }
