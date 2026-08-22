@@ -185,7 +185,9 @@ module.exports = {
           imageWidth: 140,
         },
       ],
-      // After expo-widgets, which is what creates the extension target this adds fonts to.
+      // Dangerous mods execute in reverse registration order. Register these before
+      // expo-widgets so they run after its extension sources have been generated.
+      "./plugins/withWidgetFullBleedBackground",
       "./plugins/withWidgetFonts",
       "./plugins/withIosLiquidGlassIcon",
       "expo-secure-store",
