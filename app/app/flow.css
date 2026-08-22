@@ -1544,7 +1544,9 @@ a.home-stat-tile:hover { background: var(--p-ice); }
     overscroll-behavior: contain;
   }
   .card-tools-sheet-shell .inline-qr-frame { width: min(100%, 260px); margin-inline: auto; padding: 10px; }
-  .card-tools-sheet-shell .scan-steps { grid-template-columns: 1fr; }
+  .card-tools-sheet-shell .scan-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+  .card-tools-sheet-shell .scan-steps li { min-width: 0; padding: 8px 6px; gap: 5px; line-height: 1.25; }
+  .card-tools-sheet-shell .scan-steps span { width: 19px; height: 19px; }
   .card-tools-sheet-shell .inline-qr-actions,
   .card-tools-sheet-shell .signature-actions,
   .card-tools-sheet-shell .phone-widget-actions { display: grid; grid-template-columns: 1fr; gap: 7px; }
