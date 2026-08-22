@@ -334,7 +334,6 @@ export default function ScanPage() {
               {mode === "camera" && cameraState !== "unsupported" ? (
                 <div className="scan-secondary-actions">
                   <Button variant="ghost" onClick={() => setMode("manual")}>Paste instead</Button>
-                  <LinkButton variant="ghost" href="/business/contacts/linkedin"><LinkedinLogoIcon size={16} />Add from LinkedIn</LinkButton>
                 </div>
               ) : null}
             </div>

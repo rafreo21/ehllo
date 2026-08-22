@@ -288,7 +288,9 @@
   color: inherit;
   text-decoration: none;
 }
-.public-card-method-link:hover { border-color: color-mix(in srgb, var(--card-accent) 38%, #dce2d8); background: #fff; box-shadow: 0 8px 22px rgba(22,51,0,.08); transform: translateY(-1px); }
+.public-card-method-link:hover, .public-card-method-link:focus-visible { border-color: color-mix(in srgb, var(--card-accent) 38%, #dce2d8); background: color-mix(in srgb, var(--card-accent) 7%, #fff); box-shadow: 0 8px 22px rgba(22,51,0,.08); transform: translateY(-1px); }
+.public-card-method-link:active { box-shadow: 0 2px 8px rgba(22,51,0,.06); transform: translateY(0); }
+.public-card-method-link:focus-visible { outline: 3px solid color-mix(in srgb, var(--card-accent) 48%, transparent); outline-offset: 2px; }
 .public-card-method-link { transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease; }
 .public-card-method-icon {
   position: relative;
@@ -316,7 +318,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.public-card-method-action { justify-self: end; color: #879282; }
+.public-card-method-action { justify-self: end; color: #879282; opacity: 0; transform: translate(-2px, 2px); transition: opacity .16s ease, transform .16s ease; }
+.public-card-method-link:hover .public-card-method-action, .public-card-method-link:focus-visible .public-card-method-action { opacity: 1; transform: translate(0, 0); }
+@media (hover: none) { .public-card-method-action { opacity: 1; transform: none; } }
 .public-card-return {
   min-height: 44px;
   display: flex;

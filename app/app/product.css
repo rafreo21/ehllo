@@ -301,9 +301,7 @@
 .creator-preview .creator-publish-state span { font-size: 11px; }
 .creator-preview .creator-publish-state.is-dirty span::before { width: 6px; height: 6px; margin-right: 6px; }
 .creator-preview .creator-publish-state.is-published svg { width: 15px; height: 15px; }
-/* .is-published normally matches this panel's own background (--p-sky) -
-   give it a white card so it doesn't disappear once nested here. */
-.creator-preview .creator-publish-state.is-published { background: #ffffff; }
+.creator-preview .creator-publish-state.is-published { background: #e7f8dc; color: #205d0d; }
 .theme-panel { padding: 22px; border-radius: 9px; background: var(--p-ice); }
 .theme-panel h2 { margin: 0 0 4px; font-size: 18px; }
 .theme-panel > p { margin: 0; color: var(--p-muted); font-size: 12px; }
