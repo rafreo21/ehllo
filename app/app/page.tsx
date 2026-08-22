@@ -6,6 +6,7 @@ import { CreditCard as IdentificationCardIcon } from "react-feather";
 import { CheckSquare as ListChecksIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
+import { HandWavingIcon } from "@phosphor-icons/react/dist/csr/HandWaving";
 import { TrendingUp as TrendUpIcon } from "react-feather";
 import { Users as UsersThreeIcon } from "react-feather";
 import { X as XIcon } from "react-feather";
@@ -37,6 +38,15 @@ type FollowUpNudge = {
   urgentCount: number;
   completedCount: number;
   completionRate: number;
+};
+
+type HomeNudge = {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  actionId: string;
+  readAt: string | null;
 };
 
 function isDueNow(dueAt: string) {
@@ -84,6 +94,7 @@ export default function HomeDashboard() {
   const [hasCards, setHasCards] = useState(false);
   const [activeEncounterId, setActiveEncounterId] = useState("");
   const [addFollowUpModalOpen, setAddFollowUpModalOpen] = useState(false);
+  const [homeNudges, setHomeNudges] = useState<HomeNudge[]>([]);
 
   function loadFollowUps() {
     return fetch("/api/follow-ups", { cache: "no-store" }).then(async (response) => {
@@ -111,6 +122,35 @@ export default function HomeDashboard() {
       .catch(() => setConnectionsFailed(true));
   }
 
+  function loadHomeNudges() {
+    return fetch("/api/notifications", { cache: "no-store" }).then(async (response) => {
+      if (!response.ok) throw new Error("Could not load notifications");
+      const payload = await response.json() as { notifications?: HomeNudge[] };
+      setHomeNudges((payload.notifications ?? []).filter((item) => item.type === "keep_in_touch" && !item.readAt));
+    }).catch(() => undefined);
+  }
+
+  function nudgeHref(item: HomeNudge) {
+    const [source, sourceId] = item.actionId.split(":");
+    if ((source === "met" || source === "inbound") && sourceId) {
+      return `/app/people/${encodeURIComponent(`${source}-${sourceId}`)}`;
+    }
+    return "/app/people";
+  }
+
+  async function dismissHomeNudge(id: string) {
+    setHomeNudges((current) => current.filter((item) => item.id !== id));
+    try {
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+    } catch {
+      // Best effort: the server will return the card on refresh if it could not save.
+    }
+  }
+
   function loadLocalData() {
     const encounters = readEncounters();
     const draftEncounters = encounters.filter((item) => item.status === "draft");
@@ -130,7 +170,7 @@ export default function HomeDashboard() {
     void Promise.resolve().then(async () => {
       setGreeting(timeGreeting());
       loadLocalData();
-      await Promise.allSettled([loadFollowUps(), loadConnections()]);
+      await Promise.allSettled([loadFollowUps(), loadConnections(), loadHomeNudges()]);
       setHydrated(true);
     });
     function refreshWhenVisible() {
@@ -138,6 +178,7 @@ export default function HomeDashboard() {
         loadLocalData();
         void loadFollowUps();
         void loadConnections();
+        void loadHomeNudges();
       }
     }
     window.addEventListener("focus", refreshWhenVisible);
@@ -216,6 +257,26 @@ export default function HomeDashboard() {
               </div>
             </div>
             {followUpsFailed ? <p className="home-inline-error">Could not load follow-ups. <button type="button" onClick={() => void loadFollowUps()}>Retry</button></p> : null}
+
+            {homeNudges.length ? (
+              <div className="home-nudges" aria-label="Reminders">
+                {homeNudges.map((item) => (
+                  <article className="home-nudge-card" key={item.id}>
+                    <a href={nudgeHref(item)}>
+                      <span className="home-nudge-icon"><HandWavingIcon size={19} weight="bold" /></span>
+                      <span className="home-nudge-copy">
+                        <strong>{item.title}</strong>
+                        {item.body ? <small>{item.body}</small> : null}
+                      </span>
+                      <ArrowRightIcon size={15} />
+                    </a>
+                    <button type="button" aria-label={`Dismiss ${item.title}`} onClick={() => void dismissHomeNudge(item.id)}>
+                      <XIcon size={14} />
+                    </button>
+                  </article>
+                ))}
+              </div>
+            ) : null}
 
             {activeWork.length ? (
               <div className="home-active-work">

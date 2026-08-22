@@ -31,6 +31,17 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .home-active-work-row strong { font-size: 13px; }
 .home-quick-actions { margin-left: auto; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 .home-quick-actions > a, .home-quick-actions > button { width: auto; min-height: 36px; padding-inline: 12px; flex: 0 0 auto; }
+.home-nudges { display: grid; gap: 8px; }
+.home-nudge-card { position: relative; overflow: hidden; border-radius: 12px; background: white; box-shadow: 0 1px 2px rgba(22,51,0,.04), 0 6px 18px rgba(22,51,0,.035); }
+.home-nudge-card > a { min-height: 72px; padding: 12px 52px 12px 14px; display: grid; grid-template-columns: 36px minmax(0,1fr) auto; align-items: center; gap: 12px; color: var(--p-navy); text-decoration: none; transition: background-color .16s ease; }
+.home-nudge-card > a:hover { background: var(--p-ice); }
+.home-nudge-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: var(--p-sky); }
+.home-nudge-copy { min-width: 0; display: grid; gap: 2px; }
+.home-nudge-copy strong, .home-nudge-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-nudge-copy strong { font-size: 13px; }
+.home-nudge-copy small { color: var(--p-muted); font-size: 11px; }
+.home-nudge-card > button { position: absolute; top: 9px; right: 9px; width: 28px; height: 28px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--p-ice); color: var(--p-muted); cursor: pointer; transition: background-color .16s ease, color .16s ease; }
+.home-nudge-card > button:hover { background: var(--p-sky); color: var(--p-navy); }
 .home-content-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 18px; align-items: start; }
 .home-section { display: grid; gap: 12px; }
 .home-section h2 { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
