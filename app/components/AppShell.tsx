@@ -6,13 +6,14 @@ import { useCallback, useEffect, useState, type ComponentType, type MouseEvent, 
 import { usePathname } from "next/navigation";
 import { Home as HouseIcon } from "react-feather";
 import { CreditCard as IdentificationCardIcon } from "react-feather";
-import { List as ListIcon } from "react-feather";
+import { Menu as MenuIcon } from "react-feather";
 import { Send as PaperPlaneTiltIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { Users as UsersThreeIcon } from "react-feather";
 import { LogOut as SignOutIcon } from "react-feather";
 import { User as UserCircleIcon } from "react-feather";
 import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { X as XIcon } from "react-feather";
 import { IconButton, LinkButton } from "./Button";
 import { useAppUser } from "./AppUserContext";
 import { useAppShellChromeValue } from "./AppShellChromeContext";
@@ -64,7 +65,21 @@ export function AppShell({ children }: AppShellProps) {
   const updateActionableCount = useCallback((count: number) => setActionableCount(count), []);
   useEffect(() => {
     window.scrollTo(0, 0);
+    setMobileNav(false);
   }, [pathname]);
+  useEffect(() => {
+    if (!mobileNav) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setMobileNav(false);
+    }
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [mobileNav]);
   useEffect(() => {
     if (hydratedConsumerUser === user.email) return;
     hydratedConsumerUser = user.email;
@@ -132,7 +147,9 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <main className="product-shell">
-      <aside className={`product-sidebar consumer-sidebar ${mobileNav ? "open" : ""}`}>
+      {mobileNav ? <button type="button" className="mobile-nav-backdrop" aria-label="Close navigation" onClick={() => setMobileNav(false)} /> : null}
+      <aside id="consumer-mobile-navigation" className={`product-sidebar consumer-sidebar ${mobileNav ? "open" : ""}`} aria-label="Main navigation">
+        <button type="button" className="mobile-nav-close" aria-label="Close navigation" onClick={() => setMobileNav(false)}><XIcon size={18} /></button>
         <a
           className="product-logo"
           href="/app"
@@ -175,10 +192,9 @@ export function AppShell({ children }: AppShellProps) {
           </a>
         </div>
         <header className="product-mobile-header">
-          <IconButton className="menu-button" aria-label="Toggle navigation" onClick={() => setMobileNav(!mobileNav)}>
-            <ListIcon size={25} />
+          <IconButton className="menu-button" aria-label="Open navigation" aria-expanded={mobileNav} aria-controls="consumer-mobile-navigation" onClick={() => setMobileNav(true)}>
+            <MenuIcon size={24} />
           </IconButton>
-          <span className="mobile-logo">ehllo</span>
         </header>
         <div className="product-content">
           {backHref || leading || actions ? (
