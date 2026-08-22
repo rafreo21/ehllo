@@ -83,6 +83,12 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .home-inline-error { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 14px; border-radius: 8px; background: #fdece9; color: #a32015; font-size: 12px; }
 .home-inline-error button { color: #a32015; font-weight: 800; text-decoration: underline; background: none; border: 0; padding: 0; cursor: pointer; }
 
+/* Tablet: keep the page header intentional instead of inheriting a wrapped desktop row. */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .home-page > .flow-heading { align-items: flex-start; flex-direction: column; gap: 14px; }
+  .home-page .home-quick-actions { margin-left: 0; justify-content: flex-start; }
+}
+
 /* Narrow tablet: stack content sections while preserving compact tablet controls. */
 @media (max-width: 767px) {
   .home-content-grid { grid-template-columns: 1fr; }
