@@ -179,12 +179,20 @@ export async function buildWidgetSnapshot(
   //
   // preferredCard is only a hint: card-context passes the primary, but the card tools screen
   // passes whatever card you are looking at, so it must not outrank an explicit isPrimary.
-  // Only a PUBLISHED PRIMARY card renders. No falling back to the first published card, to a
-  // primary draft, or to whatever the card tools screen happened to pass: if there is no
-  // published primary card there is nothing legitimate to put on a home screen, and the widget
-  // shows its placeholder state instead of somebody else's card or an unpublished draft whose
-  // QR would lead nowhere.
-  const target = published.find((card) => card.isPrimary);
+  // Prefer the PUBLISHED PRIMARY card, but never show nothing when the person has a published
+  // card.
+  //
+  // This briefly had no fallback at all, and it shipped: `published.find(c => c.isPrimary)`
+  // alone. isPrimary comes from the server's is_primary column, and any account where that was
+  // never set - older accounts, or ones where set_primary_card never ran - has no primary card
+  // at all. Those users got no card in the payload and a blank white placeholder on their home
+  // screen, with their published card sitting right there. It passed testing because this
+  // device's account HAS is_primary set: card-context reconciles it on sync, so the one account
+  // it was tested on was the one account that could not hit the bug.
+  //
+  // An unpublished draft is still refused - its QR would lead nowhere - so the placeholder is
+  // reserved for people who genuinely have nothing published.
+  const target = published.find((card) => card.isPrimary) || published[0];
   const cardTargets = target ? [target] : [];
 
   let logoImageUri: string | undefined;
