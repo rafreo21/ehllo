@@ -159,10 +159,16 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
       {/* The white card's 7pt inset around a 103pt code is the only quiet zone these codes
           have - they are generated edge to edge with no margin of their own - so it is
           structural rather than decoration. */}
+      {/* White ONLY when there is a code to sit on it.
+          The placeholder used to paint this card white and leave it empty, which on a home
+          screen is indistinguishable from a broken widget - a big white square. That is what a
+          brand-new user saw before publishing a card, and what "the widgets are white" reports
+          were describing. With nothing to show, this stays a dim panel on the dark canvas so it
+          reads as "not set up yet" rather than "broken". */}
       <VStack
         modifiers={[
           frame({ width: 117, height: 117 }),
-          background('#FFFFFF'),
+          background(qrImageUri ? '#FFFFFF' : '#1F221F'),
           cornerRadius(7.2),
         ]}>
         {qrImageUri ? (
@@ -190,7 +196,16 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
               </ZStack>
             ) : null}
           </ZStack>
-        ) : null}
+        ) : (
+          <Text
+            modifiers={[
+              foregroundStyle(WIDGET_COLORS.subtle),
+              font({ family: FONTS.regular, size: 11 }),
+              lineLimit(2),
+            ]}>
+            Publish your card
+          </Text>
+        )}
       </VStack>
 
       <VStack spacing={4} alignment="leading" modifiers={[frame({ width: 175, alignment: 'leading' })]}>
