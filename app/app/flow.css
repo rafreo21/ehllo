@@ -1402,9 +1402,11 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .guest-content-grid { grid-template-columns:1fr; }
 }
 
-/* Follow-ups use cards on narrow tablets as well as phones; the desktop table
-   cannot preserve useful columns below this width without horizontal overflow. */
-@media (max-width: 800px) {
+/* Data-heavy tables also account for the desktop sidebar. Below 1200px the
+   remaining content column is too narrow for their columns, so use cards. */
+@media (max-width: 1199px) {
+  .followups-page > .flow-heading, .connections-page > .flow-heading { align-items: flex-start; flex-direction: column; gap: 14px; }
+  .followups-page .flow-heading-actions, .connections-page .flow-heading-actions { margin-left: 0; flex-wrap: nowrap; }
   .followups-page, .followup-plan, .followup-groups { width: 100%; min-width: 0; }
   .followup-plan { gap: 10px; }
   .followup-plan .data-table-shell { width: 100%; min-width: 0; overflow: visible; border: 0; background: transparent; box-shadow: none; }
