@@ -18,7 +18,9 @@ private struct ${modifierName}: ViewModifier {
   @ViewBuilder
   func body(content: Content) -> some View {
     if #available(iOS 17.0, *) {
-      content.containerBackground(color, for: .widget)
+      content
+        .background(color)
+        .containerBackground(color, for: .widget)
     } else {
       content.background(color)
     }
@@ -63,6 +65,10 @@ module.exports = function withWidgetFullBleedBackground(config) {
         source = source.replace(
           entryView,
           `${entryView}\n        .frame(maxWidth: .infinity, maxHeight: .infinity)\n        .modifier(${modifierName}(color: ${functionName}(entry.props?["themeColor"])))`,
+        );
+        source = source.replace(
+          '.contentMarginsDisabled()',
+          '.contentMarginsDisabled()\n    .containerBackgroundRemovable(false)',
         );
         source += colorHelper(modifierName, functionName);
         fs.writeFileSync(sourcePath, source);
