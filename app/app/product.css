@@ -300,17 +300,17 @@ body:has(.product-shell) { background: var(--p-ice); }
 .creator-preview-head { margin-bottom: 12px; display: flex; justify-content: space-between; color: var(--p-muted); font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .creator-preview .creator-publish-state {
   min-height: 0;
-  margin-bottom: 14px;
-  padding: 7px 10px;
-  column-gap: 6px;
-  border-radius: 7px;
+  margin-bottom: 9px;
+  padding: 5px 8px;
+  column-gap: 5px;
+  border-radius: 6px;
 }
 /* One line only here, not a title+description pair - span is the entire
    message (see the JSX), so this only needs to size the text and the dot,
    not lay out two stacked/aligned pieces. */
-.creator-preview .creator-publish-state span { font-size: 11px; }
-.creator-preview .creator-publish-state.is-dirty span::before { width: 6px; height: 6px; margin-right: 6px; }
-.creator-preview .creator-publish-state.is-published svg { width: 15px; height: 15px; }
+.creator-preview .creator-publish-state span { font-size: 10px; line-height: 1.25; }
+.creator-preview .creator-publish-state.is-dirty span::before { width: 5px; height: 5px; margin-right: 5px; }
+.creator-preview .creator-publish-state.is-published svg { width: 13px; height: 13px; }
 .creator-preview .creator-publish-state.is-published { background: #e7f8dc; color: #205d0d; }
 .theme-panel { padding: 22px; border-radius: 9px; background: var(--p-ice); }
 .theme-panel h2 { margin: 0 0 4px; font-size: 18px; }
