@@ -21,6 +21,8 @@ import { hydrateContactsFromServer } from "../../lib/contacts-sync";
 import { hydrateEncountersFromServer } from "../../lib/encounters-sync";
 import { hydrateCardLibraryFromServer } from "../../lib/card-library-sync";
 import { NotificationBell } from "./NotificationBell";
+import { CardImage } from "./CardImage";
+import { CARD_LIBRARY_CHANGE_EVENT, readCardLibrary, type LibraryCard } from "../../lib/card-library";
 
 export type AppShellActive = "home" | "people" | "cards" | "capture" | "scan" | "followups" | "settings";
 
@@ -58,6 +60,7 @@ export function AppShell({ children }: AppShellProps) {
   const { backHref, backLabel = "Back", leading, actions, requestNavigation } = useAppShellChromeValue();
   const [mobileNav, setMobileNav] = useState(false);
   const [actionableCount, setActionableCount] = useState(0);
+  const [primaryCard, setPrimaryCard] = useState<LibraryCard | null>(null);
   const updateActionableCount = useCallback((count: number) => setActionableCount(count), []);
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -73,7 +76,22 @@ export function AppShell({ children }: AppShellProps) {
     purgeWebLocalDataIfAccountChanged(user.id || user.email);
     void hydrateContactsFromServer();
     void hydrateEncountersFromServer();
-    void hydrateCardLibraryFromServer();
+    void hydrateCardLibraryFromServer().then((cards) => {
+      setPrimaryCard(cards.find((card) => card.isPrimary) || cards.find((card) => card.status === "published") || cards[0] || null);
+    });
+  }, [user.email, user.id]);
+  useEffect(() => {
+    const refreshPrimaryCard = () => {
+      const cards = readCardLibrary(localStorage);
+      setPrimaryCard(cards.find((card) => card.isPrimary) || cards.find((card) => card.status === "published") || cards[0] || null);
+    };
+    refreshPrimaryCard();
+    window.addEventListener(CARD_LIBRARY_CHANGE_EVENT, refreshPrimaryCard);
+    window.addEventListener("storage", refreshPrimaryCard);
+    return () => {
+      window.removeEventListener(CARD_LIBRARY_CHANGE_EVENT, refreshPrimaryCard);
+      window.removeEventListener("storage", refreshPrimaryCard);
+    };
   }, [user.email, user.id]);
   const label = user.displayName || user.email.split("@")[0] || "ehllo user";
   const initials = label.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
@@ -153,7 +171,7 @@ export function AppShell({ children }: AppShellProps) {
               });
             }}
           >
-            {initials || "AM"}
+            <CardImage src={primaryCard?.photo} alt="" fallback={<span>{initials || "AM"}</span>} />
           </a>
         </div>
         <header className="product-mobile-header">

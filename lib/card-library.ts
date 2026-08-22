@@ -1,4 +1,5 @@
 export const CARD_LIBRARY_KEY = "aftermeet-card-library-v1";
+export const CARD_LIBRARY_CHANGE_EVENT = "ehllo-card-library-change";
 export const ACTIVE_CARD_KEY = "aftermeet-active-card-v1";
 export const MAX_CARDS = 5;
 
@@ -22,6 +23,7 @@ export type LibraryCard = {
   companyLogo: string;
   coverPhoto: string;
   showCompanyDetails?: boolean;
+  isPrimary?: boolean;
   methods: LibraryMethod[];
   createdAt: string;
   updatedAt: string;
@@ -169,6 +171,9 @@ export function readCardLibrary(storage: StorageLike): LibraryCard[] {
 
 export function writeCardLibrary(storage: StorageLike, cards: LibraryCard[]) {
   storage.setItem(CARD_LIBRARY_KEY, JSON.stringify(cards.slice(0, MAX_CARDS)));
+  if (typeof window !== "undefined" && storage === window.localStorage) {
+    window.dispatchEvent(new Event(CARD_LIBRARY_CHANGE_EVENT));
+  }
 }
 
 export function getActiveCardId(storage: StorageLike, cards: LibraryCard[]) {

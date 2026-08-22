@@ -14,6 +14,7 @@ export type CardRow = {
   company_logo_url: string;
   cover_image_url: string;
   show_company_details: boolean;
+  is_primary: boolean;
   status: "draft" | "published" | "archived";
   published_at: string | null;
   created_at: string;
@@ -49,6 +50,7 @@ export function libraryCardFromRows(card: CardRow, methods: CardMethodRow[]): Li
     companyLogo: card.company_logo_url,
     coverPhoto: card.cover_image_url,
     showCompanyDetails: card.show_company_details ?? true,
+    isPrimary: card.is_primary ?? false,
     methods: [...methods]
       .sort((left, right) => left.sort_order - right.sort_order)
       .map((method, index) => ({
