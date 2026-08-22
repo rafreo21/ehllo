@@ -993,26 +993,28 @@ export default function CardEditor() {
                   <span className="method-library-add-icon" aria-hidden="true" style={{ color: previewTheme.backgroundColor }}><PlusIcon size={18} /></span>
                   <div><h2>Add a contact method</h2><p>Choose how people can connect with you.</p></div>
                 </header>
-                {methodCategories.map((category) => {
-                  const availableTypes = (Object.keys(methodMeta) as MethodType[]).filter(
-                    (type) => methodMeta[type].category === category && (methodTypeCounts[type] ?? 0) < 3,
-                  );
-                  if (availableTypes.length === 0) return null;
-                  return <section className="method-category" key={category}>
-                    <h3>{category}</h3><div>
-                      {availableTypes.map((type) => {
-                        const meta = methodMeta[type];
-                        return <button type="button" key={type} onClick={() => openMethod(type)}>
-                          <span className="method-library-icon" style={{ color: previewTheme.backgroundColor }}>
-                            {PHOSPHOR_METHOD_TYPES.has(type) ? <meta.Icon size={20} weight="bold" color={previewTheme.backgroundColor} /> : <meta.Icon size={20} color={previewTheme.backgroundColor} />}
-                          </span>
-                          <span className="method-library-label">{meta.name}</span>
-                          <PlusIcon />
-                        </button>;
-                      })}
-                    </div>
-                  </section>;
-                })}
+                <div className="method-library-scroll">
+                  {methodCategories.map((category) => {
+                    const availableTypes = (Object.keys(methodMeta) as MethodType[]).filter(
+                      (type) => methodMeta[type].category === category && (methodTypeCounts[type] ?? 0) < 3,
+                    );
+                    if (availableTypes.length === 0) return null;
+                    return <section className="method-category" key={category}>
+                      <h3>{category}</h3><div>
+                        {availableTypes.map((type) => {
+                          const meta = methodMeta[type];
+                          return <button type="button" key={type} onClick={() => openMethod(type)}>
+                            <span className="method-library-icon" style={{ color: previewTheme.backgroundColor }}>
+                              {PHOSPHOR_METHOD_TYPES.has(type) ? <meta.Icon size={20} weight="bold" color={previewTheme.backgroundColor} /> : <meta.Icon size={20} color={previewTheme.backgroundColor} />}
+                            </span>
+                            <span className="method-library-label">{meta.name}</span>
+                            <PlusIcon />
+                          </button>;
+                        })}
+                      </div>
+                    </section>;
+                  })}
+                </div>
               </div>
             </div>
 

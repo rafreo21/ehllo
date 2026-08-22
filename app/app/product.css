@@ -475,6 +475,16 @@ body:has(.product-shell) { background: var(--p-ice); }
   .product-shell:has(.card-creator) .method-library.editor-desktop-only {
     min-height: 0;
     flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .product-shell:has(.card-creator) .method-library.editor-desktop-only .method-library-heading {
+    flex: 0 0 auto;
+  }
+  .product-shell:has(.card-creator) .method-library-scroll {
+    min-height: 0;
+    flex: 1 1 auto;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
