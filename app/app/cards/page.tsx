@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { ArrowLeft as ArrowLeftIcon } from "react-feather";
+import { MoreHorizontal as MoreHorizontalIcon } from "react-feather";
 import { Copy as CopyIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { Download as DownloadSimpleIcon } from "react-feather";
@@ -593,9 +594,9 @@ function createCard(seed: Partial<LibraryCard> = {}) {
         ) : (
           <>
             <div className="card-detail-topbar">
-              <Button size="small" variant="ghost" onClick={showCardLibrary}><ArrowLeftIcon size={16} /> All cards</Button>
-              <div><span>Viewing</span><strong>{profile.label}</strong></div>
-              <div>
+              <Button className="card-detail-back" size="small" variant="ghost" aria-label="All cards" onClick={showCardLibrary}><ArrowLeftIcon size={16} /><span>All cards</span></Button>
+              <div className="card-detail-title"><span>Viewing</span><strong>{profile.label}</strong></div>
+              <div className="card-detail-actions">
                 <LinkButton size="small" variant="secondary" href={`/app/card/edit?id=${activeId}`}>
                   <PencilSimpleIcon size={16} /><span className="card-action-label-full">Edit card</span><span className="card-action-label-compact">Edit</span>
                 </LinkButton>
@@ -606,6 +607,14 @@ function createCard(seed: Partial<LibraryCard> = {}) {
                   <TrashIcon size={16} /> {deletingCard ? "Deleting…" : "Delete"}
                 </Button>
               </div>
+              <details className="card-detail-more">
+                <summary aria-label="More card actions"><MoreHorizontalIcon size={19} /></summary>
+                <div className="card-detail-more-menu">
+                  <LinkButton size="small" variant="ghost" href={`/app/card/edit?id=${activeId}`}><PencilSimpleIcon size={16} /> Edit card</LinkButton>
+                  <Button size="small" variant="ghost" onClick={(event) => { (event.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open"); setShareModalOpen(true); }}><UploadSimpleIcon size={16} /> Share card</Button>
+                  <Button size="small" variant="ghost" loading={deletingCard} onClick={deleteActiveCard}><TrashIcon size={16} /> {deletingCard ? "Deleting…" : "Delete"}</Button>
+                </div>
+              </details>
             </div>
             <div className="card-share-layout" id="share">
           <article className="share-card-preview" style={{ "--card-accent": cardTheme.backgroundColor } as React.CSSProperties}>
