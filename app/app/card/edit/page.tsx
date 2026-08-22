@@ -779,7 +779,7 @@ export default function CardEditor() {
                 </section>}
                 {collapsedPreviewMethods.length > 0 ? <div className="preview-methods">{collapsedPreviewMethods.map((method) => {
                   const meta = methodMeta[method.type];
-                  return <button type="button" key={method.id} onClick={() => { setMethodError(""); setEditing(method); }} aria-label={`Edit ${method.label || meta.name}`}>
+                  return <button type="button" key={method.id} style={{ "--card-accent": previewTheme.backgroundColor } as React.CSSProperties} onClick={() => { setMethodError(""); setEditing(method); }} aria-label={`Edit ${method.label || meta.name}`}>
                       <i className="preview-method-grip" aria-hidden="true" />
                       <span style={{ color: previewTheme.backgroundColor }}>
                         {PHOSPHOR_METHOD_TYPES.has(method.type) ? <meta.Icon weight="bold" color={previewTheme.backgroundColor} /> : <meta.Icon color={previewTheme.backgroundColor} />}

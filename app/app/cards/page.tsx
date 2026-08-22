@@ -27,6 +27,7 @@ import { CardImage } from "../../components/CardImage";
 import { Button, LinkButton } from "../../components/Button";
 import { ContactMethodIcon } from "../../components/ContactMethodIcon";
 import { contactMethodHref, contactMethodOpensNewTab } from "../../../lib/contact-methods";
+import { filterMethodsForCompanyVisibility, showsCompanyDetails } from "../../../lib/card-company-display";
 import { buildHtmlSignature, buildPlainSignature } from "../../../lib/email-signature";
 import { WidgetsOnPhoneModal } from "../../components/WidgetsOnPhoneModal";
 import { WalletSharePanel } from "../../components/WalletSharePanel";
@@ -130,6 +131,7 @@ export default function CardsPage() {
   const cardTheme = useMemo(() => themeSurfaceStyle(profile.theme), [profile.theme]);
   const profilePhoto = normalizeImageSource(profile.photo || photo);
   const companyLogo = normalizeImageSource(profile.companyLogo);
+  const showCompanyDetails = showsCompanyDetails(profile);
 
   function toProfile(card: LibraryCard): Profile {
     return {
@@ -519,12 +521,13 @@ function createCard(seed: Partial<LibraryCard> = {}) {
   }
 
   const initials = profile.name.split(" ").map((word) => word[0]).join("").slice(0, 2);
-  const actionMethods = profile.methods.length
+  const profileActionMethods = profile.methods.length
     ? profile.methods
     : [
         { id: "legacy-email", type: "email", value: profile.email, label: "Email" },
         { id: "legacy-website", type: "website", value: profile.website, label: "Website" },
       ].filter((method) => method.value);
+  const actionMethods = filterMethodsForCompanyVisibility(profileActionMethods, showCompanyDetails);
 
   return (
     <>
@@ -594,15 +597,17 @@ function createCard(seed: Partial<LibraryCard> = {}) {
               <div><LinkButton size="small" variant="secondary" href={`/app/card/edit?id=${activeId}`}><PencilSimpleIcon size={16} /> Edit card</LinkButton><Button size="small" variant="secondary" onClick={() => setShareModalOpen(true)}><UploadSimpleIcon size={16} /> Share card</Button><Button size="small" variant="ghost" loading={deletingCard} onClick={deleteActiveCard}><TrashIcon size={16} /> {deletingCard ? "Deleting…" : "Delete"}</Button></div>
             </div>
             <div className="card-share-layout" id="share">
-          <article className="share-card-preview">
+          <article className="share-card-preview" style={{ "--card-accent": cardTheme.backgroundColor } as React.CSSProperties}>
             <div className="share-card-cover" style={{ background: cardTheme.backgroundGradient, color: cardTheme.color }}>
-              <span style={themeCoverBadgeStyle(profile.theme)}>{profile.company[0] || "A"}<CardImage src={companyLogo} alt="" /></span>
-              <strong style={{ color: cardTheme.color }}>{profile.company || "Your company"}</strong>
+              {showCompanyDetails ? <>
+                <span style={themeCoverBadgeStyle(profile.theme)}>{profile.company[0] || "A"}<CardImage src={companyLogo} alt="" /></span>
+                <strong style={{ color: cardTheme.color }}>{profile.company || "Your company"}</strong>
+              </> : null}
             </div>
             <div className="share-card-body">
               <div className="share-avatar" style={themeCoverBadgeStyle(profile.theme)}><span>{initials}</span><CardImage src={profilePhoto} alt={profile.name || "Profile picture"} /></div>
               <h2>{profile.name}</h2>
-              <p className="share-role">{profile.role}{profile.company ? ` · ${profile.company}` : ""}</p>
+              <p className="share-role">{profile.role}{showCompanyDetails && profile.company ? ` · ${profile.company}` : ""}</p>
               {profile.bio ? <p className="share-bio">{profile.bio}</p> : null}
               <div className="share-contact">
                 {actionMethods.map((method) => {
