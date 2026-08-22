@@ -471,6 +471,24 @@ body:has(.product-shell) { background: var(--p-ice); }
   .product-shell:has(.consumer-sidebar) .product-mobile-header { padding: 0 16px; }
   .product-shell:has(.consumer-sidebar) .menu-button { position: fixed; top: 16px; left: 16px; z-index: 90; width: 46px; height: 46px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: white; box-shadow: 0 8px 24px rgba(22,51,0,.1); pointer-events: auto; }
   .product-shell:has(.consumer-sidebar) .menu-button:hover { background: var(--p-ice); }
+
+  /* The card editor toolbar is the complete mobile/tablet header. Keep it in
+     view and remove the duplicate shell controls while editing or creating. */
+  .product-shell:has(.card-creator) .consumer-topbar,
+  .product-shell:has(.card-creator) .product-mobile-header { display: none; }
+  .product-shell:has(.card-creator) .product-content { padding-top: 10px; }
+  .product-shell:has(.card-creator) .product-page-toolbar {
+    position: sticky;
+    top: 10px;
+    z-index: 92;
+    min-height: 58px;
+    margin-bottom: 18px;
+    padding: 9px 10px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.96);
+    box-shadow: 0 8px 24px rgba(22,51,0,.09);
+    backdrop-filter: blur(14px) saturate(1.15);
+  }
 }
 
 @media (max-width: 760px) {
@@ -480,6 +498,7 @@ body:has(.product-shell) { background: var(--p-ice); }
   .product-content { padding: 36px 18px 56px; }
   .product-page-toolbar { margin-bottom: 16px; }
   .product-shell:has(.consumer-sidebar) .product-page-toolbar { margin-bottom: 20px; }
+  .product-shell:has(.card-creator) .product-page-toolbar { margin-bottom: 18px; }
   .welcome, .builder-grid { grid-template-columns: 1fr; }
   .completion { margin-top: 15px; }
   .preview-column { min-height: 0; padding: 18px; }
