@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Camera as CameraIcon } from "react-feather";
 import { CreditCard as IdentificationCardIcon } from "react-feather";
+import { ExternalLink as ExternalLinkIcon } from "react-feather";
 import { Linkedin as LinkedinLogoIcon } from "react-feather";
 import { Mic as MicrophoneIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
@@ -350,26 +351,26 @@ export default function ScanPage() {
             {savedContactId ? <StatusMessage tone="success">Saved to your contacts.</StatusMessage> : null}
             <div className="scan-result-actions">
               {draftContact ? (
-                <Button onClick={() => saveContact(draftContact)}>
-                  <IdentificationCardIcon size={18} />Add to contacts
+                <Button size="small" onClick={() => saveContact(draftContact)}>
+                  <IdentificationCardIcon size={16} />Add to contacts
                 </Button>
               ) : null}
               {savedContactId ? (
-                <LinkButton variant="secondary" href={`/business/contacts/${savedContactId}`}>Open contact</LinkButton>
+                <LinkButton size="small" variant="secondary" href={`/business/contacts/${savedContactId}`}>Open contact</LinkButton>
               ) : null}
               {draftContact ? (
-                <Button variant="secondary" onClick={() => setCaptureModalOpen(true)}>
-                  <MicrophoneIcon size={18} />Capture moment
+                <Button size="small" variant="secondary" onClick={() => setCaptureModalOpen(true)}>
+                  <MicrophoneIcon size={16} />Capture moment
                 </Button>
               ) : null}
               {target.type === "aftermeet_card" ? (
-                <LinkButton variant="ghost" href={`/c/${target.slug}`}>Open public card</LinkButton>
+                <LinkButton size="small" variant="secondary" href={`/c/${target.slug}`}><ExternalLinkIcon size={15} />Open public card</LinkButton>
               ) : null}
               {target.type === "linkedin" ? (
-                <LinkButton variant="ghost" href={target.url} target="_blank" rel="noreferrer">Open LinkedIn</LinkButton>
+                <LinkButton size="small" variant="secondary" href={target.url} target="_blank" rel="noreferrer"><ExternalLinkIcon size={15} />Open LinkedIn</LinkButton>
               ) : null}
               {target.type === "url" ? (
-                <LinkButton variant="ghost" href={target.url} target="_blank" rel="noreferrer">Open link</LinkButton>
+                <LinkButton size="small" variant="secondary" href={target.url} target="_blank" rel="noreferrer"><ExternalLinkIcon size={15} />Open link</LinkButton>
               ) : null}
               {target.type === "linkedin" ? (
                 <LinkButton href={`/business/contacts/linkedin?url=${encodeURIComponent(target.url)}`}>Review LinkedIn import</LinkButton>

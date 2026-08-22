@@ -44,7 +44,7 @@ import {
   upsertLibraryCard,
 } from "../../../lib/card-library";
 import { themeCoverBadgeStyle, themeSurfaceStyle } from "../../../lib/theme-contrast";
-import { hydrateCardLibraryFromServer, queueCardSync } from "../../../lib/card-library-sync";
+import { deleteCardFromServer, hydrateCardLibraryFromServer, queueCardSync } from "../../../lib/card-library-sync";
 import { applyCardTemplate } from "../../../lib/card-templates";
 import type { CardTemplate } from "../../../lib/workspace/types";
 import {
@@ -106,6 +106,7 @@ export default function CardsPage() {
   const [qrError, setQrError] = useState("");
   const [shareUrl, setShareUrl] = useState("http://localhost:3000/c/alex-morgan");
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [deletingCard, setDeletingCard] = useState(false);
   const [recentConnection, setRecentConnection] = useState<ConnectionItem | null>(null);
   const cardTheme = useMemo(() => themeSurfaceStyle(profile.theme), [profile.theme]);
   const { showToast } = useToast();
@@ -291,13 +292,25 @@ export default function CardsPage() {
     window.location.assign(`/business/card/edit?id=${card.id}`);
   }
 
-  function deleteActiveCard() {
+  async function deleteActiveCard() {
+    if (deletingCard) return;
     if (!window.confirm(`Delete “${profile.label}”? This cannot be undone.`)) return;
+    setDeletingCard(true);
+    const result = await deleteCardFromServer(activeId);
+    if (!result.ok) {
+      setDeletingCard(false);
+      showToast({ tone: "error", message: result.error });
+      return;
+    }
+
+    const deletedLabel = profile.label;
     const next = removeLibraryCard(localStorage, activeId);
     setCards(next);
     setViewingCard(false);
     window.history.replaceState(null, "", "/business/cards");
+    showToast({ tone: "success", message: `"${deletedLabel}" deleted.` });
     if (next[0]) selectCard(next[0]);
+    setDeletingCard(false);
   }
 
   async function downloadShareAsset(type: QrShareType) {
@@ -496,7 +509,7 @@ export default function CardsPage() {
             <div className="card-detail-topbar">
               <Button size="small" variant="ghost" onClick={showCardLibrary}><ArrowLeftIcon size={16} /> All cards</Button>
               <div><span>Viewing</span><strong>{profile.label}</strong></div>
-              <div><LinkButton size="small" variant="secondary" href={`/business/card/edit?id=${activeId}`}><PencilSimpleIcon size={16} /> Edit card</LinkButton><Button size="small" variant="secondary" onClick={() => setShareModalOpen(true)}><UploadSimpleIcon size={16} /> Share card</Button><Button size="small" variant="ghost" onClick={deleteActiveCard}><TrashIcon size={16} /> Delete</Button></div>
+              <div><LinkButton size="small" variant="secondary" href={`/business/card/edit?id=${activeId}`}><PencilSimpleIcon size={16} /> Edit card</LinkButton><Button size="small" variant="secondary" onClick={() => setShareModalOpen(true)}><UploadSimpleIcon size={16} /> Share card</Button><Button size="small" variant="ghost" loading={deletingCard} onClick={deleteActiveCard}><TrashIcon size={16} /> {deletingCard ? "Deleting…" : "Delete"}</Button></div>
             </div>
             <div className="card-share-layout" id="share">
           <article className="share-card-preview">

@@ -12,6 +12,16 @@ const path = require('path');
 // like a broken skeleton next to the iOS gallery.
 const WIDGET_PREVIEW_SOURCE = 'assets/widget-previews';
 
+// The scheme this build actually answers to. app.config.js declares an array whose first entry
+// is canonical for the variant (ehllo-staging for staging, ehllo for production). Hardcoding
+// "ehllo" here meant every widget tap on a staging build fired an ACTION_VIEW that no activity
+// could handle, and did nothing at all - no error, no log.
+function schemeFor(config) {
+  const scheme = config?.scheme;
+  if (Array.isArray(scheme)) return scheme[0] || 'ehllo';
+  return scheme || 'ehllo';
+}
+
 const PACKAGE_SUFFIX = 'widget';
 const PREFS_NAME = 'aftermeet_widget';
 const PREFS = {
@@ -20,6 +30,7 @@ const PREFS = {
   connectionsDeepLink: 'connectionsDeepLink',
   recentConnectionsJson: 'recentConnectionsJson',
   signedIn: 'signedIn',
+  scannerDeepLink: 'scannerDeepLink',
 };
 
 const WIDGETS = [
@@ -175,7 +186,7 @@ function withWidgetModule(config) {
   });
 }
 
-function kotlinBridge(packageName) {
+function kotlinBridge(packageName, defaultScheme) {
   return `package ${packageName}.widget
 
 import android.appwidget.AppWidgetManager
@@ -199,11 +210,12 @@ class QuickShareWidgetBridge(private val reactContext: ReactApplicationContext) 
       val editor = prefs.edit()
         .putString("${PREFS.cardsJson}", payload.getString("cardsJson") ?: "[]")
         .putString("${PREFS.logoImageBase64}", payload.getString("logoImageBase64") ?: "")
-        .putString("${PREFS.connectionsDeepLink}", payload.getString("connectionsDeepLink") ?: "ehllo://connections")
+        .putString("${PREFS.connectionsDeepLink}", payload.getString("connectionsDeepLink") ?: "${defaultScheme}://connections")
         .putString("${PREFS.recentConnectionsJson}", payload.getString("recentConnectionsJson") ?: "[]")
         // Absent means the widget gallery or a preview, where sample content is the right
         // answer - so this defaults to signed in rather than to the sign-in prompt.
         .putString("${PREFS.signedIn}", payload.getString("signedIn") ?: "1")
+        .putString("${PREFS.scannerDeepLink}", payload.getString("scannerDeepLink") ?: "${defaultScheme}://scanner")
 
       for (slot in 1..3) {
         editor.putString("connection\${slot}Name", payload.getString("connection\${slot}Name") ?: "")
@@ -261,7 +273,7 @@ class WidgetActionReceiver : BroadcastReceiver() {
 `;
 }
 
-function kotlinRenderer(packageName) {
+function kotlinRenderer(packageName, defaultScheme) {
   return `package ${packageName}.widget
 
 import android.app.PendingIntent
@@ -289,7 +301,7 @@ import ${packageName}.R
 
 object WidgetRenderer {
   private const val DEMO_URL = "https://ehllo.io/c/demo"
-  private const val DEMO_DEEP_LINK = "ehllo://share-card"
+  private const val DEMO_DEEP_LINK = "${defaultScheme}://share-card"
 
   private fun prefs(context: Context) =
     context.getSharedPreferences("${PREFS_NAME}", Context.MODE_PRIVATE)
@@ -309,6 +321,12 @@ object WidgetRenderer {
     if (cardCount <= 0) return 0
     val current = prefs(context).getInt(cardIndexKey(widgetId), 0)
     return current.coerceIn(0, cardCount - 1)
+  }
+
+  // The scanner link the app sent for THIS build's scheme.
+  private fun scannerLink(context: Context): String {
+    val stored = prefs(context).getString("${PREFS.scannerDeepLink}", "") ?: ""
+    return stored.ifBlank { "${defaultScheme}://scanner" }
   }
 
   private fun isSignedIn(context: Context): Boolean {
@@ -647,7 +665,7 @@ object WidgetRenderer {
 
   private fun renderConnections(context: Context, manager: AppWidgetManager, id: Int) {
     val store = prefs(context)
-    val deepLink = store.getString("${PREFS.connectionsDeepLink}", "ehllo://connections") ?: "ehllo://connections"
+    val deepLink = store.getString("${PREFS.connectionsDeepLink}", "${defaultScheme}://connections") ?: "${defaultScheme}://connections"
     val connections = loadConnections(context)
     val views = RemoteViews(context.packageName, R.layout.aftermeet_widget_connections)
     var visibleRows = 0
@@ -670,7 +688,7 @@ object WidgetRenderer {
         views.setViewVisibility(R.id.aftermeet_connections_add, View.VISIBLE)
         views.setOnClickPendingIntent(
           R.id.aftermeet_connections_add,
-          openAppIntent(context, id, "ehllo://scanner", 6100),
+          openAppIntent(context, id, scannerLink(context), 6100),
         )
       } else {
         views.setViewVisibility(R.id.aftermeet_connections_add, View.GONE)
@@ -749,7 +767,7 @@ object WidgetRenderer {
       views.setViewVisibility(R.id.aftermeet_connections_add, View.VISIBLE)
       views.setOnClickPendingIntent(
         R.id.aftermeet_connections_add,
-        openAppIntent(context, id, "ehllo://scanner", 6100),
+        openAppIntent(context, id, scannerLink(context), 6100),
       )
     }
 
@@ -1253,7 +1271,7 @@ function withWidgetFiles(config) {
         fs.copyFileSync(from, path.join(drawableNodpiDir, file));
       }
 
-      fs.writeFileSync(path.join(kotlinDir, 'QuickShareWidgetBridge.kt'), kotlinBridge(packageName));
+      fs.writeFileSync(path.join(kotlinDir, 'QuickShareWidgetBridge.kt'), kotlinBridge(packageName, schemeFor(config)));
       fs.writeFileSync(path.join(kotlinDir, 'WidgetActionReceiver.kt'), kotlinActionReceiver(packageName));
       fs.writeFileSync(
         path.join(kotlinDir, 'QuickShareWidgetPackage.kt'),
@@ -1275,7 +1293,7 @@ class QuickShareWidgetPackage : ReactPackage {
 }
 `,
       );
-      fs.writeFileSync(path.join(kotlinDir, 'WidgetRenderer.kt'), kotlinRenderer(packageName));
+      fs.writeFileSync(path.join(kotlinDir, 'WidgetRenderer.kt'), kotlinRenderer(packageName, schemeFor(config)));
 
       fs.writeFileSync(path.join(layoutDir, 'aftermeet_widget_qr_scan.xml'), layoutQrScan());
       fs.writeFileSync(path.join(layoutDir, 'aftermeet_widget_qr_scan_preview.xml'), layoutQrScanPreview());

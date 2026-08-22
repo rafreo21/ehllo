@@ -6,10 +6,12 @@ import { shareCardDeepLink } from '@/features/card/share-deep-link';
 import type { MobileCard } from '@/features/card/types';
 import type { WidgetCardPayload, WidgetConnection, WidgetSnapshot } from '@/features/card/widget-types';
 import { cacheWidgetPhotoUri, ensureWidgetLogoUri, readUriAsBase64 } from '@/lib/widget-assets';
+import { appDeepLink } from '@/lib/app-scheme';
 import { readEnv } from '@/lib/env';
 import { buildWidgetQrFileUri } from '@/lib/widget-qr';
 
-export const CONNECTIONS_DEEP_LINK = 'ehllo://connections';
+export const CONNECTIONS_DEEP_LINK = appDeepLink('connections');
+export const SCANNER_DEEP_LINK = appDeepLink('scanner');
 
 type WidgetBridge = {
   updateWidget?: (payload: Record<string, string | undefined>) => Promise<void>;
@@ -210,6 +212,9 @@ function bridgePayload(snapshot: WidgetSnapshot): Record<string, string | undefi
     cardsJson: JSON.stringify(snapshot.cards),
     logoImageBase64: snapshot.logoImageBase64,
     connectionsDeepLink: snapshot.connectionsDeepLink,
+    // Sent explicitly rather than hardcoded natively: the scheme differs per variant
+    // (ehllo-staging vs ehllo), and a native default cannot know which build it is in.
+    scannerDeepLink: SCANNER_DEEP_LINK,
     recentConnectionsJson: JSON.stringify(snapshot.connections),
     signedIn: snapshot.signedIn ? '1' : '0',
   };
@@ -241,7 +246,8 @@ function iosWidgetPayload(snapshot: WidgetSnapshot): IosWidgetPayload {
     cardIndex: 0,
     logoImageUri: snapshot.logoImageUri,
     connectionsDeepLink: snapshot.connectionsDeepLink,
-    shareDeepLink: primary?.shareDeepLink || 'ehllo://share-card',
+    scannerDeepLink: SCANNER_DEEP_LINK,
+    shareDeepLink: primary?.shareDeepLink || appDeepLink('share-card'),
     qrImageUri: primary?.qrImageUri || snapshot.qrImageUri,
     // Empty rather than demo text, so the widget can tell "no published primary card" apart
     // from a card that simply has no role or company set.

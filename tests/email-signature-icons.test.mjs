@@ -36,13 +36,41 @@ test("icons carry alt text so blocked images degrade to a label", async () => {
   assert.match(html, /alt="Email"/);
 });
 
-test("an unparseable card url drops the icon instead of emitting a broken image", async () => {
+test("a non-public card url falls back to the canonical origin, never localhost", async () => {
   const { buildHtmlSignature } = await import("../lib/email-signature.ts");
-  const html = buildHtmlSignature({ ...PROFILE, cardUrl: "not a url" });
-  assert.ok(!html.includes("/email-icons/"), "must not build a relative or malformed src");
-  // The contact details themselves still have to be there.
-  assert.match(html, /alex@example\.com/);
-  assert.match(html, /\+44 7700 900123/);
+  // An email is read outside your network, so assets must come from a public host. Deriving the
+  // origin from the card URL emitted http://localhost:3000/email-icons/... on a dev server,
+  // which no mail client can reach - the icons were simply missing and nothing said so.
+  for (const cardUrl of ["not a url", "http://localhost:3000/c/alex", "https://127.0.0.1/c/alex"]) {
+    const html = buildHtmlSignature({ ...PROFILE, cardUrl });
+    // Only the IMAGE sources matter here. A localhost "View my card" href is correct - the card
+    // URL is whatever the card URL is - but an unreachable <img src> shows nothing and says
+    // nothing, which is the failure this guards.
+    const srcs = [...html.matchAll(/src="([^"]+)"/g)].map((m) => m[1]);
+    for (const src of srcs) {
+      assert.ok(!src.includes("localhost"), `${cardUrl} produced a localhost asset: ${src}`);
+      assert.ok(!/\/\/[\d.]+[/:]/.test(src), `${cardUrl} produced an IP asset: ${src}`);
+    }
+    assert.match(html, /src="https:\/\/ehllo\.io\/email-icons\/phone\.png"/);
+    // The contact details themselves still have to be there.
+    assert.match(html, /alex@example\.com/);
+    assert.match(html, /\+44 7700 900123/);
+  }
+});
+
+test("a public https card url keeps its own origin, so staging stays self-consistent", async () => {
+  const { buildHtmlSignature } = await import("../lib/email-signature.ts");
+  const html = buildHtmlSignature({ ...PROFILE, cardUrl: "https://staging.ehllo.io/c/alex" });
+  assert.match(html, /src="https:\/\/staging\.ehllo\.io\/email-icons\/phone\.png"/);
+  assert.match(html, /href="https:\/\/staging\.ehllo\.io"/);
+});
+
+test("the footer carries the ehllo mark and links the wordmark", async () => {
+  const { buildHtmlSignature } = await import("../lib/email-signature.ts");
+  const html = buildHtmlSignature(PROFILE);
+  assert.match(html, /src="https:\/\/staging\.ehllo\.io\/ehllo-mark\.png"/);
+  assert.match(html, /width="14" height="14" alt="ehllo"/);
+  assert.match(html, /<a href="https:\/\/staging\.ehllo\.io"[^>]*>ehllo<\/a>/);
 });
 
 test("the plain-text signature is unaffected and carries no icons", async () => {

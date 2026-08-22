@@ -43,6 +43,29 @@ export async function syncCardToServer(card: LibraryCard) {
   }
 }
 
+export async function deleteCardFromServer(cardId: string) {
+  try {
+    const response = await fetch(`/api/cards?id=${encodeURIComponent(cardId)}`, {
+      method: "DELETE",
+    });
+
+    // A 404 means the server copy is already gone (or archived). Removing the
+    // stale local copy is still the correct reconciliation for this client.
+    if (response.ok || response.status === 404) return { ok: true } as const;
+
+    const payload = await response.json().catch(() => null) as { error?: string } | null;
+    return {
+      ok: false,
+      error: payload?.error || "We couldn’t delete this card. Please try again.",
+    } as const;
+  } catch {
+    return {
+      ok: false,
+      error: "You appear to be offline. Reconnect before deleting this card.",
+    } as const;
+  }
+}
+
 export async function hydrateCardLibraryFromServer() {
   if (typeof window === "undefined") return readCardLibrary(localStorage);
   if (hydratePromise) return hydratePromise;

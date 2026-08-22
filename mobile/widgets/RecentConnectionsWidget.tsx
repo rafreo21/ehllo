@@ -39,6 +39,8 @@ export type RecentConnectionsWidgetProps = {
   connection2Email?: string;
   connection2Initials?: string;
   connection2PhotoUri?: string;
+  /** Supplied by the app so the scheme matches this build - see below. */
+  scannerDeepLink?: string;
   /** '1' or '0'. Absent means the widget gallery, where sample content is the right answer. */
   signedIn?: string | boolean;
 };
@@ -234,8 +236,12 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
   // The pill takes the place of a second row when there is only one connection, so the widget
   // always has two lines of content instead of a row and a gap.
   function renderAddButton() {
+    // The scheme differs per variant - staging registers ehllo-staging, production ehllo - so
+    // a hardcoded "ehllo://scanner" opened nothing at all on a staging build. The app sends
+    // the right one; the fallback only matters in the widget gallery.
+    const scannerLink = props.scannerDeepLink?.trim() || 'ehllo://scanner';
     return (
-      <Link destination="ehllo://scanner">
+      <Link destination={scannerLink}>
         <HStack
           spacing={6}
           alignment="center"

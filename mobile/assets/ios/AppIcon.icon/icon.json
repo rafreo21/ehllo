@@ -1,0 +1,57 @@
+{
+  "color-space-for-untagged-svg-colors": "display-p3",
+  "fill-specializations": [
+    {
+      "value": {
+        "linear-gradient": [
+          "display-p3:0.60784,0.95294,0.33725,1.00000",
+          "display-p3:0.32157,0.81961,0.17647,1.00000"
+        ],
+        "orientation": {
+          "start": { "x": 0.15, "y": 0.05 },
+          "stop": { "x": 0.85, "y": 0.95 }
+        }
+      }
+    },
+    {
+      "appearance": "dark",
+      "value": {
+        "linear-gradient": [
+          "display-p3:0.32941,0.76078,0.16471,1.00000",
+          "display-p3:0.10980,0.38431,0.07059,1.00000"
+        ],
+        "orientation": {
+          "start": { "x": 0.15, "y": 0.05 },
+          "stop": { "x": 0.85, "y": 0.95 }
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "lighting": "combined",
+      "specular": true,
+      "blur": 0.18,
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.32
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.12
+      },
+      "layers": [
+        {
+          "name": "ehllo mark",
+          "image-name": "ehllo-mark.svg",
+          "blend-mode": "normal",
+          "glass": true,
+          "hidden": false
+        }
+      ]
+    }
+  ],
+  "supported-platforms": {
+    "squares": "shared"
+  }
+}

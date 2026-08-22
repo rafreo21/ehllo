@@ -1,5 +1,5 @@
 import { Image, Text, VStack, ZStack } from '@expo/ui/swift-ui';
-import { aspectRatio, background, containerBackground, cornerRadius, font, foregroundStyle, frame, padding, resizable, widgetAccentedRenderingMode, widgetURL } from '@expo/ui/swift-ui/modifiers';
+import { background, containerBackground, cornerRadius, font, foregroundStyle, frame, padding, resizable, widgetAccentedRenderingMode, widgetURL } from '@expo/ui/swift-ui/modifiers';
 import { createWidget } from 'expo-widgets';
 
 type WidgetCardRecord = {
@@ -115,38 +115,36 @@ function QrScanWidget(props: QrScanWidgetProps) {
                 The system desaturates full-colour images in those modes by default and can
                 apply the person's chosen tint on top - and a QR that has lost its contrast
                 will not scan, which is the entire job of this widget. */}
-            {/* resizable() before the frame, or SwiftUI draws the image at its natural size
-                and the frame merely crops it - which is why a 480px code appeared as a
-                zoomed-in fragment of itself, unscannable. aspectRatio keeps it square so the
-                modules stay readable. */}
-            {/* 116pt inside a 130pt card leaves the 7pt inset that is the quiet zone a scanner
-                needs. Up from 105. */}
-            <Image
-              uiImage={qrImageUri}
-              modifiers={[
-                resizable(),
-                aspectRatio({ ratio: 1, contentMode: 'fit' }),
-                frame({ width: 116, height: 116 }),
-                widgetAccentedRenderingMode('fullColor'),
-              ]}
-            />
-            {props.logoImageUri ? (
+            {/* IMAGES ONLY HONOUR resizable().
+                @expo/ui applies image modifiers through applyImageModifier, which handles
+                "resizable" and silently returns the image unchanged for everything else - the
+                reduce has to keep the accumulator an Image, and frame/padding/background/
+                cornerRadius all return some View. So a resizable image FILLS ITS CONTAINER and
+                its own frame() is a no-op.
+                That is why the logo, once given frame(22) + background(white) for its ring,
+                expanded over the whole 130pt card and hid the code: the ring modifiers did
+                nothing and nothing constrained it. All sizing therefore lives on containers. */}
+            <ZStack modifiers={[frame({ width: 116, height: 116 })]}>
               <Image
-                uiImage={props.logoImageUri}
+                uiImage={qrImageUri}
+                modifiers={[resizable(), widgetAccentedRenderingMode('fullColor')]}
+              />
+            </ZStack>
+            {props.logoImageUri ? (
+              // The ring is the container's white background; the inner box sizes the mark.
+              <ZStack
                 modifiers={[
-                  resizable(),
-                  aspectRatio({ ratio: 1, contentMode: 'fit' }),
-                  // A white ring so the mark reads as sitting ON the code rather than being
-                  // part of it. The logo shrinks from 30 to 22 so the ring grows inward: the
-                  // white footprint stays 30pt, which keeps the occluded share of the code
-                  // unchanged and the code as scannable as it was.
-                  frame({ width: 22, height: 22 }),
-                  padding({ all: 4 }),
+                  frame({ width: 30, height: 30 }),
                   background('#FFFFFF'),
                   cornerRadius(7),
-                  widgetAccentedRenderingMode('fullColor'),
-                ]}
-              />
+                ]}>
+                <ZStack modifiers={[frame({ width: 22, height: 22 })]}>
+                  <Image
+                    uiImage={props.logoImageUri}
+                    modifiers={[resizable(), widgetAccentedRenderingMode('fullColor')]}
+                  />
+                </ZStack>
+              </ZStack>
             ) : null}
           </ZStack>
         ) : (

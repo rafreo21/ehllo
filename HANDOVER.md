@@ -68,3 +68,39 @@ found in minutes once the real error was visible.
 Diagnostics that work: Vercel runtime logs via the MCP; `xcrun simctl spawn <udid> log show
 --predicate 'process == "ExpoWidgetsTarget"'`; the Supabase MCP for rows; `jsqr` + `sharp` to
 decode a QR straight out of a screenshot.
+
+## 22 August - widgets, deep links, virtual background, signature
+
+Confirmed working by inspection on device/simulator:
+
+| What | Root cause | Verified by |
+|---|---|---|
+| iOS QR codes vanished from both widgets | `@expo/ui`'s `applyImageModifier` honours **only** `resizable()`; `frame`/`padding`/`background`/`cornerRadius` on an `<Image>` are silently dropped. The logo's new ring modifiers did nothing, so a `resizable()` logo filled the whole card and covered the code. | you, on the simulator |
+| Recent Connections rows never rendered | `expo-widgets` reads children with `compactMap { $0 as? [String: Any] }`, discarding the nested array `{rows.map(...)}` produces | rows visible |
+| Every widget tap did nothing, both platforms | staging registers `ehllo-staging`, widgets emitted `ehllo://`. Proven: `am start ehllo-staging://connections` OK, `ehllo://connections` DEAD | you, on Android |
+| Widget kept showing the previous build | `persistCards` returned early when the card list was unchanged, and the widget sync sat after that return | prefs mtime |
+| iOS widgets all returned `CHSErrorDomain 1101` | an icon rebuild mangled entitlements -> `KeyChainException` -> signed out -> no snapshot -> App Group never created | rebuild; 0 keychain errors, all three `success` |
+| Mirrored virtual background did nothing | app calls the **deployed** API, so an unknown `?mirrored=1` was ignored and returned the normal file. Now flipped on-device. | pixel test |
+| Android picker previews looked like wireframes | drawn by a rasteriser with no font support, so every text line was a grey bar | real text, 12.8% light pixels |
+
+Also: all three Android widgets reworked (transparent/hugging cards, composited square QR card,
+logo rings, 2 rows, placeholders); Android widget heights corrected from 114dp to 106dp to fit
+the 110dp a 4x2 is *guaranteed* rather than the 215dp one test phone happens to give; email
+signature emoji dingbats replaced with hosted PNGs plus the ehllo mark and an environment-aware
+link; desktop preview gallery brought in line.
+
+**Tooling.** Android release builds spent ~25 of 26 minutes in `lintVitalAnalyzeRelease`;
+`assembleDebug` with `-PreactNativeArchitectures=arm64-v8a` is ~9 min cold. `install-dev-android.sh`
+no longer needs a Sentry token to finish. Android live reload works for JS via the dev client -
+widget layout never will, it is compiled RemoteViews.
+
+**Sentry noise on 21-22 Aug is ours**, not users': keychain failures from the broken iOS build,
+`Unable to load script` from a dev client launched before Metro, and an `ExpoFabricView` teardown
+race from repeated reloads. Users column 0-1 throughout.
+
+### Still not verified by anyone
+NFC tag write, a real capture, a Wallet pass, a scan of an unconnected card.
+
+### Not shipped
+Everything after `ac6857d` is uncommitted and unpushed by request - `mobile/**` auto-fires the
+OTA. Android widget work is native and will NOT ride an OTA; it needs a `staging-store` build.

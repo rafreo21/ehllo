@@ -30,11 +30,25 @@ function initialsFor(name: string) {
     .toUpperCase();
 }
 
-function signatureOrigin(cardUrl: string) {
+// Where the signature's images are fetched from.
+//
+// This deliberately does NOT just reuse the card's origin. A signature composed against a dev
+// server emitted http://localhost:3000/email-icons/..., which no email client on earth can
+// reach - the images were simply missing and nothing said so. An email is read outside your
+// network, so its assets have to come from a public host.
+//
+// A card URL is used when it is already public https; anything else (localhost, an IP, http)
+// falls back to the canonical site.
+const PUBLIC_ASSET_ORIGIN = 'https://ehllo.io';
+
+function signatureAssetOrigin(cardUrl: string) {
   try {
-    return new URL(cardUrl.trim()).origin;
+    const url = new URL(cardUrl.trim());
+    if (url.protocol !== 'https:') return PUBLIC_ASSET_ORIGIN;
+    if (url.hostname === 'localhost' || /^[\d.]+$/.test(url.hostname)) return PUBLIC_ASSET_ORIGIN;
+    return url.origin;
   } catch {
-    return '';
+    return PUBLIC_ASSET_ORIGIN;
   }
 }
 
@@ -49,14 +63,13 @@ function signatureOrigin(cardUrl: string) {
 // data-URI images. The alt text carries the label, so a client that blocks remote images shows
 // "Phone" rather than a broken-image icon.
 function contactIcon(origin: string, file: "phone" | "envelope", label: string) {
-  if (!origin) return '';
   return `<img src="${origin}/email-icons/${file}.png" width="14" height="14" alt="${label}"`
     + ` style="display:block;width:14px;height:14px;border:0;" />`;
 }
 
 function contactRows(profile: SignatureProfile) {
   const rows: string[] = [];
-  const origin = signatureOrigin(profile.cardUrl);
+  const origin = signatureAssetOrigin(profile.cardUrl);
   if (profile.phone?.trim()) {
     rows.push(
       `<tr><td style="padding:0 8px 0 0;vertical-align:middle;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;color:#53634D;">${contactIcon(origin, 'phone', 'Phone')}</td>`,
@@ -94,6 +107,7 @@ export function buildHtmlSignature(profile: SignatureProfile) {
   const company = profile.showCompany !== false ? escapeHtml(profile.company.trim()) : '';
   const cardUrl = escapeHtml(profile.cardUrl.trim());
   const initials = escapeHtml(initialsFor(profile.name));
+  const assetOrigin = signatureAssetOrigin(profile.cardUrl);
 
   const avatarCell = profile.photoUrl?.trim()
     ? `<img src="${escapeHtml(profile.photoUrl.trim())}" alt="${name}" width="64" height="64" style="display:block;width:64px;height:64px;border-radius:10px;object-fit:cover;" />`
@@ -135,9 +149,14 @@ export function buildHtmlSignature(profile: SignatureProfile) {
     '</td>',
     '</tr>',
     '<tr>',
-    '<td colspan="2" style="padding-top:12px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;color:#71806B;">',
-    'Shared with <span style="color:#2F5711;font-weight:700;">ehllo</span>',
-    '</td>',
+    `<td colspan="2" style="padding-top:12px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;color:#71806B;">`,
+    `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>`,
+    `<td valign="middle" style="padding:0 6px 0 0;"><img src="${assetOrigin}/ehllo-mark.png" width="14" height="14" alt="ehllo" style="display:block;width:14px;height:14px;border:0;" /></td>`,
+    `<td valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;color:#71806B;">`,
+    `Shared with <a href="${assetOrigin}" target="_blank" rel="noopener noreferrer" style="color:#2F5711;font-weight:700;text-decoration:none;">ehllo</a>`,
+    `</td>`,
+    `</tr></table>`,
+    `</td>`,
     '</tr>',
     '</table>',
   ].filter(Boolean).join('');

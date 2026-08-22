@@ -1,6 +1,5 @@
 import { HStack, Image, Text, VStack, ZStack } from '@expo/ui/swift-ui';
 import {
-  aspectRatio,
   background,
   containerBackground,
   cornerRadius,
@@ -160,33 +159,27 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
         ]}>
         {qrImageUri ? (
           <ZStack modifiers={[frame({ width: 103, height: 103 })]}>
-            {/* resizable() before the frame, or SwiftUI draws the image at its natural size
-                and the frame only crops it. fullColor so a tinted widget appearance cannot
-                recolour the code out of scanning range. */}
+            {/* Images only honour resizable() - see QrScanWidget for the detail. Everything
+                that positions or decorates has to sit on a container, or it is silently
+                dropped and the image simply fills whatever contains it. */}
             <Image
               uiImage={qrImageUri}
-              modifiers={[
-                resizable(),
-                aspectRatio({ ratio: 1, contentMode: 'fit' }),
-                frame({ width: 103, height: 103 }),
-                widgetAccentedRenderingMode('fullColor'),
-              ]}
+              modifiers={[resizable(), widgetAccentedRenderingMode('fullColor')]}
             />
             {props.logoImageUri ? (
-              <Image
-                uiImage={props.logoImageUri}
+              <ZStack
                 modifiers={[
-                  resizable(),
-                  aspectRatio({ ratio: 1, contentMode: 'fit' }),
-                  // Same white ring as the QR widget, and the same reasoning: 20pt logo inside
-                  // a 3pt ring keeps the white footprint at the 26pt it already occupied.
-                  frame({ width: 20, height: 20 }),
-                  padding({ all: 3 }),
+                  frame({ width: 26, height: 26 }),
                   background('#FFFFFF'),
                   cornerRadius(6),
-                  widgetAccentedRenderingMode('fullColor'),
-                ]}
-              />
+                ]}>
+                <ZStack modifiers={[frame({ width: 20, height: 20 })]}>
+                  <Image
+                    uiImage={props.logoImageUri}
+                    modifiers={[resizable(), widgetAccentedRenderingMode('fullColor')]}
+                  />
+                </ZStack>
+              </ZStack>
             ) : null}
           </ZStack>
         ) : null}
@@ -194,16 +187,10 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
 
       <VStack spacing={4} alignment="leading" modifiers={[frame({ width: 175, alignment: 'leading' })]}>
         {photoImageUri ? (
-          <Image
-            uiImage={photoImageUri}
-            modifiers={[
-              resizable(),
-              aspectRatio({ ratio: 1, contentMode: 'fill' }),
-              frame({ width: 40, height: 40 }),
-              // A 20pt radius on a 40pt square is the ellipse in the guide.
-              cornerRadius(20),
-            ]}
-          />
+          // Sized and rounded by its container, for the same reason as the code above.
+          <ZStack modifiers={[frame({ width: 40, height: 40 }), cornerRadius(20)]}>
+            <Image uiImage={photoImageUri} modifiers={[resizable()]} />
+          </ZStack>
         ) : (
           <Text
             modifiers={[

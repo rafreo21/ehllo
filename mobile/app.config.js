@@ -187,6 +187,7 @@ module.exports = {
       ],
       // After expo-widgets, which is what creates the extension target this adds fonts to.
       "./plugins/withWidgetFonts",
+      "./plugins/withIosLiquidGlassIcon",
       "expo-secure-store",
       [
         "expo-camera",
