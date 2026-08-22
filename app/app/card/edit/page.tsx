@@ -38,6 +38,7 @@ import { Button, LinkButton } from "../../../components/Button";
 import { CardFlowSkeleton } from "../../../components/AsyncState";
 import { CardImage } from "../../../components/CardImage";
 import { InlineEditField } from "../../../components/InlineEditField";
+import { useToast } from "../../../components/ToastContext";
 import { Check as CheckIcon } from "react-feather";
 import { themeCoverBadgeStyle, themeForegroundColor, themeGradientCss, themeSurfaceStyle } from "../../../../lib/theme-contrast";
 import {
@@ -251,6 +252,7 @@ function resolveDraft(search: string, cards: LibraryCard[]): DraftResolution {
 
 export default function CardEditor() {
   const searchParams = useSearchParams();
+  const { showToast } = useToast();
   const searchString = searchParams.toString();
   const [isCreating, setIsCreating] = useState(false);
   const [draft, setDraft] = useState<CardDraft>(initialDraft);
@@ -453,6 +455,7 @@ export default function CardEditor() {
       setHasEditBaseline(true);
       setIsCreating(false);
       setSaved(true);
+      showToast({ tone: "success", message: "Card published successfully." });
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "We couldn’t publish this card.");
     } finally {
@@ -576,6 +579,7 @@ export default function CardEditor() {
     const latest = draftRef.current;
     persistDraft(latest);
     await flushCardSync(latest).catch(() => null);
+    showToast({ tone: "success", message: "Draft saved." });
     completePendingNavigation();
   }
 

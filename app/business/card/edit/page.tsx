@@ -42,6 +42,7 @@ import { CardImage } from "../../../components/CardImage";
 import { Button, IconButton, LinkButton } from "../../../components/Button";
 import { TextAreaField, TextField } from "../../../components/FormField";
 import { PhoneField } from "../../../components/PhoneField";
+import { useToast } from "../../../components/ToastContext";
 import { Check as CheckIcon } from "react-feather";
 import { contactMethodHref, contactMethodOpensNewTab } from "../../../../lib/contact-methods";
 import { themeCoverBadgeStyle, themeForegroundColor, themeGradientCss, themeSurfaceStyle } from "../../../../lib/theme-contrast";
@@ -233,6 +234,7 @@ function resolveDraft(search: string, cards: LibraryCard[]): DraftResolution {
 
 export default function CardEditor() {
   const searchParams = useSearchParams();
+  const { showToast } = useToast();
   const searchString = searchParams.toString();
   const [draft, setDraft] = useState<CardDraft>(initialDraft);
   const draftRef = useRef<CardDraft>(initialDraft);
@@ -415,6 +417,7 @@ export default function CardEditor() {
       setPublishedFingerprint(cardPublishFingerprint(published));
       setIsCreating(false);
       setSaved(true);
+      showToast({ tone: "success", message: "Card published successfully." });
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "We couldn’t publish this card.");
     } finally {
