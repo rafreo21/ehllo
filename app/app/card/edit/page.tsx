@@ -715,7 +715,7 @@ export default function CardEditor() {
                   <h3>{category}</h3><div>
                     {availableTypes.map((type) => {
                       const meta = methodMeta[type];
-                      return <button type="button" key={type} onClick={() => openMethod(type)}>
+                      return <button type="button" key={type} onPointerDown={(event) => event.preventDefault()} onClick={() => openMethod(type)}>
                         <span className="method-library-icon" style={{ color: previewTheme.backgroundColor }}>
                           {PHOSPHOR_METHOD_TYPES.has(type) ? <meta.Icon size={20} weight="bold" color={previewTheme.backgroundColor} /> : <meta.Icon size={20} color={previewTheme.backgroundColor} />}
                         </span>
@@ -1016,7 +1016,7 @@ export default function CardEditor() {
                       <h3>{category}</h3><div>
                         {availableTypes.map((type) => {
                           const meta = methodMeta[type];
-                          return <button type="button" key={type} onClick={() => openMethod(type)}>
+                          return <button type="button" key={type} onPointerDown={(event) => event.preventDefault()} onClick={() => openMethod(type)}>
                             <span className="method-library-icon" style={{ color: previewTheme.backgroundColor }}>
                               {PHOSPHOR_METHOD_TYPES.has(type) ? <meta.Icon size={20} weight="bold" color={previewTheme.backgroundColor} /> : <meta.Icon size={20} color={previewTheme.backgroundColor} />}
                             </span>
