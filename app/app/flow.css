@@ -45,6 +45,23 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .home-feature-card { background: linear-gradient(105deg, #f3faee, #fff); }
 .home-feature-card > a:hover { background: rgba(220,245,207,.38); }
 .home-feature-action { display: inline-flex; align-items: center; gap: 6px; padding-right: 4px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.home-mobile-beta { position: relative; isolation: isolate; min-height: 220px; overflow: hidden; padding: clamp(24px,4vw,42px); display: grid; grid-template-columns: minmax(0,1fr) minmax(250px,.75fr); align-items: center; gap: 28px; border-radius: 16px; background: linear-gradient(125deg, #173500 0%, #285d08 58%, #81dc4b 100%); color: white; }
+.home-mobile-beta-copy { position: relative; z-index: 2; max-width: 560px; display: grid; justify-items: start; gap: 12px; }
+.home-mobile-beta-kicker { font-size: 10px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: #c9f6ad; }
+.home-mobile-beta h2 { margin: 0; color: white; font-size: clamp(26px,3vw,38px); line-height: 1.05; letter-spacing: -.035em; }
+.home-mobile-beta p { max-width: 500px; margin: 0; color: rgba(255,255,255,.78); font-size: 14px; line-height: 1.5; }
+.home-mobile-beta-platforms { display: flex; flex-wrap: wrap; gap: 7px; }
+.home-mobile-beta-platforms span { padding: 5px 9px; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; background: rgba(255,255,255,.1); font-size: 10px; font-weight: 800; }
+.home-mobile-beta-copy > button { margin-top: 4px; }
+.home-mobile-beta-art { position: relative; align-self: stretch; min-height: 190px; display: grid; place-items: center; }
+.home-mobile-phone { position: relative; z-index: 2; width: 150px; height: 206px; padding: 42px 18px 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 5px solid rgba(255,255,255,.82); border-radius: 28px; background: linear-gradient(160deg, rgba(255,255,255,.98), rgba(235,250,226,.88)); color: var(--p-navy); box-shadow: 0 24px 50px rgba(9,31,0,.28); transform: rotate(7deg); }
+.home-mobile-phone-speaker { position: absolute; top: 13px; width: 38px; height: 5px; border-radius: 999px; background: rgba(22,51,0,.18); }
+.home-mobile-phone-logo { width: 52px; height: 52px; margin-bottom: 12px; display: grid; place-items: center; border-radius: 15px; background: var(--p-lime); box-shadow: 0 10px 24px rgba(81,171,27,.25); }
+.home-mobile-phone strong { font-size: 20px; }
+.home-mobile-phone small { margin-top: 5px; color: var(--p-muted); font-size: 8px; text-align: center; }
+.home-mobile-orbit { position: absolute; border-radius: 50%; background: rgba(255,255,255,.12); }
+.home-mobile-orbit-one { width: 230px; height: 230px; }
+.home-mobile-orbit-two { width: 310px; height: 310px; border: 1px solid rgba(255,255,255,.13); background: transparent; }
 .home-content-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 18px; align-items: start; }
 .home-section { display: grid; gap: 12px; }
 .home-section h2 { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
@@ -70,6 +87,8 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 
 @media (max-width: 720px) {
   .home-content-grid { grid-template-columns: 1fr; }
+  .home-mobile-beta { grid-template-columns: 1fr; }
+  .home-mobile-beta-art { min-height: 170px; }
 }
 
 @media (max-width: 640px) {
@@ -79,6 +98,7 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .home-quick-actions { width: 100%; margin-left: 0; flex-direction: column; }
   .home-quick-actions > a, .home-quick-actions > button { width: 100%; }
   .home-feature-action { display: none; }
+  .home-mobile-beta { padding: 24px; border-radius: 12px; }
   .home-empty-compact { grid-template-columns: auto 1fr; }
   .home-empty-compact > a { grid-column: 1 / -1; margin-top: 4px; }
 }

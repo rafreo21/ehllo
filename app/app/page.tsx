@@ -9,6 +9,7 @@ import { ScanIcon } from "@phosphor-icons/react/dist/csr/Scan";
 import { HandWavingIcon } from "@phosphor-icons/react/dist/csr/HandWaving";
 import { TrendingUp as TrendUpIcon } from "react-feather";
 import { Users as UsersThreeIcon } from "react-feather";
+import { Smartphone as DeviceMobileIcon } from "react-feather";
 import { X as XIcon } from "react-feather";
 import { AddFollowUpModal } from "../components/AddFollowUpModal";
 import { Button, LinkButton } from "../components/Button";
@@ -390,6 +391,29 @@ export default function HomeDashboard() {
               )}
             </section>
             </div>
+
+            <section className="home-mobile-beta" aria-labelledby="mobile-beta-title">
+              <div className="home-mobile-beta-copy">
+                <span className="home-mobile-beta-kicker">ehllo mobile</span>
+                <h2 id="mobile-beta-title">Take ehllo with you.</h2>
+                <p>The mobile app is coming soon. Join testing today on iOS or Android and help shape what ships.</p>
+                <div className="home-mobile-beta-platforms" aria-label="Available testing platforms">
+                  <span>iOS beta</span>
+                  <span>Android beta</span>
+                </div>
+                <Button size="small" disabled title="Testing form link coming soon">Join mobile testing</Button>
+              </div>
+              <div className="home-mobile-beta-art" aria-hidden="true">
+                <span className="home-mobile-orbit home-mobile-orbit-one" />
+                <span className="home-mobile-orbit home-mobile-orbit-two" />
+                <div className="home-mobile-phone">
+                  <span className="home-mobile-phone-speaker" />
+                  <span className="home-mobile-phone-logo"><DeviceMobileIcon size={25} /></span>
+                  <strong>ehllo</strong>
+                  <small>Meet. Remember. Follow up.</small>
+                </div>
+              </div>
+            </section>
           </>
         )}
       </div>
