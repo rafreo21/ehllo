@@ -77,6 +77,7 @@ function RootNavigator() {
       <Stack.Screen name="edit-card" />
       <Stack.Screen name="capture" />
       <Stack.Screen name="quick-follow-up" />
+      <Stack.Screen name="widget-email" />
       <Stack.Screen name="card-tools" />
       <Stack.Screen name="program-nfc" />
       <Stack.Screen name="connections" />

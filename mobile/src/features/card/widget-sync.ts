@@ -8,7 +8,7 @@ import { shareCardDeepLink } from '@/features/card/share-deep-link';
 import type { MobileCard } from '@/features/card/types';
 import type { WidgetCardPayload, WidgetConnection, WidgetSnapshot } from '@/features/card/widget-types';
 import { cacheWidgetPhotoUri, ensureWidgetLogoUri, readUriAsBase64 } from '@/lib/widget-assets';
-import { appDeepLink } from '@/lib/app-scheme';
+import { appDeepLink, appScheme } from '@/lib/app-scheme';
 import { readEnv } from '@/lib/env';
 import { buildWidgetQrFileUri } from '@/lib/widget-qr';
 import { buildFollowUpMailto } from '@/features/follow-ups/action-links';
@@ -89,7 +89,22 @@ function connectedAgo(connectedAt?: string) {
 function followUpMailUrl(name: string, email?: string, eventTitle?: string) {
   const address = email?.trim();
   if (!address) return undefined;
-  return buildFollowUpMailto(address, name, eventTitle) || undefined;
+  // WidgetKit treats external mailto: destinations as widget deep links and hands them back
+  // to the host app. Expo Router then rewrites the address as an ehllo route (for example
+  // ehllo-staging://name%2540example.com), which lands on Unmatched Route. Enter through a
+  // real app route first; that route invokes the same shared follow-up composer as the rest
+  // of the app, so To, subject and body stay consistent on iOS and Android.
+  const mailto = buildFollowUpMailto(address, name, eventTitle);
+  if (!mailto) return undefined;
+  const query = new URLSearchParams({
+    to: address,
+    name,
+    ...(eventTitle?.trim() ? { event: eventTitle.trim() } : {}),
+  }).toString();
+  // Three slashes make widget-email a path. With two, iOS treats it as the URL host; Expo
+  // Router can resolve some legacy host-style links, but file routes from WidgetKit are not
+  // consistent and this one stayed on the current screen in device testing.
+  return `${appScheme()}:///widget-email?${query}`;
 }
 
 // Two, not three: the layout has room for two rows plus an action, and every extra row costs a
