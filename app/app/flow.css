@@ -51,7 +51,6 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .home-mobile-beta p { max-width: 500px; margin: 0; color: var(--p-muted); font-size: 14px; line-height: 1.5; }
 .home-mobile-beta-platforms { display: flex; flex-wrap: wrap; gap: 7px; }
 .home-mobile-beta-platforms span { padding: 6px 10px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #d2e2ca; border-radius: 999px; background: rgba(255,255,255,.66); font-size: 10px; font-weight: 800; }
-.home-mobile-apple-logo { color: #111; }
 .home-mobile-beta-copy > button { margin-top: 4px; }
 .home-mobile-beta-art { display: grid; gap: 10px; }
 .home-mobile-platform-card { min-height: 74px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; border-radius: 12px; background: rgba(255,255,255,.72); color: var(--p-navy); }

@@ -56,12 +56,16 @@ const HOME_FOLLOW_UP_TIP_DISMISSED_KEY = "ehllo-home-follow-up-tip-dismissed-v1"
 function GooglePlayMark({ size = 17 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="#34a853" d="M3.4 2.6 14 12 3.4 21.4c-.3-.4-.4-.9-.4-1.5V4.1c0-.6.1-1.1.4-1.5Z" />
-      <path fill="#4285f4" d="m14 12 3.1-2.8L6.1 3c-.9-.5-1.8-.6-2.7-.4L14 12Z" />
-      <path fill="#fbbc04" d="m14 12-10.6 9.4c.9.2 1.8.1 2.7-.4l11-6.2L14 12Z" />
-      <path fill="#ea4335" d="m17.1 9.2-3.1 2.8 3.1 2.8 3.1-1.7c1.1-.6 1.1-1.6 0-2.2l-3.1-1.7Z" />
+      <path style={{ fill: "#00d26a" }} d="M3.4 2.6 14 12 3.4 21.4c-.3-.4-.4-.9-.4-1.5V4.1c0-.6.1-1.1.4-1.5Z" />
+      <path style={{ fill: "#00a4ef" }} d="m14 12 3.1-2.8L6.1 3c-.9-.5-1.8-.6-2.7-.4L14 12Z" />
+      <path style={{ fill: "#ffce00" }} d="m14 12-10.6 9.4c.9.2 1.8.1 2.7-.4l11-6.2L14 12Z" />
+      <path style={{ fill: "#ff3a44" }} d="m17.1 9.2-3.1 2.8 3.1 2.8 3.1-1.7c1.1-.6 1.1-1.6 0-2.2l-3.1-1.7Z" />
     </svg>
   );
+}
+
+function AppleBrandMark({ size = 17 }: { size?: number }) {
+  return <AppleLogo size={size} weight="fill" style={{ color: "#000", fill: "#000" }} aria-hidden="true" />;
 }
 
 function isDueNow(dueAt: string) {
@@ -408,14 +412,14 @@ export default function HomeDashboard() {
                 <h2 id="mobile-beta-title">Take ehllo with you.</h2>
                 <p>The mobile app is coming soon. Join testing today on iOS or Android and help shape what ships.</p>
                 <div className="home-mobile-beta-platforms" aria-label="Available testing platforms">
-                  <span><AppleLogo className="home-mobile-apple-logo" size={17} weight="fill" />iOS beta</span>
+                  <span><AppleBrandMark />iOS beta</span>
                   <span><GooglePlayMark />Android beta</span>
                 </div>
                 <Button size="small" disabled title="Testing form link coming soon">Join mobile testing</Button>
               </div>
               <div className="home-mobile-beta-art" aria-hidden="true">
                 <div className="home-mobile-platform-card">
-                  <AppleLogo className="home-mobile-apple-logo" size={34} weight="fill" />
+                  <AppleBrandMark size={34} />
                   <span><strong>Test on iOS</strong><small>iPhone beta</small></span>
                 </div>
                 <div className="home-mobile-platform-card">
