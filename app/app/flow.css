@@ -1371,6 +1371,12 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .settings-drawer-body > .settings-panel { padding: 18px 16px 28px; }
   .settings-drawer-body .settings-panel,
   .settings-drawer-body .activate-panel { padding: 16px; }
+  .settings-drawer-body .recording-storage-panel { padding: 0; }
+  .settings-drawer-body .recording-storage-panel > div { width: 100%; }
+  .recording-storage-option { min-height: 60px; padding: 10px 12px; gap: 10px; }
+  .recording-storage-option > .flex-1 { min-width: 0; }
+  .recording-storage-option strong,
+  .recording-storage-option small { overflow: hidden; display: block; text-overflow: ellipsis; white-space: nowrap; }
   .settings-drawer-body .notification-preferences { padding: 0; }
   .settings-drawer-body .notification-preferences .preference-row { grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; padding-block: 13px; }
   .settings-drawer-body .notification-preferences .preference-switch { grid-column: auto; }
@@ -1383,6 +1389,9 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .settings-drawer-header p { display: none; }
   .settings-drawer-header .settings-drawer-text-action { padding-inline: 6px; font-size: 10px; }
   .settings-drawer-body .local-data-panel { margin-inline: 12px; }
+  .settings-drawer-body > .recording-storage-panel,
+  .settings-drawer-body > .flow-page { padding-inline: 12px; }
+  .settings-drawer-body .recording-storage-panel { padding: 0; }
 }
 .connected-account-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .connected-capabilities { display:flex; flex-wrap:wrap; justify-content: flex-end; gap:5px; }
