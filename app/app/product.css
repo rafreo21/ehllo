@@ -122,6 +122,14 @@ body:has(.product-shell) { background: var(--p-ice); }
 .product-page-leading { min-width: 0; display: flex; align-items: center; gap: 8px; }
 .product-page-back { flex: 0 0 auto; }
 .product-page-card-label { min-width: 80px; max-width: min(320px, 32vw); padding: 7px 9px; overflow: hidden; color: var(--p-navy); font-size: 13px; font-weight: 800; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.card-toolbar-title-group { min-width: 0; display: flex; align-items: center; gap: 8px; }
+.card-toolbar-publish-state { min-width: 0; max-width: min(330px,35vw); padding: 5px 8px; display: inline-flex; align-items: center; gap: 6px; border-radius: 7px; font-size: 10px; font-weight: 800; line-height: 1.2; white-space: nowrap; }
+.card-toolbar-publish-state > i { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; }
+.card-toolbar-publish-state > span { overflow: hidden; text-overflow: ellipsis; }
+.card-toolbar-publish-state.is-published { background: #e7f8dc; color: #205d0d; }
+.card-toolbar-publish-state.is-published > i { background: #2e8b25; }
+.card-toolbar-publish-state.is-dirty { background: #fff4da; color: #6f4700; }
+.card-toolbar-publish-state.is-dirty > i { background: #e29a19; }
 .product-page-actions { margin-left: auto; display: flex; justify-content: flex-end; gap: 10px; align-items: center; }
 .app-shell-action-group { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 .product-content { max-width: 1260px; min-height: 100%; margin: auto; padding: 58px 40px 72px; background: inherit; }
@@ -587,6 +595,10 @@ body:has(.product-shell) { background: var(--p-ice); }
     box-shadow: 0 8px 24px rgba(22,51,0,.09);
     backdrop-filter: blur(14px) saturate(1.15);
   }
+  .product-shell:has(.card-creator) .card-toolbar-title-group { gap: 4px; }
+  .product-shell:has(.card-creator) .card-toolbar-publish-state { width: 10px; height: 10px; padding: 0; overflow: visible; background: transparent; }
+  .product-shell:has(.card-creator) .card-toolbar-publish-state > i { width: 8px; height: 8px; }
+  .product-shell:has(.card-creator) .card-toolbar-publish-state > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
   .editor-desktop-only { display: none; }
   .theme-picker-trigger.editor-compact-only { display: grid; }
   .preview-theme-picker-trigger { min-height: 48px; padding: 7px 11px; grid-template-columns: 32px minmax(0,1fr) 18px; gap: 9px; }

@@ -346,6 +346,13 @@ export default function CardEditor() {
       : saved
         ? "Publish changes"
         : "Save and publish";
+  const publishStateLabel = hasUnpublishedChanges
+    ? isCreating
+      ? "New card, not published yet."
+      : "Unpublished changes on this card."
+    : isPublishedCard(draft)
+      ? "Card published and up to date."
+      : "Draft loaded, not published yet.";
   const shouldShowLeavePrompt = showLeavePrompt && hasUnpublishedChanges;
 
   function persistDraft(next: CardDraft) {
@@ -533,17 +540,28 @@ export default function CardEditor() {
     labelConfirmRef.current = (value) => update("label", value);
   });
   const appShellLeading = useMemo(() => hydrated ? (
-    <InlineEditField
-      key={`${draft.id}-${hydrated ? "ready" : "loading"}`}
-      as="span"
-      className="product-page-card-label"
-      defaultValue={draft.label}
-      onConfirm={(value) => labelConfirmRef.current(value)}
-      placeholder="Card label"
-      ariaLabel="Card label"
-      maxLength={60}
-    />
-  ) : null, [draft.id, draft.label, hydrated]);
+    <div className="card-toolbar-title-group">
+      <InlineEditField
+        key={`${draft.id}-${hydrated ? "ready" : "loading"}`}
+        as="span"
+        className="product-page-card-label"
+        defaultValue={draft.label}
+        onConfirm={(value) => labelConfirmRef.current(value)}
+        placeholder="Card label"
+        ariaLabel="Card label"
+        maxLength={60}
+      />
+      <span
+        className={`card-toolbar-publish-state ${isPublishedCard(draft) && !hasUnpublishedChanges ? "is-published" : "is-dirty"}`}
+        role="status"
+        aria-label={publishStateLabel}
+        title={publishStateLabel}
+      >
+        <i aria-hidden="true" />
+        <span>{publishStateLabel}</span>
+      </span>
+    </div>
+  ) : null, [draft.id, draft.label, draft.status, draft.publishedAt, hydrated, hasUnpublishedChanges, publishStateLabel]);
   const appShellActions = useMemo(() => !hydrated || cardLimitReached ? null : (
     <Button
       size="small"
@@ -760,20 +778,6 @@ export default function CardEditor() {
       <section className="card-creator">
         <div className="creator-layout creator-layout--fill">
           <aside className="creator-preview">
-            {hydrated && (
-              <div className={`creator-publish-state ${isPublishedCard(draft) && !hasUnpublishedChanges ? "is-published" : "is-dirty"}`} role="status">
-                {!hasUnpublishedChanges && isPublishedCard(draft) && <CheckCircleIcon size={18} />}
-                <span>
-                  {hasUnpublishedChanges
-                    ? isCreating
-                      ? "New card, not published yet."
-                      : "Unpublished changes on this card."
-                    : isPublishedCard(draft)
-                      ? "Card published and up to date."
-                      : "Draft loaded, not published yet."}
-                </span>
-              </div>
-            )}
             <div className="creator-preview-head"><span>Live preview</span><small>Updates instantly</small></div>
             <button type="button" className="theme-picker-trigger preview-theme-picker-trigger editor-compact-only" onClick={() => setShowThemePicker(true)}>
               <span className="theme-picker-current" aria-hidden="true" style={{ background: previewTheme.backgroundGradient }} />
