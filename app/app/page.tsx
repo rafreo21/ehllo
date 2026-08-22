@@ -182,9 +182,9 @@ export default function HomeDashboard() {
             <p>Your day at a glance.</p>
           </div>
           <div className="home-quick-actions">
-            <LinkButton href="/app/cards#share"><QrCodeIcon size={17} weight="bold" />Share my card</LinkButton>
-            <Button variant="secondary" onClick={() => setAddFollowUpModalOpen(true)}><ListChecksIcon size={17} />Quick follow-up</Button>
-            <LinkButton variant="secondary" href="/app/scan"><ScanIcon size={17} weight="bold" />Quick scan</LinkButton>
+            <LinkButton size="small" href="/app/cards#share"><QrCodeIcon size={15} weight="bold" />Share my card</LinkButton>
+            <Button size="small" variant="secondary" onClick={() => setAddFollowUpModalOpen(true)}><ListChecksIcon size={15} />Quick follow-up</Button>
+            <LinkButton size="small" variant="secondary" href="/app/scan"><ScanIcon size={15} weight="bold" />Quick scan</LinkButton>
           </div>
         </div>
 
