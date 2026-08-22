@@ -515,10 +515,9 @@ body:has(.product-shell) { background: var(--p-ice); }
   }
   .editor-desktop-only { display: none; }
   .theme-picker-trigger.editor-compact-only { display: grid; }
-  .preview-theme-picker-trigger { min-height: 58px; padding: 9px 12px; grid-template-columns: 34px minmax(0,1fr) 18px; gap: 10px; }
-  .preview-theme-picker-trigger .theme-picker-current { width: 34px; height: 34px; }
+  .preview-theme-picker-trigger { min-height: 48px; padding: 7px 11px; grid-template-columns: 32px minmax(0,1fr) 18px; gap: 9px; }
+  .preview-theme-picker-trigger .theme-picker-current { width: 32px; height: 32px; }
   .preview-theme-picker-trigger strong { font-size: 13px; }
-  .preview-theme-picker-trigger small { font-size: 10px; }
   .method-library-trigger.editor-compact-only { display: flex; }
   .preview-add-method-trigger.editor-compact-only { display: grid; }
   .creator-layout { grid-template-columns: minmax(0,1fr); }

@@ -769,7 +769,7 @@ export default function CardEditor() {
             <div className="creator-preview-head"><span>Live preview</span><small>Updates instantly</small></div>
             <button type="button" className="theme-picker-trigger preview-theme-picker-trigger editor-compact-only" onClick={() => setShowThemePicker(true)}>
               <span className="theme-picker-current" aria-hidden="true" style={{ background: previewTheme.backgroundGradient }} />
-              <span><strong>Card colour</strong><small>Choose the colour used across your card.</small></span>
+              <span><strong>Card colour</strong></span>
               <ChevronRightIcon size={18} aria-hidden="true" />
             </button>
             <article className="public-card public-card--editable">
