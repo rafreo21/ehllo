@@ -53,6 +53,8 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .home-mobile-beta-copy > button { margin-top: 4px; }
 .home-mobile-beta-art { display: grid; gap: 10px; }
 .home-mobile-platform-card { min-height: 74px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; border-radius: 12px; background: rgba(255,255,255,.72); color: var(--p-navy); }
+.home-mobile-brand-icon { width: 42px; height: 42px; display: grid; place-items: center; flex: 0 0 auto; }
+.home-mobile-brand-icon-apple { border-radius: 11px; background: #111; }
 .home-mobile-platform-card > span { display: grid; gap: 2px; }
 .home-mobile-platform-card strong { font-size: 13px; }
 .home-mobile-platform-card small { color: var(--p-muted); font-size: 10px; }
