@@ -396,7 +396,7 @@ export default function FollowupsPage() {
 
   return (
     <>
-      <div className="flow-page">
+      <div className="flow-page followups-page">
         <div className="flow-heading"><div><h1>Keep the promise.</h1><p className="flow-heading-copy-wide">Nothing is sent automatically. Review the context, take the action, then mark it complete.</p></div><div className="flow-heading-actions"><Button size="small" variant="secondary" onClick={() => setAddFollowUpModalOpen(true)}><PlusIcon size={15} />Add follow-up</Button><Button size="small" onClick={() => setCaptureModalOpen(true)}><MicrophoneIcon size={15} />Capture</Button></div></div>
         {message && <StatusMessage tone="success" action={<Button size="small" variant="ghost" onClick={() => setMessage("")}>Dismiss</Button>}>{message}</StatusMessage>}
         {error && (
