@@ -246,7 +246,11 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .card-detail-title { display: grid; justify-items: center; gap: 2px; }
 .card-detail-title span { color: var(--p-muted); font-size: 8px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .card-detail-actions { display: flex; justify-content: flex-end; gap: 6px; }
-.card-detail-more { display: none; }
+.card-detail-more { display: none; border: 0; color: var(--p-navy); font: inherit; }
+.card-actions-sheet-backdrop { z-index: 110; }
+.card-actions-sheet { border-radius: 16px 16px 12px 12px; }
+.card-actions-sheet-list { display: grid; gap: 4px; }
+.card-actions-sheet-list > * { width: 100%; min-height: 44px; justify-content: flex-start; }
 .card-action-label-compact { display: none; }
 .selected-card-heading { margin-bottom: -16px; display: flex; align-items: end; justify-content: space-between; gap: 18px; }
 .selected-card-heading > div { display: grid; gap: 4px; }
@@ -1509,8 +1513,9 @@ a.home-stat-tile:hover { background: var(--p-ice); }
     white-space: nowrap;
   }
   .card-detail-actions { display: none; }
-  .card-detail-more { position: relative; grid-column: 3; grid-row: 1; display: block; }
-  .card-detail-more > summary {
+  .card-detail-more {
+    grid-column: 3;
+    grid-row: 1;
     width: 36px;
     height: 36px;
     display: grid;
@@ -1518,25 +1523,8 @@ a.home-stat-tile:hover { background: var(--p-ice); }
     border-radius: 50%;
     background: #f2f5f0;
     cursor: pointer;
-    list-style: none;
   }
-  .card-detail-more > summary::-webkit-details-marker { display: none; }
-  .card-detail-more[open] > summary { background: #e5e9e2; }
-  .card-detail-more-menu {
-    position: absolute;
-    z-index: 20;
-    top: calc(100% + 7px);
-    right: 0;
-    width: 154px;
-    padding: 5px;
-    display: grid;
-    gap: 2px;
-    border: 1px solid #e3e7e0;
-    border-radius: 10px;
-    background: white;
-    box-shadow: 0 14px 34px rgba(22,51,0,.14);
-  }
-  .card-detail-more-menu > * { width: 100%; justify-content: flex-start; }
+  .card-detail-more:hover, .card-detail-more:active, .card-detail-more[aria-expanded="true"] { background: #e5e9e2; }
   .card-action-label-full { display: none; }
   .card-action-label-compact { display: inline; }
   .followups-page .flow-heading-actions { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }

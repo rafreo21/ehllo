@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { MoreHorizontal as MoreHorizontalIcon } from "react-feather";
+import { X as XIcon } from "react-feather";
 import { Copy as CopyIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
 import { Download as DownloadSimpleIcon } from "react-feather";
@@ -125,6 +126,7 @@ export default function CardsPage() {
   const [qrError, setQrError] = useState("");
   const [shareUrl, setShareUrl] = useState("http://localhost:3000/c/alex-morgan");
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [cardActionsOpen, setCardActionsOpen] = useState(false);
   const [deletingCard, setDeletingCard] = useState(false);
   const [shareTool, setShareTool] = useState<ShareTool>("qr");
   const [recentConnection, setRecentConnection] = useState<ConnectionItem | null>(null);
@@ -607,14 +609,7 @@ function createCard(seed: Partial<LibraryCard> = {}) {
                   <TrashIcon size={16} /> {deletingCard ? "Deleting…" : "Delete"}
                 </Button>
               </div>
-              <details className="card-detail-more">
-                <summary aria-label="More card actions"><MoreHorizontalIcon size={19} /></summary>
-                <div className="card-detail-more-menu">
-                  <LinkButton size="small" variant="ghost" href={`/app/card/edit?id=${activeId}`}><PencilSimpleIcon size={16} /> Edit card</LinkButton>
-                  <Button size="small" variant="ghost" onClick={(event) => { (event.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open"); setShareModalOpen(true); }}><UploadSimpleIcon size={16} /> Share card</Button>
-                  <Button size="small" variant="ghost" loading={deletingCard} onClick={deleteActiveCard}><TrashIcon size={16} /> {deletingCard ? "Deleting…" : "Delete"}</Button>
-                </div>
-              </details>
+              <button className="card-detail-more" type="button" aria-label="More card actions" aria-expanded={cardActionsOpen} onClick={() => setCardActionsOpen(true)}><MoreHorizontalIcon size={19} /></button>
             </div>
             <div className="card-share-layout" id="share">
           <article className="share-card-preview" style={{ "--card-accent": cardTheme.backgroundColor } as React.CSSProperties}>
@@ -846,6 +841,21 @@ function createCard(seed: Partial<LibraryCard> = {}) {
               copied={copied}
               onCopyLink={copyLink}
             />
+            {cardActionsOpen ? (
+              <div className="connections-modal-backdrop card-actions-sheet-backdrop" role="presentation" onClick={() => setCardActionsOpen(false)}>
+                <section className="connections-modal card-actions-sheet" role="dialog" aria-modal="true" aria-labelledby="card-actions-title" onClick={(event) => event.stopPropagation()}>
+                  <header>
+                    <h2 id="card-actions-title">Card actions</h2>
+                    <button type="button" aria-label="Close card actions" onClick={() => setCardActionsOpen(false)}><XIcon size={18} /></button>
+                  </header>
+                  <div className="card-actions-sheet-list">
+                    <LinkButton variant="ghost" href={`/app/card/edit?id=${activeId}`} onClick={() => setCardActionsOpen(false)}><PencilSimpleIcon size={17} /> Edit card</LinkButton>
+                    <Button variant="ghost" onClick={() => { setCardActionsOpen(false); setShareModalOpen(true); }}><UploadSimpleIcon size={17} /> Share card</Button>
+                    <Button variant="ghost" loading={deletingCard} onClick={() => { setCardActionsOpen(false); void deleteActiveCard(); }}><TrashIcon size={17} /> {deletingCard ? "Deleting…" : "Delete card"}</Button>
+                  </div>
+                </section>
+              </div>
+            ) : null}
             <WidgetsOnPhoneModal
               open={widgetsOnPhoneOpen}
               onClose={() => setWidgetsOnPhoneOpen(false)}
