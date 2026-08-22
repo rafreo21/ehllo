@@ -1,5 +1,55 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Airbnb Cereal";
+  src: url("/fonts/airbnb-cereal/AirbnbCereal-Light.otf") format("opentype");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Airbnb Cereal";
+  src: url("/fonts/airbnb-cereal/AirbnbCereal-Book.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Airbnb Cereal";
+  src: url("/fonts/airbnb-cereal/AirbnbCereal-Medium.otf") format("opentype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Airbnb Cereal";
+  src: url("/fonts/airbnb-cereal/AirbnbCereal-Medium.otf") format("opentype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Airbnb Cereal";
+  src: url("/fonts/airbnb-cereal/AirbnbCereal-Bold.otf") format("opentype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Airbnb Cereal";
+  src: url("/fonts/airbnb-cereal/AirbnbCereal-ExtraBold.otf") format("opentype");
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Airbnb Cereal";
+  src: url("/fonts/airbnb-cereal/AirbnbCereal-Black.otf") format("opentype");
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+}
+
 :root {
   --navy: #163300;
   --blue: #9fe870;
@@ -13,7 +63,7 @@
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 94px; }
-body { min-width: 320px; margin: 0; overflow-x: clip; background: var(--white); color: var(--navy); font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+body { min-width: 320px; margin: 0; overflow-x: clip; background: var(--white); color: var(--navy); font-family: "Airbnb Cereal", Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 /* In @layer base (not bare CSS) so Tailwind's text-size utilities - which
    live in a higher-priority layer - can actually override this reset.
    Unlayered, this rule's `font: inherit` (a shorthand covering font-size)
