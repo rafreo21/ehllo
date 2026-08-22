@@ -410,7 +410,12 @@ export default function CardToolsScreen() {
           <Button
             loading={busy === 'widget'}
             onPress={() => void run('widget', async () => {
-              await syncCardToolsForCard(cards, cardPublicUrl, session?.access_token, card);
+              // rethrow: this is the one caller of syncCardToolsForCard where a person is
+              // explicitly asking whether the sync worked, not a background sync riding along
+              // on some other screen - see the comment on syncCardToolsForCard for why every
+              // other caller stays best-effort. Without it, run()'s catch never fires and the
+              // success toast below fires unconditionally, even when the sync failed.
+              await syncCardToolsForCard(cards, cardPublicUrl, session?.access_token, card, { rethrow: true });
             }, { successMessage: 'Widget data refreshed. Add or update ehllo from your widget picker.' })}>
             Refresh home-screen widgets
           </Button>

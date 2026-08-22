@@ -1,4 +1,5 @@
 import { NativeModules, Platform } from 'react-native';
+import * as Sentry from '@sentry/react-native';
 
 import { fetchAllConnections } from '@/features/connections/connections-api';
 import { showsCompanyDetails } from '@/features/card/company-display';
@@ -10,6 +11,7 @@ import { cacheWidgetPhotoUri, ensureWidgetLogoUri, readUriAsBase64 } from '@/lib
 import { appDeepLink } from '@/lib/app-scheme';
 import { readEnv } from '@/lib/env';
 import { buildWidgetQrFileUri } from '@/lib/widget-qr';
+import { buildFollowUpMailto } from '@/features/follow-ups/action-links';
 
 export const CONNECTIONS_DEEP_LINK = appDeepLink('connections');
 export const SCANNER_DEEP_LINK = appDeepLink('scanner');
@@ -19,6 +21,27 @@ type WidgetBridge = {
 };
 
 type IosWidgetPayload = Record<string, string | number | undefined>;
+
+/**
+ * Every QR/photo/logo asset step below is intentionally best-effort - a missing avatar falls
+ * back to initials, a missing QR falls back to "Publish your card", and none of that is worth
+ * failing the whole widget sync over. But "worth degrading gracefully" and "worth knowing
+ * about" are different questions, and until now these caught silently: no console line, no
+ * Sentry event, nothing. That is exactly the shape of failure a real device hit - a real,
+ * published card with a real QR file on disk, but qrImageUri missing from the synced snapshot
+ * anyway - and it stayed invisible because the code succeeding at the sync while quietly
+ * losing one asset looked, from every log available, identical to nothing going wrong at all.
+ * `warning`, not `error`: the sync itself still succeeds, so this should never look like an
+ * outage on its own - only a pattern across many of these should.
+ */
+function reportWidgetAssetFailure(step: string, caught: unknown) {
+  const message = caught instanceof Error ? caught.message : String(caught);
+  console.warn(`[widget-sync] ${step} failed`, { message });
+  Sentry.captureException(caught instanceof Error ? caught : new Error(message), {
+    level: 'warning',
+    tags: { widget_asset_step: step },
+  });
+}
 
 function initialsFor(name: string) {
   return name
@@ -56,19 +79,17 @@ function connectedAgo(connectedAt?: string) {
 // The follow-up the widget's envelope should draft. A widget tap that lands you in an empty
 // compose window has done almost nothing useful; naming where you met is the part nobody
 // remembers to write.
+//
+// This used to hand-roll its own subject/body, which read close to but not exactly like the
+// email the app itself sends for the same action ("Hi" vs "Hey", a subject that embedded the
+// event when the app's never does, no sign-off). The widget and the app must produce the
+// same email for the same tap - online or offline, from a home screen or from the connection
+// screen - so this calls the same builder the app uses rather than keeping a second copy that
+// only drifts from it.
 function followUpMailUrl(name: string, email?: string, eventTitle?: string) {
   const address = email?.trim();
   if (!address) return undefined;
-  const firstName = name.trim().split(/\s+/)[0] || 'there';
-  const place = eventTitle?.trim();
-  const subject = place ? `Great meeting you at ${place}` : 'Great meeting you';
-  const opener = place
-    ? `It was great meeting you at ${place}.`
-    : 'It was great meeting you.';
-  const body = `Hi ${firstName},\n\n${opener}\n\n`;
-  return `mailto:${encodeURIComponent(address)}`
-    + `?subject=${encodeURIComponent(subject)}`
-    + `&body=${encodeURIComponent(body)}`;
+  return buildFollowUpMailto(address, name, eventTitle) || undefined;
 }
 
 // Two, not three: the layout has room for two rows plus an action, and every extra row costs a
@@ -87,9 +108,10 @@ async function loadRecentConnections(accessToken?: string): Promise<WidgetConnec
             photoImageUri = cached;
             if (Platform.OS === 'android') photoImageBase64 = await readUriAsBase64(cached);
           }
-        } catch {
+        } catch (caught) {
           // A missing avatar falls back to the initials circle, which is a real design state
           // rather than a failure - so this is not worth failing the whole sync over.
+          reportWidgetAssetFailure('connection photo', caught);
           photoImageUri = undefined;
           photoImageBase64 = undefined;
         }
@@ -107,7 +129,8 @@ async function loadRecentConnections(accessToken?: string): Promise<WidgetConnec
         photoImageBase64,
       };
     }));
-  } catch {
+  } catch (caught) {
+    reportWidgetAssetFailure('load connections', caught);
     return [];
   }
 }
@@ -131,7 +154,8 @@ async function buildWidgetCardPayload(
         qrImageBase64 = await readUriAsBase64(qrImageUriValue);
       }
     }
-  } catch {
+  } catch (caught) {
+    reportWidgetAssetFailure('card QR', caught);
     qrImageBase64 = undefined;
     qrImageUri = undefined;
   }
@@ -145,7 +169,8 @@ async function buildWidgetCardPayload(
           photoImageBase64 = await readUriAsBase64(cachedPhotoUri);
         }
       }
-    } catch {
+    } catch (caught) {
+      reportWidgetAssetFailure('card photo', caught);
       photoImageBase64 = undefined;
       photoImageUri = undefined;
     }
@@ -165,7 +190,32 @@ async function buildWidgetCardPayload(
   };
 }
 
-export async function buildWidgetSnapshot(
+// Serializes every call that reaches buildWidgetQrFileUri/cacheWidgetPhotoUri, not just
+// syncAllWidgets. card-tool-sheets.tsx's "Home screen widgets" preview sheet calls
+// buildWidgetSnapshotImpl directly, for its own live preview - a second, independent entry
+// point into the exact same shared resources: the single-item requestQrDataUrl queue
+// (widget-qr-renderer.tsx, 4s timeout per item) and the same deterministic QR/photo file
+// paths (assetKey is the card id, so the preview and the real sync target the identical
+// filename). A widget-sync-only lock left this one uncovered: on a cold launch the preview's
+// own snapshot build was observed racing the real one for the same QR slot, and whichever
+// finished last overwrote UserDefaults - sometimes with the preview's own failed/undefined
+// qrImageUri, on a card that files on disk prove really did get a QR moments earlier from the
+// call that lost the write race. Locking here, at the shared resource itself, covers both
+// entry points instead of only the one that happened to be found first.
+let snapshotChain: Promise<unknown> = Promise.resolve();
+
+export function buildWidgetSnapshot(
+  cards: MobileCard[],
+  cardPublicUrl: (card: MobileCard) => string,
+  accessToken?: string,
+  preferredCard?: MobileCard,
+): Promise<WidgetSnapshot> {
+  const run = snapshotChain.then(() => buildWidgetSnapshotImpl(cards, cardPublicUrl, accessToken, preferredCard));
+  snapshotChain = run.then(() => undefined, () => undefined);
+  return run;
+}
+
+async function buildWidgetSnapshotImpl(
   cards: MobileCard[],
   cardPublicUrl: (card: MobileCard) => string,
   accessToken?: string,
@@ -213,7 +263,8 @@ export async function buildWidgetSnapshot(
   try {
     logoImageUri = await ensureWidgetLogoUri();
     if (logoImageUri) logoImageBase64 = await readUriAsBase64(logoImageUri);
-  } catch {
+  } catch (caught) {
+    reportWidgetAssetFailure('logo', caught);
     logoImageUri = undefined;
   }
 
@@ -230,7 +281,8 @@ export async function buildWidgetSnapshot(
   if (!qrImageUri && primary?.cardUrl) {
     try {
       qrImageUri = await buildWidgetQrFileUri(primary.cardUrl, 'primary');
-    } catch {
+    } catch (caught) {
+      reportWidgetAssetFailure('primary QR fallback', caught);
       qrImageUri = undefined;
     }
   }
@@ -363,7 +415,43 @@ async function updateIosWidgets(snapshot: WidgetSnapshot) {
   recentConnections.updateSnapshot(payload);
 }
 
-export async function syncAllWidgets(
+// Serializes calls to performSyncAllWidgets so two syncs can never run at once. They used to:
+// card-context.tsx fires one on every card-list persist (including on every app launch) and
+// again on publish; card-tools.tsx fires one from an effect too. Two overlapping calls each
+// build their own widget snapshot independently, and the *second one to finish* wins - it
+// overwrites the App Group entirely, including any card the first call already wrote.
+//
+// QR generation makes this land on the QR specifically, not photos: requestQrDataUrl
+// (widget-qr-renderer.tsx) is a single global queue with a 4s-per-item timeout, shared by
+// every sync in flight. Two concurrent syncs queue their QR requests behind each other, and
+// on a busy app launch (bundling, hydration, image loads) the second request can miss the 4s
+// window and reject. That call's snapshot then has a real card - name, role, photo all
+// present - with qrImageUri simply absent, because JSON.stringify drops undefined keys. If it
+// finishes writing after the sync that DID get a QR, its card-without-a-QR becomes the one the
+// widget reads, even though a valid QR file is still sitting on disk from the sync that won
+// the race the other way. That is "Publish your card" / "Open ehllo to set up your card" on a
+// card that is, in fact, published - confirmed by reading the actual App Group plist: cardsJson
+// held a real name, role and photo with no qrImageUri key at all, while a QR file from a
+// separate, successful sync moments earlier sat unreferenced right next to it.
+let widgetSyncChain: Promise<void> = Promise.resolve();
+
+export function syncAllWidgets(
+  cards: MobileCard[],
+  cardPublicUrl: (card: MobileCard) => string,
+  accessToken?: string,
+  preferredCard?: MobileCard,
+) {
+  // buildWidgetSnapshot (called inside performSyncAllWidgets) already serializes against
+  // every caller, preview included - see snapshotChain above. This second lock additionally
+  // orders the native updateIosWidgets/bridge.updateWidget write step across concurrent real
+  // syncs specifically, so the last one to reach that step is always the one with the
+  // freshest snapshot, not whichever happened to finish its own snapshot build first.
+  const run = widgetSyncChain.then(() => performSyncAllWidgets(cards, cardPublicUrl, accessToken, preferredCard));
+  widgetSyncChain = run.then(() => undefined, () => undefined);
+  return run;
+}
+
+async function performSyncAllWidgets(
   cards: MobileCard[],
   cardPublicUrl: (card: MobileCard) => string,
   accessToken?: string,
@@ -385,6 +473,9 @@ export async function syncAllWidgets(
       console.error('[widget-sync] iOS widget update failed', {
         message: caught instanceof Error ? caught.message : String(caught),
       });
+      Sentry.captureException(caught instanceof Error ? caught : new Error(String(caught)), {
+        tags: { widget_sync_platform: 'ios' },
+      });
       throw caught instanceof Error
         ? new Error(`The widget could not be updated: ${caught.message}`)
         : new Error('The widget could not be updated.');
@@ -403,6 +494,9 @@ export async function syncAllWidgets(
       // build, and it should not be reported as one.
       console.error('[widget-sync] Android widget update failed', {
         message: caught instanceof Error ? caught.message : String(caught),
+      });
+      Sentry.captureException(caught instanceof Error ? caught : new Error(String(caught)), {
+        tags: { widget_sync_platform: 'android' },
       });
       throw caught instanceof Error
         ? new Error(`The widget could not be updated: ${caught.message}`)

@@ -87,6 +87,10 @@ function QrScanWidget(props: QrScanWidgetProps) {
     <VStack
       modifiers={[
         containerBackground(WIDGET_COLORS.canvas, 'widget'),
+        // containerBackground(_:for:) is iOS 17+ only and no-ops below that - see the same
+        // comment in BusinessCardWidget.tsx. background() has no such gate and is the fallback
+        // for the iOS 16 devices this app's deployment target (ios/Podfile) says it must serve.
+        background(WIDGET_COLORS.canvas),
         // A minimum guard only - the card below is a fixed size and the VStack centres it, so
         // the visible margin is (widget - card) / 2: about 14pt on this phone, which matches
         // the business card's 16pt closely, and 5pt on the smallest iPhone where there simply

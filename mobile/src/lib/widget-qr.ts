@@ -1,14 +1,9 @@
-import { File, Paths } from 'expo-file-system';
+import { File } from 'expo-file-system';
 import * as FileSystem from 'expo-file-system/legacy';
 import { PixelRatio, Platform } from 'react-native';
 import logoAsset from '../../assets/images/splash-icon.png';
 import { requestQrDataUrl } from '@/lib/widget-qr-renderer';
-
-const IOS_APP_GROUPS = ['group.com.ehllo.app.staging', 'group.com.ehllo.app'];
-
-function appleWidgetGroup() {
-  return IOS_APP_GROUPS.map((id) => Paths.appleSharedContainers?.[id]).find(Boolean);
-}
+import { getWritableAppleWidgetGroup } from '@/lib/widget-assets';
 function qrFileName(fileKey: string) {
   const safeKey = fileKey.replace(/[^a-zA-Z0-9_-]/g, '') || 'primary';
   return `quick-share-qr-${safeKey}.png`;
@@ -34,6 +29,10 @@ const QR_TARGET_PIXELS = 480;
 
 export async function buildWidgetQrFileUri(cardUrl: string, fileKey = 'primary') {
   const QR_FILE_NAME = qrFileName(fileKey);
+  // Probe before rendering the QR. If iOS has not mounted the App Group, generating a raster
+  // we cannot store only adds memory/CPU pressure and then produces another native failure.
+  const appleGroup = Platform.OS === 'ios' ? await getWritableAppleWidgetGroup() : undefined;
+  if (Platform.OS === 'ios' && !appleGroup) return undefined;
   // Divided by the pixel ratio because the rasterizer treats this as points and multiplies by
   // the screen scale. Asking in pixels and letting it triple was the bug.
   const requestedSize = Math.max(120, Math.round(QR_TARGET_PIXELS / PixelRatio.get()));
@@ -43,9 +42,8 @@ export async function buildWidgetQrFileUri(cardUrl: string, fileKey = 'primary')
   const base64 = await requestQrDataUrl(cardUrl, requestedSize, { color: '#163300', backgroundColor: '#FFFFFF' });
 
   if (Platform.OS === 'ios') {
-    const group = appleWidgetGroup();
-    if (group) {
-      const file = new File(group, QR_FILE_NAME);
+    if (appleGroup) {
+      const file = new File(appleGroup, QR_FILE_NAME);
       await FileSystem.writeAsStringAsync(file.uri, base64, {
         encoding: FileSystem.EncodingType.Base64,
       });

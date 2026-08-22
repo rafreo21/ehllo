@@ -121,8 +121,17 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
     return digits ? `tel:${digits}` : '';
   }
 
+  // Same shape check the app's own mailto builder uses (action-links.ts) - inlined rather
+  // than imported, because the 'widget' directive above only serializes this function's own
+  // body for native evaluation, nothing captured from outer scope. Without it, a malformed
+  // address (bad sync data, a typo that slipped past card validation) produced a mailto: that
+  // was guaranteed to fail silently instead of falling through to a channel that works.
+  function isValidEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
   function mailUrl(email: string, phone: string) {
-    if (email.trim()) return `mailto:${email.trim()}`;
+    if (email.trim() && isValidEmail(email.trim())) return `mailto:${email.trim()}`;
     if (phone.trim()) return `sms:${phone.replace(/\s+/g, '')}`;
     return '';
   }
@@ -305,6 +314,10 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
       alignment="leading"
       modifiers={[
         containerBackground(WIDGET_COLORS.canvas, 'widget'),
+        // containerBackground(_:for:) is iOS 17+ only and no-ops below that - see the same
+        // comment in BusinessCardWidget.tsx. background() has no such gate and is the fallback
+        // for the iOS 16 devices this app's deployment target (ios/Podfile) says it must serve.
+        background(WIDGET_COLORS.canvas),
         // 16pt, the same margin as the business card widget, so the two do not look like they
         // were laid out to different rules when they sit together on a home screen.
         padding({ leading: 16, trailing: 16, top: 16 }),

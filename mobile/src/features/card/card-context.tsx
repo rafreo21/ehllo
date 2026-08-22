@@ -92,6 +92,7 @@ export function CardProvider({ children }: PropsWithChildren) {
   const cardsRef = useRef(cards);
   const activeCardIdRef = useRef(activeCardId);
   const dirtyCardIdsRef = useRef(new Set<string>());
+  const signedOutWidgetSnapshotWrittenRef = useRef(false);
   useEffect(() => {
     cardsRef.current = cards;
     activeCardIdRef.current = activeCardId;
@@ -177,6 +178,25 @@ export function CardProvider({ children }: PropsWithChildren) {
       `${env?.publicCardBaseUrl || 'http://localhost:3000'}/c/${target.slug}`;
     await syncCardToolsForCard(normalized, urlForCard, accessToken, active);
   }, [accessToken]);
+
+  // Foreground remote sync is intentionally session-gated, but widget initialization is not
+  // remote sync. A never-authenticated device previously returned before anything wrote the
+  // App Group/SharedPreferences snapshot, leaving WidgetKit with no layout data at all. Once
+  // local storage has hydrated, write the explicit signed-out/empty state exactly once. Local
+  // edits already pass through persistCards themselves; this closes only the initial gap and
+  // also refreshes the widget immediately when an authenticated session signs out.
+  useEffect(() => {
+    if (loading) return;
+    if (session) {
+      signedOutWidgetSnapshotWrittenRef.current = false;
+      return;
+    }
+    if (signedOutWidgetSnapshotWrittenRef.current) return;
+    signedOutWidgetSnapshotWrittenRef.current = true;
+    void persistCards(cardsRef.current, activeCardIdRef.current).catch(() => {
+      signedOutWidgetSnapshotWrittenRef.current = false;
+    });
+  }, [loading, persistCards, session]);
 
   /**
    * Archives a card through /api/cards, the same authenticated route every other card write
