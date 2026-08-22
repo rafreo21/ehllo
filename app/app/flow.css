@@ -1416,8 +1416,8 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .encounter-layout { grid-template-columns: 1fr; }
   .encounter-privacy-rail { display: none; }
 }
-/* Flow layouts switch with the application shell: desktop starts at 1024px. */
-@media (max-width: 1023px) {
+/* Card/flow workspaces need a wider canvas than list pages: desktop starts at 1200px. */
+@media (max-width: 1199px) {
   .flow-grid, .cards-grid, .qr-layout, .card-share-layout, .dashboard-grid, .review-layout { grid-template-columns: 1fr; }
   .privacy-rail, .share-rail { position: static; }
   .follow-up-meta { grid-template-columns: 1fr; }
@@ -1879,7 +1879,9 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 }
 
 /* On card detail, this toolbar becomes the single mobile/tablet header. */
-@media (max-width: 1023px) {
+@media (max-width: 1199px) {
+  .product-shell:has(.card-detail-page) { display: block; padding: 0; }
+  .product-shell:has(.card-detail-page) .consumer-sidebar { display: none; }
   .product-shell:has(.card-detail-page) .product-mobile-header,
   .product-shell:has(.card-detail-page) .consumer-topbar { display: none; }
   .product-shell:has(.card-detail-page) { height: auto; min-height: 100vh; overflow: visible; }
