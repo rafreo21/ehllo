@@ -595,7 +595,17 @@ function createCard(seed: Partial<LibraryCard> = {}) {
             <div className="card-detail-topbar">
               <Button size="small" variant="ghost" onClick={showCardLibrary}><ArrowLeftIcon size={16} /> All cards</Button>
               <div><span>Viewing</span><strong>{profile.label}</strong></div>
-              <div><LinkButton size="small" variant="secondary" href={`/app/card/edit?id=${activeId}`}><PencilSimpleIcon size={16} /> Edit card</LinkButton><Button size="small" variant="secondary" onClick={() => setShareModalOpen(true)}><UploadSimpleIcon size={16} /> Share card</Button><Button size="small" variant="ghost" loading={deletingCard} onClick={deleteActiveCard}><TrashIcon size={16} /> {deletingCard ? "Deleting…" : "Delete"}</Button></div>
+              <div>
+                <LinkButton size="small" variant="secondary" href={`/app/card/edit?id=${activeId}`}>
+                  <PencilSimpleIcon size={16} /><span className="card-action-label-full">Edit card</span><span className="card-action-label-compact">Edit</span>
+                </LinkButton>
+                <Button size="small" variant="secondary" onClick={() => setShareModalOpen(true)}>
+                  <UploadSimpleIcon size={16} /><span className="card-action-label-full">Share card</span><span className="card-action-label-compact">Share</span>
+                </Button>
+                <Button size="small" variant="ghost" loading={deletingCard} onClick={deleteActiveCard}>
+                  <TrashIcon size={16} /> {deletingCard ? "Deleting…" : "Delete"}
+                </Button>
+              </div>
             </div>
             <div className="card-share-layout" id="share">
           <article className="share-card-preview" style={{ "--card-accent": cardTheme.backgroundColor } as React.CSSProperties}>

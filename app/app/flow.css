@@ -246,6 +246,7 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .card-detail-topbar > div:nth-child(2) { display: grid; justify-items: center; gap: 2px; }
 .card-detail-topbar > div:nth-child(2) span { color: var(--p-muted); font-size: 8px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .card-detail-topbar > div:last-child { display: flex; justify-content: flex-end; gap: 6px; }
+.card-action-label-compact { display: none; }
 .selected-card-heading { margin-bottom: -16px; display: flex; align-items: end; justify-content: space-between; gap: 18px; }
 .selected-card-heading > div { display: grid; gap: 4px; }
 .selected-card-heading span { color: var(--p-muted); font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
@@ -1478,6 +1479,46 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 }
 
 @media (max-width: 599px) {
+  .card-detail-topbar {
+    min-height: 0;
+    padding: 12px;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px 12px;
+  }
+  .card-detail-topbar > button:first-child {
+    grid-column: 1;
+    grid-row: 1;
+    padding-inline: 8px;
+  }
+  .card-detail-topbar > div:nth-child(2) {
+    order: initial;
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    justify-items: end;
+    text-align: right;
+  }
+  .card-detail-topbar > div:nth-child(2) strong {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card-detail-topbar > div:last-child {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .card-detail-topbar > div:last-child > * {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 7px;
+    white-space: nowrap;
+  }
+  .card-action-label-full { display: none; }
+  .card-action-label-compact { display: inline; }
   .followups-page .flow-heading-actions { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .followups-page .flow-heading-actions > button, .followups-page .flow-heading-actions > a { width: 100%; min-width: 0; min-height: 40px; padding-inline: 10px; }
   .connections-page .flow-heading-actions { width: 100%; }
