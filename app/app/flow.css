@@ -83,13 +83,15 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .home-inline-error { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 14px; border-radius: 8px; background: #fdece9; color: #a32015; font-size: 12px; }
 .home-inline-error button { color: #a32015; font-weight: 800; text-decoration: underline; background: none; border: 0; padding: 0; cursor: pointer; }
 
-@media (max-width: 720px) {
+/* Narrow tablet: stack content sections while preserving compact tablet controls. */
+@media (max-width: 767px) {
   .home-content-grid { grid-template-columns: 1fr; }
   .home-mobile-beta { min-height: 0; grid-template-columns: 1fr; gap: 18px; }
   .home-mobile-beta-art { min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 }
 
-@media (max-width: 640px) {
+/* Mobile: up to 599px. */
+@media (max-width: 599px) {
   .home-stats { grid-template-columns: 1fr; padding: 5px; }
   .home-stat-tile { min-height: 72px; }
   .home-stat-tile + .home-stat-tile { border-top: 1px solid rgba(22,51,0,.055); border-left: 0; }

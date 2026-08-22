@@ -420,7 +420,8 @@
 .label-suggestions button.selected, .label-suggestions button[aria-pressed="true"] { border-color: var(--p-navy); background: var(--p-navy); color: white; }
 .label-suggestions button:focus-visible { outline: 3px solid rgba(159,232,112,.6); outline-offset: 2px; }
 
-@media (max-width: 980px) {
+/* Responsive shell: desktop >= 1024px, tablet/mobile navigation < 1024px. */
+@media (max-width: 1023px) {
   .product-shell { grid-template-columns: 1fr; }
   .product-sidebar { position: fixed; left: -270px; width: 250px; transition: left .25s; box-shadow: 20px 0 50px rgba(0,28,100,.15); }
   .product-sidebar.open { left: 0; }
@@ -464,6 +465,12 @@
   .creator-workspace--fill { display: block; }
   .creator-section--fill { overflow-y: visible; }
   .card-flow-skeleton { grid-template-columns: 1fr; }
+}
+
+/* Tablet content: 600px-1023px. Keep useful width without desktop-scale gutters. */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .product-content { padding: 18px 28px 64px; }
+  .product-shell:has(.consumer-sidebar) .product-page-toolbar { margin-bottom: 18px; }
 }
 
 @media (max-width: 520px) {
