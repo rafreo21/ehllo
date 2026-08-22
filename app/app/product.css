@@ -337,6 +337,11 @@ body:has(.product-shell) { background: var(--p-ice); }
 .method-inline-fields > div:last-child > p { margin: 0 0 8px; color: var(--p-muted); font-size: 11px; font-weight: 700; }
 .method-inline-editor > footer { min-height: 0; padding: 14px 20px; display: flex; grid-template-columns: none; align-items: center; justify-content: flex-end; gap: 8px; border-top: 1px solid rgba(22,51,0,.1); background: rgba(255,255,255,.55); color: var(--p-navy); }
 .method-library { padding: 20px; border: 1px solid var(--p-line); border-radius: 12px; background: linear-gradient(145deg, #fff 0%, #f7f9f5 100%); box-shadow: 0 8px 24px rgba(22,51,0,.06); }
+.method-library-trigger { width: 100%; min-height: 82px; padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid var(--p-line); border-radius: 12px; background: white; color: var(--p-navy); font: inherit; text-align: left; cursor: pointer; box-shadow: 0 7px 22px rgba(22,51,0,.05); transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.method-library-trigger:hover { border-color: color-mix(in srgb, var(--card-accent, var(--p-navy)) 30%, var(--p-line)); box-shadow: 0 10px 26px rgba(22,51,0,.09); transform: translateY(-1px); }
+.method-library-trigger:focus-visible { outline: 3px solid rgba(159,232,112,.65); outline-offset: 2px; }
+.method-library-trigger .method-library-heading { min-width: 0; margin: 0; flex: 1 1 auto; }
+.method-library-trigger-action { flex: 0 0 auto; color: var(--p-muted); }
 .method-library-heading { margin-bottom: 20px; display: grid; grid-template-columns: 42px minmax(0, 1fr); align-items: center; gap: 12px; }
 .method-library-heading > div { min-width: 0; align-self: center; }
 .method-library-heading > .method-library-add-icon { position: relative; isolation: isolate; width: 42px; height: 42px; display: grid; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, currentColor 30%, white); border-radius: 50%; background: rgba(255,255,255,.58); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 6px 16px color-mix(in srgb, currentColor 14%, transparent); backdrop-filter: blur(8px) saturate(1.25); }
@@ -357,6 +362,18 @@ body:has(.product-shell) { background: var(--p-ice); }
 .method-library-icon > svg, .preview-methods > button > span > svg { position: relative; z-index: 1; filter: drop-shadow(0 1px 2px color-mix(in srgb, currentColor 24%, transparent)); }
 .method-category button > svg:last-child { width: 20px; height: 20px; padding: 4px; grid-column: 2; grid-row: 1; justify-self: end; border-radius: 50%; background: var(--p-ice); color: var(--p-muted); }
 .method-library-label { min-width: 0; grid-column: 1 / 3; grid-row: 2; overflow: hidden; font-size: 11px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.method-library-sheet-backdrop { position: fixed; inset: 0; z-index: 110; padding: 18px; display: grid; place-items: end center; background: rgba(14,20,12,.46); backdrop-filter: blur(5px); }
+.method-library-sheet { width: min(720px,100%); max-height: min(82vh,760px); display: flex; flex-direction: column; overflow: hidden; border-radius: 20px 20px 14px 14px; background: white; box-shadow: 0 28px 80px rgba(0,0,0,.22); animation: method-sheet-enter .2s ease-out; }
+.method-library-sheet-header { flex: 0 0 auto; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid rgba(22,51,0,.08); }
+.method-library-sheet-header > div { min-width: 0; display: flex; align-items: center; gap: 12px; }
+.method-library-sheet-header .method-library-add-icon { position: relative; isolation: isolate; width: 40px; height: 40px; flex: 0 0 auto; display: grid; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, currentColor 30%, white); border-radius: 50%; background: rgba(255,255,255,.58); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 5px 14px color-mix(in srgb, currentColor 14%, transparent); }
+.method-library-sheet-header h2 { margin: 0; font-size: 19px; letter-spacing: -.02em; }
+.method-library-sheet-header p { margin: 3px 0 0; color: var(--p-muted); font-size: 12px; }
+.method-library-sheet-header > button { width: 38px; height: 38px; flex: 0 0 auto; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--p-ice); color: var(--p-navy); cursor: pointer; }
+.method-library-sheet-header > button:hover { background: var(--p-sky); }
+.method-library-sheet-content { min-height: 0; padding: 18px 20px 24px; overflow-y: auto; overscroll-behavior: contain; }
+.method-library-sheet .method-category > div { grid-template-columns: repeat(4,minmax(0,1fr)); }
+@keyframes method-sheet-enter { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 .preview-method-editor { margin: 18px 0; padding: 12px; display: grid; border-radius: 10px; background: #f3f4f2; }
 .preview-method-editor-content { min-width: 0; display: grid; gap: 7px; }
 .preview-method-suggestions { margin: -4px; padding: 4px; display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scroll-snap-type: inline proximity; scrollbar-width: none; touch-action: pan-x; }
@@ -475,6 +492,7 @@ body:has(.product-shell) { background: var(--p-ice); }
   .creator-workspace--fill { display: block; }
   .creator-section--fill { overflow-y: visible; }
   .card-flow-skeleton { grid-template-columns: 1fr; }
+  .method-library-sheet .method-category > div { grid-template-columns: repeat(3,minmax(0,1fr)); }
 }
 
 /* Tablet content: 600px-1023px. Keep useful width without desktop-scale gutters. */
@@ -497,6 +515,10 @@ body:has(.product-shell) { background: var(--p-ice); }
   .image-options { grid-template-columns: 1fr; }
   .image-options > div > button:first-child { min-height: 88px; }
   .method-category > div { grid-template-columns: 1fr 1fr; }
+  .method-library-sheet-backdrop { padding: 0; }
+  .method-library-sheet { width: 100%; max-height: 88dvh; border-radius: 20px 20px 0 0; }
+  .method-library-sheet-header { padding: 16px; }
+  .method-library-sheet-content { padding: 16px 16px 24px; }
   .method-row { grid-template-columns: 42px 1fr; }
   .method-row > div { grid-column: 1 / 3; justify-content: flex-end; }
 }

@@ -268,6 +268,7 @@ export default function CardEditor() {
   const [showLeavePrompt, setShowLeavePrompt] = useState(false);
   const [leaveAction, setLeaveAction] = useState<"save" | "discard" | "">("");
   const [editing, setEditing] = useState<ContactMethod | null>(null);
+  const [showMethodLibrary, setShowMethodLibrary] = useState(false);
   const [methodError, setMethodError] = useState("");
   const [draggingMethodId, setDraggingMethodId] = useState<string | null>(null);
   const [dropTargetMethodId, setDropTargetMethodId] = useState<string | null>(null);
@@ -480,6 +481,7 @@ export default function CardEditor() {
     if ((methodTypeCounts[type] ?? 0) >= 3) return;
     setMethodError("");
     setEditing({ id: crypto.randomUUID(), type, value: "", label: methodMeta[type].label });
+    setShowMethodLibrary(false);
   }
 
   function saveMethod() {
@@ -634,6 +636,20 @@ export default function CardEditor() {
     return () => window.removeEventListener("keydown", handleEscape);
   }, [shouldShowLeavePrompt, leaveAction, cancelNavigation]);
 
+  useEffect(() => {
+    if (!showMethodLibrary) return;
+    const previousOverflow = document.body.style.overflow;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowMethodLibrary(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [showMethodLibrary]);
+
   if (!hydrated) return <CardFlowSkeleton />;
 
   if (cardLimitReached) {
@@ -661,6 +677,41 @@ export default function CardEditor() {
             <div style={{ display: "grid", gap: "10px", gridTemplateColumns: "1fr 1fr" }}>
               <Button size="small" variant="secondary" loading={leaveAction === "discard"} disabled={Boolean(leaveAction)} onClick={() => void discardChangesAndLeave()}>Discard changes</Button>
               <Button size="small" loading={leaveAction === "save"} disabled={Boolean(leaveAction)} onClick={() => void saveDraftAndLeave()}>Save to draft</Button>
+            </div>
+          </section>
+        </div>
+      )}
+      {showMethodLibrary && (
+        <div className="method-library-sheet-backdrop" role="presentation" onClick={() => setShowMethodLibrary(false)}>
+          <section className="method-library-sheet" role="dialog" aria-modal="true" aria-labelledby="method-library-title" onClick={(event) => event.stopPropagation()}>
+            <header className="method-library-sheet-header">
+              <div>
+                <span className="method-library-add-icon" aria-hidden="true" style={{ color: previewTheme.backgroundColor }}><PlusIcon size={18} /></span>
+                <div><h2 id="method-library-title">Add a contact method</h2><p>Choose how people can connect with you.</p></div>
+              </div>
+              <button type="button" aria-label="Close contact method sheet" onClick={() => setShowMethodLibrary(false)}><XIcon size={19} /></button>
+            </header>
+            <div className="method-library-sheet-content">
+              {methodCategories.map((category) => {
+                const availableTypes = (Object.keys(methodMeta) as MethodType[]).filter(
+                  (type) => methodMeta[type].category === category && (methodTypeCounts[type] ?? 0) < 3,
+                );
+                if (availableTypes.length === 0) return null;
+                return <section className="method-category" key={category}>
+                  <h3>{category}</h3><div>
+                    {availableTypes.map((type) => {
+                      const meta = methodMeta[type];
+                      return <button type="button" key={type} onClick={() => openMethod(type)}>
+                        <span className="method-library-icon" style={{ color: previewTheme.backgroundColor }}>
+                          {PHOSPHOR_METHOD_TYPES.has(type) ? <meta.Icon size={20} weight="bold" color={previewTheme.backgroundColor} /> : <meta.Icon size={20} color={previewTheme.backgroundColor} />}
+                        </span>
+                        <span className="method-library-label">{meta.name}</span>
+                        <PlusIcon />
+                      </button>;
+                    })}
+                  </div>
+                </section>;
+              })}
             </div>
           </section>
         </div>
@@ -889,32 +940,13 @@ export default function CardEditor() {
                 ))}</div>
               </div>
 
-              <div className="method-library">
-                <header className="method-library-heading">
+              <button type="button" className="method-library-trigger" onClick={() => setShowMethodLibrary(true)}>
+                <div className="method-library-heading">
                   <span className="method-library-add-icon" aria-hidden="true" style={{ color: previewTheme.backgroundColor }}><PlusIcon size={18} /></span>
                   <div><h2>Add a contact method</h2><p>Choose how people can connect with you.</p></div>
-                </header>
-                {methodCategories.map((category) => {
-                  const availableTypes = (Object.keys(methodMeta) as MethodType[]).filter(
-                    (type) => methodMeta[type].category === category && (methodTypeCounts[type] ?? 0) < 3,
-                  );
-                  if (availableTypes.length === 0) return null;
-                  return <section className="method-category" key={category}>
-                  <h3>{category}</h3><div>
-                    {availableTypes.map((type) => {
-                      const meta = methodMeta[type];
-                      return <button type="button" key={type} onClick={() => openMethod(type)}>
-                        <span className="method-library-icon" style={{ color: previewTheme.backgroundColor }}>
-                          {PHOSPHOR_METHOD_TYPES.has(type) ? <meta.Icon size={20} weight="bold" color={previewTheme.backgroundColor} /> : <meta.Icon size={20} color={previewTheme.backgroundColor} />}
-                        </span>
-                        <span className="method-library-label">{meta.name}</span>
-                        <PlusIcon />
-                      </button>;
-                    })}
-                  </div>
-                </section>;
-                })}
-              </div>
+                </div>
+                <PlusIcon className="method-library-trigger-action" size={18} aria-hidden="true" />
+              </button>
             </div>
 
             {saveError && (
