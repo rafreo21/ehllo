@@ -181,6 +181,11 @@ export default function HomeDashboard() {
             <h1>{firstName ? `${greeting}, ${firstName}` : greeting}</h1>
             <p>Your day at a glance.</p>
           </div>
+          <div className="home-quick-actions">
+            <LinkButton href="/app/cards#share"><QrCodeIcon size={17} weight="bold" />Share my card</LinkButton>
+            <Button variant="secondary" onClick={() => setAddFollowUpModalOpen(true)}><ListChecksIcon size={17} />Quick follow-up</Button>
+            <LinkButton variant="secondary" href="/app/scan"><ScanIcon size={17} weight="bold" />Quick scan</LinkButton>
+          </div>
         </div>
 
         {!hydrated ? (
@@ -223,12 +228,6 @@ export default function HomeDashboard() {
                 ))}
               </div>
             ) : null}
-
-            <div className="home-quick-actions">
-              <LinkButton href="/app/cards#share"><QrCodeIcon size={17} weight="bold" />Share my card</LinkButton>
-              <Button variant="secondary" onClick={() => setAddFollowUpModalOpen(true)}><ListChecksIcon size={17} />Quick follow-up</Button>
-              <LinkButton variant="secondary" href="/app/scan"><ScanIcon size={17} weight="bold" />Quick scan</LinkButton>
-            </div>
 
             <div className="home-content-grid">
             <section className="home-section">
