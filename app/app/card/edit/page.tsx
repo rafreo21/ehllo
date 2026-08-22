@@ -887,7 +887,7 @@ export default function CardEditor() {
 
               <div className="method-library">
                 <header className="method-library-heading">
-                  <span aria-hidden="true" style={{ background: previewTheme.backgroundGradient, color: previewTheme.color }}><PlusIcon size={18} /></span>
+                  <span className="method-library-add-icon" aria-hidden="true" style={{ color: previewTheme.backgroundColor }}><PlusIcon size={18} /></span>
                   <div><h2>Add a contact method</h2><p>Choose how people can connect with you.</p></div>
                 </header>
                 {methodCategories.map((category) => {

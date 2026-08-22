@@ -327,8 +327,12 @@
 .method-inline-fields > div:last-child > p { margin: 0 0 8px; color: var(--p-muted); font-size: 11px; font-weight: 700; }
 .method-inline-editor > footer { min-height: 0; padding: 14px 20px; display: flex; grid-template-columns: none; align-items: center; justify-content: flex-end; gap: 8px; border-top: 1px solid rgba(22,51,0,.1); background: rgba(255,255,255,.55); color: var(--p-navy); }
 .method-library { padding: 20px; border: 1px solid var(--p-line); border-radius: 12px; background: linear-gradient(145deg, #fff 0%, #f7f9f5 100%); box-shadow: 0 8px 24px rgba(22,51,0,.06); }
-.method-library-heading { margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
-.method-library-heading > span { width: 40px; height: 40px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 10px; background: rgba(159,232,112,.32); color: var(--p-navy); }
+.method-library-heading { margin-bottom: 20px; display: grid; grid-template-columns: 42px minmax(0, 1fr); align-items: center; gap: 12px; }
+.method-library-heading > div { min-width: 0; align-self: center; }
+.method-library-heading > .method-library-add-icon { position: relative; isolation: isolate; width: 42px; height: 42px; display: grid; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, currentColor 30%, white); border-radius: 50%; background: rgba(255,255,255,.58); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 6px 16px color-mix(in srgb, currentColor 14%, transparent); backdrop-filter: blur(8px) saturate(1.25); }
+.method-library-heading > .method-library-add-icon::before { content: ""; position: absolute; z-index: 0; inset: 1px; border-radius: inherit; background: linear-gradient(145deg, rgba(255,255,255,.72), rgba(255,255,255,.12) 50%, transparent 70%); pointer-events: none; }
+.method-library-heading > .method-library-add-icon::after { content: ""; position: absolute; z-index: 0; right: 4px; bottom: 3px; width: 30%; height: 30%; border-radius: 50%; background: currentColor; opacity: .08; filter: blur(3px); pointer-events: none; }
+.method-library-heading > .method-library-add-icon > svg { position: relative; z-index: 1; filter: drop-shadow(0 1px 2px color-mix(in srgb, currentColor 24%, transparent)); }
 .method-library-heading h2 { margin: 0; font-size: 18px; letter-spacing: -.02em; }
 .method-library-heading p { margin: 3px 0 0; color: var(--p-muted); font-size: 11px; line-height: 1.4; }
 .method-category + .method-category { margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(22,51,0,.08); }
