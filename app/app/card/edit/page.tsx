@@ -545,7 +545,6 @@ export default function CardEditor() {
         key={`${draft.id}-${hydrated ? "ready" : "loading"}`}
         as="span"
         className="product-page-card-label"
-        style={{ color: previewTheme.backgroundColor }}
         defaultValue={draft.label}
         onConfirm={(value) => labelConfirmRef.current(value)}
         placeholder="Card label"
@@ -562,7 +561,7 @@ export default function CardEditor() {
         <span>{publishStateLabel}</span>
       </span>
     </div>
-  ) : null, [draft.id, draft.label, draft.status, draft.publishedAt, hydrated, hasUnpublishedChanges, previewTheme.backgroundColor, publishStateLabel]);
+  ) : null, [draft.id, draft.label, draft.status, draft.publishedAt, hydrated, hasUnpublishedChanges, publishStateLabel]);
   const appShellActions = useMemo(() => !hydrated || cardLimitReached ? null : (
     <Button
       size="small"
