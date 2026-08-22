@@ -7,6 +7,7 @@ import {
   visitorOnboardingPath,
 } from "../../../lib/auth/visitor-intent";
 import { sanitizeIntendedDestination } from "../../../lib/auth/redirect";
+import { hasPkceVerifier, mergeRequestCookies } from "../../../lib/auth/request-cookies";
 import { browserConnectionSource, recordConnectionScanSource } from "../../../lib/connection-scan-source";
 import { requirePublicSupabaseConfig } from "../../../lib/supabase/env";
 
@@ -18,7 +19,7 @@ function createClient(request: NextRequest, response: NextResponse) {
   const config = requirePublicSupabaseConfig();
   return createServerClient(config.url, config.anonKey, {
     cookies: {
-      getAll: () => request.cookies.getAll(),
+      getAll: () => mergeRequestCookies(request.cookies.getAll(), request.headers.get("cookie")),
       setAll: (items) => items.forEach(({ name, value, options }) => response.cookies.set(name, value, options)),
     },
   });
@@ -33,7 +34,7 @@ function redirectWithSession(request: NextRequest, sessionResponse: NextResponse
   return redirect;
 }
 
-function redirectToAuth(request: NextRequest, error: "callback" | "provisioning") {
+function redirectToAuth(request: NextRequest, error: "oauth_provider" | "oauth_exchange" | "provisioning") {
   return NextResponse.redirect(new URL(`/auth?error=${error}`, request.url));
 }
 
@@ -100,10 +101,26 @@ export async function GET(request: NextRequest) {
 
   const code = request.nextUrl.searchParams.get("code");
   const oauthError = request.nextUrl.searchParams.get("error");
-  if (oauthError || !code) return redirectToAuth(request, "callback");
+  if (oauthError || !code) {
+    console.error("[auth-callback] OAuth provider did not return a code", {
+      error: oauthError,
+      description: request.nextUrl.searchParams.get("error_description"),
+    });
+    return redirectToAuth(request, "oauth_provider");
+  }
 
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-  if (exchangeError) return redirectToAuth(request, "callback");
+  if (exchangeError) {
+    const callbackCookies = mergeRequestCookies(request.cookies.getAll(), request.headers.get("cookie"));
+    console.error("[auth-callback] OAuth code exchange failed", {
+      code: exchangeError.code,
+      message: exchangeError.message,
+      hasPkceVerifier: hasPkceVerifier(callbackCookies),
+      cookieCount: callbackCookies.length,
+      origin: request.nextUrl.origin,
+    });
+    return redirectToAuth(request, "oauth_exchange");
+  }
 
   const onboardingStatus = await readOnboardingStatus(supabase);
   if (!onboardingStatus) {

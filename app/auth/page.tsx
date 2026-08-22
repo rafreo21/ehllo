@@ -42,7 +42,9 @@ export default async function AuthPage({
     || (visitorIntent ? VISITOR_DEFAULT_DESTINATION : "/app");
   const environment = readPublicSupabaseConfig();
   const errors: Record<string, string> = {
-    callback: "That sign-in session is invalid or has expired. Request a new code.",
+    callback: "That sign-in session could not be completed. Try Google again or continue with email.",
+    oauth_provider: "Google sign-in was cancelled or could not be completed. Please try again.",
+    oauth_exchange: "Google returned successfully, but the secure sign-in session could not be completed. Please try Google again.",
     provisioning: "We couldn’t create your private workspace. Your session was closed; please try again.",
   };
   const providerAvailability = environment.config
