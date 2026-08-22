@@ -1885,7 +1885,7 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .product-shell:has(.card-detail-page) .product-mobile-header,
   .product-shell:has(.card-detail-page) .consumer-topbar { display: none; }
   .product-shell:has(.card-detail-page) { height: auto; min-height: 100vh; overflow: visible; }
-  .product-shell:has(.card-detail-page) .product-main { min-height: 0; overflow: visible; }
+  .product-shell:has(.card-detail-page) .product-main { min-height: 100vh; min-height: 100dvh; overflow: visible; }
   .product-shell:has(.card-detail-page) .product-content {
     max-width: 760px;
     padding: 12px 22px 56px;

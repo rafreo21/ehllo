@@ -14,8 +14,10 @@
   --p-border: #e4e8e2;
   --p-green: #e2f6d5;
 }
+body:has(.product-shell) { background: var(--p-ice); }
 .product-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--p-ice);
   color: var(--p-navy);
   display: grid;
@@ -70,7 +72,7 @@
 .workspace-signout { margin-left: auto; flex: 0 0 auto; }
 .workspace-signout-button { border-radius: 50% !important; background: white !important; color: var(--p-navy) !important; }
 .workspace-signout-button:hover { background: var(--p-sky) !important; }
-.product-main { min-width: 0; }
+.product-main { min-width: 0; min-height: 100vh; min-height: 100dvh; background: inherit; }
 .consumer-topbar { position: fixed; top: 16px; right: 24px; z-index: 90; display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 999px; background: white; box-shadow: 0 8px 24px rgba(22,51,0,.1); }
 .consumer-topbar-avatar { width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; background: var(--p-navy); color: white; font-size: 11px; font-weight: 900; text-decoration: none; flex: 0 0 auto; }
 .consumer-topbar-avatar > img { width: 100%; height: 100%; display: block; border-radius: inherit; object-fit: cover; }
@@ -118,7 +120,7 @@
 .product-page-card-label { min-width: 80px; max-width: min(320px, 32vw); padding: 7px 9px; overflow: hidden; color: var(--p-navy); font-size: 13px; font-weight: 800; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .product-page-actions { margin-left: auto; display: flex; justify-content: flex-end; gap: 10px; align-items: center; }
 .app-shell-action-group { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
-.product-content { max-width: 1260px; margin: auto; padding: 58px 40px 72px; }
+.product-content { max-width: 1260px; min-height: 100%; margin: auto; padding: 58px 40px 72px; background: inherit; }
 
 /* Consumer app: every page-level back/action toolbar occupies the same normal-flow
    position used by View Card, clear of the floating account controls. */
