@@ -245,6 +245,9 @@ export default function HomeDashboard() {
   const cardSubtitle = card
     ? [card.name, [card.role, card.company].filter(Boolean).join(" · ")].filter(Boolean).join(" · ")
     : "";
+  const primaryCardHref = card?.id
+    ? `/app/cards?id=${encodeURIComponent(card.id)}`
+    : "/app/cards";
 
   return (
     <>
@@ -255,7 +258,7 @@ export default function HomeDashboard() {
             <p>Your day at a glance.</p>
           </div>
           <div className="home-quick-actions">
-            <LinkButton size="small" href="/app/cards#share"><QrCodeIcon size={15} weight="bold" />Share my card</LinkButton>
+            <LinkButton size="small" href={primaryCardHref}><QrCodeIcon size={15} weight="bold" />Share my card</LinkButton>
             <Button size="small" variant="secondary" onClick={() => setAddFollowUpModalOpen(true)}><ListChecksIcon size={15} />Quick follow-up</Button>
             <LinkButton size="small" variant="secondary" href="/app/scan"><ScanIcon size={15} weight="bold" />Quick scan</LinkButton>
           </div>
