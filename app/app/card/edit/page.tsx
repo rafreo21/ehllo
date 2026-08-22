@@ -853,7 +853,7 @@ export default function CardEditor() {
                 className={`company-visibility-option ${showCompanyDetails ? "is-enabled" : ""}`}
                 style={showCompanyDetails ? { borderColor: previewTheme.backgroundColor, boxShadow: `0 8px 24px rgba(22,51,0,.08), inset 3px 0 0 ${previewTheme.backgroundColor}` } : undefined}
               >
-                <span className="company-option-icon" aria-hidden="true" style={showCompanyDetails ? { background: previewTheme.backgroundGradient, color: previewTheme.color } : undefined}><BriefcaseIcon size={19} /></span>
+                <span className="company-option-icon" aria-hidden="true" style={showCompanyDetails ? { color: previewTheme.backgroundColor } : undefined}><BriefcaseIcon size={19} /></span>
                 <div className="company-option-copy">
                   <div><strong>Company details</strong><span style={showCompanyDetails ? { background: previewTheme.backgroundGradient, color: previewTheme.color } : undefined}>{showCompanyDetails ? "Shown" : "Hidden"}</span></div>
                   <p id="company-details-description">Show your logo, company name, and company website on the card.</p>

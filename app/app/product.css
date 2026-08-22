@@ -388,8 +388,11 @@
 .review-list button { border: 0; background: transparent; color: var(--p-navy); font-weight: 800; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .company-visibility-option { padding: 18px; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 14px; border: 1px solid var(--p-line); border-radius: 12px; background: linear-gradient(135deg, #fff 0%, #f8faf7 100%); box-shadow: 0 7px 22px rgba(22,51,0,.06); transition: border-color .16s ease, box-shadow .16s ease; }
 .company-visibility-option.is-enabled { border-color: rgba(94,154,48,.34); box-shadow: 0 8px 24px rgba(22,51,0,.08), inset 3px 0 0 var(--p-lime); }
-.company-option-icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px; background: #e5e8e3; color: #777d74; }
-.company-visibility-option.is-enabled .company-option-icon { background: rgba(159,232,112,.34); }
+.company-option-icon { position: relative; isolation: isolate; width: 42px; height: 42px; display: grid; place-items: center; overflow: hidden; border: 1px solid #d9ddd7; border-radius: 50%; background: rgba(244,246,243,.78); color: #7a8178; box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 5px 14px rgba(67,78,63,.1); backdrop-filter: blur(8px) saturate(1.2); }
+.company-option-icon::before { content: ""; position: absolute; z-index: 0; inset: 1px; border-radius: inherit; background: linear-gradient(145deg, rgba(255,255,255,.78), rgba(255,255,255,.14) 52%, transparent 72%); pointer-events: none; }
+.company-option-icon::after { content: ""; position: absolute; z-index: 0; right: 4px; bottom: 3px; width: 30%; height: 30%; border-radius: 50%; background: currentColor; opacity: .07; filter: blur(3px); pointer-events: none; }
+.company-option-icon > svg { position: relative; z-index: 1; filter: drop-shadow(0 1px 2px color-mix(in srgb, currentColor 22%, transparent)); }
+.company-visibility-option.is-enabled .company-option-icon { border-color: color-mix(in srgb, currentColor 30%, white); background: rgba(255,255,255,.58); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 6px 16px color-mix(in srgb, currentColor 14%, transparent); backdrop-filter: blur(8px) saturate(1.25); }
 .company-option-copy { min-width: 0; }
 .company-option-copy > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .company-option-copy strong { color: var(--p-navy); font-size: 15px; }
