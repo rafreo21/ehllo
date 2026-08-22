@@ -567,6 +567,31 @@ body:has(.product-shell) { background: var(--p-ice); }
   .product-shell:has(.card-creator) .preview-theme-picker-trigger strong { font-size: 13px; }
 }
 
+@media (max-width: 1199px) {
+  .product-shell:has(.card-creator) .creator-workspace {
+    overflow: visible;
+    background: transparent;
+    box-shadow: none;
+  }
+  .product-shell:has(.card-creator) .creator-section { padding: 0 4px; }
+  .product-shell:has(.card-creator) .company-visibility-option {
+    padding: 10px 4px;
+    grid-template-columns: 36px minmax(0,1fr) auto;
+    gap: 10px;
+    border-color: transparent !important;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none !important;
+  }
+  .product-shell:has(.card-creator) .company-option-icon { width: 36px; height: 36px; }
+  .product-shell:has(.card-creator) .company-option-copy > div { gap: 6px; }
+  .product-shell:has(.card-creator) .company-option-copy strong { font-size: 14px; }
+  .product-shell:has(.card-creator) .company-option-copy p { margin-top: 2px; font-size: 10px; line-height: 1.35; }
+  .product-shell:has(.card-creator) .company-switch { width: 40px; height: 24px; }
+  .product-shell:has(.card-creator) .company-switch > span { width: 18px; height: 18px; }
+  .product-shell:has(.card-creator) .company-switch.is-on > span { transform: translateX(16px); }
+}
+
 @media (max-width: 760px) {
   .consumer-topbar { top: 10px; right: 16px; }
   .product-shell:has(.consumer-sidebar) .menu-button { top: 10px; }
