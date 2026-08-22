@@ -136,8 +136,8 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 @media (max-width: 360px) {
   .home-page > .flow-heading h1 { font-size: 24px; }
   .home-page > .flow-heading { gap: 12px; }
-  .home-person-row, .home-card-row { min-height: 82px; padding-block: 12px; }
-  .home-person-row small, .home-card-row small { display: -webkit-box; overflow: hidden; line-height: 1.35; text-overflow: initial; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .home-person-row, .home-card-row { min-height: 72px; padding-block: 10px; }
+  .home-person-row small, .home-card-row small { display: block; overflow: hidden; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
   .home-mobile-beta { padding: 16px; gap: 14px; }
   .home-mobile-beta-art { grid-template-columns: 1fr; gap: 7px; }
   .home-mobile-platform-card { min-height: 58px; padding: 9px 12px; }
