@@ -10,6 +10,7 @@ import { Download as DownloadSimpleIcon } from "react-feather";
 import { Monitor as MonitorIcon } from "react-feather";
 import { Watch as WatchIcon } from "react-feather";
 import { Mail as EnvelopeSimpleIcon } from "react-feather";
+import { Phone as PhoneIcon } from "react-feather";
 import { Edit2 as PencilSimpleIcon } from "react-feather";
 import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
 import { ExternalLink as ArrowSquareOutIcon } from "react-feather";
@@ -686,10 +687,10 @@ function createCard(seed: Partial<LibraryCard> = {}) {
                   {profile.role ? <span>{profile.role}</span> : null}
                   {profile.company ? <span>{profile.company}</span> : null}
                   {profile.methods.find((method) => method.type === "phone")?.value ? (
-                    <small>☎ {profile.methods.find((method) => method.type === "phone")?.value}</small>
+                    <small><PhoneIcon size={12} aria-hidden="true" /> {profile.methods.find((method) => method.type === "phone")?.value}</small>
                   ) : null}
                   {profile.methods.find((method) => method.type === "email")?.value || profile.email ? (
-                    <small>✉ {profile.methods.find((method) => method.type === "email")?.value || profile.email}</small>
+                    <small><EnvelopeSimpleIcon size={12} aria-hidden="true" /> {profile.methods.find((method) => method.type === "email")?.value || profile.email}</small>
                   ) : null}
                   <em>View my card</em>
                 </div>
@@ -770,8 +771,8 @@ function createCard(seed: Partial<LibraryCard> = {}) {
                         <strong>{recentConnection?.name || "Recent connection"}</strong>
                         <span>{recentConnection?.subtitle || "Shared via your card"}</span>
                       </div>
-                      <span className="widget-gallery-action">☎</span>
-                      <span className="widget-gallery-action">✉</span>
+                      <span className="widget-gallery-action"><PhoneIcon size={11} aria-hidden="true" /></span>
+                      <span className="widget-gallery-action"><EnvelopeSimpleIcon size={11} aria-hidden="true" /></span>
                     </div>
                   </div>
                   <h4>Recent Connections</h4>

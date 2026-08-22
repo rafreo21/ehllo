@@ -460,8 +460,20 @@ export function SignatureToolSheetContent({
           <Text style={styles.signatureName}>{card.name || 'Your name'}</Text>
           {card.role ? <Text style={styles.signatureLine}>{card.role}</Text> : null}
           {showCompany && card.company ? <Text style={styles.signatureLine}>{card.company}</Text> : null}
-          {signatureProfile.phone ? <Text style={styles.signatureContact}>☎ {signatureProfile.phone}</Text> : null}
-          {signatureProfile.email ? <Text style={styles.signatureContact}>✉ {signatureProfile.email}</Text> : null}
+          {/* Real icons, matching the signature the builder actually emits - it uses hosted
+              monochrome PNGs, never a dingbat that the OS turns into colour emoji. */}
+          {signatureProfile.phone ? (
+            <View style={styles.signatureContactRow}>
+              <Phone size={12} color={colors.muted} weight="fill" />
+              <Text style={styles.signatureContact}>{signatureProfile.phone}</Text>
+            </View>
+          ) : null}
+          {signatureProfile.email ? (
+            <View style={styles.signatureContactRow}>
+              <EnvelopeSimple size={12} color={colors.muted} weight="fill" />
+              <Text style={styles.signatureContact}>{signatureProfile.email}</Text>
+            </View>
+          ) : null}
           <Text style={styles.signatureLink}>View my card</Text>
         </View>
         <View style={styles.signatureQr}>
@@ -633,6 +645,7 @@ const styles = StyleSheet.create({
   },
   signatureName: { color: colors.ink, fontSize: 16, fontFamily: fonts.bold, fontWeight: '800' },
   signatureLine: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13 },
+  signatureContactRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   signatureContact: { color: colors.ink, fontFamily: fonts.regular, fontSize: 13, marginTop: 4 },
   signatureLink: { color: '#2F5711', fontSize: 12, fontFamily: fonts.bold, fontWeight: '800', marginTop: 8 },
   widgetQrLabel: { color: colors.muted, fontSize: 12, fontFamily: fonts.bold, fontWeight: '800' },
