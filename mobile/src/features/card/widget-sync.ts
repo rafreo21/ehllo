@@ -2,6 +2,7 @@ import { NativeModules, Platform } from 'react-native';
 
 import { fetchAllConnections } from '@/features/connections/connections-api';
 import { showsCompanyDetails } from '@/features/card/company-display';
+import { isPreviewCard } from '@/features/card/default-card';
 import { shareCardDeepLink } from '@/features/card/share-deep-link';
 import type { MobileCard } from '@/features/card/types';
 import type { WidgetCardPayload, WidgetConnection, WidgetSnapshot } from '@/features/card/widget-types';
@@ -171,7 +172,19 @@ export async function buildWidgetSnapshot(
   preferredCard?: MobileCard,
 ): Promise<WidgetSnapshot> {
   const env = readEnv();
-  const published = cards.filter((card) => card.status === 'published' && card.slug);
+  // Preview cards are excluded HERE, at the widget boundary, not just by the callers.
+  //
+  // defaultCard is a sample used to populate the UI before someone has a real card. It is
+  // marked status:'published' with slug 'alex-morgan', so it satisfies every test for "a real
+  // published card" - and card-context filters it in five places for the UI and for remote
+  // sync, but nothing filtered it on the way to the widget. A user carrying it got Alex
+  // Morgan's name on their home screen with a QR pointing at /c/alex-morgan, or, while the
+  // primary lookup had no fallback, a blank white widget. Both reported symptoms, one cause.
+  //
+  // Filtering at the boundary rather than trusting the caller: the widget is the thing with a
+  // stranger's identity on a home screen if this is ever wrong again.
+  const real = cards.filter((card) => !isPreviewCard(card));
+  const published = real.filter((card) => card.status === 'published' && card.slug);
   // The widget shows exactly one card: the one set as primary in the card home. It used to
   // send every published card so the widget could page between them, and took whichever one
   // happened to be first in the array as the headline - which is not necessarily the primary

@@ -54,3 +54,30 @@ test("nothing published means no card, so the placeholder is deliberate", () => 
 test("a published card with no slug is not usable", () => {
   assert.equal(selectTarget([{ status: "published", isPrimary: true, name: "No slug" }]), undefined);
 });
+
+// The preview card is the one that actually reached testers. defaultCard is marked
+// status:'published' with slug 'alex-morgan', so it passes every "is this a real published
+// card" test. Carrying it meant either a stranger's name on the home screen, or - while the
+// primary lookup had no fallback - a blank white widget.
+const PREVIEW_CARD_ID = "preview-primary-card";
+
+function selectTargetExcludingPreview(cards) {
+  const real = cards.filter((card) => card.id !== PREVIEW_CARD_ID);
+  const published = real.filter((card) => card.status === "published" && card.slug);
+  return published.find((card) => card.isPrimary) || published[0];
+}
+
+test("the preview card is never chosen, even though it looks published", () => {
+  const target = selectTargetExcludingPreview([
+    { id: PREVIEW_CARD_ID, slug: "alex-morgan", status: "published", name: "Alex Morgan" },
+    { id: "real", slug: "mine", status: "published", name: "Mine" },
+  ]);
+  assert.equal(target.name, "Mine", "a real card must win over the sample");
+});
+
+test("carrying only the preview card yields no card, not a stranger's identity", () => {
+  const target = selectTargetExcludingPreview([
+    { id: PREVIEW_CARD_ID, slug: "alex-morgan", status: "published", name: "Alex Morgan" },
+  ]);
+  assert.equal(target, undefined, "must fall through to the placeholder, never to Alex Morgan");
+});
