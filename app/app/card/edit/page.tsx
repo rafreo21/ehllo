@@ -959,13 +959,53 @@ export default function CardEditor() {
                   <span aria-hidden="true" />
                 </button>
               </div>
-              <button type="button" className="theme-picker-trigger" onClick={() => setShowThemePicker(true)}>
+              <div className="theme-panel editor-desktop-only"><h2>Card colour</h2><p>Used for the cover and primary actions.</p>
+                <div className="theme-swatches">{themes.map((theme, index) => (
+                  <button
+                    type="button"
+                    key={theme}
+                    aria-label={`Use card colour ${index + 1}`}
+                    aria-pressed={draft.theme === theme}
+                    className={draft.theme === theme ? "selected" : ""}
+                    style={{ background: themeGradientCss(theme) }}
+                    onClick={() => update("theme", theme)}>
+                    {draft.theme === theme ? <CheckIcon size={16} color={themeForegroundColor(theme)} /> : null}
+                  </button>
+                ))}</div>
+              </div>
+              <button type="button" className="theme-picker-trigger editor-compact-only" onClick={() => setShowThemePicker(true)}>
                 <span className="theme-picker-current" aria-hidden="true" style={{ background: previewTheme.backgroundGradient }} />
                 <span><strong>Card colour</strong><small>Choose the colour used across your card.</small></span>
                 <ChevronRightIcon size={18} aria-hidden="true" />
               </button>
 
-              <button type="button" className="method-library-trigger" onClick={() => setShowMethodLibrary(true)}>
+              <div className="method-library editor-desktop-only">
+                <header className="method-library-heading">
+                  <span className="method-library-add-icon" aria-hidden="true" style={{ color: previewTheme.backgroundColor }}><PlusIcon size={18} /></span>
+                  <div><h2>Add a contact method</h2><p>Choose how people can connect with you.</p></div>
+                </header>
+                {methodCategories.map((category) => {
+                  const availableTypes = (Object.keys(methodMeta) as MethodType[]).filter(
+                    (type) => methodMeta[type].category === category && (methodTypeCounts[type] ?? 0) < 3,
+                  );
+                  if (availableTypes.length === 0) return null;
+                  return <section className="method-category" key={category}>
+                    <h3>{category}</h3><div>
+                      {availableTypes.map((type) => {
+                        const meta = methodMeta[type];
+                        return <button type="button" key={type} onClick={() => openMethod(type)}>
+                          <span className="method-library-icon" style={{ color: previewTheme.backgroundColor }}>
+                            {PHOSPHOR_METHOD_TYPES.has(type) ? <meta.Icon size={20} weight="bold" color={previewTheme.backgroundColor} /> : <meta.Icon size={20} color={previewTheme.backgroundColor} />}
+                          </span>
+                          <span className="method-library-label">{meta.name}</span>
+                          <PlusIcon />
+                        </button>;
+                      })}
+                    </div>
+                  </section>;
+                })}
+              </div>
+              <button type="button" className="method-library-trigger editor-compact-only" onClick={() => setShowMethodLibrary(true)}>
                 <div className="method-library-heading">
                   <span className="method-library-add-icon" aria-hidden="true" style={{ color: previewTheme.backgroundColor }}><PlusIcon size={18} /></span>
                   <div><h2>Add a contact method</h2><p>Choose how people can connect with you.</p></div>
