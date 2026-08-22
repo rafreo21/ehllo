@@ -11,7 +11,6 @@ import { TrendingUp as TrendUpIcon } from "react-feather";
 import { Users as UsersThreeIcon } from "react-feather";
 import { X as XIcon } from "react-feather";
 import { AppleLogo } from "@phosphor-icons/react/dist/csr/AppleLogo";
-import { GooglePlayLogo } from "@phosphor-icons/react/dist/csr/GooglePlayLogo";
 import { AddFollowUpModal } from "../components/AddFollowUpModal";
 import { Button, LinkButton } from "../components/Button";
 import { PageSkeleton } from "../components/AsyncState";
@@ -53,6 +52,17 @@ type HomeNudge = {
 };
 
 const HOME_FOLLOW_UP_TIP_DISMISSED_KEY = "ehllo-home-follow-up-tip-dismissed-v1";
+
+function GooglePlayMark({ size = 17 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#34a853" d="M3.4 2.6 14 12 3.4 21.4c-.3-.4-.4-.9-.4-1.5V4.1c0-.6.1-1.1.4-1.5Z" />
+      <path fill="#4285f4" d="m14 12 3.1-2.8L6.1 3c-.9-.5-1.8-.6-2.7-.4L14 12Z" />
+      <path fill="#fbbc04" d="m14 12-10.6 9.4c.9.2 1.8.1 2.7-.4l11-6.2L14 12Z" />
+      <path fill="#ea4335" d="m17.1 9.2-3.1 2.8 3.1 2.8 3.1-1.7c1.1-.6 1.1-1.6 0-2.2l-3.1-1.7Z" />
+    </svg>
+  );
+}
 
 function isDueNow(dueAt: string) {
   if (!dueAt.trim()) return false;
@@ -395,22 +405,21 @@ export default function HomeDashboard() {
 
             <section className="home-mobile-beta" aria-labelledby="mobile-beta-title">
               <div className="home-mobile-beta-copy">
-                <span className="home-mobile-beta-kicker">ehllo mobile</span>
                 <h2 id="mobile-beta-title">Take ehllo with you.</h2>
                 <p>The mobile app is coming soon. Join testing today on iOS or Android and help shape what ships.</p>
                 <div className="home-mobile-beta-platforms" aria-label="Available testing platforms">
-                  <span><AppleLogo size={17} weight="fill" />iOS beta</span>
-                  <span><GooglePlayLogo size={17} weight="fill" />Android beta</span>
+                  <span><AppleLogo className="home-mobile-apple-logo" size={17} weight="fill" />iOS beta</span>
+                  <span><GooglePlayMark />Android beta</span>
                 </div>
                 <Button size="small" disabled title="Testing form link coming soon">Join mobile testing</Button>
               </div>
               <div className="home-mobile-beta-art" aria-hidden="true">
                 <div className="home-mobile-platform-card">
-                  <AppleLogo size={34} weight="fill" />
+                  <AppleLogo className="home-mobile-apple-logo" size={34} weight="fill" />
                   <span><strong>Test on iOS</strong><small>iPhone beta</small></span>
                 </div>
                 <div className="home-mobile-platform-card">
-                  <GooglePlayLogo size={34} weight="fill" />
+                  <GooglePlayMark size={34} />
                   <span><strong>Test on Android</strong><small>Android beta</small></span>
                 </div>
               </div>

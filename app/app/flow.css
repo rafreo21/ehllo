@@ -47,11 +47,11 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .home-feature-action { display: inline-flex; align-items: center; gap: 6px; padding-right: 4px; font-size: 12px; font-weight: 800; white-space: nowrap; }
 .home-mobile-beta { min-height: 210px; padding: clamp(24px,4vw,40px); display: grid; grid-template-columns: minmax(0,1.15fr) minmax(260px,.85fr); align-items: center; gap: 32px; border-radius: 16px; background: #eef7e9; color: var(--p-navy); }
 .home-mobile-beta-copy { position: relative; z-index: 2; max-width: 560px; display: grid; justify-items: start; gap: 12px; }
-.home-mobile-beta-kicker { font-size: 10px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: #4e6d3e; }
 .home-mobile-beta h2 { margin: 0; color: var(--p-navy); font-size: clamp(26px,3vw,36px); line-height: 1.05; letter-spacing: -.035em; }
 .home-mobile-beta p { max-width: 500px; margin: 0; color: var(--p-muted); font-size: 14px; line-height: 1.5; }
 .home-mobile-beta-platforms { display: flex; flex-wrap: wrap; gap: 7px; }
 .home-mobile-beta-platforms span { padding: 6px 10px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #d2e2ca; border-radius: 999px; background: rgba(255,255,255,.66); font-size: 10px; font-weight: 800; }
+.home-mobile-apple-logo { color: #111; }
 .home-mobile-beta-copy > button { margin-top: 4px; }
 .home-mobile-beta-art { display: grid; gap: 10px; }
 .home-mobile-platform-card { min-height: 74px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; border-radius: 12px; background: rgba(255,255,255,.72); color: var(--p-navy); }
