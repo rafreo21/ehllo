@@ -500,11 +500,11 @@ body:has(.product-shell) { background: var(--p-ice); }
   .method-row > div { grid-column: 1 / 3; justify-content: flex-end; }
 }
 
-/* Narrow phones: preserve full navigation labels instead of squeezing two columns. */
-@media (max-width: 360px) {
+/* Phones use a simple vertical navigation list; tablets retain two columns. */
+@media (max-width: 599px) {
   .product-shell .consumer-sidebar { padding-inline: 12px; }
-  .consumer-sidebar nav { grid-template-columns: 1fr; gap: 2px; }
-  .consumer-sidebar nav a { min-height: 42px; padding-inline: 12px; }
+  .consumer-sidebar nav { grid-template-columns: 1fr; gap: 3px; }
+  .consumer-sidebar nav a { min-height: 44px; padding-inline: 12px; }
   .consumer-sidebar nav a > span { white-space: nowrap; }
   .consumer-sidebar .sidebar-bottom { margin-top: 8px; }
 }
