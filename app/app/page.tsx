@@ -393,7 +393,7 @@ export default function HomeDashboard() {
             <section className="home-section">
               <h2>Primary card</h2>
               {hasCards && card ? (
-                <a className="home-card-row" href="/app/cards">
+                <a className="home-card-row" href={primaryCardHref}>
                   {card.photo ? <img className="home-card-avatar" src={card.photo} alt="" /> : (
                     <span className="home-card-avatar home-card-avatar-fallback"><IdentificationCardIcon size={20} /></span>
                   )}
