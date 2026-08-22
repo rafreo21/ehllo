@@ -101,12 +101,14 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
   const canvasColor = props.themeColor || WIDGET_COLORS.canvas;
   const textColor = props.themeTextColor || WIDGET_COLORS.text;
   const mutedColor = props.themeMutedColor || WIDGET_COLORS.subtle;
-  // Use the foreground and canvas as an inverse pair for controls. On dark themes this
-  // produces a bright button with a dark icon; on light themes it produces a dark button
-  // with a light icon. That keeps small symbols legible instead of putting white on a fixed
-  // charcoal chip that can disappear into some card colours.
-  const actionBackgroundColor = textColor;
-  const actionForegroundColor = canvasColor;
+  // Tonal controls rather than solid inverse buttons. Dark themes receive a soft white wash;
+  // bright themes receive a soft ink wash. The foreground remains the same high-contrast
+  // colour as the surrounding copy, so the mail icon and add action feel lighter without
+  // becoming faint or losing their relationship to the selected card style.
+  const actionBackgroundColor = textColor === '#FFFFFF'
+    ? 'rgba(255,255,255,0.18)'
+    : 'rgba(22,51,0,0.12)';
+  const actionForegroundColor = textColor;
 
 
   function connectionSlots(props: Record<string, string | number | boolean | undefined>) {
