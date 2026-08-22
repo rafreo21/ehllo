@@ -557,6 +557,7 @@ export default function CardEditor() {
 
   useAppShellChrome({
     backHref: "/app/cards",
+    backLabel: "",
     requestNavigation,
     leading: appShellLeading,
     actions: appShellActions,

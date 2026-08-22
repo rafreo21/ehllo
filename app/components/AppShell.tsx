@@ -208,6 +208,7 @@ export function AppShell({ children }: AppShellProps) {
                     variant="ghost"
                     href={backHref}
                     className="product-page-back"
+                    aria-label={backLabel || "Back"}
                     onClick={(event) => {
                       navigateWithPrompt(event, backHref, () => {
                         window.location.href = backHref;
