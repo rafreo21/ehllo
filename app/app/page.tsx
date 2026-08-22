@@ -12,7 +12,6 @@ import { X as XIcon } from "react-feather";
 import { AddFollowUpModal } from "../components/AddFollowUpModal";
 import { Button, LinkButton } from "../components/Button";
 import { PageSkeleton } from "../components/AsyncState";
-import { CapturePromoBanner } from "../components/CapturePromoBanner";
 import { EncounterDrawerView } from "../components/EncounterDrawerView";
 import { useAppUser } from "../components/AppUserContext";
 import {
@@ -124,7 +123,7 @@ export default function HomeDashboard() {
     const library = readCardLibrary(localStorage);
     setHasCards(library.length > 0);
     const activeId = getActiveCardId(localStorage, library);
-    setCard(library.find((item) => item.id === activeId) || library[0] || null);
+    setCard(library.find((item) => item.isPrimary) || library.find((item) => item.id === activeId) || library[0] || null);
   }
 
   useEffect(() => {
@@ -180,7 +179,7 @@ export default function HomeDashboard() {
         <div className="flow-heading">
           <div>
             <h1>{firstName ? `${greeting}, ${firstName}` : greeting}</h1>
-            <p>Here’s what needs your attention.</p>
+            <p>Your day at a glance.</p>
           </div>
         </div>
 
@@ -231,8 +230,7 @@ export default function HomeDashboard() {
               <LinkButton variant="secondary" href="/app/scan"><ScanIcon size={17} weight="bold" />Quick scan</LinkButton>
             </div>
 
-            <CapturePromoBanner />
-
+            <div className="home-content-grid">
             <section className="home-section">
               <div className="home-section-head">
                 <h2>Recent people</h2>
@@ -280,7 +278,7 @@ export default function HomeDashboard() {
             </section>
 
             <section className="home-section">
-              <h2>My card</h2>
+              <h2>Primary card</h2>
               {hasCards && card ? (
                 <a className="home-card-row" href="/app/cards">
                   {card.photo ? <img className="home-card-avatar" src={card.photo} alt="" /> : (
@@ -304,6 +302,7 @@ export default function HomeDashboard() {
                 </div>
               )}
             </section>
+            </div>
           </>
         )}
       </div>
