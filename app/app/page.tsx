@@ -411,10 +411,6 @@ export default function HomeDashboard() {
               <div className="home-mobile-beta-copy">
                 <h2 id="mobile-beta-title">Take ehllo with you.</h2>
                 <p>The mobile app is coming soon. Join testing today on iOS or Android and help shape what ships.</p>
-                <div className="home-mobile-beta-platforms" aria-label="Available testing platforms">
-                  <span><AppleBrandMark />iOS beta</span>
-                  <span><GooglePlayMark />Android beta</span>
-                </div>
                 <Button size="small" disabled title="Testing form link coming soon">Join mobile testing</Button>
               </div>
               <div className="home-mobile-beta-art" aria-hidden="true">
