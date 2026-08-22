@@ -931,6 +931,16 @@ export default function CardEditor() {
                     </div>
                   </div>
                 </section>}
+                <button
+                  type="button"
+                  className="preview-add-method-trigger editor-compact-only"
+                  style={{ "--card-accent": previewTheme.backgroundColor } as React.CSSProperties}
+                  onClick={() => setShowMethodLibrary(true)}
+                >
+                  <span aria-hidden="true" style={{ color: previewTheme.backgroundColor }}><PlusIcon size={18} /></span>
+                  <span><strong>Add contact method</strong><small>Choose another way to connect.</small></span>
+                  <ChevronRightIcon size={18} aria-hidden="true" />
+                </button>
               </div>
             </article>
           </aside>
@@ -1005,13 +1015,6 @@ export default function CardEditor() {
                   </section>;
                 })}
               </div>
-              <button type="button" className="method-library-trigger editor-compact-only" onClick={() => setShowMethodLibrary(true)}>
-                <div className="method-library-heading">
-                  <span className="method-library-add-icon" aria-hidden="true" style={{ color: previewTheme.backgroundColor }}><PlusIcon size={18} /></span>
-                  <div><h2>Add a contact method</h2><p>Choose how people can connect with you.</p></div>
-                </div>
-                <PlusIcon className="method-library-trigger-action" size={18} aria-hidden="true" />
-              </button>
             </div>
 
             {saveError && (
