@@ -9,6 +9,7 @@ import type { EncounterAction } from "../../lib/encounters";
 import { emptyConnectedAccountStatus, type ConnectedAccountStatus } from "../../lib/integrations/types";
 import { LinkButton } from "./Button";
 import { DropdownButton, type DropdownItem } from "./DropdownButton";
+import { useToast } from "./ToastContext";
 
 type ActionDoButtonProps = {
   action: Pick<EncounterAction, "channel" | "title" | "dueAt" | "status" | "owner">;
@@ -25,9 +26,9 @@ const TRIGGER_LABEL: Partial<Record<EncounterAction["channel"], string>> = {
 };
 
 export function ActionDoButton({ action, context, size = "small", showSecondary = false }: ActionDoButtonProps) {
+  const { showToast } = useToast();
   const [integrations, setIntegrations] = useState<ConnectedAccountStatus>(emptyConnectedAccountStatus());
   const [scheduling, setScheduling] = useState<"" | "google" | "microsoft">("");
-  const [scheduleMessage, setScheduleMessage] = useState("");
   // ehllo never auto-sends anything external - creating a private event
   // on your own calendar needs no review, but inviting the other person is
   // an outward-facing action, so it always stops here for an explicit
@@ -61,7 +62,6 @@ export function ActionDoButton({ action, context, size = "small", showSecondary 
     const title = action.title.trim() || `Meeting with ${context.personName || "contact"}`;
     const details = `Scheduled from ehllo${context.encounterTitle ? `: ${context.encounterTitle}` : ""}.`;
     setScheduling(provider);
-    setScheduleMessage("");
     try {
       const response = await fetch("/api/integrations/schedule-meeting", {
         method: "POST",
@@ -70,15 +70,18 @@ export function ActionDoButton({ action, context, size = "small", showSecondary 
       });
       const payload = await response.json() as { error?: string; invited?: boolean };
       if (!response.ok) {
-        setScheduleMessage(payload.error || "We couldn’t schedule this meeting.");
+        showToast({ tone: "error", message: payload.error || "We couldn’t schedule this meeting." });
         return;
       }
       const calendarName = provider === "google" ? "Google Calendar" : "Outlook Calendar";
-      setScheduleMessage(payload.invited
-        ? `Scheduled in ${calendarName} and invited ${context.personName || "them"}.`
-        : `Scheduled in ${calendarName}.`);
+      showToast({
+        tone: "success",
+        message: payload.invited
+          ? `Scheduled in ${calendarName} and invited ${context.personName || "them"}.`
+          : `Scheduled in ${calendarName}.`,
+      });
     } catch {
-      setScheduleMessage("We couldn’t schedule this meeting.");
+      showToast({ tone: "error", message: "We couldn’t schedule this meeting." });
     } finally {
       setScheduling("");
       setPendingProvider("");
@@ -143,7 +146,6 @@ export function ActionDoButton({ action, context, size = "small", showSecondary 
             </div>
           </div>
         ) : null}
-        {scheduleMessage ? <span className="action-do-message" role="status">{scheduleMessage}</span> : null}
       </div>
     );
   }
