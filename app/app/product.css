@@ -537,7 +537,7 @@ body:has(.product-shell) { background: var(--p-ice); }
   .method-library-sheet-content { padding: 12px 16px 18px; }
   .method-library-sheet .method-category + .method-category { margin-top: 14px; padding-top: 13px; }
   .method-library-sheet .method-category h3 { margin-bottom: 7px; font-size: 8px; }
-  .method-library-sheet .method-category > div { gap: 7px; }
+  .method-library-sheet .method-category > div { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
   .method-library-sheet .method-category button { min-height: 64px; padding: 8px; grid-template-columns: 30px 1fr; grid-template-rows: 30px auto; gap: 5px; }
   .method-library-sheet .method-library-icon { width: 30px; height: 30px; }
   .method-library-sheet .method-library-icon > svg { width: 17px; height: 17px; }
@@ -565,6 +565,7 @@ body:has(.product-shell) { background: var(--p-ice); }
   .product-shell:has(.card-creator) .preview-theme-picker-trigger { min-height: 48px; padding: 7px 11px; grid-template-columns: 32px minmax(0,1fr) 18px; gap: 9px; }
   .product-shell:has(.card-creator) .preview-theme-picker-trigger .theme-picker-current { width: 32px; height: 32px; }
   .product-shell:has(.card-creator) .preview-theme-picker-trigger strong { font-size: 13px; }
+  .method-library-sheet .method-category > div { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
 
 @media (max-width: 1199px) {
@@ -607,7 +608,7 @@ body:has(.product-shell) { background: var(--p-ice); }
   .header-actions a { display: none; }
   .creator-layout--fill { margin-top: 24px; height: auto; }
   .card-flow-skeleton { grid-template-columns: 1fr; }
-  .method-library-sheet .method-category > div { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .method-library-sheet .method-category > div { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
 
 /* Tablet content: 600px-1023px. Keep useful width without desktop-scale gutters. */
