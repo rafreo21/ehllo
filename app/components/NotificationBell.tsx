@@ -10,6 +10,7 @@ import { Mail as EnvelopeSimpleIcon } from "react-feather";
 import { RotateCcw as ClockCounterClockwiseIcon } from "react-feather";
 import { Share2 as ShareNetworkIcon } from "react-feather";
 import { Users as UsersThreeIcon } from "react-feather";
+import { X as CloseIcon } from "react-feather";
 import { HandWavingIcon } from "@phosphor-icons/react/dist/csr/HandWaving";
 import { LinkButton } from "./Button";
 import { EncounterDrawerView } from "./EncounterDrawerView";
@@ -237,12 +238,16 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
       </button>
 
       {open ? (
-        <section className="notification-popover" role="dialog" aria-label="Notifications">
-          <header>
-            <div><span>Attention centre</span><h2>Notifications</h2></div>
-            {unreadCount ? <button type="button" onClick={() => void markAllRead()}><CheckIcon size={14} />Mark all read</button> : null}
-          </header>
-          <div className="notification-popover-body">
+        <div className="notification-drawer-backdrop" role="presentation" onClick={() => setOpen(false)}>
+          <section className="notification-popover" role="dialog" aria-modal="true" aria-label="Notifications" onClick={(event) => event.stopPropagation()}>
+            <header>
+              <div><span>Attention centre</span><h2>Notifications</h2></div>
+              <div className="notification-header-actions">
+                {unreadCount ? <button type="button" onClick={() => void markAllRead()}><CheckIcon size={14} />Mark all read</button> : null}
+                <button type="button" className="notification-close" aria-label="Close notifications" onClick={() => setOpen(false)}><CloseIcon size={18} /></button>
+              </div>
+            </header>
+            <div className="notification-popover-body">
             {loading ? <div className="notification-loading"><i /><i /><i /></div> : failed ? (
               <div className="notification-empty"><strong>Couldn&apos;t load notifications</strong><p>Check your connection and try again.</p><button type="button" onClick={() => void load()}>Try again</button></div>
             ) : alerts.length ? alerts.slice(0, 8).map((alert) => {
@@ -270,9 +275,10 @@ export function NotificationBell({ onActionableCountChange }: { onActionableCoun
             }) : (
               <div className="notification-empty"><span><CheckIcon size={22} /></span><strong>You&apos;re all caught up</strong><p>Review-ready captures, due follow-ups, and shared-meeting updates will appear here.</p></div>
             )}
-          </div>
-          <footer><LinkButton fullWidth variant="secondary" href="/app/followups" onClick={() => setOpen(false)}>Open follow-ups</LinkButton></footer>
-        </section>
+            </div>
+            <footer><LinkButton fullWidth variant="secondary" href="/app/followups" onClick={() => setOpen(false)}>Open follow-ups</LinkButton></footer>
+          </section>
+        </div>
       ) : null}
 
       {activeEncounterId ? (
