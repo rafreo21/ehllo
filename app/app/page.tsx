@@ -360,14 +360,16 @@ export default function HomeDashboard() {
                       <a className="home-person-row" href={`/app/people?connection=${encodeURIComponent(connection.id)}`} key={connection.id}>
                         <img className="connections-avatar" src={connection.photoUrl || connectionAvatarUrl(connection)} alt="" />
                         <span>
-                          <strong>{connection.name}</strong>
+                          <span className="home-person-name">
+                            <strong>{connection.name}</strong>
+                            {openFollowUp ? (
+                              <em className={isOverdue(openFollowUp.dueAt ?? "") ? "home-person-tag home-person-tag-overdue" : "home-person-tag"}>
+                                {isOverdue(openFollowUp.dueAt ?? "") ? "Overdue" : "Follow-up due"}
+                              </em>
+                            ) : null}
+                          </span>
                           <small>{connection.subtitle}{connection.connectedAt ? ` · ${formatConnectionDate(connection.connectedAt)}` : ""}</small>
                         </span>
-                        {openFollowUp ? (
-                          <em className={isOverdue(openFollowUp.dueAt ?? "") ? "home-person-tag home-person-tag-overdue" : "home-person-tag"}>
-                            {isOverdue(openFollowUp.dueAt ?? "") ? "Overdue" : "Follow-up due"}
-                          </em>
-                        ) : null}
                         <ArrowRightIcon size={15} />
                       </a>
                     );

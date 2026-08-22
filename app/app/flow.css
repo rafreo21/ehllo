@@ -65,8 +65,11 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .home-view-all:hover { text-decoration: underline; }
 .home-people-list { display: grid; gap: 8px; }
 .home-person-row, .home-card-row { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid rgba(22,51,0,.065); border-radius: 10px; background: white; color: var(--p-navy); text-decoration: none; transition: border-color .16s ease, background .16s ease; }
+.home-person-row { grid-template-columns: auto minmax(0, 1fr) auto; }
 .home-person-row:hover, .home-card-row:hover { border-color: rgba(22,51,0,.12); background: #fbfcfa; }
 .home-person-row > span, .home-card-row > span { min-width: 0; display: grid; gap: 2px; }
+.home-person-name { min-width: 0; display: flex; align-items: center; gap: 7px; }
+.home-person-name strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .home-person-row strong, .home-card-row strong { font-size: 14px; }
 .home-person-row small, .home-card-row small { overflow: hidden; color: var(--p-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .home-person-tag { padding: 4px 9px; border-radius: 999px; background: var(--p-sky); color: #2F5711; font-size: 10px; font-weight: 800; font-style: normal; white-space: nowrap; }
@@ -108,8 +111,7 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .home-person-row > img, .home-card-row > img, .home-card-row > .home-card-avatar-fallback { grid-row: 1 / 3; }
   .home-person-row > span, .home-card-row > span { align-self: center; }
   .home-person-row > svg, .home-card-row > svg { grid-column: 3; grid-row: 1 / 3; align-self: center; }
-  .home-person-row .home-person-tag { grid-column: 2; grid-row: 2; width: max-content; padding: 3px 7px; }
-  .home-person-row:has(.home-person-tag) > span { align-self: end; }
+  .home-person-row .home-person-tag { flex: 0 0 auto; padding: 3px 7px; }
   .home-card-row > em { display: none; }
   .home-nudge-card > a { min-height: 82px; grid-template-columns: 32px minmax(0, 1fr); align-items: start; gap: 10px; padding: 13px 44px 13px 12px; }
   .home-nudge-icon { width: 32px; height: 32px; }
