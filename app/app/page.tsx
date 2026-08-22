@@ -17,6 +17,7 @@ import { EncounterDrawerView } from "../components/EncounterDrawerView";
 import { useAppUser } from "../components/AppUserContext";
 import {
   connectionAvatarUrl,
+  enrichConnectionPhotos,
   fetchAllConnectionsMerged,
   formatConnectionDate,
   sortConnections,
@@ -118,6 +119,7 @@ export default function HomeDashboard() {
       .then((items) => {
         setSortedConnections(sortConnections(items, "date"));
         setConnectionsFailed(false);
+        void enrichConnectionPhotos(items).then((enriched) => setSortedConnections(sortConnections(enriched, "date")));
       })
       .catch(() => setConnectionsFailed(true));
   }
@@ -133,7 +135,7 @@ export default function HomeDashboard() {
   function nudgeHref(item: HomeNudge) {
     const [source, sourceId] = item.actionId.split(":");
     if ((source === "met" || source === "inbound") && sourceId) {
-      return `/app/people/${encodeURIComponent(`${source}-${sourceId}`)}`;
+      return `/app/people?connection=${encodeURIComponent(`${source}-${sourceId}`)}`;
     }
     return "/app/people";
   }
@@ -309,7 +311,7 @@ export default function HomeDashboard() {
                         || (item.personName || "").trim().toLowerCase() === connection.name.trim().toLowerCase())
                     ));
                     return (
-                      <a className="home-person-row" href={`/app/people/${encodeURIComponent(connection.id)}`} key={connection.id}>
+                      <a className="home-person-row" href={`/app/people?connection=${encodeURIComponent(connection.id)}`} key={connection.id}>
                         <img className="connections-avatar" src={connection.photoUrl || connectionAvatarUrl(connection)} alt="" />
                         <span>
                           <strong>{connection.name}</strong>

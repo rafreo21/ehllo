@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { Search as MagnifyingGlassIcon } from "react-feather";
 import { Edit2 as PencilSimpleLineIcon } from "react-feather";
@@ -48,6 +48,7 @@ export default function ConnectionsPage() {
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [activeConnection, setActiveConnection] = useState<ConnectionItem | null>(null);
+  const deepLinkHandled = useRef(false);
   const [deleting, setDeleting] = useState(false);
   const { showToast } = useToast();
 
@@ -57,10 +58,18 @@ export default function ConnectionsPage() {
     try {
       const merged = await fetchAllConnectionsMerged();
       setConnections(merged);
+      if (!deepLinkHandled.current) {
+        deepLinkHandled.current = true;
+        const requestedId = new URLSearchParams(window.location.search).get("connection");
+        if (requestedId) setActiveConnection(merged.find((item) => item.id === requestedId) || null);
+      }
       setLoading(false);
       setEnriching(true);
       void enrichConnectionPhotos(merged)
-        .then(setConnections)
+        .then((enriched) => {
+          setConnections(enriched);
+          setActiveConnection((current) => current ? enriched.find((item) => item.id === current.id) || current : null);
+        })
         .finally(() => setEnriching(false));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load connections.");
