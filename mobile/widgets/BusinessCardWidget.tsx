@@ -1,7 +1,6 @@
 import { HStack, Image, Text, VStack, ZStack } from '@expo/ui/swift-ui';
 import {
   background,
-  containerBackground,
   cornerRadius,
   font,
   foregroundStyle,
@@ -145,7 +144,6 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
   // Morgan's name, role and company as though they were yours. Apple's guidance is explicit
   // that a widget needing an account should say so rather than inventing content.
   const signedOut = props.signedIn === '0' || props.signedIn === false;
-  const canvasColor = card.themeColor || props.themeColor || WIDGET_COLORS.canvas;
   const textColor = card.themeTextColor || props.themeTextColor || WIDGET_COLORS.text;
   const mutedColor = card.themeMutedColor || props.themeMutedColor || WIDGET_COLORS.muted;
   const subtleColor = card.themeSoftColor || props.themeSoftColor || WIDGET_COLORS.subtle;
@@ -162,16 +160,9 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
       spacing={16}
       alignment="center"
       modifiers={[
-        containerBackground(canvasColor, 'widget'),
-        // containerBackground(_:for:) is iOS 17+ only - @expo/ui's own modifier no-ops below
-        // that (ContainerBackgroundModifier.swift falls through to `content` unchanged on
-        // iOS < 17), so on iOS 16 nothing paints this canvas at all and WidgetKit falls back
-        // to its own default light background - every widget shows correct text and images on
-        // a plain white card, on real iOS 16 hardware, which is exactly the "white, not black"
-        // report this app's own iOS 16.4 deployment target (ios/Podfile) says it must support.
-        // Plain background() carries no such gate, so it is the fallback for iOS < 17;
-        // redundant with containerBackground on 17+, which is harmless.
-        background(canvasColor),
+        // The generated native WidgetKit host paints the theme across the complete system
+        // shape. This content layer stays transparent so it cannot create a smaller competing
+        // canvas with exposed host space around it.
         // Horizontal padding only. A fixed 24pt top against a 16pt bottom pushed everything
         // low and left uneven margins, and any fixed pair is wrong on some device anyway:
         // a medium widget is 164pt tall here and 141pt on the smallest iPhones, so the spare

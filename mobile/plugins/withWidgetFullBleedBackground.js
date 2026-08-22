@@ -5,13 +5,26 @@ const path = require('path');
 /** Paints the complete WidgetKit host with the card's current theme colour. */
 const TARGET_DIRECTORY = 'ExpoWidgetsTarget';
 const WIDGETS = [
-  ['QrScanWidget.swift', 'qrScanWidgetThemeColor'],
-  ['BusinessCardWidget.swift', 'businessCardWidgetThemeColor'],
-  ['RecentConnectionsWidget.swift', 'recentConnectionsWidgetThemeColor'],
+  ['QrScanWidget.swift', 'QrScanWidgetThemeBackground', 'qrScanWidgetThemeColor'],
+  ['BusinessCardWidget.swift', 'BusinessCardWidgetThemeBackground', 'businessCardWidgetThemeColor'],
+  ['RecentConnectionsWidget.swift', 'RecentConnectionsWidgetThemeBackground', 'recentConnectionsWidgetThemeColor'],
 ];
 
-function colorHelper(functionName) {
+function colorHelper(modifierName, functionName) {
   return `
+private struct ${modifierName}: ViewModifier {
+  let color: Color
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if #available(iOS 17.0, *) {
+      content.containerBackground(color, for: .widget)
+    } else {
+      content.background(color)
+    }
+  }
+}
+
 private func ${functionName}(_ rawValue: Any?) -> Color {
   let raw = (rawValue as? String) ?? "#000000"
   let hex = raw.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
@@ -35,7 +48,7 @@ module.exports = function withWidgetFullBleedBackground(config) {
     async (cfg) => {
       const targetDir = path.join(cfg.modRequest.platformProjectRoot, TARGET_DIRECTORY);
 
-      for (const [fileName, functionName] of WIDGETS) {
+      for (const [fileName, modifierName, functionName] of WIDGETS) {
         const sourcePath = path.join(targetDir, fileName);
         if (!fs.existsSync(sourcePath)) {
           throw new Error(`[withWidgetFullBleedBackground] Missing generated widget source: ${sourcePath}`);
@@ -49,9 +62,9 @@ module.exports = function withWidgetFullBleedBackground(config) {
 
         source = source.replace(
           entryView,
-          `${entryView}\n        .frame(maxWidth: .infinity, maxHeight: .infinity)\n        .background(${functionName}(entry.props?["themeColor"]))`,
+          `${entryView}\n        .frame(maxWidth: .infinity, maxHeight: .infinity)\n        .modifier(${modifierName}(color: ${functionName}(entry.props?["themeColor"])))`,
         );
-        source += colorHelper(functionName);
+        source += colorHelper(modifierName, functionName);
         fs.writeFileSync(sourcePath, source);
       }
 

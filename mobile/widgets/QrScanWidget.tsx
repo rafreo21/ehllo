@@ -1,5 +1,5 @@
 import { Image, Text, VStack, ZStack } from '@expo/ui/swift-ui';
-import { background, containerBackground, cornerRadius, font, foregroundStyle, frame, padding, resizable, widgetAccentedRenderingMode, widgetURL } from '@expo/ui/swift-ui/modifiers';
+import { background, cornerRadius, font, foregroundStyle, frame, padding, resizable, widgetAccentedRenderingMode, widgetURL } from '@expo/ui/swift-ui/modifiers';
 import { createWidget } from 'expo-widgets';
 
 type WidgetCardRecord = {
@@ -88,17 +88,13 @@ function QrScanWidget(props: QrScanWidgetProps) {
   const card = activeCard(cards, 0);
   const deepLink = card.shareDeepLink || props.shareDeepLink || 'ehllo://share-card';
   const qrImageUri = card.qrImageUri || props.qrImageUri;
-  const canvasColor = card.themeColor || props.themeColor || WIDGET_COLORS.canvas;
   const textColor = card.themeTextColor || props.themeTextColor || WIDGET_COLORS.text;
 
   return (
     <VStack
       modifiers={[
-        containerBackground(canvasColor, 'widget'),
-        // containerBackground(_:for:) is iOS 17+ only and no-ops below that - see the same
-        // comment in BusinessCardWidget.tsx. background() has no such gate and is the fallback
-        // for the iOS 16 devices this app's deployment target (ios/Podfile) says it must serve.
-        background(canvasColor),
+        // The native WidgetKit host is the single owner of the full-size theme background.
+        // This layer stays transparent and only positions the QR content.
         // A minimum guard only - the card below is a fixed size and the VStack centres it, so
         // the visible margin is (widget - card) / 2: about 14pt on this phone, which matches
         // the business card's 16pt closely, and 5pt on the smallest iPhone where there simply

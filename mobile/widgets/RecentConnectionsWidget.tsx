@@ -2,7 +2,6 @@ import { HStack, Image, Link, Spacer, Text, VStack } from '@expo/ui/swift-ui';
 import {
   aspectRatio,
   background,
-  containerBackground,
   cornerRadius,
   font,
   foregroundStyle,
@@ -98,7 +97,6 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
     textGap: 1,
     actionGap: 8,
   };
-  const canvasColor = props.themeColor || WIDGET_COLORS.canvas;
   const textColor = props.themeTextColor || WIDGET_COLORS.text;
   const mutedColor = props.themeMutedColor || WIDGET_COLORS.subtle;
   // Tonal controls rather than solid inverse buttons. Dark themes receive a soft white wash;
@@ -327,11 +325,9 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
       spacing={SIZES.rowGap}
       alignment="leading"
       modifiers={[
-        containerBackground(canvasColor, 'widget'),
-        // containerBackground(_:for:) is iOS 17+ only and no-ops below that - see the same
-        // comment in BusinessCardWidget.tsx. background() has no such gate and is the fallback
-        // for the iOS 16 devices this app's deployment target (ios/Podfile) says it must serve.
-        background(canvasColor),
+        // The native WidgetKit host owns the full-bleed theme background. Keeping this content
+        // layer transparent prevents a second, intrinsically-sized colour rectangle from
+        // sitting inside the host and exposing a mismatched frame around it.
         // 16pt, the same margin as the business card widget, so the two do not look like they
         // were laid out to different rules when they sit together on a home screen.
         padding({ leading: 16, trailing: 16, top: 16 }),
