@@ -549,6 +549,24 @@ body:has(.product-shell) { background: var(--p-ice); }
   .theme-swatches--sheet button { height: 58px; aspect-ratio: auto; border-radius: 10px; }
 }
 
+/* The desktop shell can remain visible at compact laptop widths, but the card
+   editor no longer has enough usable width for its two-column workspace. */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .product-shell:has(.card-creator) .creator-layout { grid-template-columns: minmax(0,1fr); }
+  .product-shell:has(.card-creator) .creator-preview { position: static; grid-row: 1; width: min(100%,680px); margin-inline: auto; }
+  .product-shell:has(.card-creator) .creator-workspace { width: min(100%,680px); margin-inline: auto; }
+  .product-shell:has(.card-creator) .creator-section { min-height: 0; }
+  .product-shell:has(.card-creator) .creator-layout--fill { height: auto; }
+  .product-shell:has(.card-creator) .creator-workspace--fill { display: block; }
+  .product-shell:has(.card-creator) .creator-section--fill { overflow-y: visible; }
+  .product-shell:has(.card-creator) .editor-desktop-only { display: none; }
+  .product-shell:has(.card-creator) .theme-picker-trigger.editor-compact-only,
+  .product-shell:has(.card-creator) .preview-add-method-trigger.editor-compact-only { display: grid; }
+  .product-shell:has(.card-creator) .preview-theme-picker-trigger { min-height: 48px; padding: 7px 11px; grid-template-columns: 32px minmax(0,1fr) 18px; gap: 9px; }
+  .product-shell:has(.card-creator) .preview-theme-picker-trigger .theme-picker-current { width: 32px; height: 32px; }
+  .product-shell:has(.card-creator) .preview-theme-picker-trigger strong { font-size: 13px; }
+}
+
 @media (max-width: 760px) {
   .consumer-topbar { top: 10px; right: 16px; }
   .product-shell:has(.consumer-sidebar) .menu-button { top: 10px; }
