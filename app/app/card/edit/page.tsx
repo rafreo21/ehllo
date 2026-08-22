@@ -545,6 +545,7 @@ export default function CardEditor() {
         key={`${draft.id}-${hydrated ? "ready" : "loading"}`}
         as="span"
         className="product-page-card-label"
+        style={{ color: previewTheme.backgroundColor }}
         defaultValue={draft.label}
         onConfirm={(value) => labelConfirmRef.current(value)}
         placeholder="Card label"
@@ -561,7 +562,7 @@ export default function CardEditor() {
         <span>{publishStateLabel}</span>
       </span>
     </div>
-  ) : null, [draft.id, draft.label, draft.status, draft.publishedAt, hydrated, hasUnpublishedChanges, publishStateLabel]);
+  ) : null, [draft.id, draft.label, draft.status, draft.publishedAt, hydrated, hasUnpublishedChanges, previewTheme.backgroundColor, publishStateLabel]);
   const appShellActions = useMemo(() => !hydrated || cardLimitReached ? null : (
     <Button
       size="small"
@@ -784,7 +785,10 @@ export default function CardEditor() {
               <span><strong>Card colour</strong></span>
               <ChevronRightIcon size={18} aria-hidden="true" />
             </button>
-            <article className="public-card public-card--editable">
+            <article
+              className="public-card public-card--editable"
+              style={{ "--card-accent": previewTheme.backgroundColor } as React.CSSProperties}
+            >
               <input ref={photoInput} className="sr-only" type="file" accept="image/*" onChange={selectPhoto} />
               <input ref={logoInput} className="sr-only" type="file" accept="image/*" onChange={(event) => selectImage("companyLogo", event)} />
               <input ref={coverInput} className="sr-only" type="file" accept="image/*" onChange={(event) => selectImage("coverPhoto", event)} />

@@ -249,6 +249,8 @@ body:has(.product-shell) { background: var(--p-ice); }
 .inline-edit-field[data-empty="true"]::before { content: attr(data-placeholder); color: inherit; opacity: .55; }
 .inline-edit-field:hover { background: rgba(22,51,0,.05); }
 .inline-edit-field:focus { background: rgba(22,51,0,.07); outline: 2px solid rgba(159,232,112,.65); outline-offset: 1px; }
+.public-card--editable .inline-edit-field:hover { background: color-mix(in srgb, var(--card-accent, #9fe870) 10%, rgba(255,255,255,.7)); }
+.public-card--editable .inline-edit-field:focus { background: color-mix(in srgb, var(--card-accent, #9fe870) 14%, rgba(255,255,255,.84)); outline-color: color-mix(in srgb, var(--card-accent, #9fe870) 72%, white); }
 
 .card-role { color: var(--p-muted); margin: 0; font-size: 12px; }
 /* A touch more breathing room than the business editor's 0, scoped so it
@@ -420,15 +422,18 @@ body:has(.product-shell) { background: var(--p-ice); }
 .theme-swatches--sheet button.selected { box-shadow: 0 0 0 3px white, 0 0 0 6px var(--p-navy); }
 @keyframes method-sheet-enter { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 .editor-compact-only { display: none; }
-.preview-method-editor { margin: 18px 0; padding: 12px; display: grid; border-radius: 10px; background: #f3f4f2; }
+.preview-method-editor { margin: 18px 0; padding: 12px; display: grid; border-radius: 10px; background: color-mix(in srgb, var(--card-accent, #9fe870) 4%, #f3f4f2); }
 .preview-method-editor-content { min-width: 0; display: grid; gap: 7px; }
 .preview-method-suggestions { margin: -4px; padding: 4px; display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scroll-snap-type: inline proximity; scrollbar-width: none; touch-action: pan-x; }
 .preview-method-suggestions::-webkit-scrollbar { display: none; }
-.preview-method-suggestions button { flex: 0 0 auto; min-height: 25px; padding: 3px 10px; border: 1px solid #dfe2dc; border-radius: 999px; background: #f8f9f7; color: #777b75; font-size: 10px; font-weight: 650; white-space: nowrap; scroll-snap-align: start; cursor: pointer; }
-.preview-method-suggestions button[aria-pressed="true"] { border-color: #72db79; background: #effff1; color: #176526; }
-.preview-method-editor-content > input { width: 100%; height: 38px; min-width: 0; padding: 0 12px; border: 1px solid #edf0eb; border-radius: 7px; background: white; color: var(--p-navy); font: inherit; font-size: 13px; outline: none; }
+.preview-method-suggestions button { flex: 0 0 auto; min-height: 25px; padding: 3px 10px; border: 1px solid color-mix(in srgb, var(--card-accent, #9fe870) 16%, #dfe2dc); border-radius: 999px; background: color-mix(in srgb, var(--card-accent, #9fe870) 3%, #f8f9f7); color: #667063; font-size: 10px; font-weight: 650; white-space: nowrap; scroll-snap-align: start; cursor: pointer; transition: border-color .14s ease, background-color .14s ease, color .14s ease, box-shadow .14s ease; }
+.preview-method-suggestions button:hover { border-color: color-mix(in srgb, var(--card-accent, #9fe870) 48%, #dfe2dc); background: color-mix(in srgb, var(--card-accent, #9fe870) 8%, white); color: var(--p-navy); }
+.preview-method-suggestions button:focus-visible { outline: 2px solid color-mix(in srgb, var(--card-accent, #9fe870) 52%, transparent); outline-offset: 1px; }
+.preview-method-suggestions button[aria-pressed="true"] { border-color: color-mix(in srgb, var(--card-accent, #9fe870) 76%, #dfe2dc); background: color-mix(in srgb, var(--card-accent, #9fe870) 13%, white); color: var(--p-navy); box-shadow: 0 0 0 2px color-mix(in srgb, var(--card-accent, #9fe870) 30%, transparent); }
+.preview-method-editor-content > input { width: 100%; height: 38px; min-width: 0; padding: 0 12px; border: 1px solid #edf0eb; border-radius: 7px; background: white; color: var(--p-navy); font: inherit; font-size: 13px; outline: none; transition: border-color .14s ease, background-color .14s ease, box-shadow .14s ease; }
 .preview-method-editor-content > input::placeholder { color: #858985; }
-.preview-method-editor-content > input:focus { border-color: #8ea785; box-shadow: 0 0 0 3px rgba(159,232,112,.28); }
+.preview-method-editor-content > input:hover { border-color: color-mix(in srgb, var(--card-accent, #9fe870) 34%, #dfe5dc); background: color-mix(in srgb, var(--card-accent, #9fe870) 3%, white); }
+.preview-method-editor-content > input:focus { border-color: color-mix(in srgb, var(--card-accent, #9fe870) 74%, #8ea785); background: color-mix(in srgb, var(--card-accent, #9fe870) 4%, white); box-shadow: 0 0 0 3px color-mix(in srgb, var(--card-accent, #9fe870) 24%, transparent); }
 .preview-method-error { color: #b42318; font-size: 10px; font-weight: 700; }
 .preview-method-mini-actions { justify-self: end; display: flex; align-items: center; gap: 2px; }
 .preview-method-cancel, .preview-method-delete, .preview-method-save { min-height: 24px; padding: 2px 7px; border: 0; border-radius: 5px; background: transparent; color: var(--p-muted); font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
