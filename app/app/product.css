@@ -126,6 +126,15 @@ body:has(.product-shell) { background: var(--p-ice); }
    position used by View Card, clear of the floating account controls. */
 .product-shell:has(.consumer-sidebar) .product-content { position: relative; }
 .product-shell:has(.consumer-sidebar) .product-page-toolbar { position: static; margin-bottom: 28px; z-index: 5; }
+@media (min-width: 1024px) {
+  .product-shell:has(.card-creator) .product-page-toolbar {
+    min-height: 58px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 8px 24px rgba(22,51,0,.04);
+  }
+}
 .welcome { display: grid; grid-template-columns: 1.3fr .7fr; gap: 6vw; align-items: end; }
 .step-pill { display: inline-block; padding: 7px 10px; border-radius: 14px; background: var(--p-blue); color: var(--p-navy); font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: .1em; }
 .step-pill b { margin-right: 5px; font-size: 14px; line-height: 1; vertical-align: -2px; }
