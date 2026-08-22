@@ -128,6 +128,9 @@ body:has(.product-shell) { background: var(--p-ice); }
 .product-shell:has(.consumer-sidebar) .product-page-toolbar { position: static; margin-bottom: 28px; z-index: 5; }
 @media (min-width: 1024px) {
   .product-shell:has(.card-creator) .product-page-toolbar {
+    position: sticky;
+    top: 76px;
+    z-index: 80;
     min-height: 58px;
     padding: 10px 12px;
     border-radius: 10px;
