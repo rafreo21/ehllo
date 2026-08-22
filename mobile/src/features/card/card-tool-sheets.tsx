@@ -729,6 +729,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   widgetAddPill: {
+    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,

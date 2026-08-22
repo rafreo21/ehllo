@@ -291,9 +291,6 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
             ]}>
             Add new connection
           </Text>
-          {/* The Spacer is what makes the pill span the full width - a fixed width would be
-              wrong on some device, since a medium widget is 292 to 360pt wide. */}
-          <Spacer />
         </HStack>
       </Link>
     );
