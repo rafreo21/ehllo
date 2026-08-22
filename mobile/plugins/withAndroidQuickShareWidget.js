@@ -225,6 +225,8 @@ class QuickShareWidgetBridge(private val reactContext: ReactApplicationContext) 
         // Initials and the avatar photo are NOT copied here: recentConnectionsJson already
         // carries both, and duplicating base64 images into SharedPreferences would store every
         // avatar twice.
+        editor.putString("connection\${slot}Profile", payload.getString("connection\${slot}Profile") ?: "")
+        editor.putString("connection\${slot}Mail", payload.getString("connection\${slot}Mail") ?: "")
       }
       editor.apply()
 
@@ -555,13 +557,22 @@ object WidgetRenderer {
     )
   }
 
-  private fun messageIntent(context: Context, widgetId: Int, email: String, phone: String, requestCode: Int): PendingIntent? {
+  // Two bugs lived here.
+  //
+  // ACTION_VIEW on a mailto: URI frequently resolves to nothing, which is why tapping the
+  // envelope "opened the email app" and then did nothing useful. ACTION_SENDTO is the
+  // documented action for mailto: and sms:.
+  //
+  // And the envelope preferred SMS whenever a phone number existed, so an icon that plainly
+  // means email opened a text message instead - and behaved differently from iOS, which
+  // preferred email. The envelope is email; the handset is the phone.
+  private fun messageIntent(context: Context, widgetId: Int, mailUrl: String, email: String, requestCode: Int): PendingIntent? {
     val uri = when {
-      phone.isNotBlank() -> Uri.parse("sms:\$phone")
+      mailUrl.isNotBlank() -> Uri.parse(mailUrl)
       email.isNotBlank() -> Uri.parse("mailto:\$email")
       else -> return null
     }
-    val intent = Intent(Intent.ACTION_VIEW, uri)
+    val intent = Intent(Intent.ACTION_SENDTO, uri)
     return PendingIntent.getActivity(
       context,
       widgetId + requestCode,
@@ -719,6 +730,8 @@ object WidgetRenderer {
       val phone = connection.optString("phone", "")
       val email = connection.optString("email", "")
       val initials = connection.optString("initials", "")
+      val followUpMail = store.getString("connection\${slot}Mail", "") ?: ""
+      val profileLink = store.getString("connection\${slot}Profile", "") ?: ""
 
       visibleRows += 1
       views.setViewVisibility(rowId, View.VISIBLE)
@@ -750,7 +763,12 @@ object WidgetRenderer {
       } else {
         views.setViewVisibility(phoneId, View.GONE)
       }
-      val message = messageIntent(context, id, email, phone, slot * 10 + 100)
+      // Tapping the person opens THAT person. Only the empty area around the rows falls
+      // through to the root intent, which still opens the people you met.
+      if (profileLink.isNotBlank()) {
+        views.setOnClickPendingIntent(rowId, openAppIntent(context, id, profileLink, slot * 10 + 200))
+      }
+      val message = messageIntent(context, id, followUpMail, email, slot * 10 + 100)
       if (message != null) {
         views.setViewVisibility(messageId, View.VISIBLE)
         views.setOnClickPendingIntent(messageId, message)

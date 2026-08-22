@@ -52,6 +52,24 @@ function connectedAgo(connectedAt?: string) {
   return `Connected ${months} month${months === 1 ? '' : 's'} ago`;
 }
 
+// The follow-up the widget's envelope should draft. A widget tap that lands you in an empty
+// compose window has done almost nothing useful; naming where you met is the part nobody
+// remembers to write.
+function followUpMailUrl(name: string, email?: string, eventTitle?: string) {
+  const address = email?.trim();
+  if (!address) return undefined;
+  const firstName = name.trim().split(/\s+/)[0] || 'there';
+  const place = eventTitle?.trim();
+  const subject = place ? `Great meeting you at ${place}` : 'Great meeting you';
+  const opener = place
+    ? `It was great meeting you at ${place}.`
+    : 'It was great meeting you.';
+  const body = `Hi ${firstName},\n\n${opener}\n\n`;
+  return `mailto:${encodeURIComponent(address)}`
+    + `?subject=${encodeURIComponent(subject)}`
+    + `&body=${encodeURIComponent(body)}`;
+}
+
 // Two, not three: the layout has room for two rows plus an action, and every extra row costs a
 // photo download and a cache write for something that would not be drawn.
 async function loadRecentConnections(accessToken?: string): Promise<WidgetConnection[]> {
@@ -81,6 +99,9 @@ async function loadRecentConnections(accessToken?: string): Promise<WidgetConnec
         phone: connection.phone,
         email: connection.email,
         initials: initialsFor(connection.name),
+        // Tapping the person opens that person, not the whole list.
+        profileDeepLink: connection.id ? appDeepLink(`connections/${connection.id}`) : undefined,
+        followUpMailUrl: followUpMailUrl(connection.name, connection.email, connection.eventTitle),
         photoImageUri,
         photoImageBase64,
       };
@@ -227,6 +248,8 @@ function bridgePayload(snapshot: WidgetSnapshot): Record<string, string | undefi
     payload[`connection${slot}Email`] = connection.email;
     payload[`connection${slot}Initials`] = connection.initials;
     payload[`connection${slot}PhotoBase64`] = connection.photoImageBase64;
+    payload[`connection${slot}Profile`] = connection.profileDeepLink;
+    payload[`connection${slot}Mail`] = connection.followUpMailUrl;
   });
 
   return payload;
@@ -269,6 +292,8 @@ function iosWidgetPayload(snapshot: WidgetSnapshot): IosWidgetPayload {
     payload[`connection${slot}Email`] = connection.email || '';
     payload[`connection${slot}Initials`] = connection.initials || '';
     payload[`connection${slot}PhotoUri`] = connection.photoImageUri || '';
+    payload[`connection${slot}Profile`] = connection.profileDeepLink || '';
+    payload[`connection${slot}Mail`] = connection.followUpMailUrl || '';
   });
 
   return payload;

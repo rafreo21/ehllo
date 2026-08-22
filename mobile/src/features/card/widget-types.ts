@@ -3,6 +3,11 @@ export type WidgetConnection = {
   subtitle: string;
   phone?: string;
   email?: string;
+  /** Opens this person's profile rather than the connections list. */
+  profileDeepLink?: string;
+  /** A prefilled follow-up email, so the widget's envelope drafts a message rather than
+   *  dumping the person into an empty compose window. */
+  followUpMailUrl?: string;
   /** Initials, for the green fallback avatar when there is no photo. */
   initials: string;
   /** Cached local file, for the iOS widget. */

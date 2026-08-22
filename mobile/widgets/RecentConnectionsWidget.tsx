@@ -22,6 +22,8 @@ type WidgetConnectionRecord = {
   email?: string;
   initials?: string;
   photoUri?: string;
+  profile?: string;
+  mail?: string;
 };
 
 export type RecentConnectionsWidgetProps = {
@@ -33,12 +35,16 @@ export type RecentConnectionsWidgetProps = {
   connection1Email?: string;
   connection1Initials?: string;
   connection1PhotoUri?: string;
+  connection1Profile?: string;
+  connection1Mail?: string;
   connection2Name?: string;
   connection2Subtitle?: string;
   connection2Phone?: string;
   connection2Email?: string;
   connection2Initials?: string;
   connection2PhotoUri?: string;
+  connection2Profile?: string;
+  connection2Mail?: string;
   /** Supplied by the app so the scheme matches this build - see below. */
   scannerDeepLink?: string;
   /** '1' or '0'. Absent means the widget gallery, where sample content is the right answer. */
@@ -106,6 +112,8 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
         email: String(props[`connection${slot}Email`] || '').trim(),
         initials: String(props[`connection${slot}Initials`] || '').trim(),
         photoUri: String(props[`connection${slot}PhotoUri`] || '').trim(),
+        profile: String(props[`connection${slot}Profile`] || '').trim(),
+        mail: String(props[`connection${slot}Mail`] || '').trim(),
       };
     }).filter(Boolean) as WidgetConnectionRecord[];
 
@@ -140,7 +148,8 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
   function renderRow(row: WidgetConnectionRecord | undefined, rowIndex: number, placeholder?: boolean) {
     if (!row) return null;
     const phoneUrl = dialUrl(row.phone || '');
-    const mailHref = mailUrl(row.email || '', row.phone || '');
+    // The prefilled follow-up the app built; a bare mailto is only the fallback.
+    const mailHref = row.mail || mailUrl(row.email || '', row.phone || '');
 
     return (
       <HStack key={`row-${rowIndex}`} spacing={SIZES.infoGap} alignment="center">
@@ -174,26 +183,29 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
           </Text>
         )}
 
-        {/* lineLimit(1) on both lines so one long name cannot make its row taller than the
-            other and push it off the bottom. */}
-        <VStack spacing={SIZES.textGap} alignment="leading">
-          <Text
-            modifiers={[
-              foregroundStyle(placeholder ? WIDGET_COLORS.subtle : WIDGET_COLORS.text),
-              font({ family: FONTS.regular, size: 14 }),
-              lineLimit(1),
-            ]}>
-            {row.name}
-          </Text>
-          <Text
-            modifiers={[
-              foregroundStyle(WIDGET_COLORS.subtle),
-              font({ family: FONTS.regular, size: 11 }),
-              lineLimit(1),
-            ]}>
-            {row.subtitle}
-          </Text>
-        </VStack>
+        {/* The person's own tap target: opens THAT person, not the connections list. Only the
+            empty area around the rows falls through to the widget's own widgetURL. lineLimit(1)
+            on both lines so one long name cannot make its row taller than the other. */}
+        <Link destination={row.profile || props.connectionsDeepLink || 'ehllo://connections'}>
+          <VStack spacing={SIZES.textGap} alignment="leading">
+            <Text
+              modifiers={[
+                foregroundStyle(placeholder ? WIDGET_COLORS.subtle : WIDGET_COLORS.text),
+                font({ family: FONTS.regular, size: 14 }),
+                lineLimit(1),
+              ]}>
+              {row.name}
+            </Text>
+            <Text
+              modifiers={[
+                foregroundStyle(WIDGET_COLORS.subtle),
+                font({ family: FONTS.regular, size: 11 }),
+                lineLimit(1),
+              ]}>
+              {row.subtitle}
+            </Text>
+          </VStack>
+        </Link>
 
         {/* A Spacer rather than a fixed text column. A medium widget is 292pt wide on the
             smallest iPhones and 360 on the largest, so any hardcoded width overflows at one
