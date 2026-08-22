@@ -13,7 +13,7 @@ import {
   X,
 } from 'phosphor-react-native';
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 
 import { EventCard } from '@/components/event-card';
 import { MiniPromptCard } from '@/components/mini-prompt-card';
@@ -78,6 +78,7 @@ type ActiveWorkItem = {
 export default function HomeScreen() {
   const insets = useAppInsets();
   const tabBarHeight = useTabBarHeight();
+  const { width: windowWidth } = useWindowDimensions();
   const navigate = useDebouncedNavigate();
   const { session, loading: authLoading } = useAuth();
   const pendingSync = usePendingSyncCount();
@@ -226,6 +227,36 @@ export default function HomeScreen() {
     void dismissNudge(item.id);
     const destination = notificationDeepLink(item);
     if (destination) navigate(destination as never);
+  }
+
+  // Sized to leave a sliver of the next card peeking past the screen edge, so a second nudge
+  // reads as "swipe for more" rather than looking cut off.
+  const nudgeCardWidth = windowWidth - spacing.x5 * 2 - spacing.x8;
+
+  function renderNudgeCard(item: NotificationRecord, extraStyle?: StyleProp<ViewStyle>) {
+    return (
+      <Pressable
+        key={item.id}
+        accessibilityRole="button"
+        onPress={() => openNudge(item)}
+        style={({ pressed }) => [styles.nudgeCard, extraStyle, pressed && styles.attentionCardPressed]}>
+        <View style={styles.attentionIcon}>
+          <HandWaving size={20} color={colors.ink} weight="bold" />
+        </View>
+        <View style={styles.attentionCopy}>
+          <Text style={styles.attentionHeadline}>{item.title}</Text>
+          {item.body ? <Text style={styles.attentionSubline}>{item.body}</Text> : null}
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss"
+          hitSlop={8}
+          onPress={() => void dismissNudge(item.id)}
+          style={styles.nudgeDismiss}>
+          <X size={14} color={colors.muted} weight="bold" />
+        </Pressable>
+      </Pressable>
+    );
   }
 
   async function decideEventCandidate(event: EventItem, status: 'going' | 'not_going') {
@@ -444,29 +475,19 @@ export default function HomeScreen() {
               </Pressable>
             )}
 
-            {nudges.map((item) => (
-              <Pressable
-                key={item.id}
-                accessibilityRole="button"
-                onPress={() => openNudge(item)}
-                style={({ pressed }) => [styles.nudgeCard, pressed && styles.attentionCardPressed]}>
-                <View style={styles.attentionIcon}>
-                  <HandWaving size={20} color={colors.ink} weight="bold" />
-                </View>
-                <View style={styles.attentionCopy}>
-                  <Text style={styles.attentionHeadline}>{item.title}</Text>
-                  {item.body ? <Text style={styles.attentionSubline}>{item.body}</Text> : null}
-                </View>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Dismiss"
-                  hitSlop={8}
-                  onPress={() => void dismissNudge(item.id)}
-                  style={styles.nudgeDismiss}>
-                  <X size={14} color={colors.muted} weight="bold" />
-                </Pressable>
-              </Pressable>
-            ))}
+            {nudges.length > 1 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={nudgeCardWidth + spacing.x3}
+                decelerationRate="fast"
+                contentContainerStyle={styles.nudgeScrollContent}
+                style={styles.nudgeScroll}>
+                {nudges.map((item) => renderNudgeCard(item, { width: nudgeCardWidth }))}
+              </ScrollView>
+            ) : (
+              nudges.map((item) => renderNudgeCard(item))
+            )}
 
             {session && homeEventCard.type !== 'none' ? (
               <HomeEventCard
@@ -797,6 +818,11 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     elevation: 2,
   },
+  // flexGrow: 0 keeps the horizontal ScrollView sized to its content rather than stretching
+  // to fill the vertical scroll's cross axis, which would otherwise force every card tall
+  // enough to fill the remaining screen height.
+  nudgeScroll: { flexGrow: 0 },
+  nudgeScrollContent: { gap: spacing.x3 },
   nudgeDismiss: {
     position: 'absolute',
     top: spacing.x2,
