@@ -222,6 +222,7 @@ async function buildWidgetSnapshotImpl(
   preferredCard?: MobileCard,
 ): Promise<WidgetSnapshot> {
   const env = readEnv();
+  const signedIn = Boolean(accessToken);
   // Preview cards are excluded HERE, at the widget boundary, not just by the callers.
   //
   // defaultCard is a sample used to populate the UI before someone has a real card. It is
@@ -233,7 +234,10 @@ async function buildWidgetSnapshotImpl(
   //
   // Filtering at the boundary rather than trusting the caller: the widget is the thing with a
   // stranger's identity on a home screen if this is ever wrong again.
-  const real = cards.filter((card) => !isPreviewCard(card));
+  // Local card state can outlive a session. Never serialize it while signed out: otherwise a
+  // shared device can keep showing the previous account's name, photo and public QR after
+  // logout. The explicit signed-out snapshot is also what clears those values natively.
+  const real = signedIn ? cards.filter((card) => !isPreviewCard(card)) : [];
   const published = real.filter((card) => card.status === 'published' && card.slug);
   // The widget shows exactly one card: the one set as primary in the card home. It used to
   // send every published card so the widget could page between them, and took whichever one
@@ -260,12 +264,14 @@ async function buildWidgetSnapshotImpl(
 
   let logoImageUri: string | undefined;
   let logoImageBase64: string | undefined;
-  try {
-    logoImageUri = await ensureWidgetLogoUri();
-    if (logoImageUri) logoImageBase64 = await readUriAsBase64(logoImageUri);
-  } catch (caught) {
-    reportWidgetAssetFailure('logo', caught);
-    logoImageUri = undefined;
+  if (signedIn) {
+    try {
+      logoImageUri = await ensureWidgetLogoUri();
+      if (logoImageUri) logoImageBase64 = await readUriAsBase64(logoImageUri);
+    } catch (caught) {
+      reportWidgetAssetFailure('logo', caught);
+      logoImageUri = undefined;
+    }
   }
 
   const widgetCards = await Promise.all(
@@ -297,14 +303,17 @@ async function buildWidgetSnapshotImpl(
     // Whether there is a signed-in account behind this snapshot. The widget used to fall back
     // to the demo card when it had nothing, so a signed-out home screen advertised Alex
     // Morgan's details as though they were yours, with a QR pointing at a demo page.
-    signedIn: Boolean(accessToken),
+    signedIn,
   };
 }
 
 function bridgePayload(snapshot: WidgetSnapshot): Record<string, string | undefined> {
   const payload: Record<string, string | undefined> = {
     cardsJson: JSON.stringify(snapshot.cards),
-    logoImageBase64: snapshot.logoImageBase64,
+    // The native bridge persists a key/value store. Send empty values deliberately so logout,
+    // removed photos and fewer connections replace the previous snapshot instead of merging
+    // with stale personal data.
+    logoImageBase64: snapshot.logoImageBase64 || '',
     connectionsDeepLink: snapshot.connectionsDeepLink,
     // Sent explicitly rather than hardcoded natively: the scheme differs per variant
     // (ehllo-staging vs ehllo), and a native default cannot know which build it is in.
@@ -312,6 +321,17 @@ function bridgePayload(snapshot: WidgetSnapshot): Record<string, string | undefi
     recentConnectionsJson: JSON.stringify(snapshot.connections),
     signedIn: snapshot.signedIn ? '1' : '0',
   };
+
+  for (const slot of [1, 2]) {
+    payload[`connection${slot}Name`] = '';
+    payload[`connection${slot}Subtitle`] = '';
+    payload[`connection${slot}Phone`] = '';
+    payload[`connection${slot}Email`] = '';
+    payload[`connection${slot}Initials`] = '';
+    payload[`connection${slot}PhotoBase64`] = '';
+    payload[`connection${slot}Profile`] = '';
+    payload[`connection${slot}Mail`] = '';
+  }
 
   snapshot.connections.slice(0, 2).forEach((connection, index) => {
     const slot = index + 1;
@@ -340,22 +360,33 @@ function iosWidgetPayload(snapshot: WidgetSnapshot): IosWidgetPayload {
   const payload: IosWidgetPayload = {
     cardsJson: JSON.stringify(cards),
     cardIndex: 0,
-    logoImageUri: snapshot.logoImageUri,
+    logoImageUri: snapshot.logoImageUri || '',
     connectionsDeepLink: snapshot.connectionsDeepLink,
     scannerDeepLink: SCANNER_DEEP_LINK,
     shareDeepLink: primary?.shareDeepLink || appDeepLink('share-card'),
-    qrImageUri: primary?.qrImageUri || snapshot.qrImageUri,
+    qrImageUri: primary?.qrImageUri || snapshot.qrImageUri || '',
     // Empty rather than demo text, so the widget can tell "no published primary card" apart
     // from a card that simply has no role or company set.
     name: primary?.name || '',
     role: primary?.role || '',
     company: primary?.company || '',
     initials: primary?.initials || '',
-    photoImageUri: primary?.photoImageUri,
+    photoImageUri: primary?.photoImageUri || '',
     // Crosses as a string because the bridge carries strings and numbers, not booleans. Its
     // absence means the widget gallery, where sample content is the right thing to show.
     signedIn: snapshot.signedIn ? '1' : '0',
   };
+
+  for (const slot of [1, 2]) {
+    payload[`connection${slot}Name`] = '';
+    payload[`connection${slot}Subtitle`] = '';
+    payload[`connection${slot}Phone`] = '';
+    payload[`connection${slot}Email`] = '';
+    payload[`connection${slot}Initials`] = '';
+    payload[`connection${slot}PhotoUri`] = '';
+    payload[`connection${slot}Profile`] = '';
+    payload[`connection${slot}Mail`] = '';
+  }
 
   snapshot.connections.slice(0, 2).forEach((connection, index) => {
     const slot = index + 1;
