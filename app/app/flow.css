@@ -339,6 +339,9 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .scan-steps { padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; list-style: none; }
 .scan-steps li { padding: 9px; display: flex; align-items: center; gap: 7px; border-radius: 7px; background: #fafcf9; color: var(--p-muted); font-size: 10px; font-weight: 700; }
 .scan-steps span { width: 20px; height: 20px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; background: var(--p-sky); color: #2f5711; font-size: 9px; font-weight: 900; }
+.scan-steps li > div { min-width: 0; display: grid; gap: 1px; }
+.scan-steps strong { color: var(--p-navy); font-size: 10px; }
+.scan-steps small { overflow: hidden; color: var(--p-muted); font-size: 9px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
 .qr-mode-pill.flow-heading-actions { margin: 0; }
 .inline-qr-url { position: relative; padding: 11px 13px; display: grid; gap: 3px; border-radius: 7px; background: var(--p-ice); overflow-wrap: anywhere; }
 .inline-qr-copy.review-textfield-copy { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); }
@@ -1561,7 +1564,7 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .review-status-line { gap: 6px; }
   .inbox-actions { align-items: stretch; flex-direction: column; }
   .inline-qr-actions { grid-template-columns: 1fr; }
-  .scan-steps { grid-template-columns: 1fr; }
+  .scan-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .card-overview-grid { grid-template-columns: 1fr; }
   .card-detail-topbar { grid-template-columns: 1fr; }
   .card-detail-topbar > div:last-child { justify-content: stretch; }
@@ -1643,3 +1646,34 @@ a.home-stat-tile:hover { background: var(--p-ice); }
 .widget-preview-pill { display: flex; align-items: center; gap: 5px; background: #4e4e4e; color: #fff;
   border-radius: 11px; padding: 4px 11px; font-size: 10px; }
 .widget-preview-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* The scanner needs to use the phone viewport rather than retaining the roomy
+   desktop card and its fixed 3:4 camera frame. */
+@media (max-width: 599px) {
+  .scan-page { gap: 18px; }
+  .scan-page > .flow-heading { gap: 5px; }
+  .scan-page > .flow-heading h1 { font-size: 26px; }
+  .scan-page > .flow-heading p { margin-top: 4px; font-size: 13px; }
+  .scan-panel,
+  .scan-result-card { max-width: none; padding: 14px; border-radius: 10px; }
+  .scan-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+  .scan-steps li { min-width: 0; padding: 7px 6px; gap: 5px; }
+  .scan-steps span { width: 18px; height: 18px; }
+  .scan-viewport-wrap {
+    height: clamp(280px, 52dvh, 420px);
+    max-height: none;
+    margin-top: 14px;
+    border-radius: 10px;
+    aspect-ratio: auto;
+  }
+  .scan-viewport-overlay { inset: auto 10px 10px; justify-content: center; padding: 9px 10px; font-size: 11px; }
+  .scan-secondary-actions,
+  .scan-result-actions { margin-top: 12px; }
+}
+
+@media (max-width: 360px) {
+  .scan-page > .flow-heading h1 { font-size: 23px; }
+  .scan-steps li { padding-inline: 5px; }
+  .scan-steps small { display: none; }
+  .scan-viewport-wrap { height: clamp(270px, 50dvh, 380px); }
+}

@@ -289,9 +289,9 @@ export default function ScanPage() {
             </div>
             <div className="scan-panel">
               <ol className="scan-steps">
-                <li><span>1</span>Allow camera access</li>
-                <li><span>2</span>Line up the QR code</li>
-                <li><span>3</span>Add them or capture the moment</li>
+                <li><span>1</span><div><strong>Camera</strong><small>Allow access</small></div></li>
+                <li><span>2</span><div><strong>QR code</strong><small>Line it up</small></div></li>
+                <li><span>3</span><div><strong>Add</strong><small>Save details</small></div></li>
               </ol>
               {mode === "camera" ? (
                 <div className="scan-viewport-wrap">
