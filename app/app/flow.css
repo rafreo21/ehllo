@@ -104,6 +104,13 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .home-mobile-brand-icon svg { width: 25px; height: 25px; }
   .home-mobile-platform-card strong { font-size: 11px; white-space: nowrap; }
   .home-mobile-platform-card small { font-size: 9px; white-space: nowrap; }
+  .home-person-row, .home-card-row { min-height: 72px; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: auto auto; column-gap: 11px; row-gap: 4px; padding: 11px 12px; }
+  .home-person-row > img, .home-card-row > img, .home-card-row > .home-card-avatar-fallback { grid-row: 1 / 3; }
+  .home-person-row > span, .home-card-row > span { align-self: center; }
+  .home-person-row > svg, .home-card-row > svg { grid-column: 3; grid-row: 1 / 3; align-self: center; }
+  .home-person-row .home-person-tag { grid-column: 2; grid-row: 2; width: max-content; padding: 3px 7px; }
+  .home-person-row:has(.home-person-tag) > span { align-self: end; }
+  .home-card-row > em { display: none; }
   .home-empty-compact { grid-template-columns: auto 1fr; }
   .home-empty-compact > a { grid-column: 1 / -1; margin-top: 4px; }
 }
