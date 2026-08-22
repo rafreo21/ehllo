@@ -101,6 +101,12 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
   const canvasColor = props.themeColor || WIDGET_COLORS.canvas;
   const textColor = props.themeTextColor || WIDGET_COLORS.text;
   const mutedColor = props.themeMutedColor || WIDGET_COLORS.subtle;
+  // Use the foreground and canvas as an inverse pair for controls. On dark themes this
+  // produces a bright button with a dark icon; on light themes it produces a dark button
+  // with a light icon. That keeps small symbols legible instead of putting white on a fixed
+  // charcoal chip that can disappear into some card colours.
+  const actionBackgroundColor = textColor;
+  const actionForegroundColor = canvasColor;
 
 
   function connectionSlots(props: Record<string, string | number | boolean | undefined>) {
@@ -184,10 +190,10 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
           // which draws nothing, so the initial floated with no shape behind it.
           <Text
             modifiers={[
-              foregroundStyle(textColor),
+              foregroundStyle(actionForegroundColor),
               font({ family: FONTS.regular, size: 12 }),
               frame({ width: SIZES.avatar, height: SIZES.avatar }),
-              background(placeholder ? WIDGET_COLORS.chip : WIDGET_COLORS.avatarFallback),
+              background(placeholder ? mutedColor : actionBackgroundColor),
               cornerRadius(SIZES.avatar / 2),
             ]}>
             {placeholder ? ' ' : initialsFor(row)}
@@ -228,10 +234,10 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
             <Image
               systemName="phone.fill"
               modifiers={[
-                foregroundStyle(textColor),
+                foregroundStyle(actionForegroundColor),
                 font({ size: 11 }),
                 frame({ width: SIZES.action, height: SIZES.action }),
-                background(WIDGET_COLORS.chip),
+                background(actionBackgroundColor),
                 cornerRadius(SIZES.action / 2),
               ]}
             />
@@ -243,10 +249,10 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
             <Image
               systemName="envelope.fill"
               modifiers={[
-                foregroundStyle(textColor),
+                foregroundStyle(actionForegroundColor),
                 font({ size: 11 }),
                 frame({ width: SIZES.action, height: SIZES.action }),
-                background(WIDGET_COLORS.chip),
+                background(actionBackgroundColor),
                 cornerRadius(SIZES.action / 2),
               ]}
             />
@@ -270,16 +276,16 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
           alignment="center"
           modifiers={[
             padding({ leading: 12, trailing: 12, top: 6, bottom: 6 }),
-            background(WIDGET_COLORS.chip),
+            background(actionBackgroundColor),
             cornerRadius(13),
           ]}>
           <Image
             systemName="plus.circle.fill"
-            modifiers={[foregroundStyle(textColor), font({ size: 13 })]}
+            modifiers={[foregroundStyle(actionForegroundColor), font({ size: 13 })]}
           />
           <Text
             modifiers={[
-              foregroundStyle(textColor),
+              foregroundStyle(actionForegroundColor),
               font({ family: FONTS.regular, size: 12 }),
               lineLimit(1),
             ]}>
@@ -331,7 +337,7 @@ function RecentConnectionsWidget(props: RecentConnectionsWidgetProps) {
       ]}>
       <Text
         modifiers={[
-          foregroundStyle(WIDGET_COLORS.accent),
+          foregroundStyle(textColor),
           font({ family: FONTS.medium, weight: 'bold', size: 11 }),
         ]}>
         Recent Connections

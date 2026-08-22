@@ -12,6 +12,7 @@ type WidgetCardRecord = {
   qrImageUri?: string;
   photoImageUri?: string;
   themeColor?: string;
+  themeTextColor?: string;
 };
 
 export type QrScanWidgetProps = {
@@ -22,6 +23,7 @@ export type QrScanWidgetProps = {
   /** '1' or '0'. Absent means the widget gallery, where sample content is the right answer. */
   signedIn?: string | boolean;
   themeColor?: string;
+  themeTextColor?: string;
 };
 
 function QrScanWidget(props: QrScanWidgetProps) {
@@ -70,6 +72,7 @@ function QrScanWidget(props: QrScanWidgetProps) {
         qrImageUri: card.qrImageUri,
         photoImageUri: card.photoImageUri,
         themeColor: card.themeColor,
+        themeTextColor: card.themeTextColor,
       }));
     } catch {
       return [DEMO_CARD];
@@ -86,6 +89,7 @@ function QrScanWidget(props: QrScanWidgetProps) {
   const deepLink = card.shareDeepLink || props.shareDeepLink || 'ehllo://share-card';
   const qrImageUri = card.qrImageUri || props.qrImageUri;
   const canvasColor = card.themeColor || props.themeColor || WIDGET_COLORS.canvas;
+  const textColor = card.themeTextColor || props.themeTextColor || WIDGET_COLORS.text;
 
   return (
     <VStack
@@ -159,7 +163,7 @@ function QrScanWidget(props: QrScanWidgetProps) {
           // Said plainly instead of "Scan to connect", which promised a code that was not
           // there. Apple's guidance is explicit that a widget needing an account should say
           // so; the signed-out wording is theirs in spirit - "Sign in to view reservations".
-          <Text modifiers={[foregroundStyle(WIDGET_COLORS.accent), font({ family: FONTS.medium, weight: 'bold', size: 13 })]}>
+          <Text modifiers={[foregroundStyle(textColor), font({ family: FONTS.medium, weight: 'bold', size: 13 })]}>
             {props.signedIn === '0' || props.signedIn === false
               ? 'Sign in to share your card'
               : 'Open ehllo to set up your card'}

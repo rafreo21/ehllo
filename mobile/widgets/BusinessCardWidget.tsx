@@ -242,12 +242,12 @@ function BusinessCardWidget(props: BusinessCardWidgetProps) {
         ) : (
           <Text
             modifiers={[
-              foregroundStyle(WIDGET_COLORS.accent),
+              foregroundStyle(noPrimary || signedOut ? mutedColor : textColor),
               font({ family: FONTS.regular, size: 14, weight: 'medium' }),
               frame({ width: 40, height: 40 }),
               // Filled only in the placeholder state, where there are no initials to show and
               // an empty 40pt gap would just look like a layout fault.
-              background(noPrimary || signedOut ? '#2A2D2A' : '#00000000'),
+              background(noPrimary || signedOut ? subtleColor : '#00000000'),
               cornerRadius(20),
             ]}>
             {noPrimary || signedOut ? ' ' : initials}
