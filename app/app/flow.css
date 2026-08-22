@@ -111,6 +111,13 @@ a.home-stat-tile:hover { background: var(--p-ice); }
   .home-person-row .home-person-tag { grid-column: 2; grid-row: 2; width: max-content; padding: 3px 7px; }
   .home-person-row:has(.home-person-tag) > span { align-self: end; }
   .home-card-row > em { display: none; }
+  .home-nudge-card > a { min-height: 82px; grid-template-columns: 32px minmax(0, 1fr); align-items: start; gap: 10px; padding: 13px 44px 13px 12px; }
+  .home-nudge-icon { width: 32px; height: 32px; }
+  .home-nudge-copy { gap: 3px; padding-top: 1px; }
+  .home-nudge-copy strong, .home-nudge-copy small { white-space: normal; }
+  .home-nudge-copy strong { display: -webkit-box; overflow: hidden; line-height: 1.25; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .home-nudge-copy small { display: -webkit-box; overflow: hidden; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .home-nudge-card > button { top: 10px; right: 10px; }
   .home-empty-compact { grid-template-columns: auto 1fr; }
   .home-empty-compact > a { grid-column: 1 / -1; margin-top: 4px; }
 }
