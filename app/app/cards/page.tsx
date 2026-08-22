@@ -6,6 +6,7 @@ import QRCode from "qrcode";
 import { ArrowLeft as ArrowLeftIcon } from "react-feather";
 import { ArrowRight as ArrowRightIcon } from "react-feather";
 import { MoreHorizontal as MoreHorizontalIcon } from "react-feather";
+import { Grid as GridIcon } from "react-feather";
 import { X as XIcon } from "react-feather";
 import { Copy as CopyIcon } from "react-feather";
 import { CheckCircle as CheckCircleIcon } from "react-feather";
@@ -650,7 +651,11 @@ function createCard(seed: Partial<LibraryCard> = {}) {
               </div>
             </div>
           </article>
-          <Button className="card-tools-mobile-trigger" variant="secondary" onClick={() => { setMobileToolSelected(false); setMobileToolsOpen(true); }}><MoreHorizontalIcon size={18} /> Do more</Button>
+          <button className="card-tools-mobile-trigger" type="button" onClick={() => { setMobileToolSelected(false); setMobileToolsOpen(true); }}>
+            <span className="card-tools-mobile-trigger-icon"><GridIcon size={18} /></span>
+            <span className="card-tools-mobile-trigger-copy"><strong>Do more</strong><small>QR code, signature, widgets and more</small></span>
+            <ArrowRightIcon className="card-tools-mobile-trigger-arrow" size={17} />
+          </button>
           <div className={`card-tools-sheet-shell${mobileToolsOpen ? " open" : ""}${mobileToolSelected ? " tool-selected" : ""}`} role={mobileToolsOpen ? "presentation" : undefined} onClick={(event) => { if (event.target === event.currentTarget) setMobileToolsOpen(false); }}>
           <section className="inline-qr-panel" role={mobileToolsOpen ? "dialog" : undefined} aria-modal={mobileToolsOpen || undefined} aria-label={mobileToolsOpen ? "Card tools" : undefined}>
             <header className="card-tools-mobile-header">
